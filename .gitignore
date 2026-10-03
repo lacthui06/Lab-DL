@@ -1,0 +1,80 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual Environments
+venv/
+.venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints
+*/.ipynb_checkpoints/*
+
+# IDE and OS files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Large datasets & Raw data (Giữ cấu trúc thư mục data/ nhưng không push data nặng)
+**/data/*
+!**/data/.gitkeep
+!**/data/README.md
+*.csv
+*.tsv
+*.parquet
+*.feather
+*.h5
+*.hdf5
+*.tar
+*.tar.gz
+*.zip
+*.7z
+*.rar
+
+# Model checkpoints & weights (trọng số mô hình nặng, lưu ở Kaggle/Google Drive)
+*.pt
+*.pth
+*.ckpt
+*.onnx
+*.bin
+*.pkl
+*.pickle
+**/outputs/models/*
+**/outputs/checkpoints/*
+
+# Logs & Output runs
+wandb/
+runs/
+lightning_logs/
+.tensorboard/
+*.log
