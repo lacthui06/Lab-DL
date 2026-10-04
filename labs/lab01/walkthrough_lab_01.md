@@ -3,11 +3,15 @@
 > **Tên bài Lab:** Lab 01 — FashionMNIST Image Classification with PyTorch  
 > **Trạng thái:** [x] Hoàn thành  
 > **Mục tiêu chính:** Xây dựng quy trình Deep Learning chuẩn phân loại 10 lớp trang phục FashionMNIST, áp dụng kiểm thử TDD Sanity Overfit, huấn luyện và so sánh 3 kiến trúc mô hình (Baseline MLP, Tuned MLP, FashionCNN) nâng Test Accuracy từ 87.39% lên 92.65% (F1: 92.60%).  
-> **Tài liệu tham chiếu:** `dl_workflows/DL_flow.md` | `dl_workflows/dl_training_and_optimization_guide.md`
+> **Tài liệu tham chiếu:** `dl_workflows/DL_flow.md` | `dl_workflows/dl_training_and_optimization_guide.md`  
+> **Quy chuẩn hợp nhất 3 Rule (Single Living Walkthrough Architecture):**  
+> - **Rule 1 (`spec-driven-development`):** Tham chiếu trực tiếp vào **Mục 1 — Đặc tả kỹ thuật & Thiết kế Flow (Spec & Baseline Setup)**.  
+> - **Rule 2 (`walkthrough-and-experiment-tracking`):** Tham chiếu trực tiếp vào **Mục 2 — Nhật ký tiến hóa toàn bộ Flow (Full-Flow Experiment Changelog)**.  
+> - **Rule 3 (`documentation-and-adrs`):** Tham chiếu trực tiếp vào **Mục 3 — Báo cáo kết quả đối đầu & Chẩn đoán lỗi (Results & Final Report)**.  
 
 ---
 
-## 1. ĐẶC TẢ KỸ THUẬT & THIẾT KẾ FLOW (SPEC & BASELINE SETUP)
+## 1. ĐẶC TẢ KỸ THUẬT & THIẾT KẾ FLOW (SPEC & BASELINE SETUP — Rule: spec-driven-development)
 
 ### 1.1. Sơ đồ Quy trình Tổng thể (Master Flow Design)
 
@@ -64,7 +68,7 @@ graph LR
 
 ---
 
-## 2. NHẬT KÝ TIẾN HÓA TOÀN BỘ FLOW (FULL-FLOW EXPERIMENT CHANGELOG)
+## 2. NHẬT KÝ TIẾN HÓA TOÀN BỘ FLOW (FULL-FLOW EXPERIMENT CHANGELOG — Rule: walkthrough-and-experiment-tracking)
 
 ### Lần chạy 1 (Run #1 — Baseline Flow)
 *Mục đích: Xây dựng pipeline cơ sở tối thiểu (Baseline) với mạng MLP đơn giản 2 tầng để thiết lập mốc đánh giá.*
@@ -137,7 +141,7 @@ graph LR
 
 ---
 
-## 3. BÁO CÁO KẾT QUẢ ĐỐI ĐẦU & CHẨN ĐOÁN LỖI (RESULTS & ERROR DIAGNOSIS)
+## 3. BÁO CÁO KẾT QUẢ ĐỐI ĐẦU & CHẨN ĐOÁN LỖI (RESULTS & FINAL REPORT — Rule: documentation-and-adrs)
 
 ### 3.1. Bảng Ma Trận So Sánh Toàn Bộ Các Phiên Bản Flow (Comparison Matrix)
 

@@ -13,7 +13,11 @@ File này là bản "Hiến pháp kỹ thuật" bắt buộc mọi AI Coding Age
 3. **Mã nguồn phải tái lập được (Reproducibility):** Luôn cố định random seed (`random`, `numpy`, `torch.manual_seed`) trong mọi thử nghiệm.
 4. **Kiểm thử Sanity Overfit 1 batch:** Trước khi mang code lên Kaggle train, bắt buộc phải test thử trên 1 batch nhỏ ở local xem mô hình có ép được loss về 0 hay không (~5 giây).
 5. **Tiết kiệm tài nguyên & Hạn ngạch (Zero Waste Protocol):** TUYỆT ĐỐI KHÔNG tự ý chạy full training nhiều epoch trên máy Local CPU gây tốn thời gian và lãng phí quota chat của người dùng. Ở local chỉ hoàn thiện module `src/`, notebook `notebooks/`, chạy test Sanity 1 batch, rồi hướng dẫn người dùng đẩy lên Kaggle GPU (Tesla T4) huấn luyện.
-6. **Một Tài Liệu Sống Duy Nhất (Single Living Walkthrough):** Mọi tài liệu từ Đặc tả kỹ thuật (Spec), Nhật ký tinh chỉnh qua các Run (Changelog/Hyperparameters), cho đến Báo cáo phân tích kết quả cuối cùng (Report) đều được ghi nhận tập trung trong ĐÚNG 1 FILE DUY NHẤT: `walkthrough_lab_0X.md`.
+6. **Một Tài Liệu Sống Duy Nhất Hợp Nhất 3 Rule (Single Living Walkthrough):** Mọi tài liệu của một bài Lab bắt buộc phải hợp nhất về ĐÚNG 1 FILE DUY NHẤT: `walkthrough_lab_0X.md`. Luôn luôn giữ tham chiếu chặt chẽ với 3 rule kỹ năng:
+   - **Mục 1 (Spec & Baseline Setup):** Được dẫn dắt bởi Rule `spec-driven-development` (Đặc tả bài toán, schema dữ liệu, Baseline model và ngưỡng nghiệm thu).
+   - **Mục 2 (Changelog & Lineage):** Được dẫn dắt bởi Rule `walkthrough-and-experiment-tracking` (Nhật ký tiến hóa qua các Run, lý do thay đổi siêu tham số và kiến trúc mạng).
+   - **Mục 3 (Report & Findings):** Được dẫn dắt bởi Rule `documentation-and-adrs` (Bảng đối đầu kết quả, ma trận nhầm lẫn, phân tích lỗi sai, kết luận nộp bài).
+   Tuyệt đối KHÔNG sinh thêm các file `SPEC.md` hay `REPORT.md` riêng lẻ gây dư thừa và phân mảnh thông tin.
 7. **Nghiêm cấm dùng Icon / Emoji trong Mã nguồn và Notebook (No Icons/Emojis Policy):** TUYỆT ĐỐI KHÔNG đưa bất kỳ biểu tượng cảm xúc (emoji/icon) nào vào mã nguồn (`.py`, `.sh`), chuỗi `print()`, log, docstring, chú thích, hoặc các ô markdown/code của Jupyter Notebook (`.ipynb`). Mọi thông báo trạng thái, tiêu đề phải dùng văn bản kỹ thuật chuẩn mực, chuyên nghiệp, hiển thị tốt trên mọi terminal và môi trường kiểm thử CI/CD.
 
 ---
@@ -40,7 +44,7 @@ File này là bản "Hiến pháp kỹ thuật" bắt buộc mọi AI Coding Age
 ## 3. Các suy nghĩ sai trái bị nghiêm cấm (Anti-Rationalization)
 
 - [X] *"Code luôn không cần Spec"* -> **Bác bỏ:** Vi phạm nguyên tắc kỹ thuật, không có mốc Baseline để so sánh.
-- [X] *"Tách thành các file spec/report lẻ tẻ rời rạc"* -> **Bác bỏ:** Làm phân mảnh thông tin theo dõi tiến độ. Bắt buộc hợp nhất toàn bộ Spec, Changelog và Báo cáo kết quả vào file sống tập trung `walkthrough_lab_0X.md`.
+- [X] *"Tách thành các file SPEC.md và REPORT.md riêng lẻ"* -> **Bác bỏ:** Làm phân mảnh thông tin và sinh file dư thừa. Bắt buộc hợp nhất toàn bộ 3 nội dung (Spec, Changelog, Report) vào đúng 1 file sống duy nhất `walkthrough_lab_0X.md`. Tuyệt đối không tạo hoặc giữ các file `SPEC.md` và `REPORT.md` riêng lẻ.
 - [X] *"Không cần test overfit 1 batch, cứ mang lên Kaggle train"* -> **Bác bỏ:** Làm lãng phí hạn ngạch 30 tiếng GPU Kaggle nếu mô hình bị bug ngầm.
 - [X] *"Tự ý chạy full training trên CPU local"* -> **Bác bỏ:** Làm tràn tài nguyên local và lãng phí quota chat của người dùng. Bắt buộc dừng ở mức hoàn thiện Notebook + Sanity test 1 batch, sau đó hướng dẫn mang lên Kaggle GPU train và download artifact về.
 - [X] *"Chạy xong chỉ copy paste vài dòng log ra chat"* -> **Bác bỏ:** Bắt buộc phải cập nhật toàn bộ 5 khâu và changelog vào `walkthrough_lab_0X.md`.

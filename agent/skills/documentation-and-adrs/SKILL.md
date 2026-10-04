@@ -15,16 +15,14 @@ Kỹ năng này chịu trách nhiệm hoàn thiện khâu tài liệu chuyên m�
 
 ## Đầu ra tài liệu cho các bài Lab (Tích hợp vào Mục 3 của walkthrough_lab_0X.md)
 
-Đối với các bài Lab, toàn bộ Báo cáo định lượng, Model Card và Quyết định kỹ thuật đều được tổng hợp trực tiếp vào **Mục 3 của file duy nhất `walkthrough_lab_0X.md`** để đảm bảo tính tinh gọn:
-- **Kết quả định lượng:** Bảng so sánh giữa Baseline Model và Mô hình chính (Accuracy, Precision, Recall, F1-Macro, Test Loss).
-- **Chẩn đoán & Ma trận nhầm lẫn:** Phân tích chi tiết các lớp dễ bị nhầm lẫn (Confusion Clustered Slices).
-- **Quyết định kỹ thuật & Bài học:** Lý do tại sao chuyển đổi kiến trúc và kỹ thuật điều hòa hiệu quả nhất.
-- **Mục đích sử dụng (Intended Use):** Mô hình được thiết kế để giải quyết bài toán gì? Không được dùng cho những trường hợp nào?
-- **Dữ liệu huấn luyện & Đánh giá:** Nguồn dữ liệu, kích thước tập dữ liệu, phân bố nhãn.
-- **Kết quả định lượng (Quantitative Results):**
-  - Bảng so sánh giữa Baseline Model và Mô hình chính (Accuracy, Precision, Recall, F1-Macro, ROC-AUC).
-  - Ma trận nhầm lẫn (Confusion Matrix).
-- **Hạn chế & Lưu ý đạo đức (Limitations & Biases):** Những trường hợp mô hình có thể dự đoán sai hoặc dữ liệu bị thiếu hụt.
+Đối với các bài Lab, toàn bộ Báo cáo định lượng, Model Card và Quyết định kỹ thuật đều được tổng hợp trực tiếp vào **Mục 3 của file duy nhất `walkthrough_lab_0X.md`** (ứng với Rule 3 trong kiến trúc 3 Rule):
+- **Kết quả định lượng & Ma trận so sánh:** Bảng đối đầu giữa Baseline Model và các Iteration nâng cao (Test Loss, Test Accuracy, F1-Macro).
+- **Chẩn đoán Ma trận Nhầm lẫn (Confusion Matrix):** Phân tích chi tiết các cặp lớp dễ bị nhầm lẫn nhất (ví dụ Shirt vs T-shirt/Pullover).
+- **Phân tích lỗi sai thực tế (Error Analysis):** Trích xuất các lát cắt mẫu dữ liệu bị dự đoán sai, nguyên nhân và bài học rút ra.
+- **Quyết định Kỹ thuật & Kết luận (Key Findings):** Lý do chuyển đổi kiến trúc thành công, đánh giá hiệu quả của các kỹ thuật điều hòa (Regularization), LR Scheduler, Data Augmentation và hướng phát triển tiếp theo.
+- **Kiểm chứng nạp Checkpoint (Save/Load Verification):** Xác nhận trọng số `best_model.pt` nạp lại suy luận cho kết quả đồng nhất 100%.
+
+> Tuyệt đối KHÔNG sinh thêm file `REPORT.md` riêng lẻ, toàn bộ báo cáo hoàn chỉnh được tích hợp trực tiếp tại Mục 3 của `walkthrough_lab_0X.md`.
 
 ### 2. Hồ sơ Quyết định Kiến trúc (ADR - Architecture Decision Records)
 Ghi lại lý do chọn các giải pháp kỹ thuật vào thư mục `docs/adr/`:

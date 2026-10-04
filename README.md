@@ -30,4 +30,4 @@ Mỗi bài thực hành được tổ chức thành 4 thư mục con và 1 file 
 - `notebooks/`: Chứa file Jupyter Notebook điều khiển và trực quan hóa.
 - `src/`: Mã nguồn module hóa tái sử dụng (`config.py`, `dataset.py`, `model.py`, `engine.py`, `utils.py`).
 - `outputs/`: Lưu trữ kết quả đầu ra (ảnh biểu đồ, trọng số mô hình).
-- `walkthrough_lab_0X.md`: Nhật ký ghi nhận các lần chạy, tinh chỉnh tham số và số liệu xuất báo cáo.
+- `walkthrough_lab_0X.md`: Bản tài liệu sống duy nhất hợp nhất 3 Rule kỹ năng (Mục 1: Spec từ `spec-driven-development`, Mục 2: Changelog 5 khâu từ `walkthrough-and-experiment-tracking`, Mục 3: Final Report từ `documentation-and-adrs`).

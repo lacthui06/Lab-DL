@@ -6,7 +6,9 @@ description: Tự động ghi chép, theo dõi và cập nhật toàn bộ quy t
 # walkthrough-and-experiment-tracking
 
 ## Tổng quan
-Kỹ năng này đóng vai trò là "Nhật ký thí nghiệm tự động" (Experiment Tracker & Lineage Logger) cho toàn bộ các bài Lab Deep Learning. Sau mỗi lần chạy thử nghiệm (Run #1, Run #2,... dù chạy trên máy Local hay tải kết quả từ Kaggle về), kỹ năng này bắt buộc AI phải cập nhật chi tiết **sự thay đổi của toàn bộ 5 khâu trong Pipeline** vào file `walkthrough_lab_0X.md`.
+Kỹ năng này đóng vai trò là "Nhật ký thí nghiệm tự động" (Experiment Tracker & Lineage Logger) cho toàn bộ các bài Lab Deep Learning. Sau mỗi lần chạy thử nghiệm (Run #1, Run #2,... dù chạy trên máy Local hay tải kết quả từ Kaggle về), kỹ năng này bắt buộc AI phải cập nhật chi tiết **sự thay đổi của toàn bộ 5 khâu trong Pipeline** vào **Mục 2 của file duy nhất `walkthrough_lab_0X.md`** (ứng với Rule 2 trong kiến trúc 3 Rule).
+
+> Quy chuẩn: Mọi nhật ký thử nghiệm và tinh chỉnh siêu tham số đều tích hợp trực tiếp tại Mục 2 của `walkthrough_lab_0X.md`, không tạo file changelog rời rạc.
 
 ## Khi nào kích hoạt
 - Khi hoàn thành một lần chạy huấn luyện và có kết quả đo lường (Metrics/Loss).

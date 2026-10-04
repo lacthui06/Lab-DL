@@ -17,7 +17,8 @@ Khi lập Spec, AI **BẮT BUỘC** phải mở và trích xuất chuẩn mực 
 
 ## Cấu trúc chuẩn của bản ML/DL Spec (Ghi vào Mục 1 của walkthrough_lab_0X.md)
 
-Bản đặc tả được khởi tạo ngay trong **Mục 1 của file duy nhất `walkthrough_lab_0X.md`** trước khi code, bao gồm 5 phần sau:
+Bản đặc tả được khởi tạo ngay trong **Mục 1 của file duy nhất `walkthrough_lab_0X.md`** trước khi code (ứng với Rule 1 trong kiến trúc 3 Rule):
+> Tuyệt đối KHÔNG sinh thêm file `SPEC.md` riêng lẻ, toàn bộ đặc tả bài toán và baseline plan được tích hợp trực tiếp tại Mục 1 của `walkthrough_lab_0X.md`.
 
 ### 1. Phân loại Bài toán & Phương thái (Problem & Modality)
 - Dạng bài: Classification (Binary/Multiclass), Regression, Segmentation, Object Detection, Sequence Modeling.
