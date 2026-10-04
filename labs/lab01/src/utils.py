@@ -89,7 +89,7 @@ def plot_loss_and_acc_curves(
     if save_path:
         save_path = Path(save_path)
         save_path.parent.mkdir(parents=True, exist_ok=True)
-        plt.savefig(str(save_path), dpi=300, bbox_inches="tight")
+        fig.savefig(str(save_path), dpi=300, bbox_inches="tight")
     plt.show()
 
 
@@ -165,7 +165,7 @@ def plot_prediction_grid(
     if save_path:
         save_path = Path(save_path)
         save_path.parent.mkdir(parents=True, exist_ok=True)
-        plt.savefig(str(save_path), dpi=300, bbox_inches="tight")
+        fig.savefig(str(save_path), dpi=300, bbox_inches="tight")
     plt.show()
 
 
@@ -178,7 +178,7 @@ def plot_confusion_matrix(
 ) -> None:
     """Plots a normalized heatmap confusion matrix."""
     cm = confusion_matrix(y_true, y_pred, normalize="true")
-    plt.figure(figsize=(10, 8))
+    fig, ax = plt.subplots(figsize=(10, 8))
     sns.heatmap(
         cm,
         annot=True,
@@ -187,18 +187,19 @@ def plot_confusion_matrix(
         xticklabels=class_names,
         yticklabels=class_names,
         cbar_kws={"label": "Normalized Proportion"},
+        ax=ax,
     )
-    plt.title(title, fontsize=14, fontweight="bold", pad=12)
-    plt.xlabel("Predicted Class", fontsize=12)
-    plt.ylabel("Ground Truth Class", fontsize=12)
-    plt.xticks(rotation=45, ha="right", fontsize=10)
-    plt.yticks(rotation=0, fontsize=10)
+    ax.set_title(title, fontsize=14, fontweight="bold", pad=12)
+    ax.set_xlabel("Predicted Class", fontsize=12)
+    ax.set_ylabel("Ground Truth Class", fontsize=12)
+    ax.tick_params(axis="x", rotation=45)
+    ax.tick_params(axis="y", rotation=0)
     plt.tight_layout()
 
     if save_path:
         save_path = Path(save_path)
         save_path.parent.mkdir(parents=True, exist_ok=True)
-        plt.savefig(str(save_path), dpi=300, bbox_inches="tight")
+        fig.savefig(str(save_path), dpi=300, bbox_inches="tight")
     plt.show()
 
 
@@ -233,5 +234,5 @@ def plot_comparison_curves(
     if save_path:
         save_path = Path(save_path)
         save_path.parent.mkdir(parents=True, exist_ok=True)
-        plt.savefig(str(save_path), dpi=300, bbox_inches="tight")
+        fig.savefig(str(save_path), dpi=300, bbox_inches="tight")
     plt.show()
