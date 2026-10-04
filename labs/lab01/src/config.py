@@ -8,7 +8,12 @@ import torch
 
 
 # Project Base Directories
-BASE_DIR = Path(__file__).resolve().parent.parent
+import os
+if os.path.exists("/kaggle/working"):
+    BASE_DIR = Path("/kaggle/working")
+else:
+    BASE_DIR = Path(__file__).resolve().parent.parent
+
 DATA_DIR = BASE_DIR / "data"
 OUTPUTS_DIR = BASE_DIR / "outputs"
 CHECKPOINTS_DIR = OUTPUTS_DIR / "checkpoints"
