@@ -1,19 +1,19 @@
 # Walkthrough & Full-Flow Technical Report — Lab 01
 
-> **Tên bài Lab:** Lab 01 — FashionMNIST Image Classification with PyTorch  
-> **Trạng thái:** [x] Hoàn thành  
-> **Mục tiêu chính:** Xây dựng quy trình Deep Learning chuẩn phân loại 10 lớp trang phục FashionMNIST, áp dụng kiểm thử TDD Sanity Overfit, huấn luyện và so sánh 3 kiến trúc mô hình (Baseline MLP, Tuned MLP, FashionCNN) nâng Test Accuracy từ 87.39% lên 92.65% (F1: 92.60%).  
-> **Tài liệu tham chiếu:** `dl_workflows/DL_flow.md` | `dl_workflows/dl_training_and_optimization_guide.md`  
-> **Quy chuẩn hợp nhất 3 Rule (Single Living Walkthrough Architecture):**  
-> - **Rule 1 (`spec-driven-development`):** Tham chiếu trực tiếp vào **Mục 1 — Đặc tả kỹ thuật & Thiết kế Flow (Spec & Baseline Setup)**.  
-> - **Rule 2 (`walkthrough-and-experiment-tracking`):** Tham chiếu trực tiếp vào **Mục 2 — Nhật ký tiến hóa toàn bộ Flow (Full-Flow Experiment Changelog)**.  
-> - **Rule 3 (`documentation-and-adrs`):** Tham chiếu trực tiếp vào **Mục 3 — Báo cáo kết quả đối đầu & Chẩn đoán lỗi (Results & Final Report)**.  
+> **Lab Title:** Lab 01 — FashionMNIST Image Classification with PyTorch  
+> **Status:** [x] Completed  
+> **Primary Objective:** Construct an end-to-end deep learning pipeline classifying 10 FashionMNIST garment categories, enforce local TDD 1-batch sanity overfit testing, and evaluate 3 distinct architectures (Baseline MLP, Tuned MLP, FashionCNN) elevating Test Accuracy from 87.39% to 92.65% (Macro F1: 92.60%).  
+> **Workflow Playbook References:** `dl_workflows/DL_flow.md` | `dl_workflows/dl_training_and_optimization_guide.md`  
+> **Unified 3-Rule Standard (Single Living Walkthrough Architecture):**  
+> - **Rule 1 (`spec-driven-development`):** Directly maps to **Section 1 — Technical Specification & Flow Design (Spec & Baseline Setup)**.  
+> - **Rule 2 (`walkthrough-and-experiment-tracking`):** Directly maps to **Section 2 — Full-Flow Experiment Lineage & Changelog**.  
+> - **Rule 3 (`documentation-and-adrs`):** Directly maps to **Section 3 — Comparative Results, Error Diagnostics & Final Submission Report**.  
 
 ---
 
-## 1. ĐẶC TẢ KỸ THUẬT & THIẾT KẾ FLOW (SPEC & BASELINE SETUP — Rule: spec-driven-development)
+## 1. TECHNICAL SPECIFICATION & FLOW DESIGN (SPEC & BASELINE SETUP — Rule: spec-driven-development)
 
-### 1.1. Sơ đồ Quy trình Tổng thể (Master Flow Design)
+### 1.1. Master Flow Design
 
 ```mermaid
 graph LR
@@ -24,146 +24,146 @@ graph LR
     E --> F["6. Decision / Selected Best <br> (FashionCNN @ 92.65% Test Acc)"]
 ```
 
-### 1.2. Phân loại Bài toán & Phương thái (Problem & Modality)
-- **Phương thái (Modality):** Computer Vision (CV) — Ảnh đơn kênh xám (Grayscale Image Classification).
-- **Dạng bài toán:** Phân loại đa lớp (Multi-class Classification) với 10 lớp thời trang rời rạc:
-  - 0: T-shirt/top (Áo thun)
-  - 1: Trouser (Quần dài)
-  - 2: Pullover (Áo len chui đầu)
-  - 3: Dress (Đầm / Váy liền)
-  - 4: Coat (Áo khoác)
-  - 5: Sandal (Giày sandal)
-  - 6: Shirt (Áo sơ mi)
-  - 7: Sneaker (Giày thể thao)
-  - 8: Bag (Túi xách)
-  - 9: Ankle boot (Ủng / Bốt cổ thấp)
-- **Định dạng dữ liệu đầu vào:** Tensor ảnh 2D `[Batch_Size, 1, 28, 28]` với kiểu dữ liệu `torch.float32`.
-- **Định dạng đầu ra:** Vector Logits `[Batch_Size, 10]`, dự đoán lớp y = argmax(logits).
+### 1.2. Problem Formulation and Modality
+- **Modality:** Computer Vision (CV) — Grayscale Image Classification.
+- **Task Formulation:** Multi-class classification across 10 discrete garment categories:
+  - 0: T-shirt/top
+  - 1: Trouser
+  - 2: Pullover
+  - 3: Dress
+  - 4: Coat
+  - 5: Sandal
+  - 6: Shirt
+  - 7: Sneaker
+  - 8: Bag
+  - 9: Ankle boot
+- **Input Tensor Contract:** 2D image tensor `[Batch_Size, 1, 28, 28]` with data type `torch.float32`.
+- **Output Contract:** Logits vector `[Batch_Size, 10]`, predicted class index $\hat{y} = \arg\max(\text{logits})$.
 
-### 1.3. Hợp đồng Dữ liệu & Phân chia Tập dữ liệu (Data Contract & Split Strategy)
-- **Kích thước dữ liệu gốc:** 60,000 ảnh huấn luyện, 10,000 ảnh kiểm thử (Test). Kích thước $28 \times 28$ pixel.
-- **Phân bố nhãn:** Cân bằng hoàn hảo: 6,000 mẫu/lớp trong tập train, 1,000 mẫu/lớp trong tập test.
-- **Chiến lược phân chia:**
-  - **Train set:** 54,000 mẫu (90% tập train gốc) — cập nhật gradient.
-  - **Validation set:** 6,000 mẫu (10% tập train gốc, tách ngẫu nhiên với `seed=42`) — chọn checkpoint và theo dõi loss.
-  - **Test set:** 10,000 mẫu độc lập hoàn toàn — đánh giá nghiệm thu cuối cùng.
-- **Chuẩn hóa dữ liệu:**
-  - `ToTensor()` đưa pixel về $[0.0, 1.0]$.
-  - Chuẩn hóa Gauss theo thống kê thực nghiệm của FashionMNIST: $\mu = 0.2860, \sigma = 0.3205$.
-  - Tăng cường dữ liệu (cho Run nâng cao): `RandomHorizontalFlip(p=0.5)` và `RandomRotation(degrees=10)`.
+### 1.3. Data Contract and Partitioning Strategy
+- **Raw Volume:** 60,000 training images, 10,000 testing images. Spatial resolution: $28 \times 28$ pixels.
+- **Class Distribution:** Perfectly balanced: 6,000 samples/class in train split, 1,000 samples/class in test split.
+- **Partitioning Strategy:**
+  - **Train split:** 54,000 samples (90% of original training data) — gradient parameter updates.
+  - **Validation split:** 6,000 samples (10% of original training data, seeded with `seed=42`) — checkpoint selection and early monitoring.
+  - **Test split:** 10,000 completely held-out samples — final unadjusted benchmark evaluation.
+- **Feature Normalization:**
+  - `ToTensor()` maps pixel intensities to $[0.0, 1.0]$.
+  - Gaussian normalization using empirical FashionMNIST statistics: $\mu = 0.2860, \sigma = 0.3205$.
+  - Data Augmentation (for advanced iterations): `RandomHorizontalFlip(p=0.5)` and `RandomRotation(degrees=10)`.
 
-### 1.4. Tóm tắt 7 Khái niệm PyTorch Cốt lõi Áp dụng trong Bài
-1. **PyTorch Tensor:** Cấu trúc mảng n-chiều hỗ trợ CUDA GPU và theo dõi đạo hàm `requires_grad=True`.
-2. **Autograd:** Động cơ tính đạo hàm tự động qua `loss.backward()` cho toàn bộ trọng số mạng.
-3. **Dataset & DataLoader:** Quản lý nạp lười (`__getitem__`), gom batch 64, xáo trộn (`shuffle=True`), và khóa trang bộ nhớ (`pin_memory=True`).
-4. **Transforms:** Tiền xử lý chuẩn hóa và mở rộng miền dữ liệu thực nghiệm.
-5. **nn.Module:** Khung kiến trúc mạng nơ-ron kế thừa, quản lý tham số và luồng tính toán `forward()`.
-6. **Loss & Optimizer:** `nn.CrossEntropyLoss` kết hợp LogSoftmax và NLLLoss; `AdamW` với trọng số suy giảm phân tách.
-7. **Model Checkpointing:** Lưu và nạp `model.state_dict()` để bảo đảm tính di động.
+### 1.4. Summary of 7 Core PyTorch Concepts Applied
+1. **PyTorch Tensor:** N-dimensional array structures supporting CUDA hardware acceleration and automatic gradient tracking (`requires_grad=True`).
+2. **Autograd Engine:** Automatic reverse-mode differentiation driving parameter updates via `loss.backward()`.
+3. **Dataset & DataLoader:** Lazy sample loading (`__getitem__`), mini-batch bundling (batch size 64), stochastic shuffling (`shuffle=True`), and page-locked host memory transfers (`pin_memory=True`).
+4. **Torchvision Transforms:** Chained preprocessing compositions standardizing inputs and providing domain data regularization.
+5. **nn.Module:** Object-oriented neural network building blocks encapsulating parameters and the forward graph computation `forward()`.
+6. **Loss Functions & Optimizers:** `nn.CrossEntropyLoss` combining LogSoftmax and negative log-likelihood; `AdamW` featuring decoupled weight decay regularization.
+7. **Model Checkpointing:** Serializing and restoring `model.state_dict()` to guarantee portability across compute runtimes.
 
-### 1.5. Ngưỡng Nghiệm thu Kỹ thuật (Acceptance Thresholds)
+### 1.5. Quantitative Acceptance Thresholds
 - **Baseline MLP (Run #1):** Test Accuracy $\ge 85.0\%$.
 - **Tuned MLP (Run #2):** Test Accuracy $\ge 87.5\%$.
-- **FashionCNN (Run #3):** Test Accuracy $\ge 91.0\%$, Macro F1 $\ge 91.0\%$.
+- **FashionCNN (Run #3):** Test Accuracy $\ge 91.0\%$, Macro F1-Score $\ge 91.0\%$.
 
 ---
 
-## 2. NHẬT KÝ TIẾN HÓA TOÀN BỘ FLOW (FULL-FLOW EXPERIMENT CHANGELOG — Rule: walkthrough-and-experiment-tracking)
+## 2. FULL-FLOW EXPERIMENT CHANGELOG (FULL-FLOW EXPERIMENT CHANGELOG — Rule: walkthrough-and-experiment-tracking)
 
-### Lần chạy 1 (Run #1 — Baseline Flow)
-*Mục đích: Xây dựng pipeline cơ sở tối thiểu (Baseline) với mạng MLP đơn giản 2 tầng để thiết lập mốc đánh giá.*
+### Run 1 (Run #1 — Baseline Flow)
+*Objective: Construct the minimal viable baseline pipeline using a simple 2-layer MLP to establish an empirical performance anchor.*
 
-* **Khâu 1 - Dữ liệu (Data):**
-  - Tập dữ liệu: FashionMNIST (Torchvision official).
-  - Phân tách: 54,000 Train, 6,000 Validation (`seed=42`), 10,000 Test.
-* **Khâu 2 - Tiền xử lý (Preprocessing & Augmentation):**
-  - `ToTensor()` kết hợp chuẩn hóa $\mu = 0.2860, \sigma = 0.3205$. Không áp dụng data augmentation.
-* **Khâu 3 - Kiến trúc Mô hình (Model Architecture):**
-  - Loại mô hình: Multi-Layer Perceptron (BaselineMLP).
-  - Cấu trúc: `Flatten` -> `Linear(784, 128)` -> `ReLU()` -> `Linear(128, 10)`.
-  - Tổng tham số: **101,770** tham số (dung lượng checkpoint: 1.17 MB).
-* **Khâu 4 - Huấn luyện & Tối ưu (Training Strategy):**
-  - Hàm mất mát: `nn.CrossEntropyLoss()`.
-  - Optimizer: `AdamW(lr=1e-3, weight_decay=0.0)`. Không scheduler. Batch size 64, 5 epochs.
-* **Khâu 5 - Kết quả Đánh giá (Evaluation Metrics):**
+* **Stage 1 - Data:**
+  - Dataset: FashionMNIST (Official Torchvision release).
+  - Split: 54,000 Train, 6,000 Validation (`seed=42`), 10,000 Test.
+* **Stage 2 - Preprocessing & Augmentation:**
+  - `ToTensor()` with standard normalization ($\mu = 0.2860, \sigma = 0.3205$). No data augmentation.
+* **Stage 3 - Model Architecture:**
+  - Type: Multi-Layer Perceptron (BaselineMLP).
+  - Structure: `Flatten` -> `Linear(784, 128)` -> `ReLU()` -> `Linear(128, 10)`.
+  - Parameter Count: **101,770** parameters (checkpoint size: 1.17 MB).
+* **Stage 4 - Training Strategy:**
+  - Loss: `nn.CrossEntropyLoss()`.
+  - Optimizer: `AdamW(lr=1e-3, weight_decay=0.0)`. No scheduler. Batch size 64, 5 epochs.
+* **Stage 5 - Evaluation Metrics:**
   - Train Loss / Train Acc: 0.2782 / 89.70% (Epoch 5).
-  - Val Loss / Val Acc: 0.3301 / 88.03% (Best Val Checkpoint tại Epoch 5).
+  - Val Loss / Val Acc: 0.3301 / 88.03% (Best Val Checkpoint at Epoch 5).
   - Test Loss / Test Acc: **0.3478 / 87.39%**.
-  - Metric chính: **Test Macro F1-Score: 87.29%**.
-* **Chẩn đoán & Vấn đề phát hiện (Diagnosis):**
-  - Mô hình gặp hiện tượng Overfitting nhẹ: Train Acc đạt 89.70% trong khi Val Acc dừng lại ở 88.03% (chênh lệch ~1.67%).
-  - Baseline MLP duỗi phẳng toàn bộ ảnh 2D thành vector 1D (784 chiều), làm mất hoàn toàn mối liên hệ không gian cục bộ (Spatial Correlation) giữa các điểm ảnh liền kề.
-  - Hướng cải tiến: Thêm Batch Normalization và Dropout để chống overfit, bổ sung Cosine Annealing LR và Data Augmentation (lật ngang ngẫu nhiên).
+  - Primary Metric: **Test Macro F1-Score: 87.29%**.
+* **Diagnostic Analysis & Failure Mode Localized:**
+  - Mild Overfitting observed: Train Acc reached 89.70% while Val Acc plateaued at 88.03% (generalization gap of ~1.67%).
+  - Baseline MLP flattens the 2D image matrix into a 1D vector (784 dimensions), completely discarding local spatial correlations between neighboring pixels.
+  - Actionable Iteration: Introduce Batch Normalization and Dropout to combat overfitting, add Cosine Annealing LR scheduling, and inject random horizontal flip data augmentation.
 
 ---
 
-### Lần chạy 2 (Run #2 — Flow Iteration 1)
-*Mục đích: Cải tiến mạng MLP với kiến trúc sâu hơn, bổ sung kỹ thuật điều hòa (Regularization), bộ điều chỉnh tốc độ học và tăng cường dữ liệu.*
+### Run 2 (Run #2 — Flow Iteration 1)
+*Objective: Enhance MLP capacity with deeper representation layers, integrate explicit regularization, dynamic learning rate scheduling, and data augmentation.*
 
-* **Thay đổi ở khâu nào trong Flow?**
-  - [x] Khâu 2: Tiền xử lý & Augmentation
-  - [x] Khâu 3: Kiến trúc mô hình
-  - [x] Khâu 4: Chiến lược huấn luyện (Loss / Optimizer / LR)
-* **Chi tiết thay đổi kỹ thuật:** 
-  - *Trước khi đổi (Run #1):* Mạng MLP 2 tầng (128 ẩn), không Dropout/BatchNorm, không Augmentation, LR cố định 1e-3, 5 epochs.
-  - *Sau khi đổi (Run #2):* Mạng MLP 3 tầng (256 -> 128 ẩn), tích hợp `BatchNorm1d` và `Dropout(p=0.2)` sau mỗi tầng ẩn; áp dụng `RandomHorizontalFlip(p=0.5)` và `RandomRotation(degrees=10)` trên tập Train; áp dụng `CosineAnnealingLR` (hạ từ 1e-3 về 1e-5); tăng số epoch lên 10.
-* **Lý do thay đổi (Why):** Nhằm giải quyết hiện tượng Overfitting của Run #1, ổn định phân phối lan truyền nội bộ (internal covariate shift) và giúp mô hình hội tụ vào cực tiểu phẳng hơn.
-* **Tác động lên kết quả của toàn bộ Flow:**
+* **Which Pipeline Stages Changed?**
+  - [x] Stage 2: Preprocessing & Data Augmentation
+  - [x] Stage 3: Model Architecture
+  - [x] Stage 4: Training Strategy (Optimizer / Scheduler / Regularization)
+* **Technical Delta Description:**
+  - *Before (Run #1):* 2-layer MLP (128 hidden units), no Dropout/BatchNorm, no Augmentation, constant LR 1e-3, 5 epochs.
+  - *After (Run #2):* 3-layer MLP (256 -> 128 hidden units), integrating `BatchNorm1d` and `Dropout(p=0.2)` after each hidden layer; adding `RandomHorizontalFlip(p=0.5)` and `RandomRotation(degrees=10)` to training loader; adding `CosineAnnealingLR` (decaying from 1e-3 to 1e-5); extending training to 10 epochs.
+* **Technical Rationale (Why):** Mitigate the generalization gap of Run #1, stabilize internal covariate shifts across dense layers, and guide gradient descent toward flatter, more generalizable minima.
+* **Quantitative Impact on Flow:**
   - Train Loss / Train Acc: 0.3343 / 87.62% (Epoch 10).
-  - Val Loss / Val Acc: 0.3117 / 88.42% (Best Val Checkpoint tại Epoch 10).
+  - Val Loss / Val Acc: 0.3117 / 88.42% (Best Val Checkpoint at Epoch 10).
   - Test Loss / Test Acc: **0.3305 / 87.86%**.
   - Test Macro F1-Score: **87.85%**.
-  - Độ chênh lệch so với Run #1: Val Acc tăng +0.39%, Test Acc tăng +0.47%, Test Loss giảm từ 0.3478 xuống 0.3305.
-* **Chẩn đoán tiếp theo:** Mặc dù Regularization đã kéo sát khoảng cách Train-Val (Train Acc 87.62% vs Val Acc 88.42%), cấu trúc MLP vẫn bị giới hạn trần hiệu năng do không khai thác được cấu trúc lưới 2D của ảnh. Bắt buộc phải chuyển sang kiến trúc Mạng Tích chập (Convolutional Neural Network).
+  - Delta vs Run #1: Val Acc improved by +0.39%, Test Acc gained +0.47%, Test Loss dropped from 0.3478 to 0.3305.
+* **Subsequent Diagnosis:** While regularization tightened the Train-Val gap (Train Acc 87.62% vs Val Acc 88.42%), MLP performance hit an architectural ceiling due to the lack of 2D inductive bias. Transition to a Convolutional Neural Network (CNN) is mandatory for further gains.
 
 ---
 
-### Lần chạy 3 (Run #3 — Flow Iteration 2 — Best Flow)
-*Mục đích: Chuyển đổi sang kiến trúc Mạng Nơ-ron Tích chập (FashionCNN) để tận dụng triệt để tính bất biến dịch chuyển và đặc trưng không gian 2D.*
+### Run 3 (Run #3 — Flow Iteration 2 — Best Flow)
+*Objective: Transition to a Convolutional Neural Network (FashionCNN) to fully exploit 2D spatial locality and translation invariance.*
 
-* **Thay đổi ở khâu nào trong Flow?**
-  - [x] Khâu 3: Kiến trúc mô hình
-  - [x] Khâu 4: Chiến lược huấn luyện
-* **Chi tiết thay đổi kỹ thuật:**
-  - *Trước khi đổi (Run #2):* Mạng Tuned MLP (duỗi phẳng ảnh).
-  - *Sau khi đổi (Run #3):* Thay thế hoàn toàn bằng **FashionCNN**:
-    - Khối Conv 1: `Conv2d(1, 32, 3, pad=1)` -> `BatchNorm2d(32)` -> `ReLU()` -> `MaxPool2d(2, 2)` (feature map: $32 \times 14 \times 14$).
-    - Khối Conv 2: `Conv2d(32, 64, 3, pad=1)` -> `BatchNorm2d(64)` -> `ReLU()` -> `MaxPool2d(2, 2)` (feature map: $64 \times 7 \times 7$).
-    - Phân loại Head: `Flatten(3136)` -> `Linear(3136, 128)` -> `BatchNorm1d(128)` -> `ReLU()` -> `Dropout(0.3)` -> `Linear(128, 10)`.
-    - Huấn luyện: 10 epochs, AdamW (`lr=1e-3, weight_decay=1e-4`), `CosineAnnealingLR`.
-* **Lý do thay đổi (Why):** Tận dụng kernel tích chập để tự động trích xuất đặc trưng biên dạng, họa tiết, nếp gấp quần áo một cách bất biến cục bộ (Translation Invariance).
-* **Kết quả đo lường sau thay đổi:**
+* **Which Pipeline Stages Changed?**
+  - [x] Stage 3: Model Architecture
+  - [x] Stage 4: Training Strategy
+* **Technical Delta Description:**
+  - *Before (Run #2):* Tuned MLP (flattened 1D vector).
+  - *After (Run #3):* Full **FashionCNN** implementation:
+    - Conv Block 1: `Conv2d(1, 32, 3, pad=1)` -> `BatchNorm2d(32)` -> `ReLU()` -> `MaxPool2d(2, 2)` (feature map: $32 \times 14 \times 14$).
+    - Conv Block 2: `Conv2d(32, 64, 3, pad=1)` -> `BatchNorm2d(64)` -> `ReLU()` -> `MaxPool2d(2, 2)` (feature map: $64 \times 7 \times 7$).
+    - Dense Classifier Head: `Flatten(3136)` -> `Linear(3136, 128)` -> `BatchNorm1d(128)` -> `ReLU()` -> `Dropout(0.3)` -> `Linear(128, 10)`.
+    - Training Configuration: 10 epochs, AdamW (`lr=1e-3, weight_decay=1e-4`), `CosineAnnealingLR`.
+* **Technical Rationale (Why):** Utilize convolutional sliding kernels to automatically extract edges, textures, contours, and fabric folds with local spatial invariance.
+* **Empirical Measurements:**
   - Train Loss / Train Acc: 0.1866 / 93.23% (Epoch 10).
-  - Val Loss / Val Acc: **0.1845 / 93.48%** (Best Checkpoint tại Epoch 9).
+  - Val Loss / Val Acc: **0.1845 / 93.48%** (Best Checkpoint at Epoch 9).
   - Test Loss / Test Acc: **0.2054 / 92.65%**.
   - Test Macro F1-Score: **92.60%**.
-* **Đánh giá hiệu quả:** Bước đột phá lớn! Test Accuracy nhảy vọt từ **87.39% (Run #1)** lên **92.65% (Run #3)**, tương đương mức tăng ấn tượng **+5.26%**, vượt xa ngưỡng nghiệm thu 91.0%.
+* **Effectiveness Assessment:** Major performance breakthrough! Test Accuracy surged from **87.39% (Run #1)** to **92.65% (Run #3)**, an impressive absolute gain of **+5.26%**, far surpassing the 91.0% acceptance threshold.
 
 ---
 
-## 3. BÁO CÁO KẾT QUẢ ĐỐI ĐẦU & CHẨN ĐOÁN LỖI (RESULTS & FINAL REPORT — Rule: documentation-and-adrs)
+## 3. RESULTS & FINAL REPORT (RESULTS & FINAL REPORT — Rule: documentation-and-adrs)
 
-### 3.1. Bảng Ma Trận So Sánh Toàn Bộ Các Phiên Bản Flow (Comparison Matrix)
+### 3.1. Full-Flow Comparison Matrix
 
-| Tiêu chí so sánh | Run #1 (Baseline MLP) | Run #2 (Tuned MLP) | Run #3 (FashionCNN) | Đánh giá tốt nhất |
+| Evaluation Criteria | Run #1 (Baseline MLP) | Run #2 (Tuned MLP) | Run #3 (FashionCNN) | Best Assessment |
 |:---|:---:|:---:|:---:|:---:|
-| **Xử lý Dữ liệu** | Chuẩn hóa ($\mu=0.286, \sigma=0.320$) | Chuẩn hóa ($\mu=0.286, \sigma=0.320$) | Chuẩn hóa ($\mu=0.286, \sigma=0.320$) | Đồng nhất chuẩn |
-| **Augmentation** | Không | RandomFlip + Rotation | RandomFlip + Rotation | Run #2 & Run #3 |
-| **Kiến trúc Model** | Baseline MLP (2 tầng) | Tuned MLP (3 tầng, BN, Drop) | FashionCNN (2 Conv blocks + Head) | **FashionCNN (Run #3)** |
-| **Tổng số tham số** | 101,770 | 235,914 | 422,090 | Run #1 (nhẹ nhất) |
-| **Dung lượng File** | 1.17 MB | 2.72 MB | 4.85 MB | Run #1 (nhỏ nhất) |
-| **Optimizer & LR** | AdamW (lr=1e-3 cố định) | AdamW + CosineAnnealing | AdamW + CosineAnnealing | Run #2 & Run #3 |
-| **Epochs / Time** | 5 epochs / 31.9s | 10 epochs / 150.3s | 10 epochs / 522.0s | Run #1 (nhanh nhất) |
+| **Data Normalization** | Normalized ($\mu=0.286, \sigma=0.320$) | Normalized ($\mu=0.286, \sigma=0.320$) | Normalized ($\mu=0.286, \sigma=0.320$) | Consistent standard |
+| **Data Augmentation** | None | RandomFlip + Rotation | RandomFlip + Rotation | Run #2 & Run #3 |
+| **Model Architecture** | Baseline MLP (2 layers) | Tuned MLP (3 layers, BN, Drop) | FashionCNN (2 Conv blocks + Head) | **FashionCNN (Run #3)** |
+| **Total Parameters** | 101,770 | 235,914 | 422,090 | Run #1 (Lightest) |
+| **Checkpoint Size** | 1.17 MB | 2.72 MB | 4.85 MB | Run #1 (Smallest) |
+| **Optimizer & LR** | AdamW (constant lr=1e-3) | AdamW + CosineAnnealing | AdamW + CosineAnnealing | Run #2 & Run #3 |
+| **Epochs / Time** | 5 epochs / 31.9s | 10 epochs / 150.3s | 10 epochs / 522.0s | Run #1 (Fastest) |
 | **Train Loss / Acc** | 0.2782 / 89.70% | 0.3343 / 87.62% | 0.1866 / 93.23% | **Run #3** |
 | **Best Val Acc** | 88.03% | 88.42% | **93.48%** | **Run #3** |
 | **Test Accuracy** | 87.39% | 87.86% | **92.65%** | **Run #3 (+5.26%)** |
 | **Test Macro F1** | 87.29% | 87.85% | **92.60%** | **Run #3 (+5.31%)** |
 | **Test Loss** | 0.3478 | 0.3305 | **0.2054** | **Run #3 (-40.9% Loss)** |
-| **Metric Quyết định**| Đạt ngưỡng cơ sở | Tăng nhẹ độ tổng quát | **Vượt trội toàn diện** | **Phiên bản được chọn: Run #3** |
+| **Selection Decision** | Met baseline criteria | Moderate gain | **Comprehensive Superiority** | **Selected Best: Run #3** |
 
-### 3.2. Bảng Phân Loại Chi Tiết Mô Hình Tốt Nhất (Classification Report - FashionCNN)
+### 3.2. Detailed Classification Report (Best Model: FashionCNN)
 
-```
+```text
               precision    recall  f1-score   support
 
  T-shirt/top     0.8847    0.8830    0.8839      1000
@@ -182,30 +182,30 @@ graph LR
 weighted avg     0.9261    0.9265    0.9263     10000
 ```
 
-### 3.3. Phân Tích Ma Trận Nhầm Lẫn & Chẩn Đoán Lỗi (Error Slices & Confusion Matrix)
-- **Các lớp đạt độ chính xác gần như tuyệt đối ($> 98\%$):**
-  - **Trouser (98.5% recall):** Đặc trưng hai ống quần thẳng dài rất khác biệt với các loại áo.
-  - **Bag (98.4% recall):** Quai xách và thân túi hình chữ nhật/vuông mang hình thái đặc thù.
-  - **Sandal (98.3% recall):** Độ hở ngón và khoảng trống quai dây tạo pattern rỗng dễ nhận diện.
-- **Cụm nhầm lẫn phổ biến nhất (Confusion Clustered Slices):**
-  - **Shirt (Áo sơ mi) vs. T-shirt/top (Áo thun) & Coat (Áo khoác):**
-    - Lớp Shirt chỉ đạt Recall 78.10% (thấp nhất trong 10 lớp), với 114 mẫu Shirt bị nhầm thành T-shirt và 62 mẫu bị nhầm thành Coat.
-    - *Nguyên nhân kỹ thuật:* Ảnh có kích thước quá nhỏ ($28 \times 28$ điểm ảnh xám), khiến các chi tiết phân biệt tinh vi như hàng cúc áo, nếp cổ áo sơ mi bẻ góc hay đường viền cổ áo thun tròn bị nhòe (aliasing).
-  - **Pullover (Áo len) vs. Coat (Áo khoác):** Có 58 mẫu Pullover bị nhận diện nhầm là Coat do cùng có tay áo dài và phom dáng che thân tương tự.
+### 3.3. Confusion Matrix Analysis & Error Diagnostics
+- **Categories with Near-Perfect Precision/Recall (> 98%):**
+  - **Trouser (98.5% recall):** Distinct elongated vertical geometry easily distinguishable from tops.
+  - **Bag (98.4% recall):** Characteristic rectangular/square silhouette and top handles form unique features.
+  - **Sandal (98.3% recall):** Open-toe gaps and strap geometry produce recognizable sparse pixel distributions.
+- **Primary Confusion Clusters:**
+  - **Shirt vs. T-shirt/top & Coat:**
+    - Shirt recorded the lowest recall (78.10%), with 114 Shirt samples misclassified as T-shirt/top and 62 misclassified as Coat.
+    - *Root Technical Cause:* Low resolution ($28 \times 28$ grayscale) induces spatial aliasing, obscuring fine discriminative details like collar contours, buttons, and neckline seams.
+  - **Pullover vs. Coat:** 58 Pullover instances misclassified as Coat due to overlapping long-sleeve silhouettes and body coverage.
 
-### 3.4. Xác Thực Lưu & Nạp Mô Hình (Save & Load Verification)
-- Mô hình `fashion_cnn_best.pt` được lưu dưới dạng `state_dict` tại `outputs/checkpoints/fashion_cnn_best.pt`.
-- Kiểm thử nạp lại bằng `load_checkpoint()` và so sánh vector logits đầu ra trên cùng batch ảnh kiểm thử:
+### 3.4. Checkpoint Serialization & Restoration Verification
+- Model weights saved as `state_dict` at `outputs/checkpoints/fashion_cnn_best.pt`.
+- Reloaded via `load_checkpoint()` and evaluated against original logits across the test batch:
   $$\max |\text{Logits}_{\text{original}} - \text{Logits}_{\text{loaded}}| < 10^{-6}$$
-- Kết quả kiểm chứng: Hoàn toàn trùng khớp 100% `[PASSED]`.
+- Verification result: Exactly identical predictions `[PASSED]`.
 
-### 3.5. Kết Luận Kỹ Thuật & Bài Học Thực Nghiệm (Key Takeaways)
-1. **Kiến trúc 2D CNN vượt trội hoàn toàn MLP:** Việc giữ nguyên cấu trúc không gian 2D bằng tầng tích chập giúp mô hình hiểu được tính liên kết cục bộ giữa các pixel lân cận, tạo ra bước nhảy vọt +5.26% Accuracy so với mạng MLP duỗi phẳng.
-2. **Vai trò của Regularization:** Kết hợp `BatchNorm` + `Dropout` + `CosineAnnealingLR` giúp kéo sát khoảng cách giữa Train Acc và Val Acc, ngăn chặn triệt để Overfitting.
-3. **Danh mục Artifacts đã tạo sẵn để nộp bài:**
-   - Trọng số mô hình tốt nhất: `outputs/checkpoints/fashion_cnn_best.pt`
-   - Đồ thị đối đầu cả 3 mô hình: `outputs/all_models_comparison_curves.png`
-   - Đồ thị chi tiết từng run: `outputs/run1_baseline_curves.png`, `outputs/run2_tuned_mlp_curves.png`, `outputs/run3_cnn_curves.png`
-   - Ma trận nhầm lẫn: `outputs/confusion_matrix_cnn.png`
-   - Lưới ảnh kiểm thử dự đoán: `outputs/predictions_cnn.png`
-   - Báo cáo số đo chi tiết: `outputs/classification_report_cnn.txt`, `outputs/experiment_results.json`
+### 3.5. Key Takeaways & Submission Deliverables
+1. **2D CNN Superiority over MLP:** Preserving 2D spatial topologies through convolutional kernels allowed the model to leverage local pixel correlations, generating a decisive +5.26% Accuracy boost over flattened MLPs.
+2. **Impact of Modern Regularization:** Integrating `BatchNorm` + `Dropout` + `CosineAnnealingLR` prevented overfitting and narrowed the generalization gap.
+3. **Generated Submission Artifacts:**
+   - Best Model Weights: `outputs/checkpoints/fashion_cnn_best.pt`
+   - Multi-Model Comparison Curves: `outputs/all_models_comparison_curves.png`
+   - Individual Run Learning Curves: `outputs/run1_baseline_curves.png`, `outputs/run2_tuned_mlp_curves.png`, `outputs/run3_cnn_curves.png`
+   - Best Model Confusion Matrix: `outputs/confusion_matrix_cnn.png`
+   - Test Batch Prediction Grid: `outputs/predictions_cnn.png`
+   - Detailed Metric Logs: `outputs/classification_report_cnn.txt`, `outputs/experiment_results.json`

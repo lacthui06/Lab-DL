@@ -1,39 +1,39 @@
 ---
 name: idea-refine
-description: Mài giũa và định hình các ý tưởng đề tài nghiên cứu, đồ án tốt nghiệp, bài toán Hackathon trong lĩnh vực Data Science và AI. Sử dụng khi người dùng có ý tưởng sơ khai hoặc cần tìm hướng tiếp cận giải pháp AI.
+description: Refine and scope research proposals, academic capstones, and hackathon challenges in Data Science and AI. Formulate viable problem definitions, identify accessible datasets, and recommend feasible model architectures.
 ---
 
 # idea-refine (DS & AI Edition)
 
-## Tổng quan
-Chuyển hóa một ý tưởng sơ bộ hoặc một đề tài mở thành một đề xuất giải pháp kỹ thuật Machine Learning / Deep Learning có tính khả thi cao, xác định nguồn dữ liệu sẵn có và kiến trúc mô hình phù hợp.
+## Overview
+Transforms broad concepts or open-ended prompts into concrete, technically viable Machine Learning or Deep Learning project proposals, identifying accessible open datasets and realistic model backbones.
 
-## Khi nào sử dụng
-- Người dùng chưa có đề tài cụ thể (ví dụ: *"Tôi muốn làm đồ án AI về nông nghiệp / y tế"*).
-- Tham gia cuộc thi Hackathon AI hoặc bắt đầu dự án nghiên cứu mới.
-- Cần so sánh tính khả thi giữa các hướng tiếp cận (Deep Learning vs Mô hình truyền thống).
+## When to Use
+- The user presents an unformed project topic (e.g., *"I want to build an AI project for healthcare or agriculture"*).
+- Scoping hackathon entries or academic research proposals.
+- Weighing trade-offs between classical ML baselines and deep learning approaches.
 
-## Quy trình 4 bước (Process)
+## The 4-Step Process
 
-### Bước 1: Tư duy phân kỳ (Divergent Brainstorming)
-- Liệt kê 2 - 3 bài toán cụ thể có thể giải quyết được bằng AI trong lĩnh vực người dùng quan tâm.
-- Với mỗi bài toán, chỉ rõ:
-  - Input dữ liệu là gì (Ảnh, Văn bản, Bảng tabular, Audio)?
-  - Output mong đợi là gì (Nhãn phân loại, Giá trị liên tục, Bounding box, Text sinh ra)?
+### Step 1: Divergent Brainstorming
+- Propose 2 to 3 distinct formulations addressing the user's domain of interest.
+- For each formulation, clarify:
+  - Input modality (Image, Text, Tabular, Audio).
+  - Target output (Discrete class label, continuous scalar, bounding box, generative text).
 
-### Bước 2: Khảo sát nguồn dữ liệu mở (Dataset Sourcing)
-- Kiểm tra tính sẵn có của dữ liệu công khai (Kaggle, Hugging Face Datasets, PapersWithCode, UCI Machine Learning Repository).
-- Cảnh báo ngay nếu bài toán đòi hỏi dữ liệu riêng tư hoặc quá hiếm mà người dùng không thể tự thu thập.
+### Step 2: Dataset Sourcing
+- Identify verified public data repositories (Kaggle, Hugging Face Datasets, PapersWithCode, UCI Machine Learning Repository).
+- Alert the user if the problem requires proprietary or uncurated data that cannot be readily obtained.
 
-### Bước 3: Đánh giá tính khả thi phần cứng & Thời gian (Resource Check)
-- Đánh giá yêu cầu tài nguyên: Bài toán này cần GPU gì? Chạy trên Google Colab miễn phí (T4 15GB VRAM) có train nổi không, hay cần máy chủ chuyên dụng?
-- Đề xuất kiến trúc phù hợp: Tránh đề xuất các mô hình khổng lồ (như LLM 70B hoặc mô hình quá nặng) cho các bài toán chỉ cần ResNet hoặc XGBoost.
+### Step 3: Hardware and Compute Feasibility Assessment
+- Evaluate compute requirements: Can this architecture be trained within free-tier GPU quotas (Kaggle/Colab Tesla T4 15GB VRAM)?
+- Propose right-sized architectures: Avoid recommending massive foundation models for tasks solvable with ResNet or gradient-boosted trees.
 
-### Bước 4: Tư duy hội tụ (Convergent Selection)
-- Trình bày 1 đề xuất giải pháp tối ưu nhất cho người dùng kèm:
-  - Tên đề tài gợi ý.
-  - Bộ dữ liệu khuyến nghị sử dụng.
-  - Kiến trúc mô hình thử nghiệm ban đầu (Baseline) và mô hình nâng cao.
+### Step 4: Convergent Selection
+- Present a refined proposal to the user containing:
+  - Proposed project title.
+  - Recommended public dataset.
+  - Initial baseline model and advanced iteration candidate.
 
 ## Anti-Rationalization
-- [X] *"Cứ chọn mô hình mới nhất (SOTA) phức tạp nhất là điểm sẽ cao"* -> **Bác bỏ:** Mô hình phức tạp trên tập dữ liệu nhỏ sẽ bị Overfitting nặng nề và không kịp train. Ưu tiên giải pháp khả thi với tài nguyên hiện có.
+- [X] *"Always select the most complex SOTA model to maximize grades"* -> **Rejected:** Overly complex architectures on small datasets cause severe overfitting and prolonged training cycles. Prioritize feasible, verifiable baselines first.

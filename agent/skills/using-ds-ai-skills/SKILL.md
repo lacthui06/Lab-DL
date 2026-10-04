@@ -1,35 +1,35 @@
 ---
 name: using-ds-ai-skills
-description: Điều phối và ánh xạ luồng làm việc của các dự án Data Science, Machine Learning và Deep Learning tới kỹ năng phù hợp và tài liệu Flow tương ứng trong Lab DL.
+description: Orchestrate and route Data Science, Machine Learning, and Deep Learning tasks to the appropriate specialized skills and corresponding workflow playbooks within Lab DL.
 ---
 
 # using-ds-ai-skills
 
-## Tổng quan
-Kỹ năng này đóng vai trò là "Nhạc trưởng" định tuyến mọi yêu cầu trong lĩnh vực Khoa học Dữ liệu và AI vào đúng quy trình kỹ thuật chuẩn hóa, đồng thời kích hoạt việc tham chiếu trực tiếp vào các tài liệu nghiệp vụ [**`workflows/`**](../../workflows/) và [**`dl_workflows/`**](../../dl_workflows/).
+## Overview
+This skill acts as the master conductor, routing all tasks across Data Science, Machine Learning, and Deep Learning to standardized engineering skills and directly linking to domain playbooks in [`workflows/`](../../workflows/) and [`dl_workflows/`](../../dl_workflows/).
 
-## Khi nào sử dụng
-- Bắt đầu một phiên làm việc mới về DS/AI.
-- Người dùng đưa ra một bài toán, tập dữ liệu hoặc yêu cầu xây dựng mô hình.
-- Cần quyết định bước tiếp theo trong vòng đời phát triển dự án.
+## When to Use
+- Starting a new DS/AI development session.
+- The user provides an exercise, dataset, or model training request.
+- Deciding the immediate next step in the project lifecycle.
 
-## Quy trình điều phối chuẩn (Execution Flow)
-1. **Phân loại bài toán (Task Classification):**
-   - Xác định dạng bài: Dữ liệu bảng Tabular -> Trỏ vào `workflows/ML_flow.md`.
-   - Dữ liệu Ảnh/Chữ/Học sâu -> Trỏ vào `dl_workflows/DL_flow.md`.
-2. **Khởi tạo & Đặc tả:**
-   - Kích hoạt `idea-refine` / `interview-me` nếu đề bài chưa rõ.
-   - Kích hoạt `spec-driven-development` để lập bản Spec kỹ thuật có mốc Baseline.
-3. **Thực thi & Kiểm thử:**
-   - Kích hoạt `planning-and-task-breakdown` để chia nhỏ module `src/` và xây dựng file Notebook tương tác trong `notebooks/`.
-   - Kích hoạt `test-driven-development` để kiểm thử dữ liệu và Sanity Overfit 1 batch trên Local (~5 giây).
-4. **Quy trình Huấn luyện & Thu hoạch Tối ưu (Zero Waste Protocol):**
-   - **Tại Local:** Tuyệt đối KHÔNG tự ý chạy full training nhiều epoch trên CPU local làm tốn quota và thời gian của người dùng. Dừng ở mức hoàn thiện code + test sanity 1 batch thành công.
-   - **Tại Kaggle GPU:** Hướng dẫn người dùng upload Notebook lên Kaggle GPU (Tesla T4) chạy huấn luyện siêu tốc. Code notebook tự động xuất file trọng số (`best_model.pt`) và ảnh trực quan hóa (Input/Output predictions, Confusion Matrix, Loss curves) ra `/kaggle/working/`.
-   - **Thu hoạch:** Người dùng tải file kết quả từ Kaggle về thư mục `outputs/` ở local.
-5. **Ghi nhận & Nghiệm thu:**
-   - Kích hoạt `walkthrough-and-experiment-tracking` để cập nhật toàn bộ số liệu và bằng chứng vào file `walkthrough_lab_0X.md`.
-   - Kích hoạt `doubt-driven-development` kiểm tra rò rỉ dữ liệu trước khi `documentation-and-adrs`.
+## Standard Execution Flow
+1. **Task Classification:**
+   - Tabular datasets -> Route to `workflows/ML_flow.md`.
+   - Computer Vision / NLP / Deep Learning -> Route to `dl_workflows/DL_flow.md`.
+2. **Initialization and Specification:**
+   - Activate `idea-refine` / `interview-me` if requirements are underspecified.
+   - Activate `spec-driven-development` to construct the technical specification and baseline setup in Section 1 of `walkthrough_lab_0X.md`.
+3. **Implementation and Testing:**
+   - Activate `planning-and-task-breakdown` to partition modular source code in `src/` and interactive notebooks in `notebooks/`.
+   - Activate `test-driven-development` to verify data schemas and execute local 1-batch sanity overfit tests (~5 seconds).
+4. **Execution and Harvesting Protocol (Zero Waste Protocol):**
+   - **Locally:** Strictly prohibit executing full multi-epoch training runs on local CPU. Halt once modules and 1-batch sanity tests pass.
+   - **Kaggle GPU:** Direct execution to Kaggle GPU (Tesla T4) for accelerated training. Notebook saves checkpoints (`best_model.pt`) and visual figures (predictions, confusion matrix, loss curves) to `/kaggle/working/outputs/`.
+   - **Harvest:** Synchronize or download artifacts back to local `outputs/`.
+5. **Documentation and Submission:**
+   - Activate `walkthrough-and-experiment-tracking` to record all run iterations in Section 2 of `walkthrough_lab_0X.md`.
+   - Activate `doubt-driven-development` to audit for data leakage before triggering `documentation-and-adrs` to finalize Section 3 of `walkthrough_lab_0X.md`.
 
-## Tiêu chí nghiệm thu (Verification)
-- Mọi khâu thực thi đều bám sát đúng tài liệu Flow tương ứng và có bằng chứng ghi nhận trong file Walkthrough.
+## Verification Criteria
+- Every execution phase aligns with the appropriate workflow playbook and produces verifiable records in the living walkthrough document.

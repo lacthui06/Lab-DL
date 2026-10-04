@@ -1,43 +1,43 @@
 ---
 name: doubt-driven-development
-description: Cơ chế phản biện đối kháng độc lập khi mô hình Machine Learning hoặc Deep Learning đạt điểm số cao bất thường (Accuracy > 98%), nhằm phát hiện rò rỉ dữ liệu (Data Leakage), ngộ nhận phân phối hoặc Overfitting ngầm.
+description: Adversarial auditing mechanism activated when Machine Learning or Deep Learning models achieve suspiciously high performance (Accuracy > 98%), specifically detecting target leakage, train-test contamination, and latent overfitting.
 ---
 
 # doubt-driven-development (DS & AI Edition)
 
-## Tổng quan
-Trong Trí tuệ Nhân tạo, hiện tượng nguy hiểm nhất là **"Ảo tưởng thành công" (False Confidence)**. Mô hình đạt độ chính xác 99.9% thường không phải vì mô hình siêu việt, mà là vì **mã nguồn đang có lỗi ngầm**. Kỹ năng này bắt buộc AI phải đóng vai "kiểm toán viên hoài nghi", tìm mọi cách chứng minh mô hình đang bị gian lận trước khi công nhận kết quả.
+## Overview
+In AI and Machine Learning, the most dangerous failure mode is **False Confidence**. When a model achieves 99.9% accuracy on the first attempt, it almost certainly indicates a silent pipeline defect rather than algorithmic superiority. This skill forces the AI agent to act as a skeptical auditor, seeking to invalidate the experimental setup before accepting the reported performance.
 
-## Khi nào kích hoạt
-- Mô hình đạt Accuracy, F1-score hoặc ROC-AUC cao bất thường ($> 95\%$) ngay từ những vòng lặp đầu tiên.
-- Khi người dùng muốn thẩm định kết quả trước khi báo cáo hoặc nộp bài.
-- Khi kết quả trên tập Validation quá đẹp nhưng có nguy cơ rò rỉ dữ liệu.
+## When to Activate
+- Model achieves suspiciously high Accuracy, F1-Score, or ROC-AUC (>95%) during early training iterations.
+- Prior to finalizing coursework submissions or production deployments.
+- When validation metrics appear unrealistically optimal despite noisy input domains.
 
-## Quy trình 4 bước kiểm toán hoài nghi (The Doubt Protocol)
+## The 4-Step Skeptical Audit Protocol
 
-### Bước 1: Kiểm toán Rò rỉ Dữ liệu (Data Leakage Audit)
-- **Kiểm tra rò rỉ mục tiêu (Target Leakage):**
-  - Có cột nào trong ma trận đặc trưng $X$ thực chất được sinh ra *sau* khi sự kiện mục tiêu $y$ diễn ra không?
-  - Có cột ID hoặc mã định danh nào vô tình tương quan 1-1 với nhãn không?
-- **Kiểm tra rò rỉ phân tách (Split Leakage):**
-  - Kiểm tra xem `fit_transform()` có bị gọi trên toàn bộ tập dữ liệu *trước* khi chia `train_test_split()` không? (Nếu có -> RÒ RỈ NGHIÊM TRỌNG: giá trị trung bình/phương sai của tập test đã lọt vào tập train).
-- **Kiểm tra rò rỉ mẫu trùng (Duplicate Leakage):**
-  - Tập train và test có các dòng dữ liệu giống hệt nhau không?
+### Step 1: Data Leakage Audit
+- **Target Leakage:**
+  - Are any features in $X$ generated *after* target event $y$ occurred in the real-world timeline?
+  - Does any identifier column (ID, row hash) correlate 1-to-1 with the target label?
+- **Split Contamination:**
+  - Was `fit_transform()` executed on the entire dataset *before* `train_test_split()`? (If yes -> SEVERE LEAKAGE: test statistics contaminated the training set).
+- **Duplicate Sample Leakage:**
+  - Are identical rows or duplicated images present in both training and test partitions?
 
-### Bước 2: Kiểm toán Bẫy Mất cân bằng Nhãn (Class Imbalance Trap)
-- Xem xét kỹ **Ma trận nhầm lẫn (Confusion Matrix)**:
-  - Nếu bài toán có 99 mẫu nhãn 0 và 1 mẫu nhãn 1, mô hình chỉ cần dự đoán tất cả là 0 thì Accuracy đã là 99%!
-  - Bắt buộc kiểm tra: F1-Macro, Precision, Recall của lớp thiểu số, và diện tích dưới đường cong PR (PR-AUC).
+### Step 2: Class Imbalance Trap Audit
+- Inspect the **Confusion Matrix**:
+  - In a dataset with 99 negative samples and 1 positive sample, a trivial majority classifier achieves 99% accuracy!
+  - Mandatory checks: Macro F1-Score, Minority Class Precision and Recall, and Precision-Recall AUC (PR-AUC).
 
-### Bước 3: Kiểm toán Độ lệch Train vs Validation (Overfitting Audit)
-- Đối chiếu đường cong học (Learning Curve):
-  - Train Loss = 0.02 nhưng Val Loss = 1.20 -> Mô hình đang học vẹt thuộc lòng dữ liệu train, hoàn toàn mất khả năng tổng quát hóa.
+### Step 3: Overfitting and Generalization Gap Audit
+- Compare learning curves:
+  - Train Loss = 0.02 while Val Loss = 1.20 -> The network is memorizing training samples and failing to generalize.
 
-### Bước 4: Kiểm toán Tính ngẫu nhiên (Shuffle & Baseline Sanity Check)
-- **Bài kiểm tra xáo trộn nhãn (Label Permutation Test):**
-  - Thử xáo trộn ngẫu nhiên cột nhãn $y$ rồi train lại mô hình.
-  - **Kết quả đúng:** Điểm số phải tụt về mức đoán ngẫu nhiên (ví dụ 50% cho bài toán 2 lớp).
-  - **Cảnh báo đỏ:** Nếu nhãn đã xáo trộn ngẫu nhiên mà mô hình vẫn đạt Accuracy cao -> Mã nguồn chắc chắn 100% có bug rò rỉ dữ liệu!
+### Step 4: Random Permutation Sanity Check
+- **Label Permutation Test:**
+  - Randomly shuffle the target column $y$ and retrain the model.
+  - **Expected Outcome:** Performance drops to random chance (e.g. ~50% for binary classification, ~10% for 10-class FashionMNIST).
+  - **Red Alert:** If the model still achieves high accuracy on randomly permuted labels -> Pipeline contains 100% confirmed data leakage bugs.
 
-## Tiêu chí kết thúc
-- Chỉ khi vượt qua toàn bộ 4 bước kiểm toán trên mà không phát hiện dấu vết rò rỉ dữ liệu thì kết quả mô hình mới được công nhận là hợp lệ.
+## Completion Criteria
+- Model results are accepted as valid only after surviving all 4 audit checks without detecting leakage or evaluation artifacts.

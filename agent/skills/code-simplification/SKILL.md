@@ -1,22 +1,22 @@
 ---
 name: code-simplification
-description: Tinh gọn, tái cấu trúc và làm sạch mã nguồn Data Science và AI. Chuyển đổi mã nguồn nháp từ Jupyter Notebook thành các module Python tái sử dụng, loại bỏ biến toàn cục và số hard-code.
+description: Refactor and streamline Data Science and Deep Learning codebases. Convert exploratory Jupyter Notebook code into modular, production-ready Python packages, eliminating global variables, hard-coded constants, and non-standard characters.
 ---
 
 # code-simplification (DS & AI Edition)
 
-## Tổng quan
-Kỹ năng này chịu trách nhiệm biến các đoạn mã nháp lộn xộn, biến toàn cục và vòng lặp phức tạp (vốn thường thấy trong Jupyter Notebook) thành **mã nguồn Python chuẩn kỹ thuật (Production Clean Code)**, sẵn sàng để nộp bài hoặc tích hợp vào hệ thống lớn mà vẫn giữ nguyên 100% kết quả huấn luyện.
+## Overview
+This skill refactors exploratory notebook scripts, scattered global variables, and ad-hoc logic into **clean, modular, production-grade Python code**. It prepares codebases for coursework submission or engineering integration while guaranteeing exact reproducibility of experimental results.
 
-## Khi nào sử dụng
-- Khi mô hình đã chạy thành công và muốn dọn dẹp để nộp bài hoặc bàn giao.
-- Khi cần chuyển đổi từ file `.ipynb` (Jupyter Notebook) sang các file script `.py` có cấu trúc module.
-- Khi mã nguồn có quá nhiều tham số viết thẳng vào code (Hard-coded constants).
+## When to Use
+- Cleaning and organizing a codebase after successful model training prior to submission.
+- Extracting modular reusable components from `.ipynb` notebooks into structured `.py` files under `src/`.
+- Removing hard-coded hyperparameters and fragmented constants.
 
-## 6 Bước làm sạch mã nguồn DS & AI
+## The 6 Refactoring Steps
 
-### 1. Trục xuất số cứng và đường dẫn cứng (No Hard-coded Values)
-- Gom toàn bộ siêu tham số (Hyperparameters) và đường dẫn file vào một lớp cấu hình `Config` hoặc file `config.yaml`:
+### 1. Eliminate Hard-Coded Constants and File Paths
+- Centralize all hyperparameters, paths, and execution settings into structured configuration classes or YAML configs:
   ```python
   from dataclasses import dataclass
 
@@ -29,38 +29,38 @@ Kỹ năng này chịu trách nhiệm biến các đoạn mã nháp lộn xộn,
       random_seed: int = 42
   ```
 
-### 2. Triệt tiêu biến toàn cục (Kill Global Variables)
-- Mã nguồn trong Notebook thường dùng biến toàn cục chạy xuyên suốt các cell. Khi đơn giản hóa, bắt buộc phải đóng gói thành các hàm thuần túy (Pure Functions) nhận tham số đầu vào và trả về đầu ra rõ ràng:
+### 2. Eliminate Global Variables
+- Replace notebook-style global state with pure functions with explicit signatures:
   - `load_data(path: str) -> pd.DataFrame`
   - `preprocess_features(df: pd.DataFrame, is_train: bool) -> np.ndarray`
   - `train_one_epoch(model: nn.Module, loader: DataLoader, ...) -> float`
 
-### 3. Tái sử dụng logic tiền xử lý (Single Source of Truth)
-- Tuyệt đối không viết 2 hàm tiền xử lý riêng cho tập Train và tập Inference. Đóng gói quy trình xử lý thành một class hoặc Pipeline thống nhất (dùng `sklearn.pipeline.Pipeline` hoặc class kế thừa) để đảm bảo dữ liệu đưa vào dự đoán được xử lý đúng 100% như lúc huấn luyện.
+### 3. Maintain Single Source of Truth for Preprocessing
+- Do not maintain duplicate preprocessing logic for training and evaluation. Encapsulate transformations in unified pipeline classes or Torchvision transforms to guarantee identical behavior during inference.
 
-### 4. Bổ sung Type Hints và Docstrings ngắn gọn
-- Thêm chú thích kiểu dữ liệu (Type Hints) cho các tham số dạng Tensor hoặc DataFrame để người đọc code không bị mơ hồ về kích thước shape:
+### 4. Add Type Hints and Precise Docstrings
+- Include type annotations and tensor shape docstrings to eliminate ambiguity:
   ```python
   def forward(self, x: torch.Tensor) -> torch.Tensor:
       """
       Args:
-          x: Input tensor có shape (batch_size, channels, height, width)
+          x: Input tensor of shape (batch_size, channels, height, width).
       Returns:
-          Logits tensor có shape (batch_size, num_classes)
+          Logits tensor of shape (batch_size, num_classes).
       """
   ```
 
-### 5. Dọn dẹp mã chết (Dead Code & Unused Imports)
-- Xóa toàn bộ các dòng `import` thừa, các dòng `print()` nháp trong vòng lặp và các cell thử nghiệm thất bại bị bỏ xó.
+### 5. Remove Dead Code and Unused Imports
+- Purge unused imports, scratch `print()` statements, and deprecated experiment cells.
 
-### 6. Nghiêm cấm Icon / Emoji trong Code, Print và Notebook (Strict No-Emoji Policy)
-- Tuyệt đối không dùng emoji, icon (ví dụ: rocket, checkmark, fire, sparkles, tag, chart, folder, computer) trong bất kỳ:
-  - File mã nguồn `.py`, `.sh`.
-  - Câu lệnh in ấn `print(...)`, logger, exception message.
-  - Chú thích (comments) và docstrings.
-  - Các ô Markdown và Code cell của Jupyter Notebook (`.ipynb`).
-- Mọi trạng thái thành công/thất bại, tiêu đề mục đều biểu diễn bằng văn bản thuần túy (plain text / ASCII / chuẩn technical markdown như `[SUCCESS]`, `[INFO]`, `[FAILED]`, `Section 1: ...`). Điều này bảo đảm không bao giờ vấp phải lỗi mã hóa `UnicodeEncodeError` trên terminal hệ điều hành (như Windows CP1252) và giữ mã nguồn chuẩn mực học thuật cao nhất.
+### 6. Enforce Strict No-Emoji Policy
+- Prohibit emojis and decorative icons in:
+  - Source code files (`.py`, `.sh`).
+  - Terminal output statements (`print()`, loggers, exception messages).
+  - Code comments and docstrings.
+  - Markdown and code cells of Jupyter Notebooks (`.ipynb`).
+- Express all statuses with standard technical text (e.g. `[INFO]`, `[SUCCESS]`, `[ERROR]`, `Section 1: ...`). This prevents `UnicodeEncodeError` issues across diverse operating systems (such as Windows CP1252) and maintains professional academic standards.
 
-## Tiêu chí nghiệm thu (Verification)
-- Chạy lại toàn bộ script đã được làm sạch với cùng random seed và khẳng định kết quả đo lường (Metrics/Loss) hoàn toàn trùng khớp với phiên bản ban đầu.
-- Quét toàn bộ repository để đảm bảo không còn sót bất kỳ ký tự icon/emoji nào trong file mã nguồn và notebook.
+## Verification Criteria
+- Re-executing refactored modules with fixed random seeds yields identical losses and evaluation metrics.
+- Repository scans confirm zero emojis or non-standard graphical symbols across code and notebook files.

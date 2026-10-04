@@ -1,43 +1,43 @@
 ---
 name: documentation-and-adrs
-description: Soạn thảo Model Card, báo cáo thí nghiệm kết quả, hồ sơ quyết định kiến trúc (ADR) và tài liệu bàn giao hoàn chỉnh cho dự án Data Science và AI.
+description: Author Model Cards, technical evaluation reports, Architecture Decision Records (ADRs), and submission documentation for Data Science and AI projects. Maps directly to Section 3 of walkthrough_lab_0X.md.
 ---
 
 # documentation-and-adrs (DS & AI Edition)
 
-## Tổng quan
-Kỹ năng này chịu trách nhiệm hoàn thiện khâu tài liệu chuyên môn cao nhất cho dự án Data Science và AI. Nó tạo ra các tài liệu chuẩn công nghiệp gồm: **Model Card (Thẻ thông tin mô hình)**, **Báo cáo thí nghiệm (Experiment Report)** và **Quyết định kiến trúc (ADRs)** để bất kỳ ai cũng có thể đọc hiểu, tái lập và nộp bài với điểm số tối đa.
+## Overview
+This skill handles professional technical documentation for DS and AI projects, providing industry-standard artifacts: **Model Cards**, **Comparative Evaluation Reports**, and **Architecture Decision Records (ADRs)** to guarantee full reproducibility, interpretability, and academic rigor.
 
-## Khi nào sử dụng
-- Khi kết thúc một dự án hoặc hoàn thành huấn luyện mô hình.
-- Khi cần chuẩn bị tài liệu nộp bài tập lớn, khóa luận tốt nghiệp hoặc bàn giao cho nhóm sản phẩm.
-- Khi cần giải thích lý do tại sao lại chọn thuật toán/mô hình này thay vì thuật toán khác.
+## When to Use
+- Concluding experimental runs and generating final coursework or project reports.
+- Documenting why specific architectures, loss functions, or hyperparameter schedules were selected over alternatives.
+- Synthesizing confusion matrices and failure modes into actionable error analyses.
 
-## Đầu ra tài liệu cho các bài Lab (Tích hợp vào Mục 3 của walkthrough_lab_0X.md)
+## Documentation Deliverables for Coursework Labs (Integrated into Section 3 of `walkthrough_lab_0X.md`)
 
-Đối với các bài Lab, toàn bộ Báo cáo định lượng, Model Card và Quyết định kỹ thuật đều được tổng hợp trực tiếp vào **Mục 3 của file duy nhất `walkthrough_lab_0X.md`** (ứng với Rule 3 trong kiến trúc 3 Rule):
-- **Kết quả định lượng & Ma trận so sánh:** Bảng đối đầu giữa Baseline Model và các Iteration nâng cao (Test Loss, Test Accuracy, F1-Macro).
-- **Chẩn đoán Ma trận Nhầm lẫn (Confusion Matrix):** Phân tích chi tiết các cặp lớp dễ bị nhầm lẫn nhất (ví dụ Shirt vs T-shirt/Pullover).
-- **Phân tích lỗi sai thực tế (Error Analysis):** Trích xuất các lát cắt mẫu dữ liệu bị dự đoán sai, nguyên nhân và bài học rút ra.
-- **Quyết định Kỹ thuật & Kết luận (Key Findings):** Lý do chuyển đổi kiến trúc thành công, đánh giá hiệu quả của các kỹ thuật điều hòa (Regularization), LR Scheduler, Data Augmentation và hướng phát triển tiếp theo.
-- **Kiểm chứng nạp Checkpoint (Save/Load Verification):** Xác nhận trọng số `best_model.pt` nạp lại suy luận cho kết quả đồng nhất 100%.
+For practical labs, all quantitative evaluations, diagnostic summaries, and technical decisions are directly consolidated into **Section 3 of the single living document `walkthrough_lab_0X.md`** (governed by Rule 3 in the 3-Rule Architecture):
+- **Quantitative Evaluation & Comparison Matrix:** Head-to-head comparison table across all runs (Baseline vs Iterations) covering Test Loss, Test Accuracy, and Macro F1-Score.
+- **Confusion Matrix Diagnostics:** Deep dive into high-confusion class pairs (e.g. Shirt vs T-shirt/Pullover).
+- **Error Analysis Slices:** Visual and statistical inspection of misclassified samples, identifying root failure causes.
+- **Key Technical Findings:** Explanations for performance breakthroughs, assessing the impact of regularization, learning rate schedulers, and data augmentation.
+- **Checkpoint Verification (Save/Load):** Verification confirming that reloading `best_model.pt` reproduces 100% identical inference metrics.
 
-> Tuyệt đối KHÔNG sinh thêm file `REPORT.md` riêng lẻ, toàn bộ báo cáo hoàn chỉnh được tích hợp trực tiếp tại Mục 3 của `walkthrough_lab_0X.md`.
+> Strictly prohibit creating a separate `REPORT.md` file. All final findings are integrated directly into Section 3 of `walkthrough_lab_0X.md`.
 
-### 2. Hồ sơ Quyết định Kiến trúc (ADR - Architecture Decision Records)
-Ghi lại lý do chọn các giải pháp kỹ thuật vào thư mục `docs/adr/`:
-- *Ví dụ ADR 001:* Tại sao chọn `Focal Loss` thay cho `Binary Cross-Entropy`? (Giải thích: Vì dữ liệu bị mất cân bằng tỷ lệ 95:5).
-- *Ví dụ ADR 002:* Tại sao chọn `ResNet-18` thay vì `ViT (Vision Transformer)`? (Giải thích: Vì tập dữ liệu chỉ có 2000 ảnh, dùng ViT sẽ bị Overfitting nặng nề và tài nguyên GPU có hạn).
+### 2. Architecture Decision Records (ADRs)
+When maintaining permanent engineering projects, record major architectural choices under `docs/adr/`:
+- *ADR 001:* Why Focal Loss over Binary Cross-Entropy? (Rationale: Mitigate severe 95:5 class imbalance).
+- *ADR 002:* Why ResNet over Vision Transformer (ViT)? (Rationale: Small sample size of 2,000 images causing ViT overfitting, plus constrained GPU memory).
 
-### 3. Báo cáo bàn giao phiên làm việc (HANDOFF.md)
-Tóm tắt ngắn gọn dành cho người dùng và các phiên làm việc tiếp theo:
-- Danh sách các tệp mã nguồn và thư mục đã tạo.
-- Vị trí lưu trữ file trọng số mô hình tốt nhất (`checkpoints/best_model.pt`).
-- Lệnh một dòng để tái lập kết quả:
+### 3. Session Handoff Reports (`HANDOFF.md`)
+Concise handoff summary for subsequent development sessions:
+- List of generated source modules and output artifacts.
+- File path to the best verified model checkpoint (`outputs/checkpoints/best_model.pt`).
+- Single-command instructions to reproduce results:
   ```bash
   python train.py --config config.yaml
   python evaluate.py --checkpoint checkpoints/best_model.pt
   ```
 
-## Tiêu chí nghiệm thu (Verification)
-- Mọi con số metric ghi trong tài liệu phải phản ánh đúng 100% kết quả từ log thực tế khi chạy mã nguồn, không bịa đặt hoặc làm tròn sai lệch.
+## Verification Criteria
+- All documented metrics match 100% with empirical logs and output confusion matrices; zero hallucinated or inaccurately rounded numbers.

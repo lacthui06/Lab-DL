@@ -1,33 +1,33 @@
 # Deep Learning Labs
 
-Kho lưu trữ mã nguồn, quy trình làm việc và các bài tập thực hành môn Học Sâu (Deep Learning).
+Repository containing source code, engineering workflows, and practical lab exercises for Deep Learning coursework.
 
 ---
 
-## Cấu Trúc Thư Mục
+## Directory Structure
 
-- `agent/`: Hệ thống kỹ năng và quy tắc hỗ trợ cho AI Agent.
-- `workflows/`: Cẩm nang và quy trình Machine Learning cơ bản (EDA, Feature Engineering).
-- `dl_workflows/`: Cẩm nang và quy trình Deep Learning thực chiến (Data Augmentation, Training Loop).
-- `labs/`: Thư mục chứa các bài thực hành môn học.
-
----
-
-## Danh Sách Bài Thực Hành
-
-- **Lab 01**: Đang thực hiện
-- **Lab 02**: Cập nhật khi có đề bài
-- **Lab 03**: Cập nhật khi có đề bài
-- **Lab 04**: Cập nhật khi có đề bài
+- `agent/`: Skill framework and operational rules for AI Coding Agents.
+- `workflows/`: Foundational Machine Learning workflows and playbooks (EDA, Feature Engineering).
+- `dl_workflows/`: Deep Learning production playbooks (Data Augmentation, Training Loops, Optimization).
+- `labs/`: Course practical lab implementations.
 
 ---
 
-## Cấu Trúc Mỗi Bài Lab (`labs/lab0X/`)
+## Lab Directory
 
-Mỗi bài thực hành được tổ chức thành 4 thư mục con và 1 file nhật ký:
+- **Lab 01**: FashionMNIST Classification with PyTorch (Completed)
+- **Lab 02**: Upcoming
+- **Lab 03**: Upcoming
+- **Lab 04**: Upcoming
 
-- `data/`: Lưu trữ dữ liệu thực nghiệm (không đưa lên GitHub).
-- `notebooks/`: Chứa file Jupyter Notebook điều khiển và trực quan hóa.
-- `src/`: Mã nguồn module hóa tái sử dụng (`config.py`, `dataset.py`, `model.py`, `engine.py`, `utils.py`).
-- `outputs/`: Lưu trữ kết quả đầu ra (ảnh biểu đồ, trọng số mô hình).
-- `walkthrough_lab_0X.md`: Bản tài liệu sống duy nhất hợp nhất 3 Rule kỹ năng (Mục 1: Spec từ `spec-driven-development`, Mục 2: Changelog 5 khâu từ `walkthrough-and-experiment-tracking`, Mục 3: Final Report từ `documentation-and-adrs`).
+---
+
+## Lab Architecture (`labs/lab0X/`)
+
+Each practical lab is organized into modular directories and a single living documentation file:
+
+- `data/`: Experimental datasets (ignored by git).
+- `notebooks/`: Jupyter Notebooks for interactive execution, analysis, and visualization.
+- `src/`: Modular, production-ready Python components (`config.py`, `dataset.py`, `model.py`, `engine.py`, `utils.py`).
+- `outputs/`: Artifact store for training checkpoints, evaluation logs, and high-resolution figures.
+- `walkthrough_lab_0X.md`: Single Living Walkthrough unifying 3 Core Rules (Section 1: Spec from `spec-driven-development`, Section 2: 5-Stage Changelog from `walkthrough-and-experiment-tracking`, Section 3: Final Report from `documentation-and-adrs`).

@@ -1,53 +1,54 @@
 ---
 name: spec-driven-development
-description: Viết tài liệu đặc tả kỹ thuật (ML/DL Spec) cho bài toán Data Science & Deep Learning trước khi viết mã nguồn. Tự động liên kết và trích xuất chuẩn mực từ workflows/ML_flow.md (cho Tabular ML) hoặc dl_workflows/DL_flow.md (cho Deep Learning).
+description: Author technical ML/DL specifications before implementing code. Automatically links and extracts standards from workflows/ML_flow.md (for Tabular ML) or dl_workflows/DL_flow.md (for Deep Learning). Directly maps to Section 1 of walkthrough_lab_0X.md.
 ---
 
 # spec-driven-development (DS & AI Edition)
 
-## Tổng quan
-Kỹ năng này bắt buộc AI Agent phải xây dựng một bản **Đặc tả Kỹ thuật Học máy / Học sâu (ML/DL Spec)** chi tiết trước khi lập trình. Kỹ năng tự động liên kết với các tài liệu quy trình chuyên sâu trong dự án để thiết lập đúng tiêu chuẩn dữ liệu, hàm mất mát và chỉ số đánh giá.
+## Overview
+This skill mandates that AI agents author a comprehensive **Machine Learning / Deep Learning Specification (ML/DL Spec)** prior to coding. It grounds the project in standardized data contracts, objective loss formulations, baseline architectures, and quantitative evaluation criteria.
 
-## Liên kết Quy trình Nghiệp vụ (Flow References)
-Khi lập Spec, AI **BẮT BUỘC** phải mở và trích xuất chuẩn mực từ tài liệu nghiệp vụ tương ứng:
-- **Bài toán Dữ liệu bảng (Tabular ML):** Tham chiếu [**`workflows/ML_flow.md`**](../../workflows/ML_flow.md) và [**`workflows/eda_guide.md`**](../../workflows/eda_guide.md) để chốt chuẩn EDA, chuẩn hóa số, mã hóa biến phân loại và mô hình cơ sở.
-- **Bài toán Học sâu (Deep Learning / CV / NLP):** Tham chiếu [**`dl_workflows/DL_flow.md`**](../../dl_workflows/DL_flow.md) để chốt phương thái dữ liệu (Modality), kích thước ảnh/độ dài câu, kiến trúc Backbone và hàm mất mát chuyên biệt (Focal Loss, Label Smoothing).
+## Workflow References
+When writing specifications, agents **MUST** extract standards from the corresponding workflow playbook:
+- **Tabular ML:** Reference [`workflows/ML_flow.md`](../../workflows/ML_flow.md) and [`workflows/eda_guide.md`](../../workflows/eda_guide.md) for EDA guidelines, normalization standards, categorical encoding, and baseline benchmarks.
+- **Deep Learning (CV / NLP):** Reference [`dl_workflows/DL_flow.md`](../../dl_workflows/DL_flow.md) for input modalities, tensor dimensions, backbone selection, and specialized loss functions (e.g. Focal Loss, Label Smoothing).
 
 ---
 
-## Cấu trúc chuẩn của bản ML/DL Spec (Ghi vào Mục 1 của walkthrough_lab_0X.md)
+## Standard ML/DL Spec Architecture (Integrated into Section 1 of `walkthrough_lab_0X.md`)
 
-Bản đặc tả được khởi tạo ngay trong **Mục 1 của file duy nhất `walkthrough_lab_0X.md`** trước khi code (ứng với Rule 1 trong kiến trúc 3 Rule):
-> Tuyệt đối KHÔNG sinh thêm file `SPEC.md` riêng lẻ, toàn bộ đặc tả bài toán và baseline plan được tích hợp trực tiếp tại Mục 1 của `walkthrough_lab_0X.md`.
+The specification is authored directly in **Section 1 of the single living document `walkthrough_lab_0X.md`** before writing code (governed by Rule 1 in the 3-Rule Architecture):
 
-### 1. Phân loại Bài toán & Phương thái (Problem & Modality)
-- Dạng bài: Classification (Binary/Multiclass), Regression, Segmentation, Object Detection, Sequence Modeling.
-- Dạng dữ liệu đầu vào: Tabular DataFrame, Ảnh 2D `[B, C, H, W]`, Chuỗi văn bản `[B, Seq_Len]`.
+> Strictly prohibit creating a separate `SPEC.md` file. All problem formulations and baseline plans are integrated directly into Section 1 of `walkthrough_lab_0X.md`.
 
-### 2. Hợp đồng Dữ liệu & Phân tách (Data Contract & Split Strategy)
-- Khảo sát Schema, kiểu dữ liệu và tỷ lệ phân bố nhãn (Class Balance Ratio).
-- Chiến lược phân tách dữ liệu chống rò rỉ (Chống Data Leakage):
-  - Tabular / Image độc lập -> `StratifiedKFold` (giữ nguyên tỷ lệ các lớp).
-  - Time-series -> `TimeSeriesSplit` (tuyệt đối không shuffle).
-  - Grouped data -> `GroupKFold` (không để cùng 1 đối tượng xuất hiện ở cả train và val).
+### 1. Problem Formulation and Modality
+- Task category: Classification (Binary/Multiclass), Regression, Segmentation, Object Detection, Sequence Modeling.
+- Input data modality: Tabular DataFrame, 2D Image tensor `[B, C, H, W]`, Text token sequence `[B, Seq_Len]`.
 
-### 3. Mô hình Cơ sở & Chỉ số Mục tiêu (Baseline & Target Metrics)
-- **Baseline Model:** Thiết lập mô hình tối thiểu để làm mốc so sánh (Heuristic, Logistic Regression, hoặc Simple MLP/CNN 2 tầng).
-- **Chỉ số đo lường chính (Primary Metric):** F1-Macro, ROC-AUC, mAP, IoU, RMSE.
-- **Ngưỡng nghiệm thu (Acceptance Threshold):** Mô hình nâng cao phải vượt Baseline bao nhiêu % thì mới đạt yêu cầu.
+### 2. Data Contract and Split Strategy
+- Data schema, data types, and class balance ratios.
+- Leakage-free data partitioning strategies:
+  - Independent Tabular/Image samples -> `StratifiedKFold` (preserves class ratios).
+  - Time-series data -> `TimeSeriesSplit` (strictly chronological, never shuffled).
+  - Grouped entities -> `GroupKFold` (prevents entity overlap across train and val).
 
-### 4. Hàm Mất mát & Tối ưu (Loss & Optimization Design)
-- Lựa chọn hàm mất mát:
-  - Phân loại chuẩn -> `nn.CrossEntropyLoss(label_smoothing=0.1)`.
-  - Mất cân bằng nhãn nặng ($> 1:10$) -> `FocalLoss` hoặc gán `class_weights`.
-- Lựa chọn Optimizer (AdamW) và Learning Rate Scheduler (CosineAnnealing / OneCycleLR).
+### 3. Baseline Model and Target Metrics
+- **Baseline Model:** Minimal viable benchmark to anchor comparative progress (e.g. Heuristic, Logistic Regression, or simple 2-layer MLP).
+- **Primary Metric:** Macro F1-Score, ROC-AUC, mAP, IoU, RMSE.
+- **Acceptance Threshold:** Minimum quantitative margin the advanced model must achieve over baseline to be deemed acceptable.
 
-### 5. Ràng buộc Môi trường Thực thi (Execution Environment Constraints)
-- Thiết bị chạy: Local CPU/GPU hay **Kaggle GPU (Tesla T4)**.
-- Đường dẫn dữ liệu tương thích: Nhận diện `/kaggle/input/` (Read-Only) và `/kaggle/working/` (Writable).
-- Giới hạn bộ nhớ: Kiểm soát VRAM $< 15\text{GB}$ (bật AMP FP16).
+### 4. Loss Function and Optimization Design
+- Loss function selection:
+  - Standard multi-class classification -> `nn.CrossEntropyLoss(label_smoothing=0.1)`.
+  - Severe class imbalance (> 1:10) -> `FocalLoss` or weighted `class_weights`.
+- Optimizer (AdamW) and Learning Rate Scheduler (CosineAnnealingLR or OneCycleLR).
+
+### 5. Execution Environment Constraints
+- Compute target: Local CPU/GPU vs **Kaggle GPU (Tesla T4)**.
+- Filesystem compatibility: Handling `/kaggle/input/` (Read-Only) and `/kaggle/working/` (Writable).
+- Memory constraints: Enforcing VRAM budgets (< 15GB, AMP FP16 enabled).
 
 ---
 
 ## Anti-Rationalization
-- [X] *"Bài Lab này ngắn, code luôn cho kịp nộp"* -> **Bác bỏ:** Không có Spec đồng nghĩa với việc không có mốc Baseline để so sánh trong báo cáo, dễ chọn sai metric dẫn đến điểm số thấp.
+- [X] *"This lab exercise is short, implement code immediately"* -> **Rejected:** Implementing without a spec forfeits a baseline benchmark, risks selecting inappropriate metrics, and degrades final report rigor.

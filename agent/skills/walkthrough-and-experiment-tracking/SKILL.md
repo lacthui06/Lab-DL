@@ -1,59 +1,54 @@
 ---
 name: walkthrough-and-experiment-tracking
-description: Tự động ghi chép, theo dõi và cập nhật toàn bộ quy trình thử nghiệm (Full-Flow Experiment Lineage) vào file walkthrough_lab_0X.md sau mỗi lần huấn luyện. Ghi nhận các thay đổi về Dữ liệu, Tiền xử lý, Mô hình, Huấn luyện và Đánh giá để sẵn sàng xuất báo cáo nộp bài.
+description: Automatically track, record, and update full-flow experimental lineages in Section 2 of walkthrough_lab_0X.md following each training run. Capture architectural, hyperparameter, and metric deltas across all 5 pipeline stages.
 ---
 
 # walkthrough-and-experiment-tracking
 
-## Tổng quan
-Kỹ năng này đóng vai trò là "Nhật ký thí nghiệm tự động" (Experiment Tracker & Lineage Logger) cho toàn bộ các bài Lab Deep Learning. Sau mỗi lần chạy thử nghiệm (Run #1, Run #2,... dù chạy trên máy Local hay tải kết quả từ Kaggle về), kỹ năng này bắt buộc AI phải cập nhật chi tiết **sự thay đổi của toàn bộ 5 khâu trong Pipeline** vào **Mục 2 của file duy nhất `walkthrough_lab_0X.md`** (ứng với Rule 2 trong kiến trúc 3 Rule).
+## Overview
+This skill operates as the automated experiment lineage tracker for all deep learning coursework labs. After each training execution (Run #1 Baseline, Run #2 Tuned MLP, Run #3 FashionCNN), this skill mandates that agents document **changes across all 5 pipeline stages** directly in **Section 2 of the single living document `walkthrough_lab_0X.md`** (governed by Rule 2 in the 3-Rule Architecture).
 
-> Quy chuẩn: Mọi nhật ký thử nghiệm và tinh chỉnh siêu tham số đều tích hợp trực tiếp tại Mục 2 của `walkthrough_lab_0X.md`, không tạo file changelog rời rạc.
+> Standard: All experimental logs and hyperparameter adjustment rationales are consolidated directly into Section 2 of `walkthrough_lab_0X.md`. Do not create separate changelog files.
 
-## Khi nào kích hoạt
-- Khi hoàn thành một lần chạy huấn luyện và có kết quả đo lường (Metrics/Loss).
-- Khi người dùng điều chỉnh bất kỳ khâu nào trong Flow (thêm Data Augmentation, đổi mạng CNN sang ResNet, đổi Optimizer).
-- Khi chuẩn bị xuất số liệu và biểu đồ để làm báo cáo nộp bài.
-
----
-
-## Quy trình 4 bước cập nhật nhật ký Flow (The Tracking Protocol)
-
-### Bước 1: Ghi nhận trạng thái cấu hình 5 khâu (Capture Full-Flow State)
-Thu thập và ghi lại trạng thái của lần chạy hiện tại (`Run #X`):
-1. **Dữ liệu:** Tên dataset, số lượng mẫu, tỷ lệ chia Train/Val/Test.
-2. **Tiền xử lý & Augmentation:** Phép biến đổi đã dùng (`RandomResizedCrop`, `ColorJitter`, `Normalize`).
-3. **Mô hình:** Tên kiến trúc mạng, số lượng tham số (`Total Params`), số tầng.
-4. **Chiến lược Huấn luyện:** Hàm mất mát, Optimizer, Learning Rate, Scheduler, Batch Size, Epochs.
-5. **Kết quả Đo lường:** Train Loss/Acc, Val Loss/Acc, F1-Score, thời gian chạy.
-
-### Bước 2: Xác định độ chênh lệch kỹ thuật (Log Technical Delta)
-Trả lời 3 câu hỏi bắt buộc vào mục **Changelog**:
-- *Đã thay đổi ở khâu nào so với lần chạy trước?* (Dữ liệu, Tiền xử lý, Mô hình, hay Huấn luyện?)
-- *Tại sao lại thay đổi (Why)?* (Nhằm giải quyết lỗi Overfit, Loss ra NaN hay tăng tốc độ?)
-- *Tác động định lượng là gì?* (Metric tăng/giảm bao nhiêu %, độ chênh lệch Train-Val cải thiện ra sao?)
-
-### Bước 3: Cập nhật Bảng Ma trận So sánh (Update Comparison Matrix)
-- Thêm một cột mới cho `Run #X` vào bảng **Flow Comparison Matrix** trong file `walkthrough_lab_0X.md`.
-- Đánh dấu phiên bản nào đang nắm giữ kỷ lục điểm số cao nhất (**Best Checkpoint**).
-
-### Bước 4: Đúc kết dữ liệu & Thu hoạch Artifact từ Kaggle (Kaggle Harvest & Report-Ready Findings)
-- **Cơ chế thu hoạch từ Kaggle:** Khi người dùng chạy trên Kaggle GPU:
-  - Code Notebook lưu toàn bộ kết quả vào `/kaggle/working/`:
-    - File trọng số mô hình: `outputs/checkpoints/best_model.pt`
-    - Lưới ảnh dự đoán Input vs Output (Predicted vs Actual): `outputs/predictions_best.png`
-    - Ma trận nhầm lẫn: `outputs/confusion_matrix.png`
-    - Đồ thị huấn luyện: `outputs/loss_curves.png`
-  - Người dùng tải trực tiếp (hoặc nén `!zip -r outputs.zip /kaggle/working/outputs`) về thư mục `labs/lab0X/outputs/` ở máy Local.
-- **Trích xuất báo cáo:**
-  - AI đọc các artifact vừa tải về để lấy số liệu thực tế cập nhật vào file `walkthrough_lab_0X.md`.
-  - Trích xuất 3 kết luận then chốt:
-    - Yếu tố kỹ thuật nào tạo ra bước ngoặt cải thiện điểm số lớn nhất?
-    - Mô hình tốt nhất vẫn còn dự đoán sai ở những trường hợp nào?
-    - Đường dẫn tới các file biểu đồ và checkpoint tốt nhất (`outputs/best_model.pt`).
+## When to Activate
+- Following completion of any training run when evaluation metrics and loss values are produced.
+- Whenever modifying any component of the pipeline (data transforms, backbone architecture, optimizer schedules).
+- When synthesizing metrics and figures for coursework submission.
 
 ---
 
-## Tiêu chí nghiệm thu (Verification)
-- File `walkthrough_lab_0X.md` được cập nhật đồng bộ, đầy đủ số liệu thực tế, không có các ô trống hoặc thông tin bịa đặt.
-- Người dùng chỉ cần mở file là có đầy đủ toàn bộ bằng chứng thí nghiệm để nộp báo cáo môn học.
+## The 4-Step Tracking Protocol
+
+### Step 1: Capture Full-Flow State
+Record the configuration snapshot for the current execution (`Run #X`):
+1. **Data:** Dataset name, sample count, Train/Val/Test split ratios.
+2. **Preprocessing & Augmentation:** Applied transformations (`RandomHorizontalFlip`, `Normalize`, etc.).
+3. **Model:** Architecture name, total parameter count, depth/layers.
+4. **Training Strategy:** Loss function, optimizer, learning rate, scheduler, batch size, epoch count.
+5. **Evaluation Metrics:** Train Loss/Acc, Val Loss/Acc, Test Loss/Acc, Macro F1-Score, execution duration.
+
+### Step 2: Log Technical Delta
+Answer 3 mandatory questions in the **Changelog**:
+- *Which pipeline stages changed compared to the previous run?* (Data, Preprocessing, Architecture, or Training Strategy?)
+- *What is the technical rationale (Why)?* (Mitigating overfitting, accelerating convergence, or resolving gradient vanishing?)
+- *What is the quantitative impact?* (Absolute accuracy gain, reduction in generalization gap, loss delta?)
+
+### Step 3: Update Comparison Matrix
+- Append an updated column for `Run #X` in the **Flow Comparison Matrix** in `walkthrough_lab_0X.md`.
+- Explicitly highlight which candidate holds the **Best Checkpoint** record.
+
+### Step 4: Kaggle Artifact Harvesting and Findings Synthesis
+- **Harvesting from Kaggle:** When running on Kaggle GPU:
+  - Notebook writes output artifacts to `/kaggle/working/outputs/`:
+    - Model checkpoint: `outputs/checkpoints/best_model.pt`
+    - Prediction grid (Input vs Predicted): `outputs/predictions_best.png`
+    - Confusion matrix: `outputs/confusion_matrix.png`
+    - Training curves: `outputs/loss_curves.png`
+  - Synchronize via GitHub or download `outputs.zip` back to local `labs/lab0X/outputs/`.
+- **Findings Synthesis:**
+  - Read output artifacts and log verified empirical numbers into `walkthrough_lab_0X.md`.
+  - Extract the key breakthrough factor, error slice patterns, and paths to saved model weights.
+
+## Verification Criteria
+- `walkthrough_lab_0X.md` is synchronized with exact empirical numbers, free of placeholder blanks or unverified claims.
+- The living document provides an end-to-end audit trail ready for submission.
