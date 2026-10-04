@@ -10,8 +10,8 @@ Kỹ năng này bắt buộc AI Agent phải xây dựng một bản **Đặc t�
 
 ## Liên kết Quy trình Nghiệp vụ (Flow References)
 Khi lập Spec, AI **BẮT BUỘC** phải mở và trích xuất chuẩn mực từ tài liệu nghiệp vụ tương ứng:
-- 📊 **Bài toán Dữ liệu bảng (Tabular ML):** Tham chiếu [**`workflows/ML_flow.md`**](../../workflows/ML_flow.md) và [**`workflows/eda_guide.md`**](../../workflows/eda_guide.md) để chốt chuẩn EDA, chuẩn hóa số, mã hóa biến phân loại và mô hình cơ sở.
-- 🖼️ **Bài toán Học sâu (Deep Learning / CV / NLP):** Tham chiếu [**`dl_workflows/DL_flow.md`**](../../dl_workflows/DL_flow.md) để chốt phương thái dữ liệu (Modality), kích thước ảnh/độ dài câu, kiến trúc Backbone và hàm mất mát chuyên biệt (Focal Loss, Label Smoothing).
+- **Bài toán Dữ liệu bảng (Tabular ML):** Tham chiếu [**`workflows/ML_flow.md`**](../../workflows/ML_flow.md) và [**`workflows/eda_guide.md`**](../../workflows/eda_guide.md) để chốt chuẩn EDA, chuẩn hóa số, mã hóa biến phân loại và mô hình cơ sở.
+- **Bài toán Học sâu (Deep Learning / CV / NLP):** Tham chiếu [**`dl_workflows/DL_flow.md`**](../../dl_workflows/DL_flow.md) để chốt phương thái dữ liệu (Modality), kích thước ảnh/độ dài câu, kiến trúc Backbone và hàm mất mát chuyên biệt (Focal Loss, Label Smoothing).
 
 ---
 
@@ -26,9 +26,9 @@ Bản đặc tả được khởi tạo ngay trong **Mục 1 của file duy nh�
 ### 2. Hợp đồng Dữ liệu & Phân tách (Data Contract & Split Strategy)
 - Khảo sát Schema, kiểu dữ liệu và tỷ lệ phân bố nhãn (Class Balance Ratio).
 - Chiến lược phân tách dữ liệu chống rò rỉ (Chống Data Leakage):
-  - Tabular / Image độc lập ➔ `StratifiedKFold` (giữ nguyên tỷ lệ các lớp).
-  - Time-series ➔ `TimeSeriesSplit` (tuyệt đối không shuffle).
-  - Grouped data ➔ `GroupKFold` (không để cùng 1 đối tượng xuất hiện ở cả train và val).
+  - Tabular / Image độc lập -> `StratifiedKFold` (giữ nguyên tỷ lệ các lớp).
+  - Time-series -> `TimeSeriesSplit` (tuyệt đối không shuffle).
+  - Grouped data -> `GroupKFold` (không để cùng 1 đối tượng xuất hiện ở cả train và val).
 
 ### 3. Mô hình Cơ sở & Chỉ số Mục tiêu (Baseline & Target Metrics)
 - **Baseline Model:** Thiết lập mô hình tối thiểu để làm mốc so sánh (Heuristic, Logistic Regression, hoặc Simple MLP/CNN 2 tầng).
@@ -37,8 +37,8 @@ Bản đặc tả được khởi tạo ngay trong **Mục 1 của file duy nh�
 
 ### 4. Hàm Mất mát & Tối ưu (Loss & Optimization Design)
 - Lựa chọn hàm mất mát:
-  - Phân loại chuẩn ➔ `nn.CrossEntropyLoss(label_smoothing=0.1)`.
-  - Mất cân bằng nhãn nặng ($> 1:10$) ➔ `FocalLoss` hoặc gán `class_weights`.
+  - Phân loại chuẩn -> `nn.CrossEntropyLoss(label_smoothing=0.1)`.
+  - Mất cân bằng nhãn nặng ($> 1:10$) -> `FocalLoss` hoặc gán `class_weights`.
 - Lựa chọn Optimizer (AdamW) và Learning Rate Scheduler (CosineAnnealing / OneCycleLR).
 
 ### 5. Ràng buộc Môi trường Thực thi (Execution Environment Constraints)
@@ -49,4 +49,4 @@ Bản đặc tả được khởi tạo ngay trong **Mục 1 của file duy nh�
 ---
 
 ## Anti-Rationalization
-- ❌ *"Bài Lab này ngắn, code luôn cho kịp nộp"* ➔ **Bác bỏ:** Không có Spec đồng nghĩa với việc không có mốc Baseline để so sánh trong báo cáo, dễ chọn sai metric dẫn đến điểm số thấp.
+- [X] *"Bài Lab này ngắn, code luôn cho kịp nộp"* -> **Bác bỏ:** Không có Spec đồng nghĩa với việc không có mốc Baseline để so sánh trong báo cáo, dễ chọn sai metric dẫn đến điểm số thấp.

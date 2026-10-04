@@ -4,9 +4,9 @@
 
 ---
 
-## 🚀 Tổng quan vòng đời phát triển DS & AI
+## Tổng quan vòng đời phát triển DS & AI
 
-Khác với phát triển phần mềm truyền thống, một dự án DS & AI đòi hỏi quy trình nghiêm ngặt từ khâu dữ liệu, kiểm chứng rò rỉ (leakage), kiểm soát tài nguyên GPU cho đến đóng gói mô hình. Hệ thống gồm **13 kỹ năng cốt lõi** trải dài qua 6 giai đoạn:
+Khác với phát triển phần mềm truyền thống, một dự án DS & AI đòi hỏi quy trình nghiêm ngặt từ khâu dữ liệu, kiểm chứng rò rỉ (leakage), kiểm soát tài nguyên GPU cho đến đóng gói mô hình. Hệ thống gồm **14 kỹ năng cốt lõi** trải dài qua 6 giai đoạn:
 
 ```
   KHỞI TẠO        ĐẶC TẢ & KẾ HOẠCH         XÂY DỰNG & TDD         GỠ LỖI & PHẢN BIỆN       TỐI ƯU & GIAO DIỆN       TỔNG KẾT
@@ -16,11 +16,12 @@ Khác với phát triển phần mềm truyền thống, một dự án DS & AI 
  └─────────┘     └───────────────────┘     └──────────────┘       └────────────────────┘   └───────────────────┘    └─────────┘
   interview-me     spec-driven-dev           tdd-for-ai             debug-error-recovery     performance-opt          simplify
   idea-refine      planning-breakdown        source-driven-dev      doubt-driven-dev         api-interface-design     doc-adrs
+                                                                                                                      walkthrough
 ```
 
 ---
 
-## 📋 Danh mục 13 Kỹ năng chuyên sâu cho DS & AI
+## Danh mục 14 Kỹ năng chuyên sâu cho DS & AI
 
 ### 0. Tầng điều phối (Meta)
 - **`using-ds-ai-skills`**: Nhạc trưởng điều phối toàn bộ workflow, tự động nhận diện bài toán DS/AI và kích hoạt kỹ năng phù hợp.
@@ -31,7 +32,7 @@ Khác với phát triển phần mềm truyền thống, một dự án DS & AI 
 - **`spec-driven-development`**: Thiết lập đặc tả kỹ thuật ML: Baseline model, hàm mục tiêu (Loss function), Metric đo lường (F1, AUC, RMSE) và Schema dữ liệu.
 
 ### 2. Giai đoạn Kế hoạch & Kiến trúc Pipeline (Plan)
-- **`planning-and-task-breakdown`**: Phân rã pipeline thành các module nguyên tử: Ingestion ➔ Preprocessing ➔ Feature Engineering ➔ Train ➔ Eval ➔ Serving.
+- **`planning-and-task-breakdown`**: Phân rã pipeline thành các module nguyên tử: Ingestion -> Preprocessing -> Feature Engineering -> Train -> Eval -> Serving.
 
 ### 3. Giai đoạn Xây dựng chuẩn mực (Build & Test)
 - **`test-driven-development`**: TDD chuyên biệt cho Data & AI: Test schema dữ liệu (Pandera), test chiều Tensor (PyTorch), test rò rỉ dữ liệu (Data Leakage) và sanity test overfit 1 batch.
@@ -48,10 +49,11 @@ Khác với phát triển phần mềm truyền thống, một dự án DS & AI 
 ### 6. Giai đoạn Dọn dẹp & Nghiệm thu (Review & Ship)
 - **`code-simplification`**: Tinh gọn và làm sạch mã nguồn: Biến các đoạn code nháp lộn xộn trong Jupyter Notebook thành module Python sạch, phẳng logic, dễ bảo trì.
 - **`documentation-and-adrs`**: Tự động viết Model Card, Báo cáo thí nghiệm, phân tích Confusion Matrix, biểu đồ trực quan và hướng dẫn nạp checkpoint model.
+- **`walkthrough-and-experiment-tracking`**: Ghi nhận và theo dõi nhật ký thực nghiệm tập trung theo từng Run trong file walkthrough duy nhất.
 
 ---
 
-## 🛠️ Cách sử dụng
+## Cách sử dụng
 
 1. **Sử dụng trong Antigravity / IDE:** Đặt file `AGENTS.md` vào thư mục gốc dự án của bạn để AI tự động tuân thủ.
 2. **Kích hoạt tự nhiên:** Bạn chỉ cần nói tự nhiên bằng tiếng Việt (ví dụ: *"Lên spec cho bài toán phân loại ảnh này"*, *"Kiểm tra xem có bị leak data không"*), AI sẽ tự động kích hoạt skill tương ứng.

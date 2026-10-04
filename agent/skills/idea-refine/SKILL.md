@@ -36,4 +36,4 @@ Chuyển hóa một ý tưởng sơ bộ hoặc một đề tài mở thành m�
   - Kiến trúc mô hình thử nghiệm ban đầu (Baseline) và mô hình nâng cao.
 
 ## Anti-Rationalization
-- ❌ *"Cứ chọn mô hình mới nhất (SOTA) phức tạp nhất là điểm sẽ cao"* ➔ **Bác bỏ:** Mô hình phức tạp trên tập dữ liệu nhỏ sẽ bị Overfitting nặng nề và không kịp train. Ưu tiên giải pháp khả thi với tài nguyên hiện có.
+- [X] *"Cứ chọn mô hình mới nhất (SOTA) phức tạp nhất là điểm sẽ cao"* -> **Bác bỏ:** Mô hình phức tạp trên tập dữ liệu nhỏ sẽ bị Overfitting nặng nề và không kịp train. Ưu tiên giải pháp khả thi với tài nguyên hiện có.

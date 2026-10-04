@@ -32,4 +32,4 @@ Các thư viện AI và Deep Learning phát triển với tốc độ chóng m�
 - Nếu không chắc chắn một hàm trong Hugging Face hoặc PyTorch có hỗ trợ tham số đó hay không, AI phải tra cứu hoặc kiểm tra qua `inspect.signature` hoặc script kiểm chứng ngắn trước khi đưa vào pipeline chính.
 
 ## Anti-Rationalization
-- ❌ *"Tôi nhớ tham số này trong PyTorch năm 2021 là như vậy"* ➔ **Bác bỏ:** PyTorch 2.x và Transformers 4.x đã thay đổi nhiều chữ ký hàm. Phải dùng cú pháp chuẩn hiện hành.
+- [X] *"Tôi nhớ tham số này trong PyTorch năm 2021 là như vậy"* -> **Bác bỏ:** PyTorch 2.x và Transformers 4.x đã thay đổi nhiều chữ ký hàm. Phải dùng cú pháp chuẩn hiện hành.

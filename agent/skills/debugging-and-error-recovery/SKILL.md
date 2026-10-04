@@ -10,7 +10,7 @@ Kỹ năng này cung cấp quy trình 5 bước và sổ tay chẩn đoán nhanh
 
 ## Liên kết Quy trình Nghiệp vụ (Flow References)
 Khi gặp lỗi kỹ thuật, AI **BẮT BUỘC** phải tra cứu và đối chiếu giải pháp từ:
-- 🛠️ [**`dl_workflows/dl_training_and_optimization_guide.md`**](../../dl_workflows/dl_training_and_optimization_guide.md): Cẩm nang xử lý tràn bộ nhớ GPU, kỹ thuật AMP FP16, cắt tỉa gradient và cơ chế Early Stopping.
+- [**`dl_workflows/dl_training_and_optimization_guide.md`**](../../dl_workflows/dl_training_and_optimization_guide.md): Cẩm nang xử lý tràn bộ nhớ GPU, kỹ thuật AMP FP16, cắt tỉa gradient và cơ chế Early Stopping.
 
 ---
 
@@ -19,7 +19,7 @@ Khi gặp lỗi kỹ thuật, AI **BẮT BUỘC** phải tra cứu và đối ch
 ### 1. Tràn bộ nhớ GPU (`RuntimeError: CUDA out of memory`)
 - **Giải pháp kỹ thuật:**
   1. Giảm `batch_size` (từ 64 xuống 32 hoặc 16) và bù đắp bằng **Gradient Accumulation** (tích lũy gradient qua $N$ bước) để giữ nguyên hiệu năng học.
-  2. Bật Automatic Mixed Precision: `torch.amp.autocast('cuda', dtype=torch.float16)` ➔ Giảm $50\%$ VRAM ngay lập tức!
+  2. Bật Automatic Mixed Precision: `torch.amp.autocast('cuda', dtype=torch.float16)` -> Giảm 50% VRAM ngay lập tức!
   3. Kiểm tra rò rỉ bộ nhớ lịch sử: Dùng `total_loss += loss.item()` thay vì `total_loss += loss` (tuyệt đối không giữ nguyên đồ thị tính toán).
   4. Giải phóng cache thủ công: `torch.cuda.empty_cache()`.
 
@@ -42,7 +42,7 @@ Khi gặp lỗi kỹ thuật, AI **BẮT BUỘC** phải tra cứu và đối ch
   - *Cách sửa:* Chuyển toàn bộ đường dẫn lưu checkpoint sang `/kaggle/working/`.
 - **Lỗi 3 (Connection refused khi tải mô hình Pretrained):**
   - *Nguyên nhân:* Tắt kết nối Internet trong cài đặt Notebook.
-  - *Cách sửa:* Bật `Settings ➔ Internet ➔ Internet on` trên giao diện Kaggle.
+  - *Cách sửa:* Bật `Settings -> Internet -> Internet on` trên giao diện Kaggle.
 
 ---
 

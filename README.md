@@ -4,7 +4,7 @@ Kho lưu trữ mã nguồn, quy trình làm việc và các bài tập thực h�
 
 ---
 
-## 📁 Cấu Trúc Thư Mục
+## Cấu Trúc Thư Mục
 
 - `agent/`: Hệ thống kỹ năng và quy tắc hỗ trợ cho AI Agent.
 - `workflows/`: Cẩm nang và quy trình Machine Learning cơ bản (EDA, Feature Engineering).
@@ -13,7 +13,7 @@ Kho lưu trữ mã nguồn, quy trình làm việc và các bài tập thực h�
 
 ---
 
-## 📋 Danh Sách Bài Thực Hành
+## Danh Sách Bài Thực Hành
 
 - **Lab 01**: Đang thực hiện
 - **Lab 02**: Cập nhật khi có đề bài
@@ -22,7 +22,7 @@ Kho lưu trữ mã nguồn, quy trình làm việc và các bài tập thực h�
 
 ---
 
-## 🛠️ Cấu Trúc Mỗi Bài Lab (`labs/lab0X/`)
+## Cấu Trúc Mỗi Bài Lab (`labs/lab0X/`)
 
 Mỗi bài thực hành được tổ chức thành 4 thư mục con và 1 file nhật ký:
 

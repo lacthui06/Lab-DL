@@ -15,8 +15,8 @@ Kỹ năng này đóng vai trò là "Nhạc trưởng" định tuyến mọi yê
 
 ## Quy trình điều phối chuẩn (Execution Flow)
 1. **Phân loại bài toán (Task Classification):**
-   - Xác định dạng bài: Dữ liệu bảng Tabular ➔ Trỏ vào `workflows/ML_flow.md`.
-   - Dữ liệu Ảnh/Chữ/Học sâu ➔ Trỏ vào `dl_workflows/DL_flow.md`.
+   - Xác định dạng bài: Dữ liệu bảng Tabular -> Trỏ vào `workflows/ML_flow.md`.
+   - Dữ liệu Ảnh/Chữ/Học sâu -> Trỏ vào `dl_workflows/DL_flow.md`.
 2. **Khởi tạo & Đặc tả:**
    - Kích hoạt `idea-refine` / `interview-me` nếu đề bài chưa rõ.
    - Kích hoạt `spec-driven-development` để lập bản Spec kỹ thuật có mốc Baseline.

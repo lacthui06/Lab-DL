@@ -20,7 +20,7 @@ Trong Trí tuệ Nhân tạo, hiện tượng nguy hiểm nhất là **"Ảo tư
   - Có cột nào trong ma trận đặc trưng $X$ thực chất được sinh ra *sau* khi sự kiện mục tiêu $y$ diễn ra không?
   - Có cột ID hoặc mã định danh nào vô tình tương quan 1-1 với nhãn không?
 - **Kiểm tra rò rỉ phân tách (Split Leakage):**
-  - Kiểm tra xem `fit_transform()` có bị gọi trên toàn bộ tập dữ liệu *trước* khi chia `train_test_split()` không? (Nếu có ➔ RÒ RỈ NGHIÊM TRỌNG: giá trị trung bình/phương sai của tập test đã lọt vào tập train).
+  - Kiểm tra xem `fit_transform()` có bị gọi trên toàn bộ tập dữ liệu *trước* khi chia `train_test_split()` không? (Nếu có -> RÒ RỈ NGHIÊM TRỌNG: giá trị trung bình/phương sai của tập test đã lọt vào tập train).
 - **Kiểm tra rò rỉ mẫu trùng (Duplicate Leakage):**
   - Tập train và test có các dòng dữ liệu giống hệt nhau không?
 
@@ -31,13 +31,13 @@ Trong Trí tuệ Nhân tạo, hiện tượng nguy hiểm nhất là **"Ảo tư
 
 ### Bước 3: Kiểm toán Độ lệch Train vs Validation (Overfitting Audit)
 - Đối chiếu đường cong học (Learning Curve):
-  - Train Loss = 0.02 nhưng Val Loss = 1.20 ➔ Mô hình đang học vẹt thuộc lòng dữ liệu train, hoàn toàn mất khả năng tổng quát hóa.
+  - Train Loss = 0.02 nhưng Val Loss = 1.20 -> Mô hình đang học vẹt thuộc lòng dữ liệu train, hoàn toàn mất khả năng tổng quát hóa.
 
 ### Bước 4: Kiểm toán Tính ngẫu nhiên (Shuffle & Baseline Sanity Check)
 - **Bài kiểm tra xáo trộn nhãn (Label Permutation Test):**
   - Thử xáo trộn ngẫu nhiên cột nhãn $y$ rồi train lại mô hình.
   - **Kết quả đúng:** Điểm số phải tụt về mức đoán ngẫu nhiên (ví dụ 50% cho bài toán 2 lớp).
-  - **Cảnh báo đỏ:** Nếu nhãn đã xáo trộn ngẫu nhiên mà mô hình vẫn đạt Accuracy cao ➔ Mã nguồn chắc chắn 100% có bug rò rỉ dữ liệu!
+  - **Cảnh báo đỏ:** Nếu nhãn đã xáo trộn ngẫu nhiên mà mô hình vẫn đạt Accuracy cao -> Mã nguồn chắc chắn 100% có bug rò rỉ dữ liệu!
 
 ## Tiêu chí kết thúc
 - Chỉ khi vượt qua toàn bộ 4 bước kiểm toán trên mà không phát hiện dấu vết rò rỉ dữ liệu thì kết quả mô hình mới được công nhận là hợp lệ.

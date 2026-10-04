@@ -10,8 +10,8 @@ Kỹ năng này áp dụng TDD vào đặc thù của Học máy và Học sâu.
 
 ## Liên kết Quy trình Nghiệp vụ (Flow References)
 Khi thực hiện kiểm thử, AI **BẮT BUỘC** phải áp dụng các chuẩn mực kỹ thuật từ:
-- 🖼️ [**`dl_workflows/dl_data_and_augmentation_guide.md`**](../../dl_workflows/dl_data_and_augmentation_guide.md): Cài đặt kiểm thử tính toàn vẹn file ảnh, kiểm tra Lazy Loading của Dataset và kiểm thử kích thước batch của DataLoader.
-- ⚙️ [**`dl_workflows/dl_training_and_optimization_guide.md`**](../../dl_workflows/dl_training_and_optimization_guide.md): Cài đặt kiểm thử gradient, cắt tỉa đạo hàm và kiểm thử Sanity Overfit 1 batch.
+- [**`dl_workflows/dl_data_and_augmentation_guide.md`**](../../dl_workflows/dl_data_and_augmentation_guide.md): Cài đặt kiểm thử tính toàn vẹn file ảnh, kiểm tra Lazy Loading của Dataset và kiểm thử kích thước batch của DataLoader.
+- [**`dl_workflows/dl_training_and_optimization_guide.md`**](../../dl_workflows/dl_training_and_optimization_guide.md): Cài đặt kiểm thử gradient, cắt tỉa đạo hàm và kiểm thử Sanity Overfit 1 batch.
 
 ---
 
@@ -52,4 +52,4 @@ Khi thực hiện kiểm thử, AI **BẮT BUỘC** phải áp dụng các chu�
 ---
 
 ## Anti-Rationalization
-- ❌ *"Mô hình Deep Learning chạy lâu lắm, bỏ qua test overfit để lên Kaggle train luôn"* ➔ **Bác bỏ:** Lên Kaggle train 2 tiếng rồi mới phát hiện model không học (Loss đứng im) sẽ làm lãng phí toàn bộ quota 30 tiếng GPU miễn phí trong tuần! Test trước 30 giây trên local là bắt buộc.
+- [X] *"Mô hình Deep Learning chạy lâu lắm, bỏ qua test overfit để lên Kaggle train luôn"* -> **Bác bỏ:** Lên Kaggle train 2 tiếng rồi mới phát hiện model không học (Loss đứng im) sẽ làm lãng phí toàn bộ quota 30 tiếng GPU miễn phí trong tuần! Test trước 30 giây trên local là bắt buộc.
