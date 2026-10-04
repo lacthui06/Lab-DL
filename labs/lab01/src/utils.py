@@ -90,9 +90,7 @@ def plot_loss_and_acc_curves(
         save_path = Path(save_path)
         save_path.parent.mkdir(parents=True, exist_ok=True)
         plt.savefig(str(save_path), dpi=300, bbox_inches="tight")
-        plt.close()
-    else:
-        plt.show()
+    plt.show()
 
 
 def plot_prediction_grid(
@@ -168,9 +166,7 @@ def plot_prediction_grid(
         save_path = Path(save_path)
         save_path.parent.mkdir(parents=True, exist_ok=True)
         plt.savefig(str(save_path), dpi=300, bbox_inches="tight")
-        plt.close()
-    else:
-        plt.show()
+    plt.show()
 
 
 def plot_confusion_matrix(
@@ -203,9 +199,7 @@ def plot_confusion_matrix(
         save_path = Path(save_path)
         save_path.parent.mkdir(parents=True, exist_ok=True)
         plt.savefig(str(save_path), dpi=300, bbox_inches="tight")
-        plt.close()
-    else:
-        plt.show()
+    plt.show()
 
 
 def plot_comparison_curves(
@@ -240,6 +234,4 @@ def plot_comparison_curves(
         save_path = Path(save_path)
         save_path.parent.mkdir(parents=True, exist_ok=True)
         plt.savefig(str(save_path), dpi=300, bbox_inches="tight")
-        plt.close()
-    else:
-        plt.show()
+    plt.show()
