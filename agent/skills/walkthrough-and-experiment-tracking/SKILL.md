@@ -35,11 +35,20 @@ Trả lời 3 câu hỏi bắt buộc vào mục **Changelog**:
 - Thêm một cột mới cho `Run #X` vào bảng **Flow Comparison Matrix** trong file `walkthrough_lab_0X.md`.
 - Đánh dấu phiên bản nào đang nắm giữ kỷ lục điểm số cao nhất (**Best Checkpoint**).
 
-### Bước 4: Đúc kết dữ liệu làm Báo cáo (Report-Ready Findings)
-- Trích xuất 3 kết luận then chốt:
-  - Yếu tố kỹ thuật nào tạo ra bước ngoặt cải thiện điểm số lớn nhất?
-  - Mô hình tốt nhất vẫn còn dự đoán sai ở những trường hợp nào?
-  - Đường dẫn tới các file biểu đồ và checkpoint tốt nhất (`outputs/best_model.pt`).
+### Bước 4: Đúc kết dữ liệu & Thu hoạch Artifact từ Kaggle (Kaggle Harvest & Report-Ready Findings)
+- **Cơ chế thu hoạch từ Kaggle:** Khi người dùng chạy trên Kaggle GPU:
+  - Code Notebook lưu toàn bộ kết quả vào `/kaggle/working/`:
+    - File trọng số mô hình: `outputs/checkpoints/best_model.pt`
+    - Lưới ảnh dự đoán Input vs Output (Predicted vs Actual): `outputs/predictions_best.png`
+    - Ma trận nhầm lẫn: `outputs/confusion_matrix.png`
+    - Đồ thị huấn luyện: `outputs/loss_curves.png`
+  - Người dùng tải trực tiếp (hoặc nén `!zip -r outputs.zip /kaggle/working/outputs`) về thư mục `labs/lab0X/outputs/` ở máy Local.
+- **Trích xuất báo cáo:**
+  - AI đọc các artifact vừa tải về để lấy số liệu thực tế cập nhật vào file `walkthrough_lab_0X.md`.
+  - Trích xuất 3 kết luận then chốt:
+    - Yếu tố kỹ thuật nào tạo ra bước ngoặt cải thiện điểm số lớn nhất?
+    - Mô hình tốt nhất vẫn còn dự đoán sai ở những trường hợp nào?
+    - Đường dẫn tới các file biểu đồ và checkpoint tốt nhất (`outputs/best_model.pt`).
 
 ---
 

@@ -21,12 +21,14 @@ Kỹ năng này đóng vai trò là "Nhạc trưởng" định tuyến mọi yê
    - Kích hoạt `idea-refine` / `interview-me` nếu đề bài chưa rõ.
    - Kích hoạt `spec-driven-development` để lập bản Spec kỹ thuật có mốc Baseline.
 3. **Thực thi & Kiểm thử:**
-   - Kích hoạt `planning-and-task-breakdown` để chia nhỏ module `src/`.
-   - Kích hoạt `test-driven-development` để kiểm thử dữ liệu và Sanity Overfit 1 batch.
-4. **Huấn luyện & Ghi nhận Thực nghiệm:**
-   - Huấn luyện trên local hoặc hướng dẫn đẩy lên Kaggle GPU.
-   - **Bắt buộc kích hoạt `walkthrough-and-experiment-tracking`** để cập nhật toàn bộ flow vào file `walkthrough_lab_0X.md`.
-5. **Nghiệm thu:**
+   - Kích hoạt `planning-and-task-breakdown` để chia nhỏ module `src/` và xây dựng file Notebook tương tác trong `notebooks/`.
+   - Kích hoạt `test-driven-development` để kiểm thử dữ liệu và Sanity Overfit 1 batch trên Local (~5 giây).
+4. **Quy trình Huấn luyện & Thu hoạch Tối ưu (Zero Waste Protocol):**
+   - **Tại Local:** Tuyệt đối KHÔNG tự ý chạy full training nhiều epoch trên CPU local làm tốn quota và thời gian của người dùng. Dừng ở mức hoàn thiện code + test sanity 1 batch thành công.
+   - **Tại Kaggle GPU:** Hướng dẫn người dùng upload Notebook lên Kaggle GPU (Tesla T4) chạy huấn luyện siêu tốc. Code notebook tự động xuất file trọng số (`best_model.pt`) và ảnh trực quan hóa (Input/Output predictions, Confusion Matrix, Loss curves) ra `/kaggle/working/`.
+   - **Thu hoạch:** Người dùng tải file kết quả từ Kaggle về thư mục `outputs/` ở local.
+5. **Ghi nhận & Nghiệm thu:**
+   - Kích hoạt `walkthrough-and-experiment-tracking` để cập nhật toàn bộ số liệu và bằng chứng vào file `walkthrough_lab_0X.md`.
    - Kích hoạt `doubt-driven-development` kiểm tra rò rỉ dữ liệu trước khi `documentation-and-adrs`.
 
 ## Tiêu chí nghiệm thu (Verification)

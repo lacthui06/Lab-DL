@@ -13,7 +13,7 @@ Kỹ năng này chịu trách nhiệm biến các đoạn mã nháp lộn xộn,
 - Khi cần chuyển đổi từ file `.ipynb` (Jupyter Notebook) sang các file script `.py` có cấu trúc module.
 - Khi mã nguồn có quá nhiều tham số viết thẳng vào code (Hard-coded constants).
 
-## 5 Bước làm sạch mã nguồn DS & AI
+## 6 Bước làm sạch mã nguồn DS & AI
 
 ### 1. Trục xuất số cứng và đường dẫn cứng (No Hard-coded Values)
 - Gom toàn bộ siêu tham số (Hyperparameters) và đường dẫn file vào một lớp cấu hình `Config` hoặc file `config.yaml`:
@@ -53,5 +53,14 @@ Kỹ năng này chịu trách nhiệm biến các đoạn mã nháp lộn xộn,
 ### 5. Dọn dẹp mã chết (Dead Code & Unused Imports)
 - Xóa toàn bộ các dòng `import` thừa, các dòng `print()` nháp trong vòng lặp và các cell thử nghiệm thất bại bị bỏ xó.
 
+### 6. Nghiêm cấm Icon / Emoji trong Code, Print và Notebook (Strict No-Emoji Policy)
+- Tuyệt đối không dùng emoji, icon (ví dụ: rocket, checkmark, fire, sparkles, tag, chart, folder, computer) trong bất kỳ:
+  - File mã nguồn `.py`, `.sh`.
+  - Câu lệnh in ấn `print(...)`, logger, exception message.
+  - Chú thích (comments) và docstrings.
+  - Các ô Markdown và Code cell của Jupyter Notebook (`.ipynb`).
+- Mọi trạng thái thành công/thất bại, tiêu đề mục đều biểu diễn bằng văn bản thuần túy (plain text / ASCII / chuẩn technical markdown như `[SUCCESS]`, `[INFO]`, `[FAILED]`, `Section 1: ...`). Điều này bảo đảm không bao giờ vấp phải lỗi mã hóa `UnicodeEncodeError` trên terminal hệ điều hành (như Windows CP1252) và giữ mã nguồn chuẩn mực học thuật cao nhất.
+
 ## Tiêu chí nghiệm thu (Verification)
 - Chạy lại toàn bộ script đã được làm sạch với cùng random seed và khẳng định kết quả đo lường (Metrics/Loss) hoàn toàn trùng khớp với phiên bản ban đầu.
+- Quét toàn bộ repository để đảm bảo không còn sót bất kỳ ký tự icon/emoji nào trong file mã nguồn và notebook.

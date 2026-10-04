@@ -1,0 +1,47 @@
+{
+  "Run1_Baseline_MLP": {
+    "parameters": {
+      "total": 101770,
+      "trainable": 101770,
+      "non_trainable": 0
+    },
+    "best_val_acc": 88.03,
+    "test_loss": 0.3478,
+    "test_acc": 87.39,
+    "test_f1_macro": 87.29,
+    "final_train_loss": 0.2782,
+    "final_train_acc": 89.7,
+    "final_val_loss": 0.3301,
+    "final_val_acc": 88.03
+  },
+  "Run2_Tuned_MLP": {
+    "parameters": {
+      "total": 235914,
+      "trainable": 235914,
+      "non_trainable": 0
+    },
+    "best_val_acc": 88.42,
+    "test_loss": 0.3305,
+    "test_acc": 87.86,
+    "test_f1_macro": 87.85,
+    "final_train_loss": 0.3343,
+    "final_train_acc": 87.62,
+    "final_val_loss": 0.3117,
+    "final_val_acc": 88.42
+  },
+  "Run3_FashionCNN": {
+    "parameters": {
+      "total": 422090,
+      "trainable": 422090,
+      "non_trainable": 0
+    },
+    "best_val_acc": 93.48,
+    "test_loss": 0.2054,
+    "test_acc": 92.65,
+    "test_f1_macro": 92.6,
+    "final_train_loss": 0.1866,
+    "final_train_acc": 93.23,
+    "final_val_loss": 0.1819,
+    "final_val_acc": 93.37
+  }
+}
