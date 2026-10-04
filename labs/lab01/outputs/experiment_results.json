@@ -1,14 +1,14 @@
 {
   "Run1_Baseline_MLP": {
-    "test_loss": 0.3555,
-    "test_acc": 87.33
+    "loss": 0.3555,
+    "acc": 87.33
   },
   "Run2_Tuned_MLP": {
-    "test_loss": 0.3307,
-    "test_acc": 88.01
+    "loss": 0.3307,
+    "acc": 88.01
   },
   "Run3_FashionCNN": {
-    "test_loss": 0.1994,
-    "test_acc": 92.99
+    "loss": 0.1994,
+    "acc": 92.99
   }
 }
