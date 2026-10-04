@@ -13,11 +13,12 @@ Kỹ năng này chịu trách nhiệm hoàn thiện khâu tài liệu chuyên m�
 - Khi cần chuẩn bị tài liệu nộp bài tập lớn, khóa luận tốt nghiệp hoặc bàn giao cho nhóm sản phẩm.
 - Khi cần giải thích lý do tại sao lại chọn thuật toán/mô hình này thay vì thuật toán khác.
 
-## 3 Đầu ra tài liệu bắt buộc
+## Đầu ra tài liệu cho các bài Lab (Tích hợp vào Mục 3 của walkthrough_lab_0X.md)
 
-### 1. Thẻ thông tin mô hình chuẩn mực (MODEL_CARD.md)
-Áp dụng khung tiêu chuẩn *Model Card* của Google/Hugging Face:
-- **Thông tin cơ bản:** Tên mô hình, kiến trúc cốt lõi, ngày hoàn thành, tác giả.
+Đối với các bài Lab, toàn bộ Báo cáo định lượng, Model Card và Quyết định kỹ thuật đều được tổng hợp trực tiếp vào **Mục 3 của file duy nhất `walkthrough_lab_0X.md`** để đảm bảo tính tinh gọn:
+- **Kết quả định lượng:** Bảng so sánh giữa Baseline Model và Mô hình chính (Accuracy, Precision, Recall, F1-Macro, Test Loss).
+- **Chẩn đoán & Ma trận nhầm lẫn:** Phân tích chi tiết các lớp dễ bị nhầm lẫn (Confusion Clustered Slices).
+- **Quyết định kỹ thuật & Bài học:** Lý do tại sao chuyển đổi kiến trúc và kỹ thuật điều hòa hiệu quả nhất.
 - **Mục đích sử dụng (Intended Use):** Mô hình được thiết kế để giải quyết bài toán gì? Không được dùng cho những trường hợp nào?
 - **Dữ liệu huấn luyện & Đánh giá:** Nguồn dữ liệu, kích thước tập dữ liệu, phân bố nhãn.
 - **Kết quả định lượng (Quantitative Results):**
