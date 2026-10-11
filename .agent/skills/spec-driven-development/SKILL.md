@@ -33,6 +33,7 @@ Nguyên lý then chốt: mọi quyết định thiết kế phải được ch�
 | Input (nhận vào) | Output (trả ra) |
 |---|---|
 | Yêu cầu đã làm rõ từ `interview-me` | Section 1 đầy đủ trong `walkthrough_lab_0X.md` |
+| Đề bài gốc trong `description_lab_0X.md` | Bản tóm tắt cách hiểu đề đã xác nhận (Mục 1.0) |
 | Playbook workflow tương ứng | Data contract và chiến lược chia tập |
 | Ràng buộc compute và bộ nhớ | Baseline model, metric, ngưỡng chấp nhận |
 | Đặc điểm dataset | Thiết kế loss, optimizer, scheduler |
@@ -40,7 +41,7 @@ Nguyên lý then chốt: mọi quyết định thiết kế phải được ch�
 ## 4. Quy trình chi tiết
 
 ### Bước 0: Làm rõ đề bài gốc trước khi đặc tả
-Đọc `description_lab_0X.md` và tóm tắt lại cách hiểu đề thành các gạch đầu dòng: mục tiêu, phạm vi, ràng buộc kỹ thuật, và sản phẩm cần nộp. Liệt kê mọi điểm mơ hồ, thiếu thông tin, hoặc giả định chưa được xác nhận, rồi trình bày cho người dùng và chờ xác nhận trước khi viết Section 1. Nếu còn điểm mơ hồ ảnh hưởng đến thiết kế, kích hoạt `interview-me` để làm rõ. Bước này bắt buộc kể cả khi đề bài trông đã rõ ràng.
+Đọc `description_lab_0X.md` và tóm tắt lại cách hiểu đề thành các gạch đầu dòng: mục tiêu, phạm vi, ràng buộc kỹ thuật, và sản phẩm cần nộp. Liệt kê mọi điểm mơ hồ, thiếu thông tin, hoặc giả định chưa được xác nhận, rồi trình bày cho người dùng và chờ xác nhận trước khi viết Section 1. Nếu còn điểm mơ hồ ảnh hưởng đến thiết kế, kích hoạt `interview-me` để làm rõ. Bản tóm tắt đã xác nhận được ghi vào Mục 1.0 của `walkthrough_lab_0X.md`. Bước này bắt buộc kể cả khi đề bài trông đã rõ ràng.
 
 ### Bước 1: Chọn playbook workflow tham chiếu
 Xác định modality của bài toán. Với bài toán Deep Learning, tham chiếu `docs/dl_flow.md` cho modality, chiều tensor, backbone, và hàm loss chuyên biệt. Tham chiếu `docs/eda.md` và `docs/feature.md` cho hướng dẫn phân tích dữ liệu và kỹ thuật đặc trưng. Trích xuất chuẩn kỹ thuật từ playbook thay vì tự phát minh.
@@ -68,6 +69,7 @@ Tất cả nội dung trên được soạn trực tiếp trong Section 1 của 
 - Section 1 đầy đủ trong `walkthrough_lab_0X.md` gồm: master flow, problem formulation, data contract, baseline, metric, loss, và ràng buộc môi trường.
 - Danh sách chuẩn kỹ thuật trích xuất từ playbook workflow.
 - Ngưỡng chấp nhận định lượng rõ ràng.
+- Bản tóm tắt cách hiểu đề bài đã xác nhận với người dùng, ghi ở Mục 1.0 của `walkthrough_lab_0X.md`.
 
 ## 6. Bàn giao (Handoff)
 

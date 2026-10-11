@@ -51,16 +51,19 @@ Kiểm tra trực quan và thống kê các mẫu bị phân loại sai, xác đ
 ### Bước 4: Tổng hợp phát hiện kỹ thuật chính
 Giải thích các đột phá về hiệu năng, đánh giá tác động của regularization, learning rate scheduler, và data augmentation. Phần này trả lời câu hỏi "vì sao đạt được kết quả".
 
-### Bước 5: Xác thực checkpoint (Save/Load)
+### Bước 5: Truy vết quyết định về điểm thảo luận và chuẩn hóa ngôn ngữ
+Với mỗi quyết định kỹ thuật quan trọng (kiến trúc, hàm loss, metric, chiến lược chia tập), ghi rõ điểm thảo luận tương ứng ở Mục 1.0 của `walkthrough_lab_0X.md` và hướng giải quyết đã chốt, thường dưới dạng bảng ở Mục 3.6. Dùng văn phong kỹ thuật trung tính, ngôi thứ ba; không dùng lối kể chuyện hay từ chỉ người như "bạn", "tôi", "chúng ta". Ví dụ đúng: "Chiến lược chia tập đã được thảo luận và chốt dùng StratifiedKFold do phân bố lớp cân bằng."
+
+### Bước 6: Xác thực checkpoint (Save/Load)
 Xác nhận rằng việc nạp lại checkpoint tốt nhất tái lập 100% metric inference giống hệt. Đây là bằng chứng cuối cùng về tính tái lập của kết quả.
 
-### Bước 6: Ghi Architecture Decision Record
+### Bước 7: Ghi Architecture Decision Record
 Với các dự án kỹ thuật lâu dài, ghi lại các lựa chọn kiến trúc quan trọng dưới `docs/adr/`. Ví dụ: vì sao chọn Focal Loss thay vì Binary Cross-Entropy; vì sao chọn ResNet thay vì Vision Transformer cho dataset nhỏ. ADR lưu lại lý do đằng sau các quyết định để không phải suy đoán lại về sau.
 
-### Bước 7: Tạo báo cáo bàn giao phiên
+### Bước 8: Tạo báo cáo bàn giao phiên
 Tạo bản tóm tắt bàn giao ngắn gọn cho phiên phát triển tiếp theo: danh sách module source và artifact đã tạo, đường dẫn checkpoint tốt nhất, và hướng dẫn tái lập kết quả bằng một lệnh duy nhất.
 
-### Bước 8: Kiểm chứng tính chính xác của tài liệu
+### Bước 9: Kiểm chứng tính chính xác của tài liệu
 Xác nhận mọi metric được ghi tài liệu khớp 100% với log thực nghiệm và confusion matrix đầu ra. Không có con số ảo tưởng hay làm tròn thiếu chính xác.
 
 ## 5. Deliverables
@@ -88,6 +91,7 @@ Xác nhận mọi metric được ghi tài liệu khớp 100% với log thực n
 
 ## 8. Definition of Done
 
+- [ ] Mỗi quyết định kỹ thuật quan trọng đã được truy vết về điểm thảo luận ở Mục 1.0.
 - [ ] Ma trận đánh giá định lượng đã hoàn tất với đầy đủ các run.
 - [ ] Chẩn đoán confusion matrix đã phân tích các cặp lớp nhầm lẫn cao.
 - [ ] Phân tích lát cắt lỗi đã xác định nguyên nhân gốc.
@@ -103,3 +107,5 @@ Xác nhận mọi metric được ghi tài liệu khớp 100% với log thực n
 - [X] *"Chỉ cần trình bày kết quả tốt, khỏi phân tích lỗi"* -> **Bác bỏ:** Phân tích lỗi là phần thể hiện hiểu biết sâu về mô hình. Bỏ qua nó làm báo cáo thiếu chiều sâu và kém thuyết phục.
 - [X] *"Số liệu gần đúng cũng được, không cần chính xác tuyệt đối"* -> **Bác bỏ:** Số liệu không khớp log là dấu hiệu của ghi chép cẩu thả và làm mất độ tin cậy của toàn bộ báo cáo.
 - [X] *"Không cần xác thực checkpoint, chắc là giống"* -> **Bác bỏ:** Xác thực tái lập là bằng chứng cuối cùng cho tính khoa học của kết quả. Không xác thực thì không chứng minh được gì.
+- [X] *"Khỏi trích dẫn thảo luận, viết kết luận là đủ"* -> **Bác bỏ:** Báo cáo không truy vết được về thảo luận ban đầu thì người chấm không biết quyết định nào đã được cân nhắc và chốt. Thiếu vết truy vết làm báo cáo mất tính kiểm chứng.
+- [X] *"Viết theo lối kể chuyện cho gần gũi"* -> **Bác bỏ:** Tài liệu kỹ thuật phải trung tính và ngôi thứ ba. Lối kể chuyện và từ chỉ người làm giảm độ chuyên nghiệp và khó kiểm chứng.

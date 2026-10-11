@@ -13,6 +13,13 @@
 
 ## 1. TECHNICAL SPECIFICATION & FLOW DESIGN (Rule: spec-driven-development)
 
+### 1.0. Brief Interpretation and Clarifications
+Bản tóm tắt cách hiểu đề bài gốc trong `description_lab_0X.md`, kèm các điểm đã được làm rõ và hướng giải quyết đã chốt. Mục này là vết truy vết cho mọi quyết định đặc tả phía sau.
+
+- **Cách hiểu đề bài:** <tóm tắt mục tiêu, phạm vi, ràng buộc, sản phẩm cần nộp>
+- **Điểm đã làm rõ:** <mỗi dòng nêu điểm mơ hồ và hướng giải quyết đã thống nhất>
+- **Giả định còn lại:** <giả định chưa được xác nhận, nếu có>
+
 ### 1.1. Master Flow Design
 Sơ đồ luồng end-to-end của pipeline, từ nạp dữ liệu tới quyết định chọn mô hình cuối.
 
@@ -103,5 +110,12 @@ Giải thích các đột phá về hiệu năng, đánh giá tác động của
 ### 3.5. Checkpoint Verification (Save/Load)
 Xác nhận việc nạp lại checkpoint tốt nhất tái lập 100% metric inference.
 
-### 3.6. Conclusion & Lessons Learned
+### 3.6. Decision Traceability
+Bảng truy vết mỗi quyết định kỹ thuật quan trọng về điểm thảo luận tương ứng ở Mục 1.0, kèm hướng giải quyết đã chốt. Dùng văn phong kỹ thuật trung tính, ngôi thứ ba; không dùng lối kể chuyện hay từ chỉ người như "bạn", "tôi", "chúng ta".
+
+| Quyết định kỹ thuật | Điểm thảo luận (Mục 1.0) | Hướng giải quyết đã chốt |
+|---|---|---|
+| | | |
+
+### 3.7. Conclusion & Lessons Learned
 Kết luận cuối cùng và các bài học rút ra cho lab tiếp theo.
