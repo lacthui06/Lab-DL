@@ -18,7 +18,7 @@ Bài lab xây dựng pipeline Deep Learning end-to-end để phân loại 10 nh�
 
 ## Reproduce
 
-1. Cài đặt môi trường theo `requirements.txt` ở thư mục gốc repository.
+1. Cài đặt môi trường theo `requirements.txt` ở thư mục gốc repository. File này ghi cả phiên bản trình thông dịch Python (local: 3.13.15) ở dạng comment, dùng để đối chiếu với Kaggle.
 2. Chạy test TDD cục bộ để xác thực pipeline (bao gồm bài test 1-batch sanity overfit).
 3. Chạy huấn luyện đầy đủ trên Kaggle GPU.
 4. Tải artifact trở về `outputs/` và cập nhật `walkthrough_lab_01.md`.
@@ -36,6 +36,6 @@ Bài lab xây dựng pipeline Deep Learning end-to-end để phân loại 10 nh�
 
 Mô hình được chọn: **Tuned MLP (Run #2)** — trong lần chạy đã commit, cải thiện +0.68% Test Accuracy và giảm 7.0% Test Loss so với baseline. Các delta này thuộc lần chạy `AdamW` đã bị thay thế và cần được tính lại sau khi đo lại.
 
-Ghi chú: Run #1 và Run #2 không ghi nhận Macro F1 trong lần chạy Kaggle đã commit, nên ô này để trống thay vì suy diễn số.
+Ghi chú: Run #1 và Run #2 không ghi nhận Macro F1 trong lần chạy Kaggle đã commit, nên ô này để trống thay vì suy diễn số. Theo chuẩn metric phân loại, bảng kết quả sẽ được mở rộng thêm Precision, Recall (TPR), F1 và FPR theo từng lớp ngay khi lần chạy Kaggle kế tiếp sinh ra `classification_report_baseline_mlp.txt` và `classification_report_tuned_mlp.txt`.
 
 Chi tiết đầy đủ xem tại `walkthrough_lab_01.md`.

@@ -14,7 +14,7 @@ import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader, Dataset
 from sklearn.model_selection import StratifiedKFold
-from sklearn.metrics import confusion_matrix
+from sklearn.metrics import classification_report, confusion_matrix
 
 from .dataset import build_fold_loaders
 from .utils import set_seed
@@ -319,6 +319,45 @@ def compute_tpr_fpr(
     tpr = np.divide(tp, tp + fn, out=np.zeros_like(tp), where=(tp + fn) > 0)
     fpr = np.divide(fp, fp + tn, out=np.zeros_like(fp), where=(fp + tn) > 0)
     return tpr, fpr
+
+
+def build_per_class_metrics(
+    targets,
+    preds,
+    class_names: List[str],
+) -> Dict[str, Dict[str, float]]:
+    """Builds the full per-class metric set for a classification run.
+
+    Combines scikit-learn's per-class precision, recall, and F1 with the
+    per-class True Positive Rate and False Positive Rate derived from the
+    confusion matrix. FPR is not part of the scikit-learn classification report,
+    so it must be computed here from the confusion matrix; recall and TPR are
+    the same quantity and are reported under both names for clarity.
+
+    Args:
+        targets: Ground-truth integer labels.
+        preds: Predicted integer labels.
+        class_names: Ordered class names, index i naming class i.
+
+    Returns:
+        Mapping of class name to a dictionary with `precision`, `recall_tpr`,
+        `f1`, and `fpr`, each rounded to four decimals.
+    """
+    report = classification_report(
+        targets, preds, target_names=class_names, output_dict=True, zero_division=0
+    )
+    cm = confusion_matrix(targets, preds, labels=list(range(len(class_names))))
+    tpr, fpr = compute_tpr_fpr(cm)
+
+    per_class: Dict[str, Dict[str, float]] = {}
+    for i, name in enumerate(class_names):
+        per_class[name] = {
+            "precision": round(float(report[name]["precision"]), 4),
+            "recall_tpr": round(float(tpr[i]), 4),
+            "f1": round(float(report[name]["f1-score"]), 4),
+            "fpr": round(float(fpr[i]), 4),
+        }
+    return per_class
 
 
 def run_kfold_cv(

@@ -93,6 +93,19 @@ Note: this lab trains all models from scratch (no pretrained backbone), so `docs
 - **Baseline MLP (Run #1):** Test Accuracy $\ge 85.0\%$.
 - **Tuned MLP (Run #2):** Test Accuracy $\ge 87.5\%$.
 
+**Reported metric set (classification).** Accuracy alone is insufficient for a 10-class problem because it can hide a class the model never predicts correctly. Every run therefore reports the following set, and Section 3 analyses must cover all of it:
+
+| Metric | Level | Source |
+|:---|:---|:---|
+| Test Loss, Test Accuracy | Run | Notebook evaluation cell |
+| Macro F1-Score | Run | scikit-learn classification report |
+| Precision, Recall (TPR), F1 | Per class (10 classes) | `classification_report_{slug}.txt` |
+| False Positive Rate (FPR) | Per class (10 classes) | Derived from `confusion_matrix_{slug}.png` / the per-run confusion matrix |
+| Confusion matrix | Run | `confusion_matrix_{slug}.png` |
+| Train/Val loss and accuracy per epoch | Run | `run*_curves.png` |
+
+The accuracy thresholds above remain the pass/fail gate; the per-class metrics are the diagnostic evidence required for the error analysis, not additional pass/fail gates.
+
 ### 1.6. Phase 2 — Optimizer Comparison under Stratified K-Fold Cross-Validation
 
 #### 1.6.1. Objective and Scope
@@ -173,6 +186,7 @@ The Phase 1 comparison contrasts two architectures, so every diagnostic emitted 
 | Normalized confusion matrix | `confusion_matrix_baseline_mlp.png` | `confusion_matrix_tuned_mlp.png` |
 | Prediction grid (predicted vs actual) | `predictions_baseline_mlp.png` | `predictions_tuned_mlp.png` |
 | Per-class classification report | `classification_report_baseline_mlp.txt` | `classification_report_tuned_mlp.txt` |
+| Per-class metric set (precision, TPR, F1, FPR) | `per_class_metrics_baseline_mlp.json` | `per_class_metrics_tuned_mlp.json` |
 | Best checkpoint | `checkpoints/baseline_mlp_best.pt` | `checkpoints/tuned_mlp_best.pt` |
 | Summary metrics (both runs) | `experiment_results.json` | `experiment_results.json` |
 
@@ -262,11 +276,20 @@ The Phase 1 comparison contrasts two architectures, so every diagnostic emitted 
 
 Per-class classification reports are produced for both architectures (spec Section 1.7), written by the notebook PHẦN 9 to `outputs/classification_report_baseline_mlp.txt` and `outputs/classification_report_tuned_mlp.txt`.
 
-The committed Kaggle run produced a per-class report only for the convolutional model that has since been removed from scope, and that file was deleted together with the CNN. No per-class report for either MLP was logged by that run, so no precision/recall/F1 figures are reproduced here; they are emitted on the next Kaggle execution. Reproducing invented numbers is prohibited by the no-fabrication policy.
+Per the classifier metric standard, this section must report the full metric set for each run, not accuracy alone: Test Loss, Test Accuracy, Macro F1, and per-class Precision, Recall (TPR), F1, and FPR. Precision, Recall, and F1 come from the report files above; FPR is derived from the per-run confusion matrix. The notebook PHẦN 9 emits the consolidated per-class set to `outputs/per_class_metrics_baseline_mlp.json` and `outputs/per_class_metrics_tuned_mlp.json`. The table shape is fixed as follows so no metric is silently dropped.
+
+| Run | Class | Precision | Recall (TPR) | F1 | FPR |
+|:---|:---|:---:|:---:|:---:|:---:|
+| Run #1 Baseline MLP | all 10 classes | not logged | not logged | not logged | not logged |
+| Run #2 Tuned MLP | all 10 classes | not logged | not logged | not logged | not logged |
+
+The committed Kaggle run produced a per-class report only for the convolutional model that has since been removed from scope, and that file was deleted together with the CNN. No per-class report for either MLP was logged by that run, so no precision/recall/F1 figures are reproduced here; they are emitted on the next Kaggle execution. FPR is not part of the scikit-learn classification report and must instead be derived from the per-run confusion matrix; that derivation is deferred to the same next Kaggle execution. Reproducing invented numbers is prohibited by the no-fabrication policy.
 
 ### 3.3. Confusion Matrix Analysis & Error Diagnostics (Both Runs)
 
 Normalized confusion matrices and prediction grids are produced for both architectures (spec Section 1.7), written by the notebook PHẦN 7 to `outputs/confusion_matrix_baseline_mlp.png`, `outputs/predictions_baseline_mlp.png`, `outputs/confusion_matrix_tuned_mlp.png`, and `outputs/predictions_tuned_mlp.png`.
+
+This section must read the figures themselves, not merely list their paths. Once the artifacts exist, the analysis has to state: the highest off-diagonal cells of each confusion matrix (specific class pair and misclassification rate), the class with the lowest TPR and the class with the highest FPR, and the concrete misclassified samples visible in each prediction grid (true label, predicted label, model confidence).
 
 The committed Kaggle run stored a confusion matrix and a prediction grid only for the removed convolutional model, so no confusion-matrix-based error analysis for either MLP is available in the committed artifacts. The qualitative error-cluster analysis (for example, the well-known Shirt / T-shirt / Pullover / Coat overlap in low-resolution grayscale) is therefore deferred to the next Kaggle run rather than inferred from the deleted CNN run.
 
@@ -303,6 +326,6 @@ This table traces every important technical decision back to the corresponding d
    - Individual Run Learning Curves: `outputs/run1_baseline_curves.png`, `outputs/run2_tuned_mlp_curves.png`
    - Confusion Matrices (both runs): `outputs/confusion_matrix_baseline_mlp.png`, `outputs/confusion_matrix_tuned_mlp.png`
    - Prediction Grids (both runs): `outputs/predictions_baseline_mlp.png`, `outputs/predictions_tuned_mlp.png`
-   - Detailed Metric Logs: `outputs/classification_report_baseline_mlp.txt`, `outputs/classification_report_tuned_mlp.txt`, `outputs/experiment_results.json`
+   - Detailed Metric Logs: `outputs/classification_report_baseline_mlp.txt`, `outputs/classification_report_tuned_mlp.txt`, `outputs/per_class_metrics_baseline_mlp.json`, `outputs/per_class_metrics_tuned_mlp.json`, `outputs/experiment_results.json`
    - Phase 2 Optimizer Artifacts (2a symmetric): `outputs/optimizer_comparison_curves.png`, `outputs/optimizer_tpr_fpr.png`, `outputs/optimizer_confusion_matrices.png`, `outputs/optimizer_experiment_results.json`
    - Phase 2 Optimizer Artifacts (2b fair budget): `outputs/optimizer_comparison_curves_fairbudget.png`, `outputs/optimizer_tpr_fpr_fairbudget.png`, `outputs/optimizer_confusion_matrices_fairbudget.png`, `outputs/optimizer_experiment_results_fairbudget.json`

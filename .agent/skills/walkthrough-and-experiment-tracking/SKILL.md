@@ -1,6 +1,6 @@
 ---
 name: walkthrough-and-experiment-tracking
-description: Tự động theo dõi, ghi nhận và cập nhật dòng chảy thí nghiệm đầy đủ trong Section 2 của walkthrough_lab_0X.md sau mỗi lần chạy huấn luyện, nắm bắt chênh lệch về kiến trúc, hyperparameter và metric qua cả 5 giai đoạn pipeline.
+description: Tự động theo dõi, ghi nhận và cập nhật dòng chảy thí nghiệm đầy đủ trong Section 2 của walkthrough_lab_0X.md sau mỗi lần chạy huấn luyện, nắm bắt chênh lệch về kiến trúc, hyperparameter và metric qua cả 5 giai đoạn pipeline; với bài toán phân loại phải ghi đủ bộ metric (Accuracy, Macro F1, Precision, Recall, TPR, FPR theo lớp) và đọc, diễn giải ảnh output (đường cong, confusion matrix, lưới dự đoán, TPR/FPR).
 ---
 
 # walkthrough-and-experiment-tracking (Bản DS & AI)
@@ -22,18 +22,20 @@ Nguyên lý then chốt: mỗi run phải để lại một dấu vết kiểm t
 - Bất cứ khi nào chỉnh sửa một thành phần của pipeline (data transforms, kiến trúc backbone, optimizer schedule).
 - Khi tổng hợp metric và hình ảnh cho việc nộp bài môn học.
 - Sau khi đồng bộ artifact từ Kaggle về cục bộ.
+- Khi cần phân tích ảnh output (confusion matrix, lưới dự đoán, đường cong, TPR/FPR) để rút ra nhận xét định tính.
 
 **Điều kiện tiên quyết:**
 - Đã có Section 1 (đặc tả) trong `walkthrough_lab_0X.md`.
 - Đã có artifact của run cần ghi nhận (checkpoint, hình, bảng kết quả).
-- Đã có số liệu metric của run.
+- Đã có số liệu metric của run, bao gồm metric theo từng lớp cho bài toán phân loại.
 
 ## 3. Hợp đồng Input / Output
 
 | Input (nhận vào) | Output (trả ra) |
 |---|---|
 | Cấu hình của run hiện tại | Section 2 đã cập nhật với run mới |
-| Metric đánh giá (loss, accuracy, F1) | Bảng so sánh đã thêm cột cho run mới |
+| Metric đánh giá (loss, accuracy, F1, Precision, Recall, TPR, FPR) | Bảng so sánh đã thêm cột cho run mới |
+| Ảnh output (đường cong, confusion matrix, lưới dự đoán, TPR/FPR) | Nhận xét định tính về nội dung từng ảnh |
 | Artifact của run | Changelog với 3 câu hỏi bắt buộc |
 | Cấu hình run trước đó để so sánh | Xác định run giữ kỷ lục best checkpoint |
 
@@ -41,6 +43,20 @@ Nguyên lý then chốt: mỗi run phải để lại một dấu vết kiểm t
 
 ### Bước 1: Nắm bắt trạng thái toàn dòng chảy
 Ghi lại ảnh chụp cấu hình cho lần thực thi hiện tại, bao gồm 5 thành phần: Data (tên dataset, số mẫu, tỷ lệ chia), Preprocessing và Augmentation (các biến đổi áp dụng), Model (tên kiến trúc, tổng số tham số, độ sâu), Training Strategy (loss, optimizer, learning rate, scheduler, batch size, epoch), và Evaluation Metrics (train và val loss/acc, test loss/acc, Macro F1, thời gian chạy).
+
+**Bộ metric chuẩn cho bài toán phân loại (bắt buộc ghi đủ, không chỉ Accuracy):**
+
+| Nhóm | Metric | Ghi chú |
+|---|---|---|
+| Tổng thể | Test Loss, Test Accuracy | Đơn vị %, thống nhất số chữ số thập phân |
+| Tổng hợp lớp | Macro F1-Score | Chỉ số chính khi các lớp cần được đối xử công bằng |
+| Theo từng lớp | Precision, Recall (TPR), F1-Score | Xuất từ classification report, ghi cho đủ mọi lớp |
+| Theo từng lớp | False Positive Rate (FPR) | Đi kèm TPR để thấy lớp nào bị dự đoán nhầm nhiều |
+| Ma trận | Confusion Matrix (đã chuẩn hóa theo hàng) | Nguồn để suy ra TPR/FPR và các cặp lớp nhầm lẫn |
+| Đường cong | Train/Val Loss và Accuracy theo epoch | Bằng chứng hội tụ và overfitting |
+
+- Với bài toán phân loại nhiều lớp, **chỉ ghi Accuracy là không đủ**: Accuracy cao vẫn có thể che giấu một lớp bị mô hình bỏ quên hoàn toàn. Phải ghi Macro F1 và metric theo từng lớp để phát hiện hiện tượng đó.
+- Mọi metric theo lớp phải ghi kèm tên lớp (ví dụ `Shirt`, `Sneaker`), không ghi chỉ số lớp trần.
 
 ### Bước 2: Ghi log chênh lệch kỹ thuật
 Trả lời 3 câu hỏi bắt buộc trong changelog: Những giai đoạn pipeline nào đã thay đổi so với run trước? Lý do kỹ thuật của thay đổi là gì (giảm overfitting, tăng tốc hội tụ, hay giải quyết gradient tiêu biến)? Tác động định lượng là gì (mức tăng accuracy tuyệt đối, mức giảm khoảng cách tổng quát hóa, chênh lệch loss)? Ba câu hỏi này biến log thành tường thuật kỹ thuật có giá trị. Lý do thay đổi phải nhất quán với các quyết định đã được thảo luận và ghi ở Mục 1.0 của `walkthrough_lab_0X.md`.
@@ -54,6 +70,14 @@ Khi chạy trên Kaggle GPU, notebook ghi artifact vào `/kaggle/working/outputs
 ### Bước 5: Tổng hợp phát hiện
 Đọc các artifact đầu ra và ghi lại các con số thực nghiệm đã xác thực vào `walkthrough_lab_0X.md`. Trích xuất nhân tố đột phá chính, các pattern của lát cắt lỗi, và đường dẫn tới trọng số mô hình đã lưu.
 
+**Bắt buộc đọc và phân tích ảnh output, không chỉ liệt kê tên file.** Mỗi hình phải được mở và diễn giải nội dung thực tế; liệt kê đường dẫn mà không đọc hình là chưa hoàn thành bước này. Cụ thể:
+
+- **Đường cong huấn luyện:** mô tả hình dạng hội tụ, epoch mà val loss bắt đầu tăng (dấu hiệu overfitting), và khoảng cách train/val.
+- **Confusion matrix:** chỉ ra các ô sáng nhất ngoài đường chéo (cặp lớp nhầm lẫn nhiều nhất), đọc theo hàng để biết lớp thật bị dự đoán sai thành lớp nào.
+- **Lưới dự đoán:** chỉ ra các mẫu bị dự đoán sai, mức tự tin của mô hình ở các mẫu đó, và pattern hình ảnh của nhóm bị lỗi.
+- **Biểu đồ TPR/FPR theo lớp:** chỉ ra lớp có TPR thấp nhất (bị bỏ sót nhiều) và lớp có FPR cao nhất (bị nhầm vào nhiều).
+- **Bảng so sánh giữa các run:** nêu rõ run nào thắng ở metric nào và mức chênh lệch tuyệt đối.
+
 ### Bước 6: Xác thực tính nhất quán số liệu
 Kiểm tra rằng mọi con số trong tài liệu khớp với log thực nghiệm và bảng kết quả. Loại bỏ mọi placeholder hoặc giá trị chưa được xác thực. Số liệu không khớp là dấu hiệu của lỗi ghi chép.
 
@@ -61,6 +85,8 @@ Kiểm tra rằng mọi con số trong tài liệu khớp với log thực nghi�
 
 - Section 2 của `walkthrough_lab_0X.md` đã cập nhật với run mới.
 - Bảng Flow Comparison Matrix đầy đủ mọi run.
+- Bảng metric theo từng lớp (Precision, Recall, F1, TPR, FPR) cho bài toán phân loại.
+- Nhận xét định tính cho từng ảnh output (đường cong, confusion matrix, lưới dự đoán, TPR/FPR).
 - Changelog với 3 câu hỏi bắt buộc cho mỗi run.
 - Xác định rõ run giữ kỷ lục best checkpoint.
 - Số liệu đã xác thực, không có placeholder.
@@ -80,10 +106,14 @@ Kiểm tra rằng mọi con số trong tài liệu khớp với log thực nghi�
 - **Để lại placeholder:** Quên điền số liệu thật. Dấu hiệu: tài liệu còn ô trống. Phòng tránh: xác thực ở Bước 6.
 - **Không cập nhật ma trận:** Thêm run mới nhưng không thêm cột vào bảng so sánh. Phòng tránh: cập nhật ở Bước 3.
 - **Số liệu không khớp log:** Ghi sai số do chép tay. Phòng tránh: đối chiếu với artifact ở Bước 6.
+- **Liệt kê ảnh mà không đọc:** Chỉ chép đường dẫn hình vào tài liệu mà không mở hình để diễn giải. Dấu hiệu: tài liệu có tên file nhưng không có câu nào mô tả hình chứa gì. Phòng tránh: thực hiện đầy đủ checklist đọc ảnh ở Bước 5.
+- **Chỉ ghi Accuracy:** Bỏ qua Macro F1 và metric theo từng lớp khiến lớp yếu bị che giấu. Dấu hiệu: bảng kết quả chỉ có một cột Accuracy. Phòng tránh: ghi đủ bộ metric chuẩn ở Bước 1.
 
 ## 8. Definition of Done
 
 - [ ] Đã ghi ảnh chụp cấu hình đầy đủ 5 thành phần cho run mới.
+- [ ] Đã ghi đủ bộ metric phân loại: Test Loss, Test Accuracy, Macro F1, và Precision/Recall/F1/TPR/FPR theo từng lớp.
+- [ ] Đã mở và diễn giải từng ảnh output (đường cong, confusion matrix, lưới dự đoán, TPR/FPR), không chỉ liệt kê đường dẫn.
 - [ ] Đã trả lời đủ 3 câu hỏi bắt buộc trong changelog.
 - [ ] Đã thêm cột cho run mới trong Flow Comparison Matrix.
 - [ ] Đã xác định rõ run giữ kỷ lục best checkpoint.
@@ -97,3 +127,5 @@ Kiểm tra rằng mọi con số trong tài liệu khớp với log thực nghi�
 - [X] *"Chỉ cần ghi số liệu, không cần ghi lý do"* -> **Bác bỏ:** Số liệu không có lý do thì không thể giải thích cải thiện và không thể học được bài học cho run sau. Lý do là phần giá trị nhất của changelog.
 - [X] *"Để placeholder rồi điền sau"* -> **Bác bỏ:** Placeholder dễ bị bỏ quên và dẫn đến tài liệu nộp bài còn ô trống. Điền số liệu thật ngay khi có.
 - [X] *"Ma trận so sánh dài dòng, khỏi cập nhật"* -> **Bác bỏ:** Ma trận là công cụ so sánh toàn cảnh duy nhất. Không cập nhật thì mất khả năng đánh giá tiến bộ giữa các run.
+- [X] *"Đã ghi đường dẫn hình vào tài liệu là coi như phân tích xong"* -> **Bác bỏ:** Đường dẫn không phải bằng chứng. Chỉ khi mở hình và mô tả nội dung (cặp lớp nhầm lẫn, mẫu dự đoán sai, lớp có TPR thấp) thì người chấm mới thấy hình đã được đọc và hiểu.
+- [X] *"Accuracy cao là đủ, khỏi ghi metric theo lớp"* -> **Bác bỏ:** Accuracy trung bình có thể cao trong khi một lớp bị dự đoán sai gần hết. Macro F1 và metric theo lớp là cách duy nhất phát hiện lớp bị bỏ quên.

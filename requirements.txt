@@ -2,6 +2,11 @@
 # Phiên bản ghi nhận từ môi trường cục bộ tại thời điểm hoàn thành Lab 01.
 # Dùng file này để tái lập môi trường và đối chiếu với Kaggle.
 
+# Python interpreter (bắt buộc ghi để tái lập; đây là ghi chú, KHÔNG phải dòng pip cài được)
+# Local (Windows, CPython 64-bit): 3.13.15
+# Kaggle base image: dùng bản Python riêng của Kaggle; ghi lại chính xác tại thời điểm chạy,
+# không giả định trùng với local (xem skill environment-and-reproducibility, Bước 5).
+
 # Core deep learning framework (CPU build cho cục bộ; Kaggle dùng bản CUDA tương ứng)
 torch==2.14.0
 torchvision==0.29.1

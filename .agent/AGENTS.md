@@ -61,6 +61,7 @@ Bảng dưới đây ánh xạ ý định của người dùng sang skill tươn
 | Đóng gói mô hình thành dịch vụ inference | `api-and-interface-design` | `docs/dl_flow.md` Stage 7 |
 | Refactor code, tách module trong `src/` | `code-simplification` | Hướng dẫn Clean Architecture |
 | Ghi log các lần chạy, so sánh chênh lệch thí nghiệm | `walkthrough-and-experiment-tracking` | Section 2 trong `walkthrough_lab_0X.md` |
+| Ghi đủ metric phân loại theo lớp và phân tích ảnh output | `walkthrough-and-experiment-tracking` -> `documentation-and-adrs` | Section 2 và 3 trong `walkthrough_lab_0X.md` |
 | Hoàn thành lab, tạo báo cáo nộp bài cuối | `documentation-and-adrs` | Section 3 trong `walkthrough_lab_0X.md` |
 | Kết quả chạy hai lần khác nhau, cần tái lập | `environment-and-reproducibility` | Giao thức cố định seed và ghi nhận phiên bản |
 | Chuyển huấn luyện lên Kaggle GPU, đồng bộ artifact | `kaggle-remote-execution` | Checklist `pre_kaggle_upload.md` |

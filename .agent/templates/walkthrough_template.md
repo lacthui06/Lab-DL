@@ -62,6 +62,14 @@ Sơ đồ luồng end-to-end của pipeline, từ nạp dữ liệu tới quyế
 | Run #2 Tuned | | | | | | | | |
 | Run #3 Final | | | | | | | | |
 
+Với bài toán phân loại, ngoài bảng trên phải có thêm bảng metric theo từng lớp (bắt buộc cho mọi run, không chỉ Accuracy):
+
+| Run | Class | Precision | Recall (TPR) | F1 | FPR |
+|---|---|---|---|---|---|
+| | | | | | |
+
+Ghi chú: mọi metric theo lớp ghi kèm tên lớp; chênh lệch giữa các run ghi dạng delta tuyệt đối; metric chưa có trong artifact ghi "not logged", không bịa số.
+
 ### 2.2. Changelog per Run
 
 Với mỗi Run, trả lời đủ 3 câu hỏi bắt buộc:
@@ -91,6 +99,12 @@ Với mỗi Run, trả lời đủ 3 câu hỏi bắt buộc:
 - **Đường cong huấn luyện:** `outputs/run*_curves.png`
 - **Bảng kết quả tổng hợp:** `outputs/experiment_results.json`
 
+Mỗi hình trong log phải kèm một dòng nhận xét đọc trực tiếp từ hình (nội dung thực tế của hình), không chỉ ghi đường dẫn:
+- **Đường cong:** hội tụ ở epoch nào, val loss có tăng lại không (overfitting), khoảng cách train/val.
+- **Confusion matrix:** cặp lớp nhầm lẫn nhiều nhất và tỷ lệ nhầm cụ thể.
+- **Lưới dự đoán:** các mẫu dự đoán sai kèm nhãn thật, nhãn dự đoán, mức tự tin.
+- **TPR/FPR:** lớp có TPR thấp nhất và lớp có FPR cao nhất.
+
 ---
 
 ## 3. COMPARATIVE RESULTS, ERROR DIAGNOSTICS & FINAL SUBMISSION REPORT (Rule: documentation-and-adrs)
@@ -98,11 +112,23 @@ Với mỗi Run, trả lời đủ 3 câu hỏi bắt buộc:
 ### 3.1. Quantitative Evaluation & Comparison Matrix
 Bảng so sánh trực tiếp giữa baseline và các vòng lặp nâng cao, kèm phần trăm cải thiện.
 
+Với bài toán phân loại, bảng định lượng phải phủ đủ bộ metric (không chỉ Accuracy) và kèm bảng metric theo từng lớp:
+
+| Run | Test Loss | Test Acc | Macro F1 | Precision (macro) | Recall (macro) |
+|---|---|---|---|---|---|
+| | | | | | |
+
+| Run | Class | Precision | Recall (TPR) | F1 | FPR |
+|---|---|---|---|---|---|
+| | | | | | |
+
+Mọi chênh lệch ghi dạng delta tuyệt đối; metric chưa có trong artifact ghi "not logged" kèm lý do, không bịa số.
+
 ### 3.2. Confusion Matrix Diagnostics
-Phân tích sâu các cặp lớp nhầm lẫn cao và giải thích nguyên nhân trực quan.
+Phân tích sâu các cặp lớp nhầm lẫn cao và giải thích nguyên nhân trực quan. Phải mở ảnh confusion matrix và đọc giá trị từng ô: nêu tên cặp lớp cụ thể và tỷ lệ nhầm (ví dụ "hàng Shirt có 18% bị dự đoán thành Pullover"). Kết hợp biểu đồ TPR/FPR để chỉ ra lớp có TPR thấp nhất và lớp có FPR cao nhất.
 
 ### 3.3. Error Analysis Slices
-Kiểm tra trực quan và thống kê các mẫu bị phân loại sai, xác định nguyên nhân gốc.
+Kiểm tra trực quan và thống kê các mẫu bị phân loại sai, xác định nguyên nhân gốc. Phải mở ảnh lưới dự đoán và chỉ ra các mẫu cụ thể bị dự đoán sai kèm nhãn thật, nhãn dự đoán, mức tự tin; nhóm lỗi thành lát cắt và nêu lát cắt lỗi nhiều nhất.
 
 ### 3.4. Key Technical Findings
 Giải thích các đột phá về hiệu năng, đánh giá tác động của regularization, scheduler và augmentation.

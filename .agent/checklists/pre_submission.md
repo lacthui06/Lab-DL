@@ -16,10 +16,12 @@ Danh sách kiểm tra bắt buộc trước khi nộp lab. Mục đích là đ�
 - [ ] Không còn chỗ trống placeholder hoặc giá trị chưa điền.
 - [ ] Các metric được ghi rõ đơn vị và số chữ số thập phân nhất quán.
 - [ ] Không có tuyên bố định lượng nào thiếu bằng chứng từ artifact.
+- [ ] Với bài toán phân loại, đã ghi đủ bộ metric: Test Loss, Test Accuracy, Macro F1, và Precision/Recall/F1/TPR/FPR theo từng lớp (không chỉ Accuracy).
 
 ## 3. Artifact và hình ảnh (Artifacts)
 - [ ] Tất cả hình trực quan được nhúng hoặc tham chiếu đúng đường dẫn trong `outputs/`.
 - [ ] Confusion matrix, đường cong huấn luyện, và lưới dự đoán đều hiện diện.
+- [ ] Mỗi hình đã được mở và diễn giải nội dung thực tế (cặp lớp nhầm lẫn, mẫu dự đoán sai, lớp có TPR thấp/FPR cao), không chỉ liệt kê đường dẫn.
 - [ ] Checkpoint tốt nhất đã được xác thực save/load và ghi rõ đường dẫn.
 
 ## 4. Kiểm toán chất lượng (Quality Audit)

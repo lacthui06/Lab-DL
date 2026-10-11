@@ -58,7 +58,7 @@ File này là manifest định tuyến. Agent đọc file này trước để ch
 |---|---|---|
 | `code-simplification` | Refactor notebook thành module sạch, loại bỏ code chết | Rà soát |
 | `version-control-and-artifacts` | Commit, push, quyết định file nào thuộc Git, quản lý artifact | Rà soát |
-| `walkthrough-and-experiment-tracking` | Ghi vết các run và chênh lệch metric vào Section 2 | Ghi vết |
+| `walkthrough-and-experiment-tracking` | Ghi vết các run, chênh lệch metric, và phân tích ảnh output vào Section 2 | Ghi vết |
 | `documentation-and-adrs` | Tổng hợp kết quả, chẩn đoán, kết luận vào Section 3 | Nộp bài |
 
 ---
@@ -83,6 +83,9 @@ File này là manifest định tuyến. Agent đọc file này trước để ch
 | "Code notebook lộn xộn, cần tách ra src/" | `code-simplification` |
 | "Cần ghi lại các lần chạy và so sánh" | `walkthrough-and-experiment-tracking` |
 | "Cần viết báo cáo cuối để nộp" | `documentation-and-adrs` |
+| "Cần ghi đủ metric phân loại (Macro F1, Precision, Recall, TPR, FPR), không chỉ Accuracy" | `walkthrough-and-experiment-tracking` -> `documentation-and-adrs` |
+| "Cần phân tích ảnh output (confusion matrix, lưới dự đoán, đường cong) chứ không chỉ liệt kê tên file" | `documentation-and-adrs` |
+| "Cần ghi phiên bản Python vào môi trường" | `environment-and-reproducibility` |
 | "Trước khi commit / push" | Checklist `pre_commit.md` |
 | "Trước khi đẩy lên Kaggle" | Checklist `pre_kaggle_upload.md` |
 | "Trước khi nộp bài" | Checklist `pre_submission.md` |
@@ -97,6 +100,7 @@ File này là manifest định tuyến. Agent đọc file này trước để ch
 | `walkthrough_lab_0X.md` Section 1 | `spec-driven-development` |
 | `walkthrough_lab_0X.md` Section 2 | `walkthrough-and-experiment-tracking` |
 | `walkthrough_lab_0X.md` Section 3 | `documentation-and-adrs` |
+| Bảng metric phân loại theo lớp (Precision, Recall, TPR, FPR, Macro F1) | `documentation-and-adrs` |
 | `src/` module sạch | `code-simplification` |
 | `tests/test_pipeline.py` | `test-driven-development` |
 | Inference API service | `api-and-interface-design` |

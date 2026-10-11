@@ -20,7 +20,7 @@ sys.path.insert(0, str(LAB01_DIR))
 from src.config import DATA_DIR, CLASS_NAMES, RANDOM_SEED, DEVICE, NUM_CLASSES, OPTIMIZER_CONFIGS, OPTIMIZER_SCENARIOS
 from src.dataset import get_dataloaders, get_kfold_pool, build_fold_loaders
 from src.model import build_model, count_parameters
-from src.engine import sanity_overfit_check, build_optimizer, compute_tpr_fpr
+from src.engine import sanity_overfit_check, build_optimizer, compute_tpr_fpr, build_per_class_metrics
 from src.utils import set_seed, save_checkpoint, load_checkpoint
 
 
@@ -195,6 +195,41 @@ def test_7_compute_tpr_fpr_from_confusion_matrix():
     assert fpr.shape == (3,), f"Expected 3 FPR values, got {fpr.shape}"
     assert np.allclose(tpr, [0.80, 0.90, 0.80]), f"TPR mismatch: {tpr}"
     assert np.allclose(fpr, [0.10, 0.10, 0.05]), f"FPR mismatch: {fpr}"
+
+
+def test_11_build_per_class_metrics_full_set():
+    """Test 11: Verify the per-class metric builder returns the full metric set.
+
+    Uses a 3-class toy set where every value is hand-computable, so the test
+    pins the contract that each class carries precision, recall/TPR, F1, and FPR
+    (FPR being the field scikit-learn's report does not provide).
+    """
+    # Confusion matrix (rows = true, cols = predicted):
+    #   row0 [1,1,0]  row1 [0,2,0]  row2 [1,0,1]   total = 6
+    # col sums = [2,3,1]
+    # class 0: TP=1 FN=1 -> recall=0.5 ; FP=1 TN=3 -> FPR=1/4=0.25 ; P=1/2=0.5 ; F1=0.5
+    # class 1: TP=2 FN=0 -> recall=1.0 ; FP=1 TN=3 -> FPR=1/4=0.25 ; P=2/3 ; F1=0.8
+    # class 2: TP=1 FN=1 -> recall=0.5 ; FP=0 TN=4 -> FPR=0.0 ; P=1.0 ; F1=2/3
+    targets = [0, 0, 1, 1, 2, 2]
+    preds = [0, 1, 1, 1, 2, 0]
+    names = ["class_0", "class_1", "class_2"]
+
+    metrics = build_per_class_metrics(targets, preds, names)
+
+    assert set(metrics.keys()) == set(names), f"Unexpected classes: {set(metrics.keys())}"
+    for name in names:
+        assert set(metrics[name].keys()) == {"precision", "recall_tpr", "f1", "fpr"}, \
+            f"{name} is missing part of the metric set: {set(metrics[name].keys())}"
+
+    assert metrics["class_0"] == {"precision": 0.5, "recall_tpr": 0.5, "f1": 0.5, "fpr": 0.25}
+    assert metrics["class_1"]["recall_tpr"] == 1.0
+    assert abs(metrics["class_1"]["precision"] - 2 / 3) < 1e-4, metrics["class_1"]
+    assert abs(metrics["class_1"]["f1"] - 0.8) < 1e-4, metrics["class_1"]
+    assert metrics["class_1"]["fpr"] == 0.25
+    assert metrics["class_2"]["precision"] == 1.0
+    assert metrics["class_2"]["recall_tpr"] == 0.5
+    assert abs(metrics["class_2"]["f1"] - 2 / 3) < 1e-4, metrics["class_2"]
+    assert metrics["class_2"]["fpr"] == 0.0
 
 
 def test_8_kfold_split_integrity():

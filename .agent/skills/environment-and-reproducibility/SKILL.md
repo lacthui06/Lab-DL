@@ -53,6 +53,8 @@ Một số phép toán trên GPU không xác định theo mặc định. Bật c
 ### Bước 4: Ghi nhận phiên bản môi trường
 Tạo và duy trì một bản ghi các thư viện chính cùng phiên bản chính xác (PyTorch, Torchvision, NumPy, Scikit-learn, và các thư viện phụ thuộc quan trọng). Bản ghi này là bằng chứng về môi trường đã tạo ra kết quả, và là cơ sở để tái lập về sau.
 
+Bản ghi bắt buộc phải có cả **phiên bản trình thông dịch Python** (`python --version`), không chỉ phiên bản thư viện: cùng bộ thư viện nhưng khác phiên bản Python có thể cho hành vi khác nhau (ví dụ thay đổi mặc định của `random`, thay đổi trong thư viện chuẩn). Ghi phiên bản Python dưới dạng **comment** trong `requirements.txt` (ví dụ `# Local: Python 3.13.15`), vì dòng `python==x.y.z` không phải cú pháp pip hợp lệ và sẽ làm hỏng `pip install -r requirements.txt`.
+
 ### Bước 5: Đồng bộ môi trường giữa local và Kaggle
 So sánh phiên bản thư viện giữa máy cục bộ và Kaggle. Ghi nhận mọi khác biệt có thể ảnh hưởng đến hành vi mô hình. Nếu có khác biệt lớn, điều chỉnh để hai môi trường gần nhau nhất có thể, hoặc ghi rõ khác biệt đó trong tài liệu.
 
@@ -65,7 +67,7 @@ Chạy lại pipeline hai lần với cùng cấu hình và so sánh kết quả
 ## 5. Deliverables
 
 - Bộ seed cố định được thiết lập tại một điểm vào duy nhất trong module cấu hình.
-- Bản ghi phiên bản thư viện chính xác của môi trường.
+- Bản ghi phiên bản thư viện chính xác của môi trường, kèm phiên bản trình thông dịch Python.
 - Tài liệu ghi nhận khác biệt giữa local và Kaggle.
 - Snapshot cấu hình cho từng run huấn luyện.
 - Bằng chứng chạy lại cho ra cùng kết quả.
@@ -93,6 +95,7 @@ Chạy lại pipeline hai lần với cùng cấu hình và so sánh kết quả
 - [ ] Seed được cố định tại một điểm vào duy nhất và gọi ngay đầu chương trình.
 - [ ] Chế độ deterministic đã được bật và xác nhận không gây lỗi.
 - [ ] Phiên bản các thư viện chính đã được ghi nhận.
+- [ ] Phiên bản trình thông dịch Python đã được ghi nhận (dạng comment trong `requirements.txt`).
 - [ ] Khác biệt môi trường giữa local và Kaggle đã được ghi lại.
 - [ ] Snapshot cấu hình tồn tại cho mỗi run huấn luyện.
 - [ ] Đã chạy lại hai lần và xác nhận kết quả khớp nhau.

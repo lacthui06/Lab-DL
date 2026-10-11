@@ -46,6 +46,7 @@ from .engine import (
     train_model,
     sanity_overfit_check,
     compute_tpr_fpr,
+    build_per_class_metrics,
     run_kfold_cv,
     run_optimizer_scenario,
 )
@@ -103,6 +104,7 @@ __all__ = [
     "train_model",
     "sanity_overfit_check",
     "compute_tpr_fpr",
+    "build_per_class_metrics",
     "run_kfold_cv",
     "run_optimizer_scenario",
     "set_seed",
