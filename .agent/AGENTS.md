@@ -22,7 +22,16 @@ Trước khi đẩy job huấn luyện lên môi trường GPU từ xa (ví dụ
 ### 1.5. Giao thức Zero Waste
 Nghiêm cấm chạy huấn luyện full nhiều epoch trên máy CPU cục bộ. Làm vậy vừa tốn thời gian vừa đốt token quota của người dùng. Thực thi cục bộ chỉ dừng ở mức: hoàn thiện module trong `src/`, dựng notebook tương tác trong `notebooks/`, và chạy test 1-batch sanity. Huấn luyện đầy đủ được thực thi trên Kaggle GPU (Tesla T4) hoặc compute tương đương.
 
-### 1.6. Tài liệu sống duy nhất (Hợp nhất 3 Rule)
+### 1.6. Tái lập nghiêm ngặt và ghi nhận môi trường
+Mọi kết quả phải tái lập được. Cố định seed cho toàn bộ thư viện tại một điểm vào duy nhất, bật chế độ deterministic khi cần, ghi nhận phiên bản thư viện chính, và đồng bộ môi trường giữa local và Kaggle. Một kết quả không tái lập được thì không phải là kết quả khoa học. Skill chịu trách nhiệm: `environment-and-reproducibility`.
+
+### 1.7. Cổng kiểm tra bắt buộc (Checklist Gates)
+Các cổng quan trọng phải vượt qua checklist tương ứng trong `.agent/checklists/` trước khi đi tiếp: `new_lab_bootstrap.md` khi bắt đầu lab mới, `pre_commit.md` trước khi commit, `pre_kaggle_upload.md` trước khi lên Kaggle GPU, và `pre_submission.md` trước khi nộp bài. Checklist biến quy tắc "nên làm" thành bước "phải đủ mới đi tiếp".
+
+### 1.8. Tái sử dụng khung mẫu (Template Reuse)
+Khi bắt đầu lab mới, agent phải dùng khung mẫu trong `.agent/templates/` (`walkthrough_template.md`, `lab_readme_template.md`) thay vì tự phát minh lại cấu trúc. Mọi lab phải có cùng cấu trúc để đảm bảo tính đồng nhất và giảm công rà soát.
+
+### 1.9. Tài liệu sống duy nhất (Hợp nhất 3 Rule)
 Toàn bộ tài liệu kỹ thuật của một lab phải được hợp nhất vào đúng MỘT tài liệu sống duy nhất: `walkthrough_lab_0X.md`. File này duy trì liên kết tường minh với 3 rule cốt lõi:
 - **Section 1 (Spec & Baseline Setup):** Chịu sự điều phối của `spec-driven-development` (problem statement, data contract, mô hình baseline, ngưỡng chấp nhận).
 - **Section 2 (Full-Flow Experiment Changelog):** Chịu sự điều phối của `walkthrough-and-experiment-tracking` (dòng chảy vòng lặp, chênh lệch qua 5 giai đoạn pipeline, lý do điều chỉnh hyperparameter).
@@ -53,6 +62,10 @@ Bảng dưới đây ánh xạ ý định của người dùng sang skill tươn
 | Refactor code, tách module trong `src/` | `code-simplification` | Hướng dẫn Clean Architecture |
 | Ghi log các lần chạy, so sánh chênh lệch thí nghiệm | `walkthrough-and-experiment-tracking` | Section 2 trong `walkthrough_lab_0X.md` |
 | Hoàn thành lab, tạo báo cáo nộp bài cuối | `documentation-and-adrs` | Section 3 trong `walkthrough_lab_0X.md` |
+| Kết quả chạy hai lần khác nhau, cần tái lập | `environment-and-reproducibility` | Giao thức cố định seed và ghi nhận phiên bản |
+| Chuyển huấn luyện lên Kaggle GPU, đồng bộ artifact | `kaggle-remote-execution` | Checklist `pre_kaggle_upload.md` |
+| Commit, push, quyết định file nào thuộc Git | `version-control-and-artifacts` | Checklist `pre_commit.md` |
+| Bắt đầu lab mới | Checklist `new_lab_bootstrap.md` | `.agent/templates/` |
 
 ---
 
@@ -66,3 +79,8 @@ Bảng dưới đây ánh xạ ý định của người dùng sang skill tươn
 - [X] *"Chạy huấn luyện full nhiều epoch trên CPU cục bộ"* -> **Bác bỏ:** Bào mòn tài nguyên máy cục bộ và token quota. Dừng sau khi xác thực 1-batch sanity và chuyển thực thi sang Kaggle GPU.
 - [X] *"Dán log terminal thô vào chat thay vì ghi tài liệu"* -> **Bác bỏ:** Phải cập nhật đủ 5 giai đoạn pipeline và các chênh lệch metric định lượng trong `walkthrough_lab_0X.md`.
 - [X] *"Thêm emoji hoặc icon vào notebook hay script cho đẹp"* -> **Bác bỏ:** Vi phạm chuẩn chuyên nghiệp và gây lỗi mã hóa ký tự trên nhiều môi trường runtime khác nhau. Chỉ dùng text kỹ thuật thuần túy.
+- [X] *"Đặt seed là đủ để tái lập rồi"* -> **Bác bỏ:** Còn nhiều nguồn ngẫu nhiên khác (NumPy, DataLoader worker, thuật toán GPU không xác định). Phải cố định toàn bộ và ghi nhận phiên bản môi trường.
+- [X] *"Bỏ qua checklist cho nhanh"* -> **Bác bỏ:** Checklist là cổng chặn các lỗi tốn kém như lộ secret, đẩy file nặng, hoặc đốt GPU quota. Bỏ qua checklist tiết kiệm vài giây nhưng có thể tốn hàng giờ.
+- [X] *"Commit checkpoint nặng lên Git cũng được"* -> **Bác bỏ:** Checkpoint làm repository phình to vĩnh viễn trong lịch sử Git. Chỉ commit source, tài liệu, và figure nhẹ.
+- [X] *"Script Kaggle sẽ tự đẩy notebook lên Git"* -> **Bác bỏ:** File notebook tương tác không nằm trên đĩa container. Phải thu hồi notebook qua giao diện Kaggle rồi commit thủ công.
+- [X] *"Mỗi lab tự thiết kế cấu trúc riêng cho phù hợp"* -> **Bác bỏ:** Cấu trúc không đồng nhất khiến việc rà soát tốn công và agent phải chỉnh sửa mỗi lần. Dùng khung mẫu trong `.agent/templates/`.

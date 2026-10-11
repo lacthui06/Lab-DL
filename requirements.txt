@@ -1,0 +1,19 @@
+# Environment manifest for Lab DL (Deep Learning coursework)
+# Phiên bản ghi nhận từ môi trường cục bộ tại thời điểm hoàn thành Lab 01.
+# Dùng file này để tái lập môi trường và đối chiếu với Kaggle.
+
+# Core deep learning framework (CPU build cho cục bộ; Kaggle dùng bản CUDA tương ứng)
+torch==2.14.0
+torchvision==0.29.1
+
+# Numerical and scientific computing
+numpy==2.5.3
+
+# Classical machine learning utilities (metrics, split, reports)
+scikit-learn==1.9.1
+
+# Visualization
+matplotlib==3.11.2
+
+# Testing
+pytest==9.1.1

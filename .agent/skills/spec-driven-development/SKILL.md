@@ -1,56 +1,101 @@
 ---
 name: spec-driven-development
-description: Soạn đặc tả kỹ thuật ML/DL trước khi triển khai code. Tự động liên kết và trích xuất chuẩn từ workflows/ML_flow.md (cho Tabular ML) hoặc dl_workflows/DL_flow.md (cho Deep Learning). Ánh xạ trực tiếp vào Section 1 của walkthrough_lab_0X.md.
+description: Soạn đặc tả kỹ thuật ML/DL trước khi triển khai code, liên kết và trích xuất chuẩn từ workflows/ML_flow.md hoặc dl_workflows/DL_flow.md, ánh xạ trực tiếp vào Section 1 của walkthrough_lab_0X.md.
 ---
 
 # spec-driven-development (Bản DS & AI)
 
-## Tổng quan
+## 1. Tổng quan
 
-Skill này bắt buộc AI Agent phải soạn một **Đặc tả Machine Learning / Deep Learning (ML/DL Spec)** toàn diện trước khi viết code. Đặc tả này neo dự án vào các hợp đồng dữ liệu (data contract) chuẩn hóa, công thức loss khách quan, kiến trúc baseline và tiêu chí đánh giá định lượng.
+Skill này bắt buộc AI Agent phải soạn một **Đặc tả Machine Learning / Deep Learning (ML/DL Spec)** toàn diện trước khi viết code. Đặc tả này neo dự án vào các hợp đồng dữ liệu chuẩn hóa, công thức loss khách quan, kiến trúc baseline và tiêu chí đánh giá định lượng.
 
 Nguyên lý đằng sau là: code là hệ quả của đặc tả, không phải ngược lại. Khi đặc tả rõ ràng, việc triển khai chỉ còn là công việc cơ học; khi đặc tả mơ hồ, mọi quyết định code đều trở thành phỏng đoán.
 
-## Tham chiếu workflow
+Đặc tả cũng là cơ sở cho mọi so sánh về sau: không có baseline và ngưỡng chấp nhận được định trước, không thể chứng minh mô hình nâng cao thực sự tốt hơn.
 
-Khi viết đặc tả, agent **BẮT BUỘC** phải trích xuất chuẩn từ playbook workflow tương ứng:
-- **Tabular ML:** Tham chiếu [`workflows/ML_flow.md`](../../workflows/ML_flow.md) và [`workflows/eda_guide.md`](../../workflows/eda_guide.md) cho hướng dẫn EDA, chuẩn chuẩn hóa (normalization), mã hóa biến phân loại (categorical encoding) và các benchmark baseline.
-- **Deep Learning (CV / NLP):** Tham chiếu [`dl_workflows/DL_flow.md`](../../dl_workflows/DL_flow.md) cho modality đầu vào, chiều tensor, lựa chọn backbone và các hàm loss chuyên biệt (ví dụ Focal Loss, Label Smoothing).
+Nguyên lý then chốt: mọi quyết định thiết kế phải được chốt và ghi lại trước khi dòng code đầu tiên được viết.
 
-## Kiến trúc ML/DL Spec chuẩn (tích hợp vào Section 1 của `walkthrough_lab_0X.md`)
+## 2. Khi nào kích hoạt (Triggers)
 
-Đặc tả được soạn trực tiếp trong **Section 1 của tài liệu sống duy nhất `walkthrough_lab_0X.md`** trước khi viết code (chịu sự điều phối của Rule 1 trong Kiến trúc 3 Rule).
+**Dấu hiệu kích hoạt:**
+- Bắt đầu một lab mới hoặc dự án mới.
+- Sau khi `interview-me` đã làm rõ yêu cầu.
+- Cần chốt baseline, metric, và ngưỡng chấp nhận trước khi code.
+- Cần trích xuất chuẩn kỹ thuật từ playbook workflow tương ứng.
 
-Nghiêm cấm tạo file `SPEC.md` riêng biệt. Mọi định hình bài toán và kế hoạch baseline đều được tích hợp trực tiếp vào Section 1 của `walkthrough_lab_0X.md`.
+**Điều kiện tiên quyết:**
+- Đã biết modality và loại bài toán.
+- Đã xác định dataset và môi trường compute.
+- Đã có bản tóm tắt yêu cầu từ `interview-me` (nếu có).
 
-### 1. Định hình bài toán và Modality
-- Loại tác vụ: Classification (Binary/Multiclass), Regression, Segmentation, Object Detection, Sequence Modeling.
-- Modality dữ liệu đầu vào: Tabular DataFrame, tensor ảnh 2D `[B, C, H, W]`, chuỗi token văn bản `[B, Seq_Len]`.
+## 3. Hợp đồng Input / Output
 
-### 2. Hợp đồng dữ liệu và Chiến lược chia tập
-- Schema dữ liệu, kiểu dữ liệu, và tỷ lệ cân bằng lớp.
-- Chiến lược chia tập không rò rỉ dữ liệu:
-  - Mẫu Tabular/Image độc lập -> `StratifiedKFold` (bảo toàn tỷ lệ lớp).
-  - Dữ liệu chuỗi thời gian -> `TimeSeriesSplit` (nghiêm ngặt theo thứ tự thời gian, không bao giờ shuffle).
-  - Thực thể có nhóm (grouped entities) -> `GroupKFold` (ngăn chặn chồng lấn thực thể giữa train và val).
-- Lựa chọn sai chiến lược chia tập là nguyên nhân rò rỉ dữ liệu phổ biến nhất, nên bước này cần đặc biệt cẩn trọng.
+| Input (nhận vào) | Output (trả ra) |
+|---|---|
+| Yêu cầu đã làm rõ từ `interview-me` | Section 1 đầy đủ trong `walkthrough_lab_0X.md` |
+| Playbook workflow tương ứng | Data contract và chiến lược chia tập |
+| Ràng buộc compute và bộ nhớ | Baseline model, metric, ngưỡng chấp nhận |
+| Đặc điểm dataset | Thiết kế loss, optimizer, scheduler |
 
-### 3. Mô hình Baseline và Metric mục tiêu
-- **Mô hình Baseline:** Benchmark tối thiểu khả thi để neo tiến bộ so sánh (ví dụ Heuristic, Logistic Regression, hoặc MLP 2 lớp đơn giản).
-- **Metric chính:** Macro F1-Score, ROC-AUC, mAP, IoU, RMSE.
-- **Ngưỡng chấp nhận (Acceptance Threshold):** Biên định lượng tối thiểu mà mô hình nâng cao phải đạt được so với baseline để được coi là chấp nhận.
+## 4. Quy trình chi tiết
 
-### 4. Hàm Loss và Thiết kế tối ưu
-- Lựa chọn hàm loss:
-  - Phân loại đa lớp chuẩn -> `nn.CrossEntropyLoss(label_smoothing=0.1)`.
-  - Mất cân bằng lớp nghiêm trọng (> 1:10) -> `FocalLoss` hoặc `class_weights` có trọng số.
-- Optimizer (AdamW) và Learning Rate Scheduler (CosineAnnealingLR hoặc OneCycleLR).
+### Bước 1: Chọn playbook workflow tham chiếu
+Xác định bài toán là Tabular ML hay Deep Learning. Với Tabular, tham chiếu `workflows/ML_flow.md` và `workflows/eda_guide.md` cho hướng dẫn EDA, chuẩn hóa, mã hóa biến phân loại. Với Deep Learning, tham chiếu `dl_workflows/DL_flow.md` cho modality, chiều tensor, backbone, và hàm loss chuyên biệt. Trích xuất chuẩn kỹ thuật từ playbook thay vì tự phát minh.
 
-### 5. Ràng buộc môi trường thực thi
-- Mục tiêu compute: CPU/GPU cục bộ so với **Kaggle GPU (Tesla T4)**.
-- Tương thích hệ thống file: Xử lý `/kaggle/input/` (chỉ đọc) và `/kaggle/working/` (ghi được).
-- Ràng buộc bộ nhớ: Áp đặt ngân sách VRAM (< 15GB, bật AMP FP16).
+### Bước 2: Định hình bài toán và modality
+Ghi rõ loại tác vụ (Classification, Regression, Segmentation, Object Detection, Sequence Modeling) và modality đầu vào (Tabular DataFrame, tensor ảnh 2D `[B, C, H, W]`, chuỗi token `[B, Seq_Len]`). Xác định hợp đồng đầu vào và đầu ra về shape và dtype.
 
-## Chống biện minh (Anti-Rationalization)
+### Bước 3: Thiết kế hợp đồng dữ liệu và chiến lược chia tập
+Ghi rõ schema dữ liệu, kiểu dữ liệu, tỷ lệ cân bằng lớp. Chọn chiến lược chia tập không rò rỉ: mẫu độc lập dùng `StratifiedKFold`; chuỗi thời gian dùng `TimeSeriesSplit`; thực thể có nhóm dùng `GroupKFold`. Lựa chọn sai chiến lược chia tập là nguyên nhân rò rỉ dữ liệu phổ biến nhất.
+
+### Bước 4: Chốt baseline model và metric mục tiêu
+Chọn mô hình baseline tối thiểu khả thi để neo tiến bộ so sánh. Chọn metric chính (Macro F1-Score, ROC-AUC, mAP, IoU, RMSE). Định nghĩa ngưỡng chấp nhận: biên định lượng tối thiểu mà mô hình nâng cao phải đạt so với baseline.
+
+### Bước 5: Thiết kế hàm loss và tối ưu
+Chọn hàm loss phù hợp: phân loại đa lớp chuẩn dùng `CrossEntropyLoss` có label smoothing; mất cân bằng nghiêm trọng dùng Focal Loss hoặc class weights. Chọn optimizer (AdamW) và learning rate scheduler (CosineAnnealingLR hoặc OneCycleLR).
+
+### Bước 6: Ghi ràng buộc môi trường thực thi
+Ghi rõ mục tiêu compute (local hay Kaggle GPU Tesla T4), tương thích hệ thống file (`/kaggle/input/` chỉ đọc và `/kaggle/working/` ghi được), và ngân sách bộ nhớ (VRAM dưới 15GB, bật AMP FP16).
+
+### Bước 7: Ghi đặc tả vào Section 1 của tài liệu sống
+Tất cả nội dung trên được soạn trực tiếp trong Section 1 của `walkthrough_lab_0X.md`. Nghiêm cấm tạo file `SPEC.md` riêng. Đặc tả này là điểm tham chiếu cố định cho mọi quyết định code về sau.
+
+## 5. Deliverables
+
+- Section 1 đầy đủ trong `walkthrough_lab_0X.md` gồm: master flow, problem formulation, data contract, baseline, metric, loss, và ràng buộc môi trường.
+- Danh sách chuẩn kỹ thuật trích xuất từ playbook workflow.
+- Ngưỡng chấp nhận định lượng rõ ràng.
+
+## 6. Bàn giao (Handoff)
+
+| Skill trước (upstream) | Skill sau (downstream) |
+|---|---|
+| `interview-me` (cung cấp yêu cầu đã làm rõ) | `planning-and-task-breakdown` (nhận spec để phân rã công việc) |
+| `idea-refine` (cung cấp hướng bài toán) | `test-driven-development` (nhận data contract để viết test) |
+| `using-ds-ai-skills` (định tuyến) | `environment-and-reproducibility` (nhận ràng buộc môi trường) |
+
+## 7. Chế độ thất bại thường gặp (Failure Modes)
+
+- **Không có baseline:** Bỏ qua baseline khiến không có mốc so sánh. Dấu hiệu: không biết mô hình nâng cao có thực sự tốt hơn không. Phòng tránh: luôn định nghĩa baseline ở Bước 4.
+- **Chọn sai chiến lược chia tập:** Dùng chia ngẫu nhiên cho dữ liệu chuỗi thời gian hoặc có nhóm. Dấu hiệu: metric validation cao bất thường. Phòng tránh: chọn đúng chiến lược ở Bước 3.
+- **Metric không phù hợp:** Dùng Accuracy cho dataset mất cân bằng. Phòng tránh: chốt metric dựa trên phân bố lớp ở Bước 4.
+- **Tạo file SPEC.md riêng:** Vi phạm kiến trúc tài liệu sống duy nhất. Phòng tránh: ghi vào Section 1 ở Bước 7.
+- **Bỏ qua ràng buộc môi trường:** Code chạy local nhưng lỗi trên Kaggle. Phòng tránh: ghi ràng buộc ở Bước 6.
+
+## 8. Definition of Done
+
+- [ ] Đã chọn và trích xuất chuẩn từ playbook workflow tương ứng.
+- [ ] Đã ghi rõ loại tác vụ và modality với hợp đồng tensor.
+- [ ] Đã thiết kế data contract và chiến lược chia tập không rò rỉ.
+- [ ] Đã chốt baseline model và metric chính.
+- [ ] Đã định nghĩa ngưỡng chấp nhận định lượng.
+- [ ] Đã chọn hàm loss, optimizer, và scheduler.
+- [ ] Đã ghi ràng buộc môi trường và ngân sách bộ nhớ.
+- [ ] Section 1 của `walkthrough_lab_0X.md` đã hoàn tất, không có file SPEC.md riêng.
+
+## 9. Chống biện minh (Anti-Rationalization)
 
 - [X] *"Bài lab này ngắn, code luôn cho nhanh"* -> **Bác bỏ:** Triển khai không có spec sẽ đánh mất benchmark baseline, có nguy cơ chọn sai metric, và làm giảm độ chặt chẽ của báo cáo cuối.
+- [X] *"Tách SPEC.md riêng cho gọn"* -> **Bác bỏ:** Gây phân mảnh tài liệu và trùng lặp nội dung. Kiến trúc tài liệu sống duy nhất yêu cầu hợp nhất vào Section 1.
+- [X] *"Không cần baseline, mô hình chính là đủ"* -> **Bác bỏ:** Không có baseline thì không có cơ sở để chứng minh mô hình chính thực sự cải thiện. Mọi tuyên bố về hiệu năng trở nên vô căn cứ.
+- [X] *"Chia tập ngẫu nhiên là đủ cho mọi loại dữ liệu"* -> **Bác bỏ:** Dữ liệu chuỗi thời gian hoặc có nhóm cần chiến lược chia chuyên biệt, nếu không sẽ rò rỉ dữ liệu và cho metric ảo.
