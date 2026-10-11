@@ -52,7 +52,7 @@ Kiểm tra trực quan và thống kê các mẫu bị phân loại sai, xác đ
 Giải thích các đột phá về hiệu năng, đánh giá tác động của regularization, learning rate scheduler, và data augmentation. Phần này trả lời câu hỏi "vì sao đạt được kết quả".
 
 ### Bước 5: Truy vết quyết định về điểm thảo luận và chuẩn hóa ngôn ngữ
-Với mỗi quyết định kỹ thuật quan trọng (kiến trúc, hàm loss, metric, chiến lược chia tập), ghi rõ điểm thảo luận tương ứng ở Mục 1.0 của `walkthrough_lab_0X.md` và hướng giải quyết đã chốt, thường dưới dạng bảng ở Mục 3.6. Dùng văn phong kỹ thuật trung tính, ngôi thứ ba; không dùng lối kể chuyện hay từ chỉ người như "bạn", "tôi", "chúng ta". Ví dụ đúng: "Chiến lược chia tập đã được thảo luận và chốt dùng StratifiedKFold do phân bố lớp cân bằng."
+Với mỗi quyết định kỹ thuật quan trọng (kiến trúc, hàm loss, metric, chiến lược chia tập), ghi rõ điểm thảo luận tương ứng ở Mục 1.0 của `walkthrough_lab_0X.md` và hướng giải quyết đã chốt, thường dưới dạng bảng Decision Traceability. Dùng văn phong kỹ thuật trung tính, ngôi thứ ba; không dùng lối kể chuyện hay từ chỉ người như "bạn", "tôi", "chúng ta". Ví dụ đúng: "Chiến lược chia tập đã được thảo luận và chốt dùng StratifiedKFold do phân bố lớp cân bằng."
 
 ### Bước 6: Xác thực checkpoint (Save/Load)
 Xác nhận rằng việc nạp lại checkpoint tốt nhất tái lập 100% metric inference giống hệt. Đây là bằng chứng cuối cùng về tính tái lập của kết quả.
@@ -68,7 +68,7 @@ Xác nhận mọi metric được ghi tài liệu khớp 100% với log thực n
 
 ## 5. Deliverables
 
-- Section 3 của `walkthrough_lab_0X.md` đầy đủ: ma trận đánh giá, chẩn đoán, phân tích lỗi, kết luận.
+- Section 3 của `walkthrough_lab_0X.md` đầy đủ: ma trận đánh giá, chẩn đoán, phân tích lỗi, truy vết quyết định về Mục 1.0, kết luận.
 - Architecture Decision Record cho các quyết định kiến trúc quan trọng.
 - Báo cáo bàn giao phiên với hướng dẫn tái lập.
 - Xác nhận checkpoint tái lập 100% metric.

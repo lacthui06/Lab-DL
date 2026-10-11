@@ -66,7 +66,7 @@ Tất cả nội dung trên được soạn trực tiếp trong Section 1 của 
 
 ## 5. Deliverables
 
-- Section 1 đầy đủ trong `walkthrough_lab_0X.md` gồm: master flow, problem formulation, data contract, baseline, metric, loss, và ràng buộc môi trường.
+- Section 1 đầy đủ trong `walkthrough_lab_0X.md` gồm: bản tóm tắt cách hiểu đề bài (Mục 1.0), master flow, problem formulation, data contract, baseline, metric, loss, và ràng buộc môi trường.
 - Danh sách chuẩn kỹ thuật trích xuất từ playbook workflow.
 - Ngưỡng chấp nhận định lượng rõ ràng.
 - Bản tóm tắt cách hiểu đề bài đã xác nhận với người dùng, ghi ở Mục 1.0 của `walkthrough_lab_0X.md`.

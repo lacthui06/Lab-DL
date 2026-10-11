@@ -43,7 +43,7 @@ Nguyên lý then chốt: mỗi run phải để lại một dấu vết kiểm t
 Ghi lại ảnh chụp cấu hình cho lần thực thi hiện tại, bao gồm 5 thành phần: Data (tên dataset, số mẫu, tỷ lệ chia), Preprocessing và Augmentation (các biến đổi áp dụng), Model (tên kiến trúc, tổng số tham số, độ sâu), Training Strategy (loss, optimizer, learning rate, scheduler, batch size, epoch), và Evaluation Metrics (train và val loss/acc, test loss/acc, Macro F1, thời gian chạy).
 
 ### Bước 2: Ghi log chênh lệch kỹ thuật
-Trả lời 3 câu hỏi bắt buộc trong changelog: Những giai đoạn pipeline nào đã thay đổi so với run trước? Lý do kỹ thuật của thay đổi là gì (giảm overfitting, tăng tốc hội tụ, hay giải quyết gradient tiêu biến)? Tác động định lượng là gì (mức tăng accuracy tuyệt đối, mức giảm khoảng cách tổng quát hóa, chênh lệch loss)? Ba câu hỏi này biến log thành tường thuật kỹ thuật có giá trị.
+Trả lời 3 câu hỏi bắt buộc trong changelog: Những giai đoạn pipeline nào đã thay đổi so với run trước? Lý do kỹ thuật của thay đổi là gì (giảm overfitting, tăng tốc hội tụ, hay giải quyết gradient tiêu biến)? Tác động định lượng là gì (mức tăng accuracy tuyệt đối, mức giảm khoảng cách tổng quát hóa, chênh lệch loss)? Ba câu hỏi này biến log thành tường thuật kỹ thuật có giá trị. Lý do thay đổi phải nhất quán với các quyết định đã được thảo luận và ghi ở Mục 1.0 của `walkthrough_lab_0X.md`.
 
 ### Bước 3: Cập nhật ma trận so sánh
 Thêm một cột mới cho run hiện tại trong Flow Comparison Matrix của `walkthrough_lab_0X.md`. Đánh dấu tường minh ứng viên nào đang giữ kỷ lục best checkpoint. Ma trận này cho phép so sánh toàn cảnh mọi run chỉ trong một bảng.

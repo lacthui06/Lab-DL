@@ -6,9 +6,9 @@ Danh sách kiểm tra bắt buộc trước khi nộp lab. Mục đích là đ�
 
 ## 1. Tài liệu sống (Living Document Completeness)
 - [ ] `walkthrough_lab_0X.md` có đủ 3 Section: Spec, Changelog, Report.
-- [ ] Section 1 mô tả đầy đủ problem formulation, data contract, baseline, metric, ngưỡng chấp nhận.
+- [ ] Section 1 mô tả đầy đủ bản tóm tắt cách hiểu đề bài (Mục 1.0), problem formulation, data contract, baseline, metric, ngưỡng chấp nhận.
 - [ ] Section 2 có bảng so sánh đầy đủ tất cả các run, kèm lý do thay đổi cho mỗi run.
-- [ ] Section 3 có ma trận đánh giá định lượng, chẩn đoán confusion matrix, phân tích lỗi, kết luận.
+- [ ] Section 3 có ma trận đánh giá định lượng, chẩn đoán confusion matrix, phân tích lỗi, truy vết quyết định về Mục 1.0, kết luận.
 - [ ] Không tồn tại file `SPEC.md` hay `REPORT.md` riêng lẻ.
 
 ## 2. Tính chính xác của số liệu (Numerical Accuracy)

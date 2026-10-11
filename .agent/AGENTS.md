@@ -33,9 +33,9 @@ Khi bắt đầu lab mới, agent phải dùng khung mẫu trong `.agent/templat
 
 ### 1.9. Tài liệu sống duy nhất (Hợp nhất 3 Rule)
 Toàn bộ tài liệu kỹ thuật của một lab phải được hợp nhất vào đúng MỘT tài liệu sống duy nhất: `walkthrough_lab_0X.md`. File này duy trì liên kết tường minh với 3 rule cốt lõi:
-- **Section 1 (Spec & Baseline Setup):** Chịu sự điều phối của `spec-driven-development` (problem statement, data contract, mô hình baseline, ngưỡng chấp nhận).
+- **Section 1 (Spec & Baseline Setup):** Chịu sự điều phối của `spec-driven-development` (Mục 1.0 tóm tắt cách hiểu đề bài; problem statement, data contract, mô hình baseline, ngưỡng chấp nhận).
 - **Section 2 (Full-Flow Experiment Changelog):** Chịu sự điều phối của `walkthrough-and-experiment-tracking` (dòng chảy vòng lặp, chênh lệch qua 5 giai đoạn pipeline, lý do điều chỉnh hyperparameter).
-- **Section 3 (Results & Final Technical Report):** Chịu sự điều phối của `documentation-and-adrs` (ma trận so sánh, chẩn đoán confusion matrix, phân tích lỗi, kết luận).
+- **Section 3 (Results & Final Technical Report):** Chịu sự điều phối của `documentation-and-adrs` (ma trận so sánh, chẩn đoán confusion matrix, phân tích lỗi, truy vết quyết định về Mục 1.0, kết luận).
 
 Không được tạo file `SPEC.md` hay `REPORT.md` riêng biệt.
 
