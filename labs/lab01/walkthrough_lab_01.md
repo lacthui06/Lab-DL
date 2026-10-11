@@ -160,6 +160,23 @@ Scenario 2b (fair budget):
 - **Compute target:** Kaggle GPU (Tesla T4). Estimated cost is 6 arms x 5 folds x 15 epochs on the lightweight `TunedMLP` backbone; at approximately 4-5 minutes per 15-epoch run this is on the order of 2 GPU-hours, within the weekly quota.
 - **Zero Waste compliance:** no full multi-epoch training is executed locally. Local verification is limited to the 1-batch sanity overfit check and a tiny synthetic smoke test of the cross-validation plumbing.
 
+### 1.7. Phase 1 Diagnostic Artifacts (Symmetric Across Runs)
+The Phase 1 comparison contrasts two architectures, so every diagnostic emitted for one run must also be emitted for the other; otherwise the two runs are not comparable and the comparison matrix in Section 3.1 would rest on unequal evidence. The artifact set is therefore identical for Run #1 (Baseline MLP) and Run #2 (Tuned MLP), differing only in the `baseline_mlp` / `tuned_mlp` filename slug.
+
+| Artifact | Run #1 (Baseline MLP) | Run #2 (Tuned MLP) |
+|:---|:---|:---|
+| Learning curves (loss and accuracy) | `run1_baseline_curves.png` | `run2_tuned_mlp_curves.png` |
+| Cross-run curve overlay | `all_models_comparison_curves.png` (covers both runs) | `all_models_comparison_curves.png` (covers both runs) |
+| Normalized confusion matrix | `confusion_matrix_baseline_mlp.png` | `confusion_matrix_tuned_mlp.png` |
+| Prediction grid (predicted vs actual) | `predictions_baseline_mlp.png` | `predictions_tuned_mlp.png` |
+| Per-class classification report | `classification_report_baseline_mlp.txt` | `classification_report_tuned_mlp.txt` |
+| Best checkpoint | `checkpoints/baseline_mlp_best.pt` | `checkpoints/tuned_mlp_best.pt` |
+| Summary metrics (both runs) | `experiment_results.json` | `experiment_results.json` |
+
+- **Symmetry rule:** no run may receive a diagnostic that the other does not. Adding a diagnostic for one architecture requires adding it for the other in the same revision.
+- **Naming rule:** per-run artifacts use the run's model slug (`baseline_mlp`, `tuned_mlp`), never a bare `baseline`/`tuned` token, so the filenames map unambiguously to a model type.
+- **Superseded artifact:** the earlier `outputs/predictions_baseline.png` (no `_mlp` slug, produced by a retired notebook revision) is removed; it is replaced by `predictions_baseline_mlp.png`.
+
 ---
 
 ## 2. FULL-FLOW EXPERIMENT CHANGELOG (FULL-FLOW EXPERIMENT CHANGELOG — Rule: walkthrough-and-experiment-tracking)
@@ -238,19 +255,23 @@ Scenario 2b (fair budget):
 
 > **Staleness note:** every numeric cell in this matrix was produced by the previously committed run that used `AdamW`. The Phase 1 optimizer has since been changed to `SGD + Momentum` (lr=0.05), so these values are invalidated and are shown only as the historical record. They are pending re-measurement on the next Kaggle execution; the `superseded` tag marks each affected cell.
 
-### 3.2. Detailed Classification Report (Best Model: Tuned MLP)
+### 3.2. Detailed Classification Reports (Both Runs)
 
-The committed Kaggle run produced a per-class classification report only for the convolutional run that has since been removed from scope (that report file was deleted together with the CNN). No per-class classification report for the Tuned MLP was logged by that run. The notebook has been updated (PHẦN 9) to emit `outputs/classification_report_tuned_mlp.txt` on the next Kaggle execution. Until that artifact exists, no per-class precision/recall/F1 figures are reproduced here, in line with the no-fabrication policy.
+Per-class classification reports are produced for both architectures (spec Section 1.7), written by the notebook PHẦN 9 to `outputs/classification_report_baseline_mlp.txt` and `outputs/classification_report_tuned_mlp.txt`.
 
-### 3.3. Confusion Matrix Analysis & Error Diagnostics
+The committed Kaggle run produced a per-class report only for the convolutional model that has since been removed from scope, and that file was deleted together with the CNN. No per-class report for either MLP was logged by that run, so no precision/recall/F1 figures are reproduced here; they are emitted on the next Kaggle execution. Reproducing invented numbers is prohibited by the no-fabrication policy.
 
-The committed Kaggle run stored a confusion matrix and a prediction grid only for the removed convolutional model. Consequently, no confusion-matrix-based error analysis for the Tuned MLP is available in the committed artifacts. The notebook now targets the Tuned MLP for these diagnostics (PHẦN 7) and writes `outputs/confusion_matrix_tuned_mlp.png` and `outputs/predictions_tuned_mlp.png`; the qualitative error-cluster analysis (for example, the well-known Shirt / T-shirt / Pullover / Coat overlap in low-resolution grayscale) is therefore deferred to the next Kaggle run rather than inferred from the deleted CNN run.
+### 3.3. Confusion Matrix Analysis & Error Diagnostics (Both Runs)
+
+Normalized confusion matrices and prediction grids are produced for both architectures (spec Section 1.7), written by the notebook PHẦN 7 to `outputs/confusion_matrix_baseline_mlp.png`, `outputs/predictions_baseline_mlp.png`, `outputs/confusion_matrix_tuned_mlp.png`, and `outputs/predictions_tuned_mlp.png`.
+
+The committed Kaggle run stored a confusion matrix and a prediction grid only for the removed convolutional model, so no confusion-matrix-based error analysis for either MLP is available in the committed artifacts. The qualitative error-cluster analysis (for example, the well-known Shirt / T-shirt / Pullover / Coat overlap in low-resolution grayscale) is therefore deferred to the next Kaggle run rather than inferred from the deleted CNN run.
 
 ### 3.4. Checkpoint Serialization & Restoration Verification
-- Model weights are saved as `state_dict` at `outputs/checkpoints/tuned_mlp_best.pt`.
-- The notebook reloads the checkpoint via `load_checkpoint()` and asserts against the original logits across the test batch:
+- Model weights are saved as `state_dict` at `outputs/checkpoints/baseline_mlp_best.pt` and `outputs/checkpoints/tuned_mlp_best.pt`.
+- The notebook reloads each checkpoint via `load_checkpoint()` and asserts against the original logits across the test batch:
   $$\max |\text{Logits}_{\text{original}} - \text{Logits}_{\text{loaded}}| < 10^{-6}$$
-- Verification result: exactly identical predictions `[PASSED]` (executed notebook, PHẦN 8).
+- Verification result: exactly identical predictions `[PASSED]` (executed notebook, PHẦN 8). The check runs for both runs (spec Section 1.7).
 - **Provenance caveat:** The committed figures and `experiment_results.json` belong to the committed Kaggle run (Run #1 87.33%, Run #2 88.01%). The checkpoint files themselves are intentionally excluded from Git by `.gitignore` and are therefore local-only; a locally retained checkpoint must be re-verified against `outputs.zip` before being treated as the artifact that produced these figures.
 
 ### 3.5. Decision Traceability
@@ -267,17 +288,18 @@ This table traces every important technical decision back to the corresponding d
 | Blank numbered list 1-5 in the brief | Ambiguity: the numbered list 1 to 5 has no content. | Treat as not provided and do not infer; re-check if the instructor supplies the content. |
 | Phase 1 optimizer choice | The playbook recommends `AdamW`; the presentation topic is the three classical optimizers. | Use `SGD + Momentum` (momentum 0.9, lr=0.05) for both Phase 1 runs, so the architecture remains the only manipulated variable and the Phase 1 update rule matches the SGD arm of Phase 2. |
 | Phase 2 learning-rate policy | A single shared learning rate handicaps a non-adaptive method such as SGD. | Run two otherwise-identical scenarios: 2a with all arms at 1e-3, and 2b with only the SGD arm raised to 0.05. The pair isolates the effect of the SGD step size. |
+| Phase 1 artifact symmetry | An earlier revision gave the Tuned MLP extra diagnostics that the Baseline lacked, making the two runs non-comparable. | Emit the identical diagnostic set (confusion matrix, prediction grid, per-class report) for both runs; per-run filenames use the model slug. |
 
 ### 3.6. Key Takeaways & Submission Deliverables
 1. **Impact of Modern Regularization (superseded figures):** In the previously committed `AdamW` run, integrating `BatchNorm` + `Dropout` + `CosineAnnealingLR` improved the held-out Test Accuracy of the MLP by +0.68% (87.33% -> 88.01%) and lowered Test Loss from 0.3555 to 0.3307. These figures are invalidated by the Phase 1 optimizer change and are pending re-measurement.
 2. **Bias-Variance Trade-off (superseded figures):** In the same superseded run, explicit regularization reduced training-set accuracy (89.82% -> 87.69%) while raising held-out accuracy, evidencing reduced overfitting rather than improved raw fitting capacity.
 3. **Optimizer Sensitivity (Phase 2):** The secondary experiment isolates the optimizer update rule on a frozen `TunedMLP` backbone under Stratified 5-fold cross-validation, across two scenarios that differ only in the SGD learning rate (2a symmetric at 1e-3; 2b fair budget with SGD at 0.05). Its measured outcome is recorded once the Kaggle run completes.
 4. **Generated Submission Artifacts:**
-   - Best Model Weights: `outputs/checkpoints/tuned_mlp_best.pt`
+   - Best Model Weights: `outputs/checkpoints/baseline_mlp_best.pt`, `outputs/checkpoints/tuned_mlp_best.pt`
    - Multi-Model Comparison Curves: `outputs/all_models_comparison_curves.png`
    - Individual Run Learning Curves: `outputs/run1_baseline_curves.png`, `outputs/run2_tuned_mlp_curves.png`
-   - Best Model Confusion Matrix: `outputs/confusion_matrix_tuned_mlp.png`
-   - Test Batch Prediction Grid: `outputs/predictions_tuned_mlp.png`
-   - Detailed Metric Logs: `outputs/classification_report_tuned_mlp.txt`, `outputs/experiment_results.json`
+   - Confusion Matrices (both runs): `outputs/confusion_matrix_baseline_mlp.png`, `outputs/confusion_matrix_tuned_mlp.png`
+   - Prediction Grids (both runs): `outputs/predictions_baseline_mlp.png`, `outputs/predictions_tuned_mlp.png`
+   - Detailed Metric Logs: `outputs/classification_report_baseline_mlp.txt`, `outputs/classification_report_tuned_mlp.txt`, `outputs/experiment_results.json`
    - Phase 2 Optimizer Artifacts (2a symmetric): `outputs/optimizer_comparison_curves.png`, `outputs/optimizer_tpr_fpr.png`, `outputs/optimizer_confusion_matrices.png`, `outputs/optimizer_experiment_results.json`
    - Phase 2 Optimizer Artifacts (2b fair budget): `outputs/optimizer_comparison_curves_fairbudget.png`, `outputs/optimizer_tpr_fpr_fairbudget.png`, `outputs/optimizer_confusion_matrices_fairbudget.png`, `outputs/optimizer_experiment_results_fairbudget.json`
