@@ -274,6 +274,50 @@ def test_9_run_optimizer_scenario_smoke():
         assert res["confusion_matrix"].shape == (NUM_CLASSES, NUM_CLASSES), f"{name} confusion matrix shape wrong"
 
 
+def test_10_cv_checkpoints_disjoint_across_scenarios(tmp_path):
+    """Test 10: The two scenarios must not overwrite each other's CV checkpoints.
+
+    Both scenarios reuse the same arm names (SGD / RMSprop / Adam). If the
+    per-fold checkpoint filename ignored the scenario suffix, running 2a then 2b
+    into the same directory would leave only six files instead of twelve. This
+    test pins the naming rule documented in spec Section 1.6.7.
+    """
+    from torch.utils.data import TensorDataset
+    from src.engine import run_optimizer_scenario
+
+    torch.manual_seed(RANDOM_SEED)
+    n = 200
+    images = torch.randn(n, 1, 28, 28)
+    labels = torch.arange(n) % NUM_CLASSES
+    pool = TensorDataset(images, labels)
+
+    for scenario in OPTIMIZER_SCENARIOS:
+        run_optimizer_scenario(
+            scenario=scenario,
+            pool_train=pool,
+            pool_eval=pool,
+            targets=labels,
+            model_type="tuned_mlp",
+            num_epochs=1,
+            batch_size=16,
+            device=torch.device("cpu"),
+            n_splits=2,
+            seed=RANDOM_SEED,
+            num_workers=0,
+            checkpoint_dir=tmp_path,
+            verbose=False,
+        )
+
+    written = sorted(p.name for p in tmp_path.glob("cv_*.pt"))
+    # 2 scenarios x 3 arms x 2 folds = 12 disjoint checkpoints, no overwrites.
+    assert len(written) == 12, f"Expected 12 disjoint CV checkpoints, got {len(written)}: {written}"
+
+    sym_suffix = OPTIMIZER_SCENARIOS[0].artifact_suffix
+    fair_suffix = OPTIMIZER_SCENARIOS[1].artifact_suffix
+    assert any(f"cv_sgd{sym_suffix}_fold1.pt" == name for name in written)
+    assert any(f"cv_sgd{fair_suffix}_fold1.pt" == name for name in written)
+
+
 if __name__ == "__main__":
     print("Running tests via pytest...")
     pytest.main(["-v", __file__])

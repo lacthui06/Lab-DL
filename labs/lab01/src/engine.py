@@ -336,6 +336,7 @@ def run_kfold_cv(
     seed: int = 42,
     num_workers: int = 0,
     checkpoint_dir: Optional[Path] = None,
+    checkpoint_suffix: str = "",
     verbose: bool = True,
 ) -> Dict:
     """Runs Stratified K-Fold cross-validation for a single optimizer arm.
@@ -346,6 +347,11 @@ def run_kfold_cv(
     are aggregated into mean and standard deviation, and the out-of-fold
     predictions of every sample are concatenated into one global confusion
     matrix from which per-class TPR/FPR are derived.
+
+    `checkpoint_suffix` is inserted before the fold index in each checkpoint
+    filename. Optimizer scenario 2a and 2b reuse the same arm names (SGD /
+    RMSprop / Adam), so without a suffix the second scenario would silently
+    overwrite the first scenario's per-fold checkpoints.
 
     Returns:
         A dictionary with per-fold accuracies/losses, their mean and standard
@@ -387,7 +393,7 @@ def run_kfold_cv(
 
         save_path = None
         if checkpoint_dir is not None:
-            save_path = Path(checkpoint_dir) / f"cv_{optimizer_type}_fold{fold}.pt"
+            save_path = Path(checkpoint_dir) / f"cv_{optimizer_type}{checkpoint_suffix}_fold{fold}.pt"
 
         history, _ = train_model(
             model=model,
@@ -489,6 +495,7 @@ def run_optimizer_scenario(
             seed=seed,
             num_workers=num_workers,
             checkpoint_dir=checkpoint_dir,
+            checkpoint_suffix=scenario.artifact_suffix,
             verbose=verbose,
         )
     return scenario_results

@@ -149,14 +149,17 @@ Scenario 2a (symmetric budget):
 - `outputs/optimizer_tpr_fpr.png` — per-class TPR and FPR grouped bars.
 - `outputs/optimizer_confusion_matrices.png` — three normalized confusion matrices side by side.
 - `outputs/optimizer_experiment_results.json` — per-fold, mean/std, and per-class TPR/FPR summary.
+- `outputs/checkpoints/cv_{optimizer}_fold{n}.pt` — per-fold best-validation checkpoint (no suffix, scenario 2a).
 
 Scenario 2b (fair budget):
 - `outputs/optimizer_comparison_curves_fairbudget.png`
 - `outputs/optimizer_tpr_fpr_fairbudget.png`
 - `outputs/optimizer_confusion_matrices_fairbudget.png`
 - `outputs/optimizer_experiment_results_fairbudget.json`
+- `outputs/checkpoints/cv_{optimizer}_fairbudget_fold{n}.pt` — per-fold best-validation checkpoint (scenario 2b).
 
 #### 1.6.7. Execution Constraints
+- **Checkpoint naming rule:** every per-fold cross-validation checkpoint is named from the arm's optimizer type plus the scenario's `artifact_suffix`, so scenario 2a and scenario 2b write disjoint files. Without the suffix, the two scenarios would reuse the same SGD/RMSprop/Adam arm names and scenario 2b would silently overwrite scenario 2a's checkpoints. Metrics and figures are computed before any checkpoint is written, so a naming collision would corrupt the stored checkpoints only, not the reported numbers; the suffix removes that hazard entirely.
 - **Compute target:** Kaggle GPU (Tesla T4). Estimated cost is 6 arms x 5 folds x 15 epochs on the lightweight `TunedMLP` backbone; at approximately 4-5 minutes per 15-epoch run this is on the order of 2 GPU-hours, within the weekly quota.
 - **Zero Waste compliance:** no full multi-epoch training is executed locally. Local verification is limited to the 1-batch sanity overfit check and a tiny synthetic smoke test of the cross-validation plumbing.
 
