@@ -194,6 +194,19 @@ The Phase 1 comparison contrasts two architectures, so every diagnostic emitted 
 - **Naming rule:** per-run artifacts use the run's model slug (`baseline_mlp`, `tuned_mlp`), never a bare `baseline`/`tuned` token, so the filenames map unambiguously to a model type.
 - **Superseded artifact:** the earlier `outputs/predictions_baseline.png` (no `_mlp` slug, produced by a retired notebook revision) is removed; it is replaced by `predictions_baseline_mlp.png`.
 
+### 1.8. Execution Environment and Reproducibility Record
+The result of a run is only meaningful together with the environment that produced it, so the interpreter version is recorded in two places.
+
+| Record | Value | Where it lives |
+|:---|:---|:---|
+| Python interpreter (local) | CPython 3.13.15 (64-bit, Windows) | comment in `requirements.txt` (a `python==3.13.15` line is invalid pip syntax and would break `pip install -r requirements.txt`) |
+| Python interpreter (Kaggle) | logged per run, not assumed equal to local | `outputs/environment_snapshot.json` |
+| Library versions | torch 2.14.0, torchvision 0.29.1, numpy 2.5.3, scikit-learn 1.9.1, matplotlib 3.11.2, seaborn 0.13.2, Pillow 12.3.0 | `requirements.txt` (pins) and `outputs/environment_snapshot.json` (run-time) |
+
+- **Run-time snapshot rule:** every execution writes `outputs/environment_snapshot.json` containing the Python version, the platform string, the library versions above, and the resolved compute device. The snapshot is the evidence of the environment that actually produced the numbers; `requirements.txt` only states the intended environment.
+- **Local/Kaggle divergence rule:** if the Kaggle interpreter or library versions differ from local, the difference is recorded in this section rather than silently accepted, because a different interpreter can change standard-library defaults and therefore the run.
+- **Artifact:** `outputs/environment_snapshot.json` (produced by `collect_environment_snapshot()` in `src/utils.py`, invoked from notebook PHẦN 1).
+
 ---
 
 ## 2. FULL-FLOW EXPERIMENT CHANGELOG (FULL-FLOW EXPERIMENT CHANGELOG — Rule: walkthrough-and-experiment-tracking)
@@ -327,5 +340,6 @@ This table traces every important technical decision back to the corresponding d
    - Confusion Matrices (both runs): `outputs/confusion_matrix_baseline_mlp.png`, `outputs/confusion_matrix_tuned_mlp.png`
    - Prediction Grids (both runs): `outputs/predictions_baseline_mlp.png`, `outputs/predictions_tuned_mlp.png`
    - Detailed Metric Logs: `outputs/classification_report_baseline_mlp.txt`, `outputs/classification_report_tuned_mlp.txt`, `outputs/per_class_metrics_baseline_mlp.json`, `outputs/per_class_metrics_tuned_mlp.json`, `outputs/experiment_results.json`
+   - Environment Record: `outputs/environment_snapshot.json` (Python interpreter, platform, library versions, resolved device)
    - Phase 2 Optimizer Artifacts (2a symmetric): `outputs/optimizer_comparison_curves.png`, `outputs/optimizer_tpr_fpr.png`, `outputs/optimizer_confusion_matrices.png`, `outputs/optimizer_experiment_results.json`
    - Phase 2 Optimizer Artifacts (2b fair budget): `outputs/optimizer_comparison_curves_fairbudget.png`, `outputs/optimizer_tpr_fpr_fairbudget.png`, `outputs/optimizer_confusion_matrices_fairbudget.png`, `outputs/optimizer_experiment_results_fairbudget.json`

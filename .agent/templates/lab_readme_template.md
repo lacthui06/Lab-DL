@@ -18,10 +18,12 @@ Một đoạn ngắn mô tả bài lab: mục tiêu, dataset, và mô hình chí
 
 ## Reproduce
 
+**Phiên bản môi trường:** ghi phiên bản trình thông dịch Python dạng comment trong `requirements.txt` (không dùng dòng `python==x.y.z` vì không phải cú pháp pip hợp lệ), và để mỗi lần chạy ghi lại phiên bản thực tế vào `outputs/environment_snapshot.json`.
+
 1. Cài đặt môi trường theo `requirements.txt` ở thư mục gốc repository.
 2. Chạy test TDD cục bộ để xác thực pipeline.
 3. Chạy huấn luyện đầy đủ trên Kaggle GPU.
-4. Tải artifact trở về `outputs/` và cập nhật `walkthrough_lab_0X.md`.
+4. Tải artifact trở về `outputs/` (bao gồm `environment_snapshot.json`) và cập nhật `walkthrough_lab_0X.md`.
 
 ---
 

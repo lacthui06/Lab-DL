@@ -47,6 +47,8 @@ Sơ đồ luồng end-to-end của pipeline, từ nạp dữ liệu tới quyế
 
 ### 1.6. Execution Environment Constraints
 - **Compute Target:** <local CPU/GPU hoặc Kaggle GPU Tesla T4>
+- **Python Interpreter:** <phiên bản CPython, ví dụ 3.13.15; ghi dạng comment trong `requirements.txt` và ghi lại phiên bản thực tế của mỗi lần chạy vào `outputs/environment_snapshot.json`>
+- **Library Versions:** <PyTorch, Torchvision, NumPy, Scikit-learn cùng phiên bản chính xác>
 - **Filesystem Compatibility:** <đường dẫn input chỉ đọc và working ghi được>
 - **Memory Constraints:** <ngân sách VRAM và cấu hình AMP>
 

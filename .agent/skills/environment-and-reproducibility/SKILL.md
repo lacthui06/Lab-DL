@@ -59,7 +59,7 @@ Bản ghi bắt buộc phải có cả **phiên bản trình thông dịch Pytho
 So sánh phiên bản thư viện giữa máy cục bộ và Kaggle. Ghi nhận mọi khác biệt có thể ảnh hưởng đến hành vi mô hình. Nếu có khác biệt lớn, điều chỉnh để hai môi trường gần nhau nhất có thể, hoặc ghi rõ khác biệt đó trong tài liệu.
 
 ### Bước 6: Ghi snapshot cấu hình cho từng run
-Với mỗi lần huấn luyện, ghi lại đầy đủ: seed, hyperparameter, phiên bản thư viện, và cấu hình thiết bị. Snapshot này được lưu cùng artifact của run để bất kỳ ai cũng có thể tái tạo lại đúng điều kiện.
+Với mỗi lần huấn luyện, ghi lại đầy đủ: seed, hyperparameter, phiên bản thư viện, **phiên bản trình thông dịch Python**, và cấu hình thiết bị. Snapshot này được lưu cùng artifact của run để bất kỳ ai cũng có thể tái tạo lại đúng điều kiện; artifact chuẩn là `outputs/environment_snapshot.json` (hàm `collect_environment_snapshot()` trong `src/utils.py`).
 
 ### Bước 7: Kiểm chứng tái lập
 Chạy lại pipeline hai lần với cùng cấu hình và so sánh kết quả. Nếu loss và metric khớp nhau (trong sai số cho phép của phép toán dấu phẩy động), tính tái lập đã được xác lập. Nếu không khớp, quay lại Bước 1 để tìm nguồn ngẫu nhiên chưa được cố định.
@@ -68,6 +68,7 @@ Chạy lại pipeline hai lần với cùng cấu hình và so sánh kết quả
 
 - Bộ seed cố định được thiết lập tại một điểm vào duy nhất trong module cấu hình.
 - Bản ghi phiên bản thư viện chính xác của môi trường, kèm phiên bản trình thông dịch Python.
+- Một snapshot môi trường dạng máy đọc được, sinh ra lúc chạy (`environment_snapshot.json`): phiên bản Python, platform, phiên bản thư viện, và thiết bị tính toán thực tế. Đây mới là bằng chứng của môi trường đã tạo ra kết quả; `requirements.txt` chỉ nêu môi trường mong muốn.
 - Tài liệu ghi nhận khác biệt giữa local và Kaggle.
 - Snapshot cấu hình cho từng run huấn luyện.
 - Bằng chứng chạy lại cho ra cùng kết quả.
@@ -96,6 +97,7 @@ Chạy lại pipeline hai lần với cùng cấu hình và so sánh kết quả
 - [ ] Chế độ deterministic đã được bật và xác nhận không gây lỗi.
 - [ ] Phiên bản các thư viện chính đã được ghi nhận.
 - [ ] Phiên bản trình thông dịch Python đã được ghi nhận (dạng comment trong `requirements.txt`).
+- [ ] Snapshot môi trường sinh ra lúc chạy (`environment_snapshot.json`) tồn tại và khớp với `requirements.txt`.
 - [ ] Khác biệt môi trường giữa local và Kaggle đã được ghi lại.
 - [ ] Snapshot cấu hình tồn tại cho mỗi run huấn luyện.
 - [ ] Đã chạy lại hai lần và xác nhận kết quả khớp nhau.

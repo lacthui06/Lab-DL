@@ -1,6 +1,7 @@
 """Utility functions for Lab 01: FashionMNIST.
 Includes:
 - Reproducibility (seed fixing)
+- Environment snapshot (interpreter and library versions)
 - Model checkpoint saving and loading
 - Loss and Accuracy curve visualizations
 - Predicted vs. Actual image visualization grid
@@ -31,6 +32,63 @@ def set_seed(seed: int = 42) -> None:
         torch.backends.cudnn.deterministic = True
         torch.backends.cudnn.benchmark = False
     os.environ["PYTHONHASHSEED"] = str(seed)
+
+
+def collect_environment_snapshot(save_path: Optional[Path] = None) -> dict:
+    """Records the interpreter and library versions that produced a run.
+
+    The Python interpreter version is captured here (not only the library
+    versions) because the same library set on a different interpreter can
+    change standard-library defaults and therefore the run. This is the
+    run-time evidence required by walkthrough_lab_01.md Section 1.8; the
+    version comment in `requirements.txt` only states the intended
+    environment. The value is written as a plain string, never as a
+    `python==x.y.z` pip line, because that is invalid pip syntax.
+
+    Args:
+        save_path: Destination JSON path. When omitted, nothing is written
+            and the snapshot is only returned.
+
+    Returns:
+        Dictionary with python_version, python_implementation, platform,
+        library versions, and the resolved compute device.
+    """
+    import platform
+    import sys
+
+    try:
+        import sklearn
+        sklearn_version = sklearn.__version__
+    except ImportError:  # pragma: no cover - sklearn is a hard requirement
+        sklearn_version = None
+
+    snapshot = {
+        "python_version": sys.version.split()[0],
+        "python_version_full": sys.version,
+        "python_implementation": platform.python_implementation(),
+        "python_compiler": platform.python_compiler(),
+        "platform": platform.platform(),
+        "libraries": {
+            "torch": torch.__version__,
+            "numpy": np.__version__,
+            "scikit-learn": sklearn_version,
+        },
+        "device": str(torch.device("cuda" if torch.cuda.is_available() else "cpu")),
+        "cuda_available": torch.cuda.is_available(),
+        "cuda_device_name": (
+            torch.cuda.get_device_name(0) if torch.cuda.is_available() else None
+        ),
+    }
+
+    if save_path is not None:
+        import json
+
+        save_path = Path(save_path)
+        save_path.parent.mkdir(parents=True, exist_ok=True)
+        with open(save_path, "w", encoding="utf-8") as f:
+            json.dump(snapshot, f, indent=2)
+
+    return snapshot
 
 
 def save_checkpoint(model: nn.Module, save_path: Path, metadata: Optional[dict] = None) -> None:

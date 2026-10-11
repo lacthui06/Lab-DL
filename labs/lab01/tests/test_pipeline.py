@@ -21,7 +21,7 @@ from src.config import DATA_DIR, CLASS_NAMES, RANDOM_SEED, DEVICE, NUM_CLASSES, 
 from src.dataset import get_dataloaders, get_kfold_pool, build_fold_loaders
 from src.model import build_model, count_parameters
 from src.engine import sanity_overfit_check, build_optimizer, compute_tpr_fpr, build_per_class_metrics
-from src.utils import set_seed, save_checkpoint, load_checkpoint
+from src.utils import set_seed, save_checkpoint, load_checkpoint, collect_environment_snapshot
 
 
 @pytest.fixture(scope="module")
@@ -230,6 +230,30 @@ def test_11_build_per_class_metrics_full_set():
     assert metrics["class_2"]["recall_tpr"] == 0.5
     assert abs(metrics["class_2"]["f1"] - 2 / 3) < 1e-4, metrics["class_2"]
     assert metrics["class_2"]["fpr"] == 0.0
+
+
+def test_12_environment_snapshot_records_python_version(tmp_path):
+    """Test 12: Verify the environment snapshot records the Python interpreter.
+
+    Section 1.8 requires every run to persist the interpreter version and the
+    library versions. The test checks the returned keys and that the on-disk
+    JSON round-trips, so the artifact cannot silently lose the Python version.
+    """
+    import json
+    import sys
+
+    out_path = tmp_path / "environment_snapshot.json"
+    snapshot = collect_environment_snapshot(out_path)
+
+    assert out_path.exists(), "environment_snapshot.json was not written"
+    assert isinstance(snapshot["python_version"], str)
+    assert snapshot["python_version"] == sys.version.split()[0]
+    assert snapshot["python_version"].count(".") >= 1, snapshot["python_version"]
+    assert snapshot["libraries"]["torch"], "torch version missing"
+    assert snapshot["device"] in {"cpu", "cuda"}, snapshot["device"]
+
+    reloaded = json.loads(out_path.read_text(encoding="utf-8"))
+    assert reloaded == snapshot, "snapshot did not round-trip through JSON"
 
 
 def test_8_kfold_split_integrity():

@@ -6,6 +6,7 @@
 # Local (Windows, CPython 64-bit): 3.13.15
 # Kaggle base image: dùng bản Python riêng của Kaggle; ghi lại chính xác tại thời điểm chạy,
 # không giả định trùng với local (xem skill environment-and-reproducibility, Bước 5).
+# Phiên bản thực tế của mỗi lần chạy được ghi vào outputs/environment_snapshot.json.
 
 # Core deep learning framework (CPU build cho cục bộ; Kaggle dùng bản CUDA tương ứng)
 torch==2.14.0

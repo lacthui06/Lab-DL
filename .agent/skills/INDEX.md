@@ -85,7 +85,7 @@ File này là manifest định tuyến. Agent đọc file này trước để ch
 | "Cần viết báo cáo cuối để nộp" | `documentation-and-adrs` |
 | "Cần ghi đủ metric phân loại (Macro F1, Precision, Recall, TPR, FPR), không chỉ Accuracy" | `walkthrough-and-experiment-tracking` -> `documentation-and-adrs` |
 | "Cần phân tích ảnh output (confusion matrix, lưới dự đoán, đường cong) chứ không chỉ liệt kê tên file" | `documentation-and-adrs` |
-| "Cần ghi phiên bản Python vào môi trường" | `environment-and-reproducibility` |
+| "Cần ghi phiên bản Python và snapshot môi trường (`environment_snapshot.json`)" | `environment-and-reproducibility` |
 | "Trước khi commit / push" | Checklist `pre_commit.md` |
 | "Trước khi đẩy lên Kaggle" | Checklist `pre_kaggle_upload.md` |
 | "Trước khi nộp bài" | Checklist `pre_submission.md` |
@@ -104,6 +104,6 @@ File này là manifest định tuyến. Agent đọc file này trước để ch
 | `src/` module sạch | `code-simplification` |
 | `tests/test_pipeline.py` | `test-driven-development` |
 | Inference API service | `api-and-interface-design` |
-| Bản ghi seed và phiên bản thư viện | `environment-and-reproducibility` |
+| Bản ghi seed, phiên bản thư viện và snapshot môi trường (`environment_snapshot.json`) | `environment-and-reproducibility` |
 | Artifact đồng bộ từ Kaggle | `kaggle-remote-execution` |
 | Commit và lịch sử Git sạch | `version-control-and-artifacts` |

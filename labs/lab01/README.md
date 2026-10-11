@@ -18,10 +18,12 @@ Bài lab xây dựng pipeline Deep Learning end-to-end để phân loại 10 nh�
 
 ## Reproduce
 
+**Phiên bản môi trường:** trình thông dịch Python local là 3.13.15, ghi dạng comment trong `requirements.txt` (không dùng dòng `python==3.13.15` vì không phải cú pháp pip hợp lệ). Mỗi lần chạy ghi lại phiên bản thực tế vào `outputs/environment_snapshot.json`.
+
 1. Cài đặt môi trường theo `requirements.txt` ở thư mục gốc repository. File này ghi cả phiên bản trình thông dịch Python (local: 3.13.15) ở dạng comment, dùng để đối chiếu với Kaggle.
 2. Chạy test TDD cục bộ để xác thực pipeline (bao gồm bài test 1-batch sanity overfit).
 3. Chạy huấn luyện đầy đủ trên Kaggle GPU.
-4. Tải artifact trở về `outputs/` và cập nhật `walkthrough_lab_01.md`.
+4. Tải artifact trở về `outputs/` (bao gồm `environment_snapshot.json`) và cập nhật `walkthrough_lab_01.md`.
 
 ---
 

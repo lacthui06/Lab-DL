@@ -33,7 +33,8 @@ Danh sách kiểm tra bắt buộc trước khi nộp lab. Mục đích là đ�
 ## 5. Tái lập (Reproducibility)
 - [ ] Có hướng dẫn một lệnh để tái lập kết quả từ checkpoint tốt nhất.
 - [ ] Hướng dẫn cài đặt môi trường đầy đủ.
-- [ ] Phiên bản thư viện chính đã được ghi lại.
+- [ ] Phiên bản thư viện chính và phiên bản trình thông dịch Python đã được ghi lại.
+- [ ] `outputs/environment_snapshot.json` hiện diện và khớp với phiên bản trong `requirements.txt`.
 
 ## 6. Xác nhận cuối
 - [ ] Repository đã push lên remote và trạng thái làm việc sạch.

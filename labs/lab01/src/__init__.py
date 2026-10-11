@@ -52,6 +52,7 @@ from .engine import (
 )
 from .utils import (
     set_seed,
+    collect_environment_snapshot,
     save_checkpoint,
     load_checkpoint,
     plot_loss_and_acc_curves,
@@ -108,6 +109,7 @@ __all__ = [
     "run_kfold_cv",
     "run_optimizer_scenario",
     "set_seed",
+    "collect_environment_snapshot",
     "save_checkpoint",
     "load_checkpoint",
     "plot_loss_and_acc_curves",
