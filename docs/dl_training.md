@@ -26,37 +26,12 @@ graph TD
   * **SOTA nghiên cứu / Dataset lớn:** `vit_base_patch16_224`, `swin_base_patch4_window7_224`.
 
 ### 2. Quy trình Fine-Tuning 2 Giai đoạn chuẩn kỹ thuật
-```python
-import timm
-import torch.nn as nn
+Fine-tuning một backbone tiền huấn luyện không nên mở khóa toàn bộ ngay từ đầu, vì gradient lớn ở những bước đầu sẽ phá hỏng đặc trưng quý giá đã học từ tập dữ liệu lớn. Quy trình chuẩn gồm hai giai đoạn:
 
-# 1. Khởi tạo mô hình pre-trained với số lượng nhãn mới
-model = timm.create_model('resnet50', pretrained=True, num_classes=num_classes)
+* **Giai đoạn 1 — Đóng băng Backbone, chỉ train Classifier Head:** Đặt `requires_grad = False` cho toàn bộ tham số mô hình, sau đó bật lại `requires_grad = True` riêng cho tầng phân loại cuối (Classifier Head). Huấn luyện khoảng 3 đến 5 epoch với learning rate tương đối lớn (khoảng `1e-3`). Mục tiêu là để phần đầu phân loại mới "học nóng" và thích nghi với số lớp mới mà không làm xáo trộn backbone.
+* **Giai đoạn 2 — Mở khóa toàn bộ và áp dụng Differential Learning Rate:** Bật lại `requires_grad = True` cho mọi tham số, rồi tạo optimizer với các nhóm tham số có learning rate khác nhau. Nguyên tắc là **backbone học chậm, head học nhanh**: các tầng càng gần đầu vào (đặc trưng tổng quát) dùng learning rate càng nhỏ (ví dụ `1e-5`), các tầng càng gần đầu ra (đặc trưng chuyên biệt) dùng learning rate lớn hơn (ví dụ `1e-4`). Cách phân nhóm này giúp giữ ổn định phần đặc trưng chung trong khi vẫn tinh chỉnh mạnh phần phân loại.
 
-# GIAI ĐOẠN 1: Đóng băng Backbone, chỉ train Classifier Head
-for param in model.parameters():
-    param.requires_grad = False
-
-# Mở khóa tầng phân loại cuối cùng (model.reset_classifier hoặc gán requires_grad)
-for param in model.get_classifier().parameters():
-    param.requires_grad = True
-
-# Huấn luyện 3 - 5 epoch với LR = 1e-3...
-
-# GIAI ĐOẠN 2: Mở khóa toàn bộ và áp dụng Differential Learning Rate
-for param in model.parameters():
-    param.requires_grad = True
-
-# Backbone học chậm (1e-5), Head học nhanh hơn (1e-4)
-optimizer = torch.optim.AdamW([
-    {'params': model.conv1.parameters(), 'lr': 1e-5},
-    {'params': model.layer1.parameters(), 'lr': 1e-5},
-    {'params': model.layer2.parameters(), 'lr': 2e-5},
-    {'params': model.layer3.parameters(), 'lr': 5e-5},
-    {'params': model.layer4.parameters(), 'lr': 8e-5},
-    {'params': model.get_classifier().parameters(), 'lr': 1e-4}
-], weight_decay=1e-2)
-```
+Với `AdamW`, nên đặt `weight_decay = 1e-2` cho toàn bộ nhóm tham số.
 
 ---
 
@@ -64,174 +39,59 @@ optimizer = torch.optim.AdamW([
 
 ### 1. Cross-Entropy kết hợp Label Smoothing
 * **Why:** Nhãn One-Hot cứng nhắc ($[1, 0, 0]$) ép mạng neural tự tin thái quá, dẫn đến Overfitting.
-* **How:** `criterion = nn.CrossEntropyLoss(label_smoothing=0.1)`. Mục tiêu được làm mềm thành $[0.933, 0.033, 0.033]$, giúp mô hình có khả năng tổng quát hóa tốt hơn.
+* **How:** Dùng `nn.CrossEntropyLoss` với tham số `label_smoothing=0.1`. Mục tiêu được làm mềm thành $[0.933, 0.033, 0.033]$, giúp mô hình có khả năng tổng quát hóa tốt hơn. Đây là thay đổi một dòng nhưng thường mang lại cải thiện rõ rệt mà không tốn thêm chi phí tính toán.
 
 ### 2. Focal Loss (Vũ khí chống mất cân bằng nhãn trầm trọng)
 * **Công thức:**
   $$FL(p_t) = -\alpha_t (1 - p_t)^\gamma \log(p_t)$$
   Với $\gamma$ là tham số tập trung (thường $= 2.0$), làm suy giảm trọng số của các mẫu dễ học ($p_t \to 1$), tập trung gradient vào các ca khó học.
-* **Code triển khai:**
-  ```python
-  import torch
-  import torch.nn as nn
-  import torch.nn.functional as F
-
-  class FocalLoss(nn.Module):
-      def __init__(self, alpha=None, gamma=2.0, reduction='mean'):
-          super().__init__()
-          self.alpha = alpha # Trọng số các lớp (tensor)
-          self.gamma = gamma
-          self.reduction = reduction
-
-      def forward(self, inputs, targets):
-          ce_loss = F.cross_entropy(inputs, targets, weight=self.alpha, reduction='none')
-          pt = torch.exp(-ce_loss) # Xác suất của nhãn đúng
-          focal_loss = ((1 - pt) ** self.gamma) * ce_loss
-          return focal_loss.mean() if self.reduction == 'mean' else focal_loss.sum()
-  ```
+* **Ý tưởng triển khai:** Focal Loss là một lớp kế thừa từ `nn.Module`. Trong hàm `forward`, trước tiên tính Cross-Entropy ở chế độ `reduction='none'` để giữ lại giá trị loss của từng mẫu riêng lẻ (không lấy trung bình ngay). Từ đó suy ra xác suất của nhãn đúng $p_t$ bằng cách lấy `exp` của âm giá trị CE. Nhân thêm hệ số điều tiết $(1 - p_t)^\gamma$ vào từng mẫu để giảm trọng số các mẫu đã dự đoán đúng dễ dàng. Cuối cùng nhân với trọng số lớp $\alpha$ (nếu có, dùng để xử lý mất cân bằng) và lấy trung bình hoặc tổng theo cấu hình `reduction`.
 
 ---
 
 # PHẦN 3: OPTIMIZER & LEARNING RATE SCHEDULER
 
 ### 1. AdamW (Decoupled Weight Decay)
-* Luôn sử dụng **`torch.optim.AdamW`** thay vì `Adam` thông thường, với `weight_decay=1e-2`.
+* Luôn sử dụng **`torch.optim.AdamW`** thay vì `Adam` thông thường, với `weight_decay=1e-2`. Điểm khác biệt cốt lõi là AdamW tách rời việc suy giảm trọng số ra khỏi phép cập nhật gradient (decoupled), nhờ đó regularization hoạt động đúng như thiết kế và mô hình tổng quát hóa ổn định hơn.
 
 ### 2. Cosine Annealing với Warmup
 * **Why:** Trong những bước đầu tiên, trọng số đang lộn xộn, nếu đặt LR lớn sẽ làm hỏng đặc trưng pre-trained. Warmup giúp tăng dần LR từ 0 lên giá trị tối đa, sau đó Cosine hạ dần êm dịu về 0.
-```python
-from torch.optim.lr_scheduler import CosineAnnealingWarmRestarts, OneCycleLR
-
-# Sử dụng OneCycleLR: Vừa có Warmup, vừa có Cosine Decay trong 1 lần gọi
-scheduler = OneCycleLR(
-    optimizer=optimizer,
-    max_lr=1e-3,
-    steps_per_epoch=len(train_loader),
-    epochs=epochs,
-    pct_start=0.1 # 10% số bước đầu tiên dành cho Warmup
-)
-```
+* **Cách cấu hình:** Dùng `OneCycleLR` để có sẵn cả Warmup và Cosine Decay trong một lần gọi. Ba tham số cần chốt là: `max_lr` (đỉnh learning rate, ví dụ `1e-3`), `steps_per_epoch` (bằng số batch của tập train, để scheduler cập nhật theo từng bước chứ không theo epoch), và `pct_start=0.1` (dành 10% số bước đầu tiên cho giai đoạn Warmup). Nếu cần dao động chu kỳ nhiều lần, có thể dùng `CosineAnnealingWarmRestarts`.
 
 ---
 
 # PHẦN 4: VÒNG LẶP HUẤN LUYỆN CHUẨN DOANH NGHIỆP (THE CANONICAL TRAINING LOOP)
 
-Dưới đây là cấu trúc mẫu của một vòng lặp huấn luyện đầy đủ các kỹ thuật hiện đại: **Automatic Mixed Precision (AMP)**, **Gradient Clipping**, **Zero Grad set to None**, và **Tracking Metrics**:
+Một vòng lặp huấn luyện hiện đại cần hội đủ các kỹ thuật: **Automatic Mixed Precision (AMP)**, **Gradient Clipping**, **Zero Grad set to None**, và **Tracking Metrics**. Trình tự thực hiện trong mỗi batch như sau:
 
-```python
-import torch
-from torch.cuda.amp import GradScaler, autocast
-from tqdm import tqdm
+1. **Chuyển dữ liệu lên GPU với `non_blocking=True`** để tận dụng đường truyền bất đồng bộ khi `pin_memory` đã bật.
+2. **Xóa đạo hàm cũ bằng `optimizer.zero_grad(set_to_none=True)`** thay vì gán về 0. Đặt về `None` giúp giải phóng bộ nhớ và tránh một lượt ghi thừa, tăng tốc nhẹ nhưng đáng kể khi chạy nhiều bước.
+3. **Forward Pass trong `torch.amp.autocast`** với `dtype=torch.float16`. Các phép toán được tự động chọn độ chính xác phù hợp, giảm VRAM và tăng tốc trên GPU có Tensor Core.
+4. **Scale loss rồi backward:** gọi `scaler.scale(loss).backward()` để phóng đại gradient trước khi lan truyền ngược, tránh hiện tượng gradient underflow khi dùng FP16.
+5. **Cắt tỉa đạo hàm chống bùng nổ:** phải gọi `scaler.unscale_(optimizer)` TRƯỚC khi `clip_grad_norm_`, vì gradient hiện đang ở thang phóng đại; nếu clip trên thang đó thì ngưỡng sẽ sai. Ngưỡng khuyến nghị `max_norm=1.0`.
+6. **Cập nhật trọng số và điều chỉnh tỷ lệ:** `scaler.step(optimizer)` sau đó `scaler.update()` để tự động điều chỉnh hệ số scale cho bước kế tiếp.
+7. **Cập nhật Learning Rate theo từng bước** bằng `scheduler.step()` (đặt sau optimizer step, bên trong vòng lặp batch khi dùng `OneCycleLR`).
+8. **Thống kê kết quả:** cộng dồn loss nhân với kích thước batch và đếm số dự đoán đúng để tính loss trung bình và accuracy cho cả epoch.
 
-def train_one_epoch(model, dataloader, criterion, optimizer, scheduler, scaler, device):
-    model.train()
-    running_loss = 0.0
-    correct = 0
-    total = 0
-
-    pbar = tqdm(dataloader, desc="Training", leave=False)
-    for images, targets in pbar:
-        # 1. Chuyển dữ liệu lên GPU với non_blocking=True
-        images = images.to(device, non_blocking=True)
-        targets = targets.to(device, non_blocking=True)
-
-        # 2. Xóa đạo hàm cực nhanh bằng cách set về None
-        optimizer.zero_grad(set_to_none=True)
-
-        # 3. Tính toán Forward với độ chính xác hỗn hợp FP16
-        with torch.amp.autocast(device_type='cuda', dtype=torch.float16):
-            outputs = model(images)
-            loss = criterion(outputs, targets)
-
-        # 4. Tính toán đạo hàm có phóng đại tỷ lệ (Scale Loss)
-        scaler.scale(loss).backward()
-
-        # 5. Cắt tỉa đạo hàm chống bùng nổ (Unscale trước khi clip)
-        scaler.unscale_(optimizer)
-        torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
-
-        # 6. Cập nhật trọng số & điều chỉnh tỷ lệ
-        scaler.step(optimizer)
-        scaler.update()
-
-        # 7. Cập nhật Learning Rate theo từng bước
-        if scheduler is not None:
-            scheduler.step()
-
-        # 8. Thống kê kết quả
-        running_loss += loss.item() * images.size(0)
-        _, predicted = outputs.max(1)
-        total += targets.size(0)
-        correct += predicted.eq(targets).sum().item()
-
-        pbar.set_postfix({'loss': running_loss / total, 'acc': correct / total})
-
-    epoch_loss = running_loss / total
-    epoch_acc = correct / total
-    return epoch_loss, epoch_acc
-```
+**Cạm bẫy thường gặp:** quên `unscale_` trước khi clip (bước 5), hoặc gọi `scheduler.step()` theo epoch trong khi scheduler được thiết kế theo bước (bước 7). Cả hai đều khiến kết quả huấn luyện âm thầm sai lệch mà không báo lỗi.
 
 ---
 
 # PHẦN 5: ĐÁNH GIÁ, EARLY STOPPING & QUẢN LÝ CHECKPOINT
 
-### Vòng lặp Validation chuẩn xác:
-```python
-@torch.inference_mode() # Tối ưu hơn torch.no_grad()
-def evaluate(model, dataloader, criterion, device):
-    model.eval()
-    running_loss = 0.0
-    correct = 0
-    total = 0
+### Vòng lặp Validation chuẩn xác
+* Đặt mô hình ở chế độ `eval()` để vô hiệu hóa Dropout và cố định BatchNorm.
+* Bao toàn bộ phần tính toán trong `torch.inference_mode()` — tối ưu hơn `torch.no_grad()` vì tắt hẳn cơ chế autograd và giảm overhead bộ nhớ.
+* Vẫn dùng `torch.amp.autocast` cho forward pass để tiết kiệm VRAM, nhưng KHÔNG tính backward và KHÔNG cập nhật tham số.
+* Cộng dồn loss và số dự đoán đúng theo cùng cách với tập train, rồi trả về loss trung bình và accuracy của cả epoch.
 
-    for images, targets in dataloader:
-        images = images.to(device, non_blocking=True)
-        targets = targets.to(device, non_blocking=True)
+### Bộ điều khiển Early Stopping & Lưu Checkpoint
+Để tránh overfitting và tiết kiệm GPU quota, cần một bộ quản lý checkpoint tự động. Thành phần này hoạt động như sau:
 
-        with torch.amp.autocast(device_type='cuda', dtype=torch.float16):
-            outputs = model(images)
-            loss = criterion(outputs, targets)
+* **Cấu hình:** nhận vào đường dẫn file lưu (`filepath`), số epoch kiên nhẫn (`patience`, ví dụ 5), và chiều đánh giá (`mode` là `min` nếu metric càng nhỏ càng tốt như loss, hoặc `max` nếu càng lớn càng tốt như accuracy).
+* **Trạng thái nội bộ:** lưu điểm số tốt nhất (`best_score`) khởi tạo là vô cùng (dương hoặc âm tùy mode) và bộ đếm số lần không cải thiện (`patience_counter`).
+* **Hàm `step` (gọi sau mỗi epoch):** so sánh điểm hiện tại với điểm tốt nhất.
+  * Nếu có cải thiện: cập nhật `best_score`, reset bộ đếm về 0, và lưu checkpoint đầy đủ gồm số epoch, trạng thái tham số mô hình, điểm tốt nhất, và trạng thái optimizer (để có thể resume chính xác).
+  * Nếu không cải thiện: tăng bộ đếm lên 1. Khi bộ đếm đạt ngưỡng `patience`, trả về tín hiệu dừng để vòng lặp huấn luyện ngoài thoát ra sớm.
 
-        running_loss += loss.item() * images.size(0)
-        _, predicted = outputs.max(1)
-        total += targets.size(0)
-        correct += predicted.eq(targets).sum().item()
-
-    return running_loss / total, correct / total
-```
-
-### Bộ điều khiển Early Stopping & Lưu Checkpoint:
-```python
-import os
-
-class ModelCheckpointManager:
-    def __init__(self, filepath="best_model.pt", patience=5, mode="min"):
-        self.filepath = filepath
-        self.patience = patience
-        self.mode = mode
-        self.best_score = float('inf') if mode == 'min' else -float('inf')
-        self.patience_counter = 0
-
-    def step(self, current_score, model, epoch, optimizer=None):
-        improved = (current_score < self.best_score) if self.mode == 'min' else (current_score > self.best_score)
-        
-        if improved:
-            self.best_score = current_score
-            self.patience_counter = 0
-            # Lưu checkpoint đầy đủ
-            torch.save({
-                'epoch': epoch,
-                'model_state_dict': model.state_dict(),
-                'best_score': self.best_score,
-                'optimizer_state_dict': optimizer.state_dict() if optimizer else None
-            }, self.filepath)
-            print(f"--> Đã lưu checkpoint mới tại epoch {epoch} với điểm số: {self.best_score:.4f}")
-            return False # Chưa cần stop
-        else:
-            self.patience_counter += 1
-            print(f"--> Không cải thiện ({self.patience_counter}/{self.patience})")
-            if self.patience_counter >= self.patience:
-                print("--> Đã kích hoạt Early Stopping! Dừng huấn luyện.")
-                return True # Kích hoạt dừng sớm
-            return False
-```
+**Nguyên tắc quan trọng:** chỉ lưu checkpoint khi metric cải thiện (không lưu mỗi epoch để tránh đầy ổ đĩa), và luôn lưu kèm trạng thái optimizer cùng số epoch để lần chạy sau có thể phục hồi đúng tiến độ thay vì train lại từ đầu.

@@ -18,24 +18,7 @@ graph LR
 ### Bước 1. Quét lỗi và Tính hợp lệ của Dữ liệu (Integrity Scan)
 * **What:** Quét toàn bộ thư mục dữ liệu để tìm ra các file ảnh bị lỗi byte, bị cắt ngắn (truncated), hoặc file văn bản bị lỗi mã hóa (Encoding Error).
 * **Why:** Chỉ cần một file ảnh bị lỗi lọt vào trong quá trình huấn luyện, `DataLoader` sẽ ném Exception và làm sập toàn bộ quá trình train sau nhiều giờ chạy.
-* **How (Code thực thi):**
-  ```python
-  import os
-  from PIL import Image
-
-  def verify_image_dataset(root_dir):
-      corrupt_files = []
-      for root, _, files in os.walk(root_dir):
-          for file in files:
-              file_path = os.path.join(root, file)
-              try:
-                  with Image.open(file_path) as img:
-                      img.verify() # Kiểm tra tính toàn vẹn file ảnh
-              except Exception as e:
-                  corrupt_files.append((file_path, str(e)))
-      print(f"Tổng số file lỗi phát hiện: {len(corrupt_files)}")
-      return corrupt_files
-  ```
+* **How:** Duyệt đệ quy toàn bộ cây thư mục, mở từng file ảnh và gọi cơ chế kiểm tra tính toàn vẹn của thư viện đọc ảnh (ví dụ `PIL.Image.verify()`). Ghi lại danh sách các file lỗi kèm thông báo ngoại lệ, rồi quyết định xóa hoặc sửa thủ công trước khi đưa vào huấn luyện. Không bao giờ để khâu kiểm tra này chạy lẫn trong vòng lặp train.
 
 ### Bước 2. Phân tích Kích thước và Tỷ lệ Khung hình (Dimensions & Aspect Ratios)
 * **What:** Đo đạc phân phối chiều cao (Height), chiều rộng (Width) và tỷ lệ $Aspect\ Ratio = \frac{Width}{Height}$.
@@ -47,48 +30,23 @@ graph LR
 * **What:** Tính toán giá trị trung bình và độ lệch chuẩn của 3 kênh màu (R, G, B) trên toàn bộ tập huấn luyện:
   $$\mu_c = \frac{1}{N} \sum_{i=1}^N x_{i, c}, \quad \sigma_c = \sqrt{\frac{1}{N} \sum_{i=1}^N (x_{i, c} - \mu_c)^2}$$
 * **Why:** Thay vì dùng mặc định giá trị ImageNet (`mean=[0.485, 0.456, 0.406]`, `std=[0.229, 0.224, 0.225]`), việc tính trực tiếp trên tập dữ liệu chuyên biệt (như ảnh y tế X-quang, ảnh vệ tinh, ảnh ban đêm) sẽ giúp mô hình hội tụ tốt hơn đáng kể.
+* **How:** Duyệt qua toàn bộ tập train (chỉ tập train, tuyệt đối không dùng tập validation hay test để tránh rò rỉ dữ liệu), cộng dồn tổng và bình phương tổng của từng kênh, sau đó suy ra mean và std. Hai con số này phải được chốt cứng và dùng lại y nguyên cho cả ba tập.
 
 ---
 
 # PHẦN 2: THIẾT KẾ DATASET PYTORCH CHUẨN KỸ THUẬT
 
 ### Nguyên tắc Vàng: Lazy Loading (Nạp lười biếng)
-Tuyệt đối không lưu mảng ảnh thô vào RAM. Trong `__init__()`, chỉ lưu danh sách đường dẫn file (`file_paths`) và nhãn tương ứng (`labels`). Việc đọc file từ ổ đĩa và chuyển thành Tensor chỉ được thực hiện trong hàm `__getitem__()`.
+Tuyệt đối không lưu mảng ảnh thô vào RAM. Trong hàm khởi tạo `__init__()`, chỉ lưu danh sách đường dẫn file (`file_paths`) và nhãn tương ứng (`labels`). Việc đọc file từ ổ đĩa và chuyển thành Tensor chỉ được thực hiện trong hàm `__getitem__()`, tức là tại đúng thời điểm mẫu dữ liệu đó được lấy ra để đưa vào batch.
 
-### Mẫu Code PyTorch Custom Dataset Chuẩn:
-```python
-import os
-import torch
-from torch.utils.data import Dataset
-from PIL import Image
+### Hợp đồng của một Custom Dataset Chuẩn
+Một lớp Dataset kế thừa từ `torch.utils.data.Dataset` phải cài đặt đúng ba thành phần sau:
 
-class VisionDataset(Dataset):
-    def __init__(self, image_paths, labels, transform=None):
-        """
-        image_paths: Danh sách đường dẫn tới từng file ảnh
-        labels: Danh sách nhãn số nguyên tương ứng
-        transform: Bộ các phép biến đổi torchvision v2
-        """
-        self.image_paths = image_paths
-        self.labels = labels
-        self.transform = transform
+* **`__init__(self, image_paths, labels, transform=None)`:** Chỉ nhận và lưu lại danh sách đường dẫn ảnh, danh sách nhãn số nguyên tương ứng, và bộ biến đổi (transform). Không đọc nội dung ảnh ở bước này.
+* **`__len__(self)`:** Trả về tổng số mẫu, chính là độ dài danh sách đường dẫn. `DataLoader` dùng giá trị này để biết phạm vi lấy mẫu.
+* **`__getitem__(self, idx)`:** Thực hiện tuần tự ba việc: (1) mở ảnh từ đĩa tại chỉ số `idx` và chuyển về hệ màu RGB; (2) áp dụng `transform` nếu được truyền vào để tiền xử lý và tăng cường dữ liệu; (3) trả về cặp gồm Tensor ảnh và nhãn dưới dạng số nguyên `int64` (`torch.long`) để tương thích với hàm loss phân loại.
 
-    def __len__(self):
-        return len(self.image_paths)
-
-    def __getitem__(self, idx):
-        # 1. Đọc ảnh từ đĩa tại thời điểm cần
-        img_path = self.image_paths[idx]
-        image = Image.open(img_path).convert("RGB")
-        label = self.labels[idx]
-
-        # 2. Áp dụng tiền xử lý & Augmentation
-        if self.transform:
-            image = self.transform(image)
-
-        # 3. Trả về Tensor và nhãn dạng int64
-        return image, torch.tensor(label, dtype=torch.long)
-```
+Lưu ý: nhãn phải được ép về kiểu `torch.long`, vì `CrossEntropyLoss` yêu cầu nhãn là số nguyên lớp, không phải số thực.
 
 ---
 
@@ -97,46 +55,16 @@ class VisionDataset(Dataset):
 Augmentation trong Deep Learning được chia làm 3 cấp độ:
 
 ### Cấp độ 1: Phép biến đổi Hình học & Màu sắc Cơ bản (Spatial & Color)
-* **Sử dụng `torchvision.transforms.v2`:**
-  ```python
-  from torchvision.transforms import v2
-
-  # Bộ Transform dành riêng cho tập TRAIN (Có Augmentation)
-  train_transforms = v2.Compose([
-      v2.RandomResizedCrop(size=(224, 224), scale=(0.8, 1.0)),
-      v2.RandomHorizontalFlip(p=0.5),
-      v2.RandomRotation(degrees=15),
-      v2.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2),
-      v2.ToImage(),
-      v2.ToDtype(torch.float32, scale=True), # Đưa về [0.0, 1.0]
-      v2.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
-  ])
-
-  # Bộ Transform dành cho tập VALIDATION & TEST (Tuyệt đối KHÔNG ngẫu nhiên hóa)
-  val_transforms = v2.Compose([
-      v2.Resize(size=(256, 256)),
-      v2.CenterCrop(size=(224, 224)),
-      v2.ToImage(),
-      v2.ToDtype(torch.float32, scale=True),
-      v2.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
-  ])
-  ```
+* **Sử dụng `torchvision.transforms.v2`:** Đây là API hiện đại, thống nhất giữa ảnh và video, thay cho API `transforms` cũ.
+* **Bộ Transform cho tập TRAIN:** Ghép nối các phép biến đổi ngẫu nhiên nhằm đa dạng hóa dữ liệu: cắt và resize ngẫu nhiên về kích thước mục tiêu với tỷ lệ vùng cắt từ 0.8 đến 1.0, lật ngang xác suất 0.5, xoay ngẫu nhiên trong khoảng 15 độ, và điều chỉnh nhẹ độ sáng, độ tương phản, độ bão hòa. Sau đó chuyển sang Tensor float32 trong khoảng [0.0, 1.0] và chuẩn hóa bằng mean/std đã tính ở Phần 1.
+* **Bộ Transform cho tập VALIDATION & TEST:** Tuyệt đối KHÔNG ngẫu nhiên hóa. Chỉ resize về kích thước lớn hơn một chút (ví dụ 256) rồi CenterCrop về kích thước mô hình yêu cầu (ví dụ 224), sau đó chuyển Tensor và chuẩn hóa bằng đúng mean/std của tập train. Việc giữ tập đánh giá cố định là điều kiện để so sánh kết quả giữa các lần chạy.
 
 ### Cấp độ 2: Tăng cường Nâng cao (MixUp & CutMix)
 * **MixUp:** Trộn 2 ảnh với hệ số $\lambda \sim \text{Beta}(\alpha, \alpha)$:
   $$\tilde{x} = \lambda x_i + (1 - \lambda) x_j, \quad \tilde{y} = \lambda y_i + (1 - \lambda) y_j$$
 * **CutMix:** Cắt một vùng chữ nhật trên ảnh $A$ và đè lên ảnh $B$, nhãn mục tiêu được pha trộn theo tỷ lệ diện tích của vùng cắt.
 * **Why:** Ép mạng nơ-ron không được phụ thuộc vào một vùng đặc trưng duy nhất, tăng khả năng chống chịu nhiễu (Robustness).
-* **Cách dùng trong PyTorch:**
-  ```python
-  from torchvision.transforms.v2 import CutMix, MixUp, RandomChoice
-
-  # Áp dụng ngẫu nhiên CutMix hoặc MixUp trên cấp độ Mini-batch
-  cutmix_or_mixup = RandomChoice([
-      CutMix(num_classes=num_classes, alpha=1.0),
-      MixUp(num_classes=num_classes, alpha=0.8)
-  ])
-  ```
+* **Cách dùng trong PyTorch:** `torchvision.transforms.v2` cung cấp sẵn hai lớp `CutMix` và `MixUp`. Hai phép này hoạt động ở cấp độ Mini-batch (trộn giữa các mẫu trong cùng một batch) chứ không phải cấp độ từng ảnh đơn lẻ. Vì vậy chúng được ghép vào một bộ chọn ngẫu nhiên (`RandomChoice`) và gọi sau khi batch đã được lấy ra, chứ không nhét vào `Compose` của Dataset. Khi dùng hai phép này, nhãn trở thành phân phối mềm nên hàm loss phải là loại hỗ trợ soft label.
 
 ---
 
@@ -152,35 +80,18 @@ Bộ nạp dữ liệu `DataLoader` là cầu nối giữa ổ đĩa và GPU. C�
 | `pin_memory` | `True` (bắt buộc khi dùng GPU) | Khóa trang bộ nhớ RAM, giúp lệnh `.to('cuda', non_blocking=True)` chuyển dữ liệu sang GPU với băng thông DMA tối đa. |
 | `drop_last` | `True` (Train) | Bỏ batch cuối cùng nếu số lượng mẫu lẻ để tránh lỗi `BatchNorm` khi batch size $= 1$. |
 
+**Cách chẩn đoán nút thắt cổ chai:** Nếu GPU utilization thấp trong khi CPU chạy 100%, nút thắt nằm ở khâu nạp dữ liệu. Khi đó tăng `num_workers`, bật `pin_memory`, và cân nhắc dùng `persistent_workers=True` để không phải khởi tạo lại tiến trình worker mỗi epoch.
+
 ---
 
 # PHẦN 5: XỬ LÝ MẤT CÂN BẰNG DỮ LIỆU BẰNG SAMPLER
 
-Khi một lớp có 10.000 mẫu và một lớp chỉ có 200 mẫu, thay vì oversampling thủ công làm phình to ổ đĩa, ta sử dụng **`WeightedRandomSampler`** để lấy mẫu có trọng số nghịch đảo với tần suất xuất hiện:
+Khi một lớp có 10.000 mẫu và một lớp chỉ có 200 mẫu, thay vì oversampling thủ công làm phình to ổ đĩa, ta sử dụng **`WeightedRandomSampler`** để lấy mẫu có trọng số nghịch đảo với tần suất xuất hiện.
 
-```python
-import numpy as np
-import torch
-from torch.utils.data import DataLoader, WeightedRandomSampler
+**Quy trình ba bước:**
 
-# 1. Tính trọng số cho từng class
-class_counts = np.bincount(train_labels)
-class_weights = 1.0 / class_counts
+1. **Đếm số mẫu mỗi lớp** trên tập train (ví dụ bằng `numpy.bincount` trên mảng nhãn).
+2. **Tính trọng số nghịch đảo:** trọng số của một lớp tỷ lệ nghịch với số mẫu của lớp đó. Lớp càng hiếm thì mỗi mẫu của nó càng có trọng số lớn.
+3. **Gán trọng số cho từng mẫu cụ thể** theo nhãn của mẫu đó, rồi tạo `WeightedRandomSampler` với `num_samples` bằng tổng số mẫu train và `replacement=True` (cho phép lấy lặp lại mẫu thuộc lớp thiểu số).
 
-# 2. Gán trọng số cho từng mẫu cụ thể
-sample_weights = [class_weights[label] for label in train_labels]
-sampler = WeightedRandomSampler(
-    weights=sample_weights,
-    num_samples=len(sample_weights),
-    replacement=True # Cho phép lấy lặp lại với lớp thiểu số
-)
-
-# 3. Truyền sampler vào DataLoader (lưu ý: khi có sampler thì shuffle=False)
-train_loader = DataLoader(
-    dataset=train_dataset,
-    batch_size=32,
-    sampler=sampler,
-    num_workers=4,
-    pin_memory=True
-)
-```
+**Lưu ý quan trọng:** Khi đã truyền `sampler` vào `DataLoader`, bắt buộc đặt `shuffle=False`, vì hai cơ chế này loại trừ lẫn nhau. Ngoài ra, phương pháp này chỉ áp dụng cho tập train; tập validation và test phải giữ nguyên phân phối thật để phản ánh đúng hiệu năng thực tế của mô hình.

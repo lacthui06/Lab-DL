@@ -90,15 +90,8 @@ graph TD
 * **Why:** Huấn luyện từ đầu (From scratch) trên dữ liệu nhỏ gần như chắc chắn thất bại và tốn chi phí điện toán khổng lồ. Transfer Learning kế thừa các đặc trưng cấp thấp (cạnh, góc, texture, ngữ pháp) cực kỳ mạnh mẽ.
 
 ### Bước 2. Tùy biến Đầu ra (Custom Head Replacement)
-* **What:** Cắt bỏ tầng phân loại cuối cùng của mô hình pre-trained (vốn thiết kế cho 1000 class của ImageNet) và thay thế bằng một mạng con phù hợp với số lượng class của bài toán hiện tại:
-  ```python
-  # Thay thế Fully Connected Layer cho ResNet
-  in_features = model.fc.in_features
-  model.fc = nn.Sequential(
-      nn.Dropout(p=0.3),
-      nn.Linear(in_features, num_classes)
-  )
-  ```
+* **What:** Cắt bỏ tầng phân loại cuối cùng của mô hình pre-trained (vốn thiết kế cho 1000 class của ImageNet) và thay thế bằng một mạng con phù hợp với số lượng class của bài toán hiện tại.
+* **How:** Thay tầng Fully Connected cuối cùng bằng một mạng con mới phù hợp với số lớp của bài toán. Mạng con này thường gồm một lớp `Dropout` (ví dụ `p=0.3`) để chống overfitting, nối tiếp một lớp `Linear` có số đầu ra đúng bằng `num_classes`. Số đặc trưng đầu vào của lớp `Linear` lấy trực tiếp từ thuộc tính của tầng FC gốc (ví dụ với ResNet là `model.fc.in_features`), đảm bảo khớp đúng chiều với đầu ra của backbone.
 
 ### Bước 3. Chiến lược Tinh chỉnh 2 Giai đoạn (Two-Phase Fine-Tuning)
 * **Giai đoạn 1 (Feature Extraction):**

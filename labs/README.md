@@ -5,9 +5,11 @@ This directory manages all practical coursework labs for Deep Learning. The stan
 ```text
 labs/
 |-- lab01/                      <-- Standard reference directory layout for each lab
+|   |-- README.md               <-- Short entry point: objective, structure, reproduce, results
 |   |-- walkthrough_lab_01.md   <-- Unified 3-Rule living document (Spec -> Changelog -> Report)
 |   |-- notebooks/              <-- Interactive Jupyter Notebooks
 |   |-- src/                    <-- Modular, reusable Python source components
+|   |-- tests/                  <-- Mandatory TDD tests
 |   |-- data/                   <-- Local input datasets (git-ignored)
 |   +-- outputs/                <-- Checkpoints, evaluation logs, and visualization figures
 ```
