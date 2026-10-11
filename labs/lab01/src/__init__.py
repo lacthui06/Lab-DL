@@ -11,7 +11,6 @@ from .config import (
     ExperimentConfig,
     RUN1_CONFIG,
     RUN2_CONFIG,
-    RUN3_CONFIG,
     CV_MODEL_TYPE,
     CV_EPOCHS,
     CV_LEARNING_RATE,
@@ -34,7 +33,6 @@ from .dataset import (
 from .model import (
     BaselineMLP,
     TunedMLP,
-    FashionCNN,
     build_model,
     count_parameters,
 )
@@ -72,7 +70,6 @@ __all__ = [
     "ExperimentConfig",
     "RUN1_CONFIG",
     "RUN2_CONFIG",
-    "RUN3_CONFIG",
     "CV_MODEL_TYPE",
     "CV_EPOCHS",
     "CV_LEARNING_RATE",
@@ -91,7 +88,6 @@ __all__ = [
     "CustomFashionMNISTDataset",
     "BaselineMLP",
     "TunedMLP",
-    "FashionCNN",
     "build_model",
     "count_parameters",
     "build_optimizer",

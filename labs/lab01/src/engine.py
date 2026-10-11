@@ -326,6 +326,7 @@ def run_kfold_cv(
     pool_eval: Dataset,
     targets: torch.Tensor,
     optimizer_type: str,
+    model_type: str = "tuned_mlp",
     learning_rate: float = 1e-3,
     momentum: float = 0.9,
     num_epochs: int = 15,
@@ -364,7 +365,7 @@ def run_kfold_cv(
 
     for fold, (train_idx, val_idx) in enumerate(skf.split(np.zeros(len(y)), y), start=1):
         set_seed(seed + fold)
-        model = build_model("cnn").to(device)
+        model = build_model(model_type).to(device)
         optimizer = build_optimizer(
             optimizer_type=optimizer_type,
             model=model,

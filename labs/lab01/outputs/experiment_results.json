@@ -6,9 +6,5 @@
   "Run2_Tuned_MLP": {
     "loss": 0.3307,
     "acc": 88.01
-  },
-  "Run3_FashionCNN": {
-    "loss": 0.1994,
-    "acc": 92.99
   }
 }

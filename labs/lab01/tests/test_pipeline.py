@@ -70,7 +70,7 @@ def test_2_lazy_loading_and_tensor_types(sample_loaders):
 def test_3_model_forward_shapes():
     """Test 3: Verify all model architectures produce correct output logits."""
     dummy_input = torch.randn(4, 1, 28, 28)
-    model_types = ["baseline_mlp", "tuned_mlp", "cnn"]
+    model_types = ["baseline_mlp", "tuned_mlp"]
 
     for m_type in model_types:
         model = build_model(m_type, num_classes=10)
@@ -107,19 +107,19 @@ def test_4_sanity_overfit_one_batch(sample_loaders):
 
 def test_5_save_and_load_checkpoint(tmp_path):
     """Test 5: Verify model saving and loading preserves weights and inference outputs."""
-    model_save = build_model("cnn")
+    model_save = build_model("tuned_mlp")
     model_save.eval()
 
     dummy_input = torch.randn(2, 1, 28, 28)
     with torch.no_grad():
         out_before = model_save(dummy_input)
 
-    chk_path = tmp_path / "test_cnn.pt"
+    chk_path = tmp_path / "test_tuned_mlp.pt"
     save_checkpoint(model_save, chk_path, metadata={"val_acc": 92.5})
 
     assert chk_path.exists(), "Checkpoint file was not created"
 
-    model_load = build_model("cnn")
+    model_load = build_model("tuned_mlp")
     meta = load_checkpoint(model_load, chk_path, device=torch.device("cpu"))
     model_load.eval()
 
@@ -134,7 +134,7 @@ def test_6_build_optimizer_factory():
     """Test 6: Verify the optimizer factory returns the correct optimizer type and hyperparameters."""
     import numpy as np
 
-    model = build_model("cnn")
+    model = build_model("tuned_mlp")
 
     opt_sgd = build_optimizer("sgd", model, learning_rate=1e-3, momentum=0.9)
     assert isinstance(opt_sgd, torch.optim.SGD), "Expected torch.optim.SGD"

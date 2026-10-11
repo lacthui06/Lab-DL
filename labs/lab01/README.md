@@ -1,6 +1,6 @@
 # Lab 01 — FashionMNIST Image Classification with PyTorch
 
-Bài lab xây dựng pipeline Deep Learning end-to-end để phân loại 10 nhóm trang phục trong bộ dữ liệu FashionMNIST (60.000 mẫu train, 10.000 mẫu test). Bài lab so sánh 3 kiến trúc (Baseline MLP, Tuned MLP, FashionCNN), áp dụng quy trình TDD với bài test 1-batch sanity overfit cục bộ, và huấn luyện đầy đủ trên Kaggle GPU.
+Bài lab xây dựng pipeline Deep Learning end-to-end để phân loại 10 nhóm trang phục trong bộ dữ liệu FashionMNIST (60.000 mẫu train, 10.000 mẫu test). Bài lab so sánh 2 kiến trúc (Baseline MLP, Tuned MLP), áp dụng quy trình TDD với bài test 1-batch sanity overfit cục bộ, và huấn luyện đầy đủ trên Kaggle GPU.
 
 ---
 
@@ -30,10 +30,9 @@ Bài lab xây dựng pipeline Deep Learning end-to-end để phân loại 10 nh�
 | Run | Model | Test Accuracy | Macro F1 |
 |---|---|---|---|
 | Run #1 Baseline | Baseline MLP (2 layers) | 87.33% | không ghi nhận |
-| Run #2 Tuned | Tuned MLP (3 layers, BN, Dropout) | 88.01% | không ghi nhận |
-| Run #3 Final | FashionCNN (2 Conv blocks + Head) | **92.99%** | **92.95%** |
+| Run #2 Tuned | Tuned MLP (3 layers, BN, Dropout) | **88.01%** | không ghi nhận |
 
-Mô hình được chọn: **FashionCNN (Run #3)** — cải thiện +5.66% Test Accuracy và giảm 43.9% Test Loss so với baseline.
+Mô hình được chọn: **Tuned MLP (Run #2)** — cải thiện +0.68% Test Accuracy và giảm 7.0% Test Loss so với baseline.
 
 Ghi chú: Run #1 và Run #2 không ghi nhận Macro F1 trong lần chạy Kaggle đã commit, nên ô này để trống thay vì suy diễn số.
 

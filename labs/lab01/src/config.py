@@ -54,7 +54,7 @@ CLASS_NAMES = [
 class ExperimentConfig:
     """Hyperparameters and configuration for an experiment run."""
     name: str
-    model_type: str  # 'baseline_mlp', 'tuned_mlp', 'cnn'
+    model_type: str  # 'baseline_mlp' or 'tuned_mlp'
     batch_size: int = 64
     num_epochs: int = 10
     learning_rate: float = 1e-3
@@ -66,7 +66,7 @@ class ExperimentConfig:
     checkpoint_name: str = "best_model.pt"
 
 
-# Pre-configured configurations for the 3 experimental runs
+# Pre-configured configurations for the 2 experimental runs
 RUN1_CONFIG = ExperimentConfig(
     name="Run1_Baseline_MLP",
     model_type="baseline_mlp",
@@ -91,19 +91,6 @@ RUN2_CONFIG = ExperimentConfig(
     checkpoint_name="tuned_mlp_best.pt",
 )
 
-RUN3_CONFIG = ExperimentConfig(
-    name="Run3_FashionCNN",
-    model_type="cnn",
-    batch_size=64,
-    num_epochs=10,
-    learning_rate=1e-3,
-    weight_decay=1e-4,
-    use_scheduler=True,
-    use_augmentation=True,
-    checkpoint_name="fashion_cnn_best.pt",
-)
-
-
 # ---------------------------------------------------------------------------
 # Optimizer Comparison & K-Fold Cross-Validation (Phase 2 experiment)
 # ---------------------------------------------------------------------------
@@ -113,7 +100,7 @@ RUN3_CONFIG = ExperimentConfig(
 # The learning rate is held constant (no scheduler) and weight decay is
 # disabled, isolating the optimizer update rule from other regularization.
 
-CV_MODEL_TYPE = "cnn"
+CV_MODEL_TYPE = "tuned_mlp"
 CV_EPOCHS = 15
 CV_LEARNING_RATE = 1e-3
 CV_SGD_MOMENTUM = 0.9

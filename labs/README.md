@@ -22,5 +22,5 @@ labs/
 `walkthrough_lab_0X.md` integrates three core development rules into a single living document. Do not create separate `SPEC.md` or `REPORT.md` files:
 
 - **Section 1 (Spec & Baseline Setup):** Governed by the `spec-driven-development` rule — Records the confirmed brief interpretation (Mục 1.0), then defines problem formulation, data contracts, baseline model, and quantitative acceptance thresholds.
-- **Section 2 (Full-Flow Experiment Changelog):** Governed by the `walkthrough-and-experiment-tracking` rule — Records each experimental iteration (Run #1 Baseline, Run #2 Tuned MLP, Run #3 FashionCNN), tracking changes across all 5 pipeline stages, rationale for hyperparameter adjustments, and quantitative metric impact.
+- **Section 2 (Full-Flow Experiment Changelog):** Governed by the `walkthrough-and-experiment-tracking` rule — Records each experimental iteration (for example, Run #1 Baseline then later tuned runs), tracking changes across all 5 pipeline stages, rationale for hyperparameter adjustments, and quantitative metric impact.
 - **Section 3 (Results & Final Technical Report):** Governed by the `documentation-and-adrs` rule — Provides comparative evaluation matrices, confusion matrix diagnostics, error analysis slices, decision traceability back to Mục 1.0, and conclusions ready for submission.

@@ -2,7 +2,7 @@
 
 > **Lab Title:** Lab 01 — FashionMNIST Image Classification with PyTorch  
 > **Status:** [x] Completed  
-> **Primary Objective:** Construct an end-to-end deep learning pipeline classifying 10 FashionMNIST garment categories, enforce local TDD 1-batch sanity overfit testing, and evaluate 3 distinct architectures (Baseline MLP, Tuned MLP, FashionCNN) elevating Test Accuracy from 87.33% to 92.99% (Macro F1: 92.95%).  
+> **Primary Objective:** Construct an end-to-end deep learning pipeline classifying 10 FashionMNIST garment categories, enforce local TDD 1-batch sanity overfit testing, and evaluate 2 architectures (Baseline MLP, Tuned MLP) elevating Test Accuracy from 87.33% to 88.01% (Macro F1 for the tuned MLP: not logged in the committed run).  
 > **Workflow Playbook References:** `docs/dl_flow.md` | `docs/dl_training.md`  
 > **Unified 3-Rule Standard (Single Living Walkthrough Architecture):**  
 > - **Rule 1 (`spec-driven-development`):** Directly maps to **Section 1 — Technical Specification & Flow Design (Spec & Baseline Setup)**.  
@@ -18,11 +18,11 @@ This section summarizes how the original brief in `description_lab_01.md` was in
 
 - **Brief interpretation:** The assignment "Exercise: PyTorch FashionMNIST Classification" requires building a FashionMNIST image classification pipeline in PyTorch, covering 7 core concepts (Tensors, Datasets/Loaders, Transforms, Model Building, Autograd, Optimization, Model Saving/Loading). The required deliverables are Python code, a brief report, loss curves, and images displaying predictions versus ground-truth labels.
 - **Points clarified:**
-  - The brief does not mandate a number of experiments; it was decided to run 3 evolutionary runs (Baseline MLP, Tuned MLP, FashionCNN) to cover both the architecture axis and the regularization axis.
+  - The brief does not mandate a number of experiments; it was decided to run 2 evolutionary runs (Baseline MLP, Tuned MLP) to cover both the architecture axis and the regularization axis.
   - The brief mentions a "brief report" but does not specify a format; it was decided to use a single living document `walkthrough_lab_01.md` and not to create a separate `REPORT.md`.
-  - The brief requires the student to "Experiment with network/hyperparameters" but gives no concrete grid; the comparison grid was fixed as a basic MLP versus an MLP with BatchNorm/Dropout versus a 2-block convolutional CNN.
+  - The brief requires the student to "Experiment with network/hyperparameters" but gives no concrete grid; the comparison grid was fixed as a basic MLP versus an MLP with BatchNorm/Dropout.
   - The brief requires "Save and load the model"; it was decided to persist `state_dict` into `outputs/checkpoints/` and to add a verification step that reloading reproduces the original logits.
-  - No quantitative acceptance threshold is given in the brief; internal thresholds were fixed per run (Baseline MLP >= 85.0%, Tuned MLP >= 87.5%, FashionCNN >= 91.0% Accuracy and >= 91.0% Macro F1).
+  - No quantitative acceptance threshold is given in the brief; internal thresholds were fixed per run (Baseline MLP >= 85.0%, Tuned MLP >= 87.5% Accuracy).
 - **Remaining assumption:** The original brief contains a numbered list from 1 to 5 whose content was blank when copied; this content is treated as not provided and is not inferred. If the instructor supplies the list content, the decisions above must be re-checked against it.
 
 ### 1.1. Master Flow Design
@@ -30,10 +30,10 @@ This section summarizes how the original brief in `description_lab_01.md` was in
 ```mermaid
 graph LR
     A["1. Data Sourcing <br> (FashionMNIST 60k/10k)"] --> B["2. Preprocessing & Augment <br> (Norm mu=0.286, sigma=0.320, Flip)"]
-    B --> C["3. Model Architecture <br> (Baseline MLP vs Tuned vs CNN)"]
+    B --> C["3. Model Architecture <br> (Baseline MLP vs Tuned MLP)"]
     C --> D["4. Training & Optimization <br> (AdamW, CosineAnnealing, Checkpoints)"]
     D --> E["5. Evaluation & Diagnostics <br> (Confusion Matrix, Error Slices)"]
-    E --> F["6. Decision / Selected Best <br> (FashionCNN @ 92.99% Test Acc)"]
+    E --> F["6. Decision / Selected Best <br> (Tuned MLP @ 88.01% Test Acc)"]
 ```
 
 **Playbook Mapping:** Each pipeline stage of this lab follows the corresponding section of the reference playbooks in `docs/`. The table below is the traceability link between lab artifacts and playbooks.
@@ -90,12 +90,11 @@ Note: this lab trains all models from scratch (no pretrained backbone), so `docs
 ### 1.5. Quantitative Acceptance Thresholds
 - **Baseline MLP (Run #1):** Test Accuracy $\ge 85.0\%$.
 - **Tuned MLP (Run #2):** Test Accuracy $\ge 87.5\%$.
-- **FashionCNN (Run #3):** Test Accuracy $\ge 91.0\%$, Macro F1-Score $\ge 91.0\%$.
 
 ### 1.6. Phase 2 — Optimizer Comparison under Stratified K-Fold Cross-Validation
 
 #### 1.6.1. Objective and Scope
-The first phase held the optimizer fixed (`AdamW`) and varied the architecture. The second phase inverts the controlled variable: the architecture is frozen and the optimizer is varied. Three update rules are compared on an identical `FashionCNN` backbone:
+The first phase held the optimizer fixed (`AdamW`) and varied the architecture. The second phase inverts the controlled variable: the architecture is frozen and the optimizer is varied. Three update rules are compared on an identical `TunedMLP` backbone:
 
 | Arm | Optimizer | Learning Rate | Momentum | Weight Decay |
 |:---|:---|:---:|:---:|:---:|
@@ -132,14 +131,14 @@ The reference playbook `docs/dl_training.md` recommends `AdamW` because of its d
 - `outputs/optimizer_experiment_results.json` — per-fold, mean/std, and per-class TPR/FPR summary.
 
 #### 1.6.7. Execution Constraints
-- **Compute target:** Kaggle GPU (Tesla T4). Estimated cost is 3 arms x 5 folds x 15 epochs; at approximately 6 minutes per 15-epoch FashionCNN run this is on the order of 1.5 GPU-hours, within the weekly quota.
+- **Compute target:** Kaggle GPU (Tesla T4). Estimated cost is 3 arms x 5 folds x 15 epochs on the lightweight `TunedMLP` backbone; at approximately 4-5 minutes per 15-epoch run this is on the order of 1 GPU-hour, within the weekly quota.
 - **Zero Waste compliance:** no full multi-epoch training is executed locally. Local verification is limited to the 1-batch sanity overfit check and a tiny synthetic smoke test of the cross-validation plumbing.
 
 ---
 
 ## 2. FULL-FLOW EXPERIMENT CHANGELOG (FULL-FLOW EXPERIMENT CHANGELOG — Rule: walkthrough-and-experiment-tracking)
 
-> **Provenance note:** Every metric recorded in this section and in Section 3 is taken from the single committed Kaggle GPU run whose artifacts are stored in `outputs/` (`experiment_results.json`, `classification_report_cnn.txt`, the `*.png` figures) and from the executed notebook `notebooks/lab01_fashionmnist_walkthrough.ipynb`. Where a metric was not logged by that run, it is explicitly marked `not logged` rather than inferred.
+> **Provenance note:** Every metric recorded in this section and in Section 3 is taken from the single committed Kaggle GPU run whose artifacts are stored in `outputs/` (`experiment_results.json`, the `*.png` figures) and from the executed notebook `notebooks/lab01_fashionmnist_walkthrough.ipynb`. Where a metric was not logged by that run, it is explicitly marked `not logged` rather than inferred.
 
 ### Run 1 (Run #1 — Baseline Flow)
 *Objective: Construct the minimal viable baseline pipeline using a simple 2-layer MLP to establish an empirical performance anchor.*
@@ -185,30 +184,7 @@ The reference playbook `docs/dl_training.md` recommends `AdamW` because of its d
   - Test Loss / Test Acc: **0.3307 / 88.01%**.
   - Test Macro F1-Score: **not logged in the committed run.**
   - Delta vs Run #1: Test Acc gained +0.68% (87.33% -> 88.01%), Test Loss dropped from 0.3555 to 0.3307. Best Val Acc moved from 88.60% to 88.37% (-0.23%).
-* **Subsequent Diagnosis:** While explicit regularization substantially lowered the training-set accuracy (87.69% at the final epoch versus 89.82% for Run #1), it delivered a higher held-out Test Accuracy (+0.68%), indicating reduced overfitting. However, MLP performance still hit an architectural ceiling due to the lack of a 2D inductive bias. Transition to a Convolutional Neural Network (CNN) is mandatory for further gains.
-
----
-
-### Run 3 (Run #3 — Flow Iteration 2 — Best Flow)
-*Objective: Transition to a Convolutional Neural Network (FashionCNN) to fully exploit 2D spatial locality and translation invariance.*
-
-* **Which Pipeline Stages Changed?**
-  - [x] Stage 3: Model Architecture
-  - [x] Stage 4: Training Strategy
-* **Technical Delta Description:**
-  - *Before (Run #2):* Tuned MLP (flattened 1D vector).
-  - *After (Run #3):* Full **FashionCNN** implementation:
-    - Conv Block 1: `Conv2d(1, 32, 3, pad=1)` -> `BatchNorm2d(32)` -> `ReLU()` -> `MaxPool2d(2, 2)` (feature map: $32 \times 14 \times 14$).
-    - Conv Block 2: `Conv2d(32, 64, 3, pad=1)` -> `BatchNorm2d(64)` -> `ReLU()` -> `MaxPool2d(2, 2)` (feature map: $64 \times 7 \times 7$).
-    - Dense Classifier Head: `Flatten(3136)` -> `Linear(3136, 128)` -> `BatchNorm1d(128)` -> `ReLU()` -> `Dropout(0.3)` -> `Linear(128, 10)`.
-    - Training Configuration: 10 epochs, AdamW (`lr=1e-3, weight_decay=1e-4`), `CosineAnnealingLR`.
-* **Technical Rationale (Why):** Utilize convolutional sliding kernels to automatically extract edges, textures, contours, and fabric folds with local spatial invariance.
-* **Empirical Measurements:**
-  - Train Loss / Train Acc: 0.1841 / 93.33% (Epoch 10).
-  - Val Loss / Val Acc: **0.1837 / 93.43%** (Best Checkpoint at Epoch 10).
-  - Test Loss / Test Acc: **0.1994 / 92.99%**.
-  - Test Macro F1-Score: **92.95%**.
-* **Effectiveness Assessment:** Major performance breakthrough. Test Accuracy surged from **87.33% (Run #1)** to **92.99% (Run #3)**, an absolute gain of **+5.66%**, far surpassing the 91.0% acceptance threshold. Test Loss fell from 0.3555 to 0.1994, a **43.9% reduction**.
+* **Subsequent Diagnosis:** While explicit regularization substantially lowered the training-set accuracy (87.69% at the final epoch versus 89.82% for Run #1), it delivered a higher held-out Test Accuracy (+0.68%), indicating reduced overfitting. This run is the terminal flow of the lab. It is acknowledged that a flattened MLP discards the 2D spatial structure of the image and that a convolutional architecture would be the natural next step; that avenue is deliberately out of scope for this revision, so the lab closes with the two MLP runs and the Tuned MLP as the selected best model.
 
 ---
 
@@ -216,83 +192,59 @@ The reference playbook `docs/dl_training.md` recommends `AdamW` because of its d
 
 ### 3.1. Full-Flow Comparison Matrix
 
-| Evaluation Criteria | Run #1 (Baseline MLP) | Run #2 (Tuned MLP) | Run #3 (FashionCNN) | Best Assessment |
-|:---|:---:|:---:|:---:|:---:|
-| **Data Normalization** | Normalized ($\mu=0.286, \sigma=0.320$) | Normalized ($\mu=0.286, \sigma=0.320$) | Normalized ($\mu=0.286, \sigma=0.320$) | Consistent standard |
-| **Data Augmentation** | None | RandomFlip + Rotation | RandomFlip + Rotation | Run #2 & Run #3 |
-| **Model Architecture** | Baseline MLP (2 layers) | Tuned MLP (3 layers, BN, Drop) | FashionCNN (2 Conv blocks + Head) | **FashionCNN (Run #3)** |
-| **Total Parameters** | 101,770 | 235,914 | 422,090 | Run #1 (Lightest) |
-| **Checkpoint Size** | 1.17 MB | 2.72 MB | 4.85 MB | Run #1 (Smallest) |
-| **Optimizer & LR** | AdamW (constant lr=1e-3) | AdamW + CosineAnnealing | AdamW + CosineAnnealing | Run #2 & Run #3 |
-| **Epochs / Time** | 5 epochs / 73.2s | 10 epochs / 227.4s | 10 epochs / 242.8s | Run #1 (Fastest) |
-| **Train Loss / Acc** | 0.2750 / 89.82% | 0.3312 / 87.69% | 0.1841 / 93.33% | **Run #3** |
-| **Best Val Acc** | 88.60% | 88.37% | **93.43%** | **Run #3** |
-| **Test Accuracy** | 87.33% | 88.01% | **92.99%** | **Run #3 (+5.66%)** |
-| **Test Macro F1** | not logged | not logged | **92.95%** | **Run #3** |
-| **Test Loss** | 0.3555 | 0.3307 | **0.1994** | **Run #3 (-43.9% Loss)** |
-| **Selection Decision** | Met baseline criteria | Moderate gain | **Comprehensive Superiority** | **Selected Best: Run #3** |
+| Evaluation Criteria | Run #1 (Baseline MLP) | Run #2 (Tuned MLP) | Best Assessment |
+|:---|:---:|:---:|:---:|
+| **Data Normalization** | Normalized ($\mu=0.286, \sigma=0.320$) | Normalized ($\mu=0.286, \sigma=0.320$) | Consistent standard |
+| **Data Augmentation** | None | RandomFlip + Rotation | Run #2 |
+| **Model Architecture** | Baseline MLP (2 layers) | Tuned MLP (3 layers, BN, Drop) | **Tuned MLP (Run #2)** |
+| **Total Parameters** | 101,770 | 235,914 | Run #1 (Lightest) |
+| **Checkpoint Size** | 1.17 MB | 2.72 MB | Run #1 (Smallest) |
+| **Optimizer & LR** | AdamW (constant lr=1e-3) | AdamW + CosineAnnealing | Run #2 |
+| **Epochs / Time** | 5 epochs / 73.2s | 10 epochs / 227.4s | Run #1 (Fastest) |
+| **Train Loss / Acc** | 0.2750 / 89.82% | 0.3312 / 87.69% | Run #1 (higher train acc) |
+| **Best Val Acc** | **88.60%** | 88.37% | Run #1 |
+| **Test Accuracy** | 87.33% | **88.01%** | **Run #2 (+0.68%)** |
+| **Test Macro F1** | not logged | not logged | n/a (not logged) |
+| **Test Loss** | 0.3555 | **0.3307** | **Run #2 (-7.0% Loss)** |
+| **Selection Decision** | Met baseline criteria | **Higher held-out accuracy** | **Selected Best: Run #2** |
 
-### 3.2. Detailed Classification Report (Best Model: FashionCNN)
+### 3.2. Detailed Classification Report (Best Model: Tuned MLP)
 
-```text
-              precision    recall  f1-score   support
-
- T-shirt/top     0.8805    0.8990    0.8897      1000
-     Trouser     0.9930    0.9890    0.9910      1000
-    Pullover     0.8812    0.9050    0.8929      1000
-       Dress     0.9178    0.9490    0.9331      1000
-        Coat     0.8957    0.8760    0.8857      1000
-      Sandal     0.9899    0.9850    0.9875      1000
-       Shirt     0.8066    0.7590    0.7821      1000
-     Sneaker     0.9590    0.9830    0.9709      1000
-         Bag     0.9910    0.9910    0.9910      1000
-  Ankle boot     0.9797    0.9630    0.9713      1000
-
-    accuracy                         0.9299     10000
-   macro avg     0.9294    0.9299    0.9295     10000
-weighted avg     0.9294    0.9299    0.9295     10000
-```
+The committed Kaggle run produced a per-class classification report only for the convolutional run that has since been removed from scope (that report file was deleted together with the CNN). No per-class classification report for the Tuned MLP was logged by that run. The notebook has been updated (PHẦN 9) to emit `outputs/classification_report_tuned_mlp.txt` on the next Kaggle execution. Until that artifact exists, no per-class precision/recall/F1 figures are reproduced here, in line with the no-fabrication policy.
 
 ### 3.3. Confusion Matrix Analysis & Error Diagnostics
-- **Categories with Near-Perfect Precision/Recall (> 98%):**
-  - **Bag (99.10% recall):** Characteristic rectangular/square silhouette and top handles form unique features.
-  - **Trouser (98.90% recall):** Distinct elongated vertical geometry easily distinguishable from tops.
-  - **Sandal (98.50% recall):** Open-toe gaps and strap geometry produce recognizable sparse pixel distributions.
-- **Primary Confusion Clusters:**
-  - **Shirt vs. T-shirt/top, Coat & Pullover:**
-    - Shirt recorded the lowest recall (75.90%), with 95 Shirt samples misclassified as T-shirt/top, 58 as Pullover, and 58 as Coat.
-    - *Root Technical Cause:* Low resolution ($28 \times 28$ grayscale) induces spatial aliasing, obscuring fine discriminative details like collar contours, buttons, and neckline seams.
-  - **Coat vs. Pullover & Shirt:** 45 Coat instances were misclassified as Pullover and 53 as Shirt due to overlapping long-sleeve silhouettes and body coverage.
-  - **Pullover vs. Coat & Shirt:** 29 Pullover instances were misclassified as Coat and 42 as Shirt.
-  - **Ankle boot vs. Sneaker:** 31 Ankle boot instances were misclassified as Sneaker, reflecting a shared low-top footwear silhouette.
+
+The committed Kaggle run stored a confusion matrix and a prediction grid only for the removed convolutional model. Consequently, no confusion-matrix-based error analysis for the Tuned MLP is available in the committed artifacts. The notebook now targets the Tuned MLP for these diagnostics (PHẦN 7) and writes `outputs/confusion_matrix_tuned_mlp.png` and `outputs/predictions_tuned_mlp.png`; the qualitative error-cluster analysis (for example, the well-known Shirt / T-shirt / Pullover / Coat overlap in low-resolution grayscale) is therefore deferred to the next Kaggle run rather than inferred from the deleted CNN run.
 
 ### 3.4. Checkpoint Serialization & Restoration Verification
-- Model weights are saved as `state_dict` at `outputs/checkpoints/fashion_cnn_best.pt`.
+- Model weights are saved as `state_dict` at `outputs/checkpoints/tuned_mlp_best.pt`.
 - The notebook reloads the checkpoint via `load_checkpoint()` and asserts against the original logits across the test batch:
   $$\max |\text{Logits}_{\text{original}} - \text{Logits}_{\text{loaded}}| < 10^{-6}$$
 - Verification result: exactly identical predictions `[PASSED]` (executed notebook, PHẦN 8).
-- **Provenance caveat:** The committed figures, `experiment_results.json`, and `classification_report_cnn.txt` all belong to the committed Kaggle run (Test Acc 92.99%). The checkpoint files themselves are intentionally excluded from Git by `.gitignore` and are therefore local-only; a locally retained checkpoint must be re-verified against `outputs.zip` before being treated as the artifact that produced these figures.
+- **Provenance caveat:** The committed figures and `experiment_results.json` belong to the committed Kaggle run (Run #1 87.33%, Run #2 88.01%). The checkpoint files themselves are intentionally excluded from Git by `.gitignore` and are therefore local-only; a locally retained checkpoint must be re-verified against `outputs.zip` before being treated as the artifact that produced these figures.
 
 ### 3.5. Decision Traceability
 This table traces every important technical decision back to the corresponding discussion point in Section 1.0, together with the resolution that was locked in. Neutral technical prose, third person; no narrative voice and no person-reference words such as "you", "I", or "we".
 
 | Technical Decision | Discussion Point (Section 1.0) | Resolution Locked In |
 |---|---|---|
-| Number and form of experiments | The brief mandates no run count; this point was discussed and settled. | Run Baseline MLP, Tuned MLP, and FashionCNN to cover the architecture and regularization axes. |
+| Number and form of experiments | The brief mandates no run count; this point was discussed and settled. | Run Baseline MLP and Tuned MLP to cover the architecture and regularization axes. |
 | Report format | The brief only says "brief report" and mandates no separate file. | Use a single living document `walkthrough_lab_01.md`; do not create a separate `REPORT.md`. |
-| Architecture and hyperparameter grid | The brief asks for experimentation but provides no concrete grid. | Compare a basic MLP, an MLP with BatchNorm/Dropout, and a 2-block convolutional CNN. |
+| Architecture and hyperparameter grid | The brief asks for experimentation but provides no concrete grid. | Compare a basic MLP and an MLP with BatchNorm/Dropout. |
 | Data splitting strategy | The brief specifies no Train/Val/Test ratio. | Split 54,000 train / 6,000 validation (seed=42) / 10,000 test, preserving the balanced class distribution. |
-| Quantitative acceptance thresholds | The brief states no passing threshold. | Internal thresholds: Baseline MLP >= 85.0%, Tuned MLP >= 87.5%, FashionCNN >= 91.0% Accuracy and Macro F1. |
+| Quantitative acceptance thresholds | The brief states no passing threshold. | Internal thresholds: Baseline MLP >= 85.0% and Tuned MLP >= 87.5% Accuracy. |
 | Model save/load verification | The brief requires "Save and load the model". | Persist `state_dict` into `outputs/checkpoints/` and verify that reloading reproduces the original logits. |
 | Blank numbered list 1-5 in the brief | Ambiguity: the numbered list 1 to 5 has no content. | Treat as not provided and do not infer; re-check if the instructor supplies the content. |
 
 ### 3.6. Key Takeaways & Submission Deliverables
-1. **2D CNN Superiority over MLP:** Preserving 2D spatial topologies through convolutional kernels allowed the model to leverage local pixel correlations, generating a decisive +5.66% Accuracy boost over flattened MLPs.
-2. **Impact of Modern Regularization:** Integrating `BatchNorm` + `Dropout` + `CosineAnnealingLR` improved the held-out Test Accuracy of the MLP by +0.68% and narrowed the train-validation generalization gap.
-3. **Generated Submission Artifacts:**
-   - Best Model Weights: `outputs/checkpoints/fashion_cnn_best.pt`
+1. **Impact of Modern Regularization:** Integrating `BatchNorm` + `Dropout` + `CosineAnnealingLR` improved the held-out Test Accuracy of the MLP by +0.68% (87.33% -> 88.01%) and lowered Test Loss from 0.3555 to 0.3307.
+2. **Bias-Variance Trade-off:** Explicit regularization reduced training-set accuracy (89.82% -> 87.69%) while raising held-out accuracy, evidencing reduced overfitting rather than improved raw fitting capacity.
+3. **Optimizer Sensitivity (Phase 2):** The secondary experiment isolates the optimizer update rule on a frozen `TunedMLP` backbone under Stratified 5-fold cross-validation; its measured outcome is recorded once the Kaggle run completes.
+4. **Generated Submission Artifacts:**
+   - Best Model Weights: `outputs/checkpoints/tuned_mlp_best.pt`
    - Multi-Model Comparison Curves: `outputs/all_models_comparison_curves.png`
-   - Individual Run Learning Curves: `outputs/run1_baseline_curves.png`, `outputs/run2_tuned_mlp_curves.png`, `outputs/run3_cnn_curves.png`
-   - Best Model Confusion Matrix: `outputs/confusion_matrix_cnn.png`
-   - Test Batch Prediction Grid: `outputs/predictions_cnn.png`
-   - Detailed Metric Logs: `outputs/classification_report_cnn.txt`, `outputs/experiment_results.json`
+   - Individual Run Learning Curves: `outputs/run1_baseline_curves.png`, `outputs/run2_tuned_mlp_curves.png`
+   - Best Model Confusion Matrix: `outputs/confusion_matrix_tuned_mlp.png`
+   - Test Batch Prediction Grid: `outputs/predictions_tuned_mlp.png`
+   - Detailed Metric Logs: `outputs/classification_report_tuned_mlp.txt`, `outputs/experiment_results.json`
+   - Phase 2 Optimizer Artifacts: `outputs/optimizer_comparison_curves.png`, `outputs/optimizer_tpr_fpr.png`, `outputs/optimizer_confusion_matrices.png`, `outputs/optimizer_experiment_results.json`
