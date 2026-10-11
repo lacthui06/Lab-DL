@@ -13,6 +13,18 @@
 
 ## 1. TECHNICAL SPECIFICATION & FLOW DESIGN (SPEC & BASELINE SETUP — Rule: spec-driven-development)
 
+### 1.0. Brief Interpretation and Clarifications
+Bản tóm tắt cách hiểu đề bài gốc trong `description_lab_01.md`, kèm các điểm đã được làm rõ và hướng giải quyết đã chốt. Mục này là vết truy vết cho mọi quyết định đặc tả phía sau.
+
+- **Cách hiểu đề bài:** Đề bài "Exercise: PyTorch FashionMNIST Classification" yêu cầu xây dựng pipeline phân loại ảnh FashionMNIST bằng PyTorch, bao quát 7 khái niệm cốt lõi (Tensors, Datasets/Loaders, Transforms, Model Building, Autograd, Optimization, Model Saving/Loading). Sản phẩm cần nộp gồm mã Python, một báo cáo ngắn, đồ thị loss, và ảnh hiển thị dự đoán so với nhãn thật.
+- **Điểm đã làm rõ:**
+  - Đề bài không ấn định số lượng thí nghiệm; đã chốt thực hiện 3 run tiến hóa (Baseline MLP, Tuned MLP, FashionCNN) để bao quát trục kiến trúc và regularization.
+  - Đề bài ghi "brief report" nhưng không quy định định dạng riêng; đã chốt dùng một tài liệu sống duy nhất `walkthrough_lab_01.md`, không tạo file `REPORT.md` tách rời.
+  - Đề bài yêu cầu "Experiment with network/hyperparameters" nhưng không cho lưới cụ thể; đã chốt lưới so sánh là MLP cơ bản so với MLP có BatchNorm/Dropout so với CNN 2 khối tích chập.
+  - Đề bài yêu cầu "Save and load the model"; đã chốt lưu `state_dict` vào `outputs/checkpoints/` và thêm bước kiểm chứng nạp lại tái lập đúng logits.
+  - Ngưỡng chấp nhận định lượng không có trong đề bài; đã chốt ngưỡng nội bộ theo từng run (Baseline MLP >= 85.0%, Tuned MLP >= 87.5%, FashionCNN >= 91.0% Accuracy và >= 91.0% Macro F1).
+- **Giả định còn lại:** Đề bài gốc có một danh sách đánh số 1 đến 5 nhưng để trống nội dung khi sao chép; nội dung này được coi là chưa được cung cấp và không suy diễn thêm. Nếu giảng viên bổ sung nội dung danh sách, cần đối chiếu lại các quyết định ở trên.
+
 ### 1.1. Master Flow Design
 
 ```mermaid
@@ -213,7 +225,20 @@ weighted avg     0.9261    0.9265    0.9263     10000
   $$\max |\text{Logits}_{\text{original}} - \text{Logits}_{\text{loaded}}| < 10^{-6}$$
 - Verification result: Exactly identical predictions `[PASSED]`.
 
-### 3.5. Key Takeaways & Submission Deliverables
+### 3.5. Decision Traceability
+Bảng truy vết mỗi quyết định kỹ thuật quan trọng về điểm thảo luận tương ứng ở Mục 1.0, kèm hướng giải quyết đã chốt. Dùng văn phong kỹ thuật trung tính, ngôi thứ ba; không dùng lối kể chuyện hay từ chỉ người như "bạn", "tôi", "chúng ta".
+
+| Quyết định kỹ thuật | Điểm thảo luận (Mục 1.0) | Hướng giải quyết đã chốt |
+|---|---|---|
+| Số lượng và dạng thí nghiệm | Đề bài không ấn định số run; điểm này đã được thảo luận và chốt. | Thực hiện Baseline MLP, Tuned MLP và FashionCNN để bao quát trục kiến trúc và regularization. |
+| Định dạng báo cáo | Đề bài chỉ ghi "brief report", không quy định file riêng. | Dùng một tài liệu sống duy nhất `walkthrough_lab_01.md`; không tạo `REPORT.md` tách rời. |
+| Lưới kiến trúc và hyperparameter | Đề bài yêu cầu thử nghiệm nhưng không cho lưới cụ thể. | So sánh MLP cơ bản, MLP có BatchNorm/Dropout và CNN 2 khối tích chập. |
+| Chiến lược chia tập dữ liệu | Đề bài không quy định tỷ lệ chia Train/Val/Test. | Chia 54,000 train / 6,000 validation (seed=42) / 10,000 test, giữ phân bố lớp cân bằng. |
+| Ngưỡng chấp nhận định lượng | Đề bài không nêu ngưỡng đạt. | Chốt ngưỡng nội bộ: Baseline MLP >= 85.0%, Tuned MLP >= 87.5%, FashionCNN >= 91.0% Accuracy và Macro F1. |
+| Kiểm chứng lưu và nạp mô hình | Đề bài yêu cầu "Save and load the model". | Lưu `state_dict` vào `outputs/checkpoints/` và kiểm chứng nạp lại tái lập đúng logits. |
+| Danh sách 1-5 bị trống trong đề bài | Điểm mơ hồ: danh sách đánh số 1 đến 5 không có nội dung. | Coi là chưa được cung cấp, không suy diễn thêm; sẽ đối chiếu lại nếu giảng viên bổ sung. |
+
+### 3.6. Key Takeaways & Submission Deliverables
 1. **2D CNN Superiority over MLP:** Preserving 2D spatial topologies through convolutional kernels allowed the model to leverage local pixel correlations, generating a decisive +5.26% Accuracy boost over flattened MLPs.
 2. **Impact of Modern Regularization:** Integrating `BatchNorm` + `Dropout` + `CosineAnnealingLR` prevented overfitting and narrowed the generalization gap.
 3. **Generated Submission Artifacts:**
