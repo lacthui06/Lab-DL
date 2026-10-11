@@ -36,6 +36,10 @@ venv.bak/
 .ipynb_checkpoints
 */.ipynb_checkpoints/*
 
+# Python test cache
+.pytest_cache/
+**/.pytest_cache/*
+
 # IDE and OS files
 .vscode/
 .idea/
