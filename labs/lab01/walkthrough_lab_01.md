@@ -24,6 +24,20 @@ graph LR
     E --> F["6. Decision / Selected Best <br> (FashionCNN @ 92.65% Test Acc)"]
 ```
 
+**Playbook Mapping:** Each pipeline stage of this lab follows the corresponding section of the reference playbooks in `docs/`. The table below is the traceability link between lab artifacts and playbooks.
+
+| Lab Pipeline Stage | Implementation Artifact | Reference Playbook Section |
+|---|---|---|
+| Define Problem & Modality | Section 1.2 of this document | `docs/dl_flow.md` GIAI ĐOẠN 1 |
+| DL EDA (integrity scan, channel statistics, class balance) | `notebooks/` PHẦN 2 | `docs/dl_flow.md` GIAI ĐOẠN 2; `docs/eda.md` |
+| Dataset, DataLoader, Augmentation | `src/dataset.py` | `docs/dl_flow.md` GIAI ĐOẠN 3; `docs/dl_data.md` PHẦN 2, 3, 4 |
+| Feature Engineering & Normalization | `src/dataset.py` (transforms) | `docs/feature.md` |
+| Architecture Selection | `src/model.py` | `docs/dl_flow.md` GIAI ĐOẠN 4 |
+| Training Loop, Loss, Optimizer | `src/engine.py` | `docs/dl_flow.md` GIAI ĐOẠN 5; `docs/dl_training.md` PHẦN 3, 4 |
+| Evaluation, Diagnostics & Checkpointing | `src/engine.py`, `src/utils.py` | `docs/dl_flow.md` GIAI ĐOẠN 6; `docs/dl_training.md` PHẦN 5 |
+
+Note: this lab trains all models from scratch (no pretrained backbone), so `docs/dl_flow.md` GIAI ĐOẠN 4 is referenced for architecture selection criteria only, not for the Transfer Learning procedure.
+
 ### 1.2. Problem Formulation and Modality
 - **Modality:** Computer Vision (CV) — Grayscale Image Classification.
 - **Task Formulation:** Multi-class classification across 10 discrete garment categories:
