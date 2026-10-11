@@ -29,10 +29,12 @@ Bài lab xây dựng pipeline Deep Learning end-to-end để phân loại 10 nh�
 
 | Run | Model | Test Accuracy | Macro F1 |
 |---|---|---|---|
-| Run #1 Baseline | Baseline MLP (2 layers) | 87.39% | 87.29% |
-| Run #2 Tuned | Tuned MLP (3 layers, BN, Dropout) | 87.86% | 87.85% |
-| Run #3 Final | FashionCNN (2 Conv blocks + Head) | **92.65%** | **92.60%** |
+| Run #1 Baseline | Baseline MLP (2 layers) | 87.33% | không ghi nhận |
+| Run #2 Tuned | Tuned MLP (3 layers, BN, Dropout) | 88.01% | không ghi nhận |
+| Run #3 Final | FashionCNN (2 Conv blocks + Head) | **92.99%** | **92.95%** |
 
-Mô hình được chọn: **FashionCNN (Run #3)** — cải thiện +5.26% Test Accuracy và giảm 40.9% Test Loss so với baseline.
+Mô hình được chọn: **FashionCNN (Run #3)** — cải thiện +5.66% Test Accuracy và giảm 43.9% Test Loss so với baseline.
+
+Ghi chú: Run #1 và Run #2 không ghi nhận Macro F1 trong lần chạy Kaggle đã commit, nên ô này để trống thay vì suy diễn số.
 
 Chi tiết đầy đủ xem tại `walkthrough_lab_01.md`.
