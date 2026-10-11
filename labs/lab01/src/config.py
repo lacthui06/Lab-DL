@@ -102,3 +102,53 @@ RUN3_CONFIG = ExperimentConfig(
     use_augmentation=True,
     checkpoint_name="fashion_cnn_best.pt",
 )
+
+
+# ---------------------------------------------------------------------------
+# Optimizer Comparison & K-Fold Cross-Validation (Phase 2 experiment)
+# ---------------------------------------------------------------------------
+# Full design rationale: walkthrough_lab_01.md, Section 1.6.
+# All three optimizer arms share an identical learning rate and an identical
+# epoch budget so that the optimizer itself is the only manipulated variable.
+# The learning rate is held constant (no scheduler) and weight decay is
+# disabled, isolating the optimizer update rule from other regularization.
+
+CV_MODEL_TYPE = "cnn"
+CV_EPOCHS = 15
+CV_LEARNING_RATE = 1e-3
+CV_SGD_MOMENTUM = 0.9
+CV_BATCH_SIZE = 64
+CV_USE_AUGMENTATION = True
+CV_WEIGHT_DECAY = 0.0
+
+KFOLD_SPLITS = 5
+KFOLD_SEED = RANDOM_SEED
+
+
+@dataclass
+class OptimizerExperimentConfig:
+    """Configuration for a single optimizer arm of the comparison experiment."""
+    name: str
+    optimizer_type: str  # 'sgd', 'rmsprop', or 'adam'
+    learning_rate: float = CV_LEARNING_RATE
+    momentum: float = 0.0
+
+
+OPTIMIZER_CONFIGS = [
+    OptimizerExperimentConfig(
+        name="SGD_Momentum",
+        optimizer_type="sgd",
+        learning_rate=CV_LEARNING_RATE,
+        momentum=CV_SGD_MOMENTUM,
+    ),
+    OptimizerExperimentConfig(
+        name="RMSprop",
+        optimizer_type="rmsprop",
+        learning_rate=CV_LEARNING_RATE,
+    ),
+    OptimizerExperimentConfig(
+        name="Adam",
+        optimizer_type="adam",
+        learning_rate=CV_LEARNING_RATE,
+    ),
+]

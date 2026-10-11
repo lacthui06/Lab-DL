@@ -9,9 +9,71 @@ Implements:
 import time
 from pathlib import Path
 from typing import Dict, List, Tuple, Optional
+import numpy as np
 import torch
 import torch.nn as nn
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, Dataset
+from sklearn.model_selection import StratifiedKFold
+from sklearn.metrics import confusion_matrix
+
+from .dataset import build_fold_loaders
+from .utils import set_seed
+from .config import NUM_CLASSES
+
+
+def build_optimizer(
+    optimizer_type: str,
+    model: nn.Module,
+    learning_rate: float = 1e-3,
+    momentum: float = 0.9,
+    weight_decay: float = 0.0,
+) -> torch.optim.Optimizer:
+    """Factory function that builds an optimizer by name.
+
+    Used by the optimizer-comparison experiment so that the only varying
+    factor between arms is the optimizer itself.
+
+    Args:
+        optimizer_type: 'sgd', 'rmsprop', 'adam', or 'adamw'.
+        model: The model whose parameters will be optimized.
+        learning_rate: Step size shared across all arms.
+        momentum: Momentum factor (only applied to SGD).
+        weight_decay: L2 penalty; disabled (0.0) for the comparison experiment.
+
+    Returns:
+        An instantiated torch.optim.Optimizer.
+    """
+    name = optimizer_type.lower()
+    if name == "sgd":
+        return torch.optim.SGD(
+            model.parameters(),
+            lr=learning_rate,
+            momentum=momentum,
+            weight_decay=weight_decay,
+        )
+    elif name == "rmsprop":
+        return torch.optim.RMSprop(
+            model.parameters(),
+            lr=learning_rate,
+            weight_decay=weight_decay,
+        )
+    elif name == "adam":
+        return torch.optim.Adam(
+            model.parameters(),
+            lr=learning_rate,
+            weight_decay=weight_decay,
+        )
+    elif name == "adamw":
+        return torch.optim.AdamW(
+            model.parameters(),
+            lr=learning_rate,
+            weight_decay=weight_decay,
+        )
+    else:
+        raise ValueError(
+            f"Unknown optimizer_type '{optimizer_type}'. "
+            f"Choose from 'sgd', 'rmsprop', 'adam', 'adamw'."
+        )
 
 
 def train_one_epoch(
@@ -232,3 +294,149 @@ def sanity_overfit_check(
 
     passed = (final_acc >= 99.0) and (final_loss < 0.1)
     return passed, final_loss, final_acc
+
+
+def compute_tpr_fpr(
+    cm: np.ndarray,
+) -> Tuple[np.ndarray, np.ndarray]:
+    """Derives per-class True Positive Rate and False Positive Rate from a confusion matrix.
+
+    Args:
+        cm: Square confusion matrix of shape [num_classes, num_classes], rows = true, cols = predicted.
+
+    Returns:
+        (tpr, fpr), each a 1D array of length num_classes.
+        - TPR (recall / sensitivity) for class i = TP / (TP + FN).
+        - FPR (fall-out) for class i = FP / (FP + TN).
+    """
+    cm = np.asarray(cm, dtype=np.float64)
+    total = cm.sum()
+    tp = np.diag(cm)
+    fn = cm.sum(axis=1) - tp  # row sum minus diagonal
+    fp = cm.sum(axis=0) - tp  # column sum minus diagonal
+    tn = total - tp - fn - fp
+
+    tpr = np.divide(tp, tp + fn, out=np.zeros_like(tp), where=(tp + fn) > 0)
+    fpr = np.divide(fp, fp + tn, out=np.zeros_like(fp), where=(fp + tn) > 0)
+    return tpr, fpr
+
+
+def run_kfold_cv(
+    pool_train: Dataset,
+    pool_eval: Dataset,
+    targets: torch.Tensor,
+    optimizer_type: str,
+    learning_rate: float = 1e-3,
+    momentum: float = 0.9,
+    num_epochs: int = 15,
+    batch_size: int = 64,
+    device: torch.device = torch.device("cpu"),
+    n_splits: int = 5,
+    seed: int = 42,
+    num_workers: int = 0,
+    checkpoint_dir: Optional[Path] = None,
+    verbose: bool = True,
+) -> Dict:
+    """Runs Stratified K-Fold cross-validation for a single optimizer arm.
+
+    The full training pool is split into `n_splits` stratified folds. For each
+    fold the model is re-initialized with a deterministic per-fold seed, trained
+    on the remaining folds, and evaluated on the held-out fold. Per-fold scores
+    are aggregated into mean and standard deviation, and the out-of-fold
+    predictions of every sample are concatenated into one global confusion
+    matrix from which per-class TPR/FPR are derived.
+
+    Returns:
+        A dictionary with per-fold accuracies/losses, their mean and standard
+        deviation, the aggregated confusion matrix, and per-class TPR/FPR.
+    """
+    from .model import build_model  # local import avoids a module import cycle
+
+    y = np.asarray(targets)
+    skf = StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=seed)
+    criterion = nn.CrossEntropyLoss()
+
+    fold_accuracies: List[float] = []
+    fold_losses: List[float] = []
+    histories: List[Dict[str, List[float]]] = []
+    oof_preds: List[int] = []
+    oof_targets: List[int] = []
+
+    for fold, (train_idx, val_idx) in enumerate(skf.split(np.zeros(len(y)), y), start=1):
+        set_seed(seed + fold)
+        model = build_model("cnn").to(device)
+        optimizer = build_optimizer(
+            optimizer_type=optimizer_type,
+            model=model,
+            learning_rate=learning_rate,
+            momentum=momentum,
+        )
+
+        fold_train_loader, fold_val_loader = build_fold_loaders(
+            pool_train=pool_train,
+            pool_eval=pool_eval,
+            train_indices=train_idx,
+            val_indices=val_idx,
+            batch_size=batch_size,
+            num_workers=num_workers,
+        )
+
+        if verbose:
+            print(f"  Fold {fold}/{n_splits} | train={len(train_idx)} val={len(val_idx)}")
+
+        save_path = None
+        if checkpoint_dir is not None:
+            save_path = Path(checkpoint_dir) / f"cv_{optimizer_type}_fold{fold}.pt"
+
+        history, _ = train_model(
+            model=model,
+            train_loader=fold_train_loader,
+            val_loader=fold_val_loader,
+            criterion=criterion,
+            optimizer=optimizer,
+            scheduler=None,
+            num_epochs=num_epochs,
+            device=device,
+            save_path=save_path,
+            verbose=verbose,
+        )
+
+        # Restore the best-validation checkpoint before scoring the fold
+        if save_path is not None and Path(save_path).exists():
+            ckpt = torch.load(str(save_path), map_location=device)
+            model.load_state_dict(ckpt["model_state_dict"])
+
+        val_loss, val_acc, val_preds, val_targets = evaluate(
+            model=model,
+            dataloader=fold_val_loader,
+            criterion=criterion,
+            device=device,
+        )
+
+        fold_accuracies.append(val_acc)
+        fold_losses.append(val_loss)
+        histories.append(history)
+        oof_preds.extend(val_preds)
+        oof_targets.extend(val_targets)
+
+    cm = confusion_matrix(oof_targets, oof_preds, labels=list(range(NUM_CLASSES)))
+    tpr, fpr = compute_tpr_fpr(cm)
+
+    return {
+        "optimizer_type": optimizer_type,
+        "learning_rate": learning_rate,
+        "num_epochs": num_epochs,
+        "n_splits": n_splits,
+        "fold_accuracies": fold_accuracies,
+        "fold_losses": fold_losses,
+        "mean_acc": float(np.mean(fold_accuracies)),
+        "std_acc": float(np.std(fold_accuracies)),
+        "mean_loss": float(np.mean(fold_losses)),
+        "std_loss": float(np.std(fold_losses)),
+        "confusion_matrix": cm,
+        "tpr_per_class": tpr,
+        "fpr_per_class": fpr,
+        "histories": histories,
+        "oof_preds": oof_preds,
+        "oof_targets": oof_targets,
+    }

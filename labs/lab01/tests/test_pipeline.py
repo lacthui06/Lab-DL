@@ -17,10 +17,10 @@ import torch.nn as nn
 LAB01_DIR = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(LAB01_DIR))
 
-from src.config import DATA_DIR, CLASS_NAMES, RANDOM_SEED, DEVICE
-from src.dataset import get_dataloaders
+from src.config import DATA_DIR, CLASS_NAMES, RANDOM_SEED, DEVICE, NUM_CLASSES, OPTIMIZER_CONFIGS
+from src.dataset import get_dataloaders, get_kfold_pool, build_fold_loaders
 from src.model import build_model, count_parameters
-from src.engine import sanity_overfit_check
+from src.engine import sanity_overfit_check, build_optimizer, compute_tpr_fpr
 from src.utils import set_seed, save_checkpoint, load_checkpoint
 
 
@@ -128,6 +128,94 @@ def test_5_save_and_load_checkpoint(tmp_path):
 
     assert torch.allclose(out_before, out_after, atol=1e-6), "Loaded model outputs do not match original model"
     assert meta.get("val_acc") == 92.5, "Metadata was not correctly preserved in checkpoint"
+
+
+def test_6_build_optimizer_factory():
+    """Test 6: Verify the optimizer factory returns the correct optimizer type and hyperparameters."""
+    import numpy as np
+
+    model = build_model("cnn")
+
+    opt_sgd = build_optimizer("sgd", model, learning_rate=1e-3, momentum=0.9)
+    assert isinstance(opt_sgd, torch.optim.SGD), "Expected torch.optim.SGD"
+    assert opt_sgd.param_groups[0]["lr"] == 1e-3, "SGD learning rate mismatch"
+    assert opt_sgd.param_groups[0]["momentum"] == 0.9, "SGD momentum mismatch"
+
+    opt_rms = build_optimizer("rmsprop", model, learning_rate=1e-3)
+    assert isinstance(opt_rms, torch.optim.RMSprop), "Expected torch.optim.RMSprop"
+    assert opt_rms.param_groups[0]["lr"] == 1e-3, "RMSprop learning rate mismatch"
+
+    opt_adam = build_optimizer("adam", model, learning_rate=1e-3)
+    assert isinstance(opt_adam, torch.optim.Adam), "Expected torch.optim.Adam"
+    assert opt_adam.param_groups[0]["lr"] == 1e-3, "Adam learning rate mismatch"
+
+    # All three comparison arms must share the same learning rate
+    lrs = {build_optimizer(c.optimizer_type, model, learning_rate=c.learning_rate).param_groups[0]["lr"]
+           for c in OPTIMIZER_CONFIGS}
+    assert lrs == {1e-3}, f"All optimizer arms must share lr=1e-3, got {lrs}"
+
+    with pytest.raises(ValueError):
+        build_optimizer("nonexistent_optimizer", model)
+
+
+def test_7_compute_tpr_fpr_from_confusion_matrix():
+    """Test 7: Verify TPR/FPR derivation against a hand-computed confusion matrix."""
+    import numpy as np
+
+    # 3-class toy matrix, rows = true, cols = predicted
+    # total = 30, row sums = [10,10,10], col sums = [10,11,9]
+    # class 0: TP=8, FN=2 -> TPR=0.80 ; FP=2, TN=18 -> FPR=2/20=0.10
+    # class 1: TP=9, FN=1 -> TPR=0.90 ; FP=2, TN=18 -> FPR=2/20=0.10
+    # class 2: TP=8, FN=2 -> TPR=0.80 ; FP=1, TN=19 -> FPR=1/20=0.05
+    cm = np.array([
+        [8, 2, 0],
+        [0, 9, 1],
+        [2, 0, 8],
+    ])
+    tpr, fpr = compute_tpr_fpr(cm)
+
+    assert tpr.shape == (3,), f"Expected 3 TPR values, got {tpr.shape}"
+    assert fpr.shape == (3,), f"Expected 3 FPR values, got {fpr.shape}"
+    assert np.allclose(tpr, [0.80, 0.90, 0.80]), f"TPR mismatch: {tpr}"
+    assert np.allclose(fpr, [0.10, 0.10, 0.05]), f"FPR mismatch: {fpr}"
+
+
+def test_8_kfold_split_integrity():
+    """Test 8: Verify Stratified K-Fold splits are disjoint, exhaustive, and class-balanced."""
+    import numpy as np
+    from sklearn.model_selection import StratifiedKFold
+
+    set_seed(RANDOM_SEED)
+    pool_train, pool_eval, targets, names = get_kfold_pool(
+        data_dir=DATA_DIR, augment=False, seed=RANDOM_SEED
+    )
+    y = np.asarray(targets)
+    assert len(y) == 60000, f"Expected 60,000 training-pool samples, got {len(y)}"
+    assert len(names) == NUM_CLASSES, "Class-name count must match NUM_CLASSES"
+
+    skf = StratifiedKFold(n_splits=5, shuffle=True, random_state=RANDOM_SEED)
+    seen = np.zeros(len(y), dtype=bool)
+    for train_idx, val_idx in skf.split(np.zeros(len(y)), y):
+        # Disjointness between the two halves of one fold
+        assert len(np.intersect1d(train_idx, val_idx)) == 0, "Train and val indices overlap"
+        # Each sample is validated exactly once across folds
+        assert not seen[val_idx].any(), "A sample was validated more than once"
+        seen[val_idx] = True
+        # Stratification: validation fold preserves the balanced class ratio
+        counts = np.bincount(y[val_idx], minlength=NUM_CLASSES)
+        assert counts.min() > 0, "A class is missing from the validation fold"
+
+    assert seen.all(), "Not every sample was covered exactly once across folds"
+
+    # Fold loaders must build over the given index subsets with correct sizes
+    train_idx, val_idx = next(iter(skf.split(np.zeros(len(y)), y)))
+    fold_train_loader, fold_val_loader = build_fold_loaders(
+        pool_train, pool_eval, train_idx, val_idx, batch_size=64, num_workers=0
+    )
+    assert len(fold_train_loader.dataset) == len(train_idx), "Fold train subset size mismatch"
+    assert len(fold_val_loader.dataset) == len(val_idx), "Fold val subset size mismatch"
+    images, labels = next(iter(fold_val_loader))
+    assert images.shape[1:] == (1, 28, 28), f"Unexpected image shape {images.shape}"
 
 
 if __name__ == "__main__":

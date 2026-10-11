@@ -10,7 +10,7 @@ Includes:
 import os
 import random
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Tuple
 import numpy as np
 import matplotlib.pyplot as plt
 import torch
@@ -236,3 +236,169 @@ def plot_comparison_curves(
         save_path.parent.mkdir(parents=True, exist_ok=True)
         fig.savefig(str(save_path), dpi=300, bbox_inches="tight")
     plt.show()
+
+
+def plot_optimizer_curves(
+    results: Dict[str, Dict],
+    save_path: Optional[Path] = None,
+) -> None:
+    """Compares mean validation loss and mean validation accuracy across optimizer arms.
+
+    Args:
+        results: Mapping of optimizer name to its run_kfold_cv result dictionary.
+        save_path: Optional path to persist the figure.
+    """
+    fig, axes = plt.subplots(1, 2, figsize=(14, 5))
+    colors = ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728"]
+
+    for idx, (name, res) in enumerate(results.items()):
+        histories = res["histories"]
+        epochs = range(1, len(histories[0]["val_acc"]) + 1)
+        mean_val_loss = np.mean([h["val_loss"] for h in histories], axis=0)
+        mean_val_acc = np.mean([h["val_acc"] for h in histories], axis=0)
+        c = colors[idx % len(colors)]
+        axes[0].plot(epochs, mean_val_loss, "o-", label=name, color=c, linewidth=2)
+        axes[1].plot(epochs, mean_val_acc, "s-", label=name, color=c, linewidth=2)
+
+    axes[0].set_title("Mean Validation Loss Across Folds", fontsize=13, fontweight="bold")
+    axes[0].set_xlabel("Epoch", fontsize=11)
+    axes[0].set_ylabel("CrossEntropy Loss", fontsize=11)
+    axes[0].grid(True, linestyle="--", alpha=0.6)
+    axes[0].legend(fontsize=10)
+
+    axes[1].set_title("Mean Validation Accuracy Across Folds", fontsize=13, fontweight="bold")
+    axes[1].set_xlabel("Epoch", fontsize=11)
+    axes[1].set_ylabel("Accuracy (%)", fontsize=11)
+    axes[1].grid(True, linestyle="--", alpha=0.6)
+    axes[1].legend(fontsize=10)
+
+    plt.tight_layout()
+    if save_path:
+        save_path = Path(save_path)
+        save_path.parent.mkdir(parents=True, exist_ok=True)
+        fig.savefig(str(save_path), dpi=300, bbox_inches="tight")
+    plt.show()
+
+
+def plot_tpr_fpr_comparison(
+    results: Dict[str, Dict],
+    class_names: List[str],
+    save_path: Optional[Path] = None,
+) -> None:
+    """Plots per-class True Positive Rate and False Positive Rate as grouped bar charts.
+
+    Args:
+        results: Mapping of optimizer name to its run_kfold_cv result dictionary.
+        class_names: Ordered list of class names.
+        save_path: Optional path to persist the figure.
+    """
+    names = list(results.keys())
+    x = np.arange(len(class_names))
+    width = 0.8 / max(len(names), 1)
+
+    fig, axes = plt.subplots(2, 1, figsize=(13, 10))
+
+    for idx, name in enumerate(names):
+        res = results[name]
+        offset = (idx - (len(names) - 1) / 2.0) * width
+        axes[0].bar(x + offset, res["tpr_per_class"], width, label=name)
+        axes[1].bar(x + offset, res["fpr_per_class"], width, label=name)
+
+    axes[0].set_title("Per-Class True Positive Rate (Recall) by Optimizer", fontsize=13, fontweight="bold")
+    axes[0].set_ylabel("TPR", fontsize=11)
+    axes[1].set_title("Per-Class False Positive Rate by Optimizer", fontsize=13, fontweight="bold")
+    axes[1].set_ylabel("FPR", fontsize=11)
+
+    for ax in axes:
+        ax.set_xticks(x)
+        ax.set_xticklabels(class_names, rotation=45, ha="right", fontsize=9)
+        ax.grid(True, axis="y", linestyle="--", alpha=0.6)
+        ax.legend(fontsize=10)
+
+    plt.tight_layout()
+    if save_path:
+        save_path = Path(save_path)
+        save_path.parent.mkdir(parents=True, exist_ok=True)
+        fig.savefig(str(save_path), dpi=300, bbox_inches="tight")
+    plt.show()
+
+
+def plot_confusion_matrix_grid(
+    results: Dict[str, Dict],
+    class_names: List[str],
+    save_path: Optional[Path] = None,
+) -> None:
+    """Plots normalized confusion matrices side by side, one panel per optimizer arm.
+
+    Args:
+        results: Mapping of optimizer name to its run_kfold_cv result dictionary.
+        class_names: Ordered list of class names.
+        save_path: Optional path to persist the figure.
+    """
+    names = list(results.keys())
+    n = len(names)
+    fig, axes = plt.subplots(1, n, figsize=(7 * n, 6.5))
+    if n == 1:
+        axes = [axes]
+
+    for ax, name in zip(axes, names):
+        cm = results[name]["confusion_matrix"].astype(np.float64)
+        row_sums = cm.sum(axis=1, keepdims=True)
+        cm_norm = np.divide(cm, row_sums, out=np.zeros_like(cm), where=row_sums > 0)
+        sns.heatmap(
+            cm_norm,
+            annot=True,
+            fmt=".2f",
+            cmap="Blues",
+            xticklabels=class_names,
+            yticklabels=class_names,
+            cbar=False,
+            ax=ax,
+        )
+        ax.set_title(f"{name}: Normalized Confusion Matrix", fontsize=12, fontweight="bold", pad=10)
+        ax.set_xlabel("Predicted Class", fontsize=10)
+        ax.set_ylabel("Ground Truth Class", fontsize=10)
+        ax.tick_params(axis="x", rotation=45, labelsize=8)
+        ax.tick_params(axis="y", rotation=0, labelsize=8)
+
+    plt.tight_layout()
+    if save_path:
+        save_path = Path(save_path)
+        save_path.parent.mkdir(parents=True, exist_ok=True)
+        fig.savefig(str(save_path), dpi=300, bbox_inches="tight")
+    plt.show()
+
+
+def save_optimizer_results_json(
+    results: Dict[str, Dict],
+    class_names: List[str],
+    save_path: Path,
+) -> None:
+    """Serializes the optimizer-comparison summary into a JSON file.
+
+    Args:
+        results: Mapping of optimizer name to its run_kfold_cv result dictionary.
+        class_names: Ordered list of class names.
+        save_path: Destination JSON path.
+    """
+    import json
+
+    summary = {}
+    for name, res in results.items():
+        summary[name] = {
+            "learning_rate": res.get("learning_rate"),
+            "num_epochs": res.get("num_epochs"),
+            "fold_accuracies": [round(a, 4) for a in res["fold_accuracies"]],
+            "fold_losses": [round(l, 4) for l in res["fold_losses"]],
+            "mean_acc": round(res["mean_acc"], 4),
+            "std_acc": round(res["std_acc"], 4),
+            "mean_loss": round(res["mean_loss"], 4),
+            "std_loss": round(res["std_loss"], 4),
+            "tpr_per_class": {class_names[i]: round(float(v), 4) for i, v in enumerate(res["tpr_per_class"])},
+            "fpr_per_class": {class_names[i]: round(float(v), 4) for i, v in enumerate(res["fpr_per_class"])},
+        }
+
+    save_path = Path(save_path)
+    save_path.parent.mkdir(parents=True, exist_ok=True)
+    with open(save_path, "w", encoding="utf-8") as f:
+        json.dump(summary, f, indent=2)
