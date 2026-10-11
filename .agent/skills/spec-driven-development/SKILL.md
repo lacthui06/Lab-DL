@@ -39,6 +39,9 @@ Nguyên lý then chốt: mọi quyết định thiết kế phải được ch�
 
 ## 4. Quy trình chi tiết
 
+### Bước 0: Làm rõ đề bài gốc trước khi đặc tả
+Đọc `description_lab_0X.md` và tóm tắt lại cách hiểu đề thành các gạch đầu dòng: mục tiêu, phạm vi, ràng buộc kỹ thuật, và sản phẩm cần nộp. Liệt kê mọi điểm mơ hồ, thiếu thông tin, hoặc giả định chưa được xác nhận, rồi trình bày cho người dùng và chờ xác nhận trước khi viết Section 1. Nếu còn điểm mơ hồ ảnh hưởng đến thiết kế, kích hoạt `interview-me` để làm rõ. Bước này bắt buộc kể cả khi đề bài trông đã rõ ràng.
+
 ### Bước 1: Chọn playbook workflow tham chiếu
 Xác định modality của bài toán. Với bài toán Deep Learning, tham chiếu `docs/dl_flow.md` cho modality, chiều tensor, backbone, và hàm loss chuyên biệt. Tham chiếu `docs/eda.md` và `docs/feature.md` cho hướng dẫn phân tích dữ liệu và kỹ thuật đặc trưng. Trích xuất chuẩn kỹ thuật từ playbook thay vì tự phát minh.
 
@@ -84,6 +87,7 @@ Tất cả nội dung trên được soạn trực tiếp trong Section 1 của 
 
 ## 8. Definition of Done
 
+- [ ] Đã đọc `description_lab_0X.md` và xác nhận làm rõ đề bài với người dùng.
 - [ ] Đã chọn và trích xuất chuẩn từ playbook workflow tương ứng.
 - [ ] Đã ghi rõ loại tác vụ và modality với hợp đồng tensor.
 - [ ] Đã thiết kế data contract và chiến lược chia tập không rò rỉ.
@@ -99,3 +103,4 @@ Tất cả nội dung trên được soạn trực tiếp trong Section 1 của 
 - [X] *"Tách SPEC.md riêng cho gọn"* -> **Bác bỏ:** Gây phân mảnh tài liệu và trùng lặp nội dung. Kiến trúc tài liệu sống duy nhất yêu cầu hợp nhất vào Section 1.
 - [X] *"Không cần baseline, mô hình chính là đủ"* -> **Bác bỏ:** Không có baseline thì không có cơ sở để chứng minh mô hình chính thực sự cải thiện. Mọi tuyên bố về hiệu năng trở nên vô căn cứ.
 - [X] *"Chia tập ngẫu nhiên là đủ cho mọi loại dữ liệu"* -> **Bác bỏ:** Dữ liệu chuỗi thời gian hoặc có nhóm cần chiến lược chia chuyên biệt, nếu không sẽ rò rỉ dữ liệu và cho metric ảo.
+- [X] *"Đề bài đã rõ ràng, khỏi cần tóm tắt lại"* -> **Bác bỏ:** Đề bài rõ với người giao không có nghĩa là rõ với người làm. Hiểu sai đề là nguyên nhân số một khiến phải làm lại; tóm tắt và xác nhận tốn vài phút nhưng chặn được hàng giờ làm sai.
