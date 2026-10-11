@@ -17,7 +17,7 @@ Bài làm và toàn bộ kết quả thực nghiệm của sinh viên nằm ở 
 
 Tiêu đề gốc của đề bài: **Exercise: PyTorch FashionMNIST Classification**.
 
-Đề bài gốc có một danh sách đánh số 1 đến 5 nhưng để trống nội dung khi sao chép. Cần bổ sung nếu giảng viên có nội dung cho danh sách này.
+Đề bài gốc có một danh sách đánh số 1 đến 5; bản sao nguyên văn không kèm nội dung cho danh sách này. Danh sách được giữ nguyên trạng, không suy diễn thêm, và được đối chiếu lại khi có bản đầy đủ từ giảng viên.
 
 ---
 
