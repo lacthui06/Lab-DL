@@ -441,3 +441,54 @@ def run_kfold_cv(
         "oof_preds": oof_preds,
         "oof_targets": oof_targets,
     }
+
+
+def run_optimizer_scenario(
+    scenario,
+    pool_train: Dataset,
+    pool_eval: Dataset,
+    targets: torch.Tensor,
+    model_type: str = "tuned_mlp",
+    num_epochs: int = 15,
+    batch_size: int = 64,
+    device: torch.device = torch.device("cpu"),
+    n_splits: int = 5,
+    seed: int = 42,
+    num_workers: int = 0,
+    checkpoint_dir: Optional[Path] = None,
+    verbose: bool = True,
+) -> Dict[str, Dict]:
+    """Runs every optimizer arm of a single learning-rate scenario.
+
+    Args:
+        scenario: An `OptimizerScenario` (from `src.config`) exposing `.name`
+            and `.arms`; each arm carries its own learning rate and momentum.
+
+    Returns:
+        Mapping of arm name to that arm's `run_kfold_cv` result dictionary.
+    """
+    scenario_results: Dict[str, Dict] = {}
+    for arm in scenario.arms:
+        if verbose:
+            print(
+                f"\n>>> Scenario {scenario.name} | arm {arm.name} "
+                f"(type={arm.optimizer_type}, lr={arm.learning_rate})"
+            )
+        scenario_results[arm.name] = run_kfold_cv(
+            pool_train=pool_train,
+            pool_eval=pool_eval,
+            targets=targets,
+            optimizer_type=arm.optimizer_type,
+            model_type=model_type,
+            learning_rate=arm.learning_rate,
+            momentum=arm.momentum,
+            num_epochs=num_epochs,
+            batch_size=batch_size,
+            device=device,
+            n_splits=n_splits,
+            seed=seed,
+            num_workers=num_workers,
+            checkpoint_dir=checkpoint_dir,
+            verbose=verbose,
+        )
+    return scenario_results

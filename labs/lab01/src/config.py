@@ -67,12 +67,20 @@ class ExperimentConfig:
 
 
 # Pre-configured configurations for the 2 experimental runs
+# Phase 1 uses a single optimizer (SGD with momentum) for both runs so that the
+# architecture is the only manipulated variable. The learning rate is raised to
+# 0.05 because SGD requires a much larger step size than adaptive optimizers to
+# reach a comparable accuracy within the fixed epoch budget.
+PHASE1_OPTIMIZER_TYPE = "sgd"
+PHASE1_LEARNING_RATE = 0.05
+PHASE1_SGD_MOMENTUM = 0.9
+
 RUN1_CONFIG = ExperimentConfig(
     name="Run1_Baseline_MLP",
     model_type="baseline_mlp",
     batch_size=64,
     num_epochs=5,
-    learning_rate=1e-3,
+    learning_rate=PHASE1_LEARNING_RATE,
     weight_decay=0.0,
     use_scheduler=False,
     use_augmentation=False,
@@ -84,7 +92,7 @@ RUN2_CONFIG = ExperimentConfig(
     model_type="tuned_mlp",
     batch_size=64,
     num_epochs=10,
-    learning_rate=1e-3,
+    learning_rate=PHASE1_LEARNING_RATE,
     weight_decay=1e-4,
     use_scheduler=True,
     use_augmentation=True,
@@ -108,6 +116,11 @@ CV_BATCH_SIZE = 64
 CV_USE_AUGMENTATION = True
 CV_WEIGHT_DECAY = 0.0
 
+# Scenario 2b raises only the SGD arm's learning rate. A non-adaptive method
+# needs a larger step size than an adaptive one to use the same epoch budget,
+# so this value is the single factor that distinguishes 2b from 2a.
+CV_FAIR_SGD_LEARNING_RATE = 0.05
+
 KFOLD_SPLITS = 5
 KFOLD_SEED = RANDOM_SEED
 
@@ -121,21 +134,57 @@ class OptimizerExperimentConfig:
     momentum: float = 0.0
 
 
-OPTIMIZER_CONFIGS = [
-    OptimizerExperimentConfig(
-        name="SGD_Momentum",
-        optimizer_type="sgd",
-        learning_rate=CV_LEARNING_RATE,
-        momentum=CV_SGD_MOMENTUM,
+def _build_scenario_arms(sgd_learning_rate: float) -> list:
+    """Builds the three optimizer arms for one learning-rate scenario.
+
+    Only the SGD arm's learning rate varies between scenarios; RMSprop and Adam
+    keep the shared baseline rate. This keeps the 2a-versus-2b contrast
+    attributable to the SGD step size alone.
+    """
+    return [
+        OptimizerExperimentConfig(
+            name="SGD_Momentum",
+            optimizer_type="sgd",
+            learning_rate=sgd_learning_rate,
+            momentum=CV_SGD_MOMENTUM,
+        ),
+        OptimizerExperimentConfig(
+            name="RMSprop",
+            optimizer_type="rmsprop",
+            learning_rate=CV_LEARNING_RATE,
+        ),
+        OptimizerExperimentConfig(
+            name="Adam",
+            optimizer_type="adam",
+            learning_rate=CV_LEARNING_RATE,
+        ),
+    ]
+
+
+@dataclass
+class OptimizerScenario:
+    """A named learning-rate scenario holding its own list of optimizer arms.
+
+    `artifact_suffix` is appended to every output filename for this scenario so
+    that scenario 2a and scenario 2b write distinct artifacts.
+    """
+    name: str
+    artifact_suffix: str
+    arms: list
+
+
+OPTIMIZER_SCENARIOS = [
+    OptimizerScenario(
+        name="Symmetric",
+        artifact_suffix="",
+        arms=_build_scenario_arms(CV_LEARNING_RATE),
     ),
-    OptimizerExperimentConfig(
-        name="RMSprop",
-        optimizer_type="rmsprop",
-        learning_rate=CV_LEARNING_RATE,
-    ),
-    OptimizerExperimentConfig(
-        name="Adam",
-        optimizer_type="adam",
-        learning_rate=CV_LEARNING_RATE,
+    OptimizerScenario(
+        name="FairBudget",
+        artifact_suffix="_fairbudget",
+        arms=_build_scenario_arms(CV_FAIR_SGD_LEARNING_RATE),
     ),
 ]
+
+# Backward-compatible alias: the symmetric-budget (2a) arm list.
+OPTIMIZER_CONFIGS = OPTIMIZER_SCENARIOS[0].arms

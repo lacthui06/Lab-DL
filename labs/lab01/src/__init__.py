@@ -18,10 +18,13 @@ from .config import (
     CV_BATCH_SIZE,
     CV_USE_AUGMENTATION,
     CV_WEIGHT_DECAY,
+    CV_FAIR_SGD_LEARNING_RATE,
     KFOLD_SPLITS,
     KFOLD_SEED,
     OptimizerExperimentConfig,
+    OptimizerScenario,
     OPTIMIZER_CONFIGS,
+    OPTIMIZER_SCENARIOS,
 )
 from .dataset import (
     get_transforms,
@@ -44,6 +47,7 @@ from .engine import (
     sanity_overfit_check,
     compute_tpr_fpr,
     run_kfold_cv,
+    run_optimizer_scenario,
 )
 from .utils import (
     set_seed,
@@ -77,10 +81,13 @@ __all__ = [
     "CV_BATCH_SIZE",
     "CV_USE_AUGMENTATION",
     "CV_WEIGHT_DECAY",
+    "CV_FAIR_SGD_LEARNING_RATE",
     "KFOLD_SPLITS",
     "KFOLD_SEED",
     "OptimizerExperimentConfig",
+    "OptimizerScenario",
     "OPTIMIZER_CONFIGS",
+    "OPTIMIZER_SCENARIOS",
     "get_transforms",
     "get_dataloaders",
     "get_kfold_pool",
@@ -97,6 +104,7 @@ __all__ = [
     "sanity_overfit_check",
     "compute_tpr_fpr",
     "run_kfold_cv",
+    "run_optimizer_scenario",
     "set_seed",
     "save_checkpoint",
     "load_checkpoint",

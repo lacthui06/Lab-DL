@@ -17,7 +17,7 @@ import torch.nn as nn
 LAB01_DIR = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(LAB01_DIR))
 
-from src.config import DATA_DIR, CLASS_NAMES, RANDOM_SEED, DEVICE, NUM_CLASSES, OPTIMIZER_CONFIGS
+from src.config import DATA_DIR, CLASS_NAMES, RANDOM_SEED, DEVICE, NUM_CLASSES, OPTIMIZER_CONFIGS, OPTIMIZER_SCENARIOS
 from src.dataset import get_dataloaders, get_kfold_pool, build_fold_loaders
 from src.model import build_model, count_parameters
 from src.engine import sanity_overfit_check, build_optimizer, compute_tpr_fpr
@@ -131,9 +131,11 @@ def test_5_save_and_load_checkpoint(tmp_path):
 
 
 def test_6_build_optimizer_factory():
-    """Test 6: Verify the optimizer factory returns the correct optimizer type and hyperparameters."""
-    import numpy as np
+    """Test 6: Verify the optimizer factory and the two-scenario structure.
 
+    Scenario 2a must be symmetric (every arm at the shared base rate). Scenario
+    2b must differ from 2a in exactly one field: the SGD arm's learning rate.
+    """
     model = build_model("tuned_mlp")
 
     opt_sgd = build_optimizer("sgd", model, learning_rate=1e-3, momentum=0.9)
@@ -149,13 +151,28 @@ def test_6_build_optimizer_factory():
     assert isinstance(opt_adam, torch.optim.Adam), "Expected torch.optim.Adam"
     assert opt_adam.param_groups[0]["lr"] == 1e-3, "Adam learning rate mismatch"
 
-    # All three comparison arms must share the same learning rate
+    # Backward-compatible alias must be the symmetric-budget (2a) arm list
     lrs = {build_optimizer(c.optimizer_type, model, learning_rate=c.learning_rate).param_groups[0]["lr"]
            for c in OPTIMIZER_CONFIGS}
-    assert lrs == {1e-3}, f"All optimizer arms must share lr=1e-3, got {lrs}"
+    assert lrs == {1e-3}, f"All symmetric optimizer arms must share lr=1e-3, got {lrs}"
 
     with pytest.raises(ValueError):
         build_optimizer("nonexistent_optimizer", model)
+
+    # Two scenarios, each with the three classical arms
+    assert len(OPTIMIZER_SCENARIOS) == 2, "Phase 2 must define exactly two scenarios"
+    sym, fair = OPTIMIZER_SCENARIOS
+    assert sym.artifact_suffix == "", "Scenario 2a must keep the unsuffixed artifacts"
+    assert fair.artifact_suffix != "", "Scenario 2b must use a distinct artifact suffix"
+
+    sym_lrs = {arm.name: arm.learning_rate for arm in sym.arms}
+    fair_lrs = {arm.name: arm.learning_rate for arm in fair.arms}
+    assert sym_lrs == {"SGD_Momentum": 1e-3, "RMSprop": 1e-3, "Adam": 1e-3}, f"2a arms wrong: {sym_lrs}"
+    assert fair_lrs == {"SGD_Momentum": 0.05, "RMSprop": 1e-3, "Adam": 1e-3}, f"2b arms wrong: {fair_lrs}"
+
+    # The only field that may differ between the scenarios is the SGD learning rate
+    changed = {k for k in sym_lrs if sym_lrs[k] != fair_lrs[k]}
+    assert changed == {"SGD_Momentum"}, f"2a vs 2b must differ only in SGD lr, got {changed}"
 
 
 def test_7_compute_tpr_fpr_from_confusion_matrix():
@@ -216,6 +233,45 @@ def test_8_kfold_split_integrity():
     assert len(fold_val_loader.dataset) == len(val_idx), "Fold val subset size mismatch"
     images, labels = next(iter(fold_val_loader))
     assert images.shape[1:] == (1, 28, 28), f"Unexpected image shape {images.shape}"
+
+
+def test_9_run_optimizer_scenario_smoke():
+    """Test 9: Smoke-test the two-scenario runner on a tiny synthetic pool.
+
+    Uses 200 synthetic 1x28x28 samples and 1 epoch so that all six arms
+    (2 scenarios x 3 optimizers) execute end to end quickly. This verifies the
+    scenario plumbing without any full-scale training.
+    """
+    from torch.utils.data import TensorDataset
+    from src.engine import run_optimizer_scenario
+
+    torch.manual_seed(RANDOM_SEED)
+    n = 200
+    images = torch.randn(n, 1, 28, 28)
+    labels = torch.arange(n) % NUM_CLASSES
+    pool = TensorDataset(images, labels)
+
+    results = run_optimizer_scenario(
+        scenario=OPTIMIZER_SCENARIOS[0],
+        pool_train=pool,
+        pool_eval=pool,
+        targets=labels,
+        model_type="tuned_mlp",
+        num_epochs=1,
+        batch_size=16,
+        device=torch.device("cpu"),
+        n_splits=2,
+        seed=RANDOM_SEED,
+        num_workers=0,
+        checkpoint_dir=None,
+        verbose=False,
+    )
+
+    assert set(results.keys()) == {"SGD_Momentum", "RMSprop", "Adam"}, f"Unexpected arms: {set(results.keys())}"
+    for name, res in results.items():
+        assert len(res["fold_accuracies"]) == 2, f"{name} did not produce 2 fold scores"
+        assert 0.0 <= res["mean_acc"] <= 100.0, f"{name} mean accuracy out of range"
+        assert res["confusion_matrix"].shape == (NUM_CLASSES, NUM_CLASSES), f"{name} confusion matrix shape wrong"
 
 
 if __name__ == "__main__":

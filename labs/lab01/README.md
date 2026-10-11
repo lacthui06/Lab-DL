@@ -27,12 +27,14 @@ Bài lab xây dựng pipeline Deep Learning end-to-end để phân loại 10 nh�
 
 ## Results Summary
 
+> **Staleness note:** the figures below were produced by the previously committed run that used `AdamW`. The Phase 1 optimizer has since been changed to `SGD + Momentum` (lr=0.05), so these values are invalidated and are shown only as the historical record. They are pending re-measurement on the next Kaggle execution.
+
 | Run | Model | Test Accuracy | Macro F1 |
 |---|---|---|---|
-| Run #1 Baseline | Baseline MLP (2 layers) | 87.33% | không ghi nhận |
-| Run #2 Tuned | Tuned MLP (3 layers, BN, Dropout) | **88.01%** | không ghi nhận |
+| Run #1 Baseline | Baseline MLP (2 layers) | 87.33% (superseded) | không ghi nhận |
+| Run #2 Tuned | Tuned MLP (3 layers, BN, Dropout) | **88.01%** (superseded) | không ghi nhận |
 
-Mô hình được chọn: **Tuned MLP (Run #2)** — cải thiện +0.68% Test Accuracy và giảm 7.0% Test Loss so với baseline.
+Mô hình được chọn: **Tuned MLP (Run #2)** — trong lần chạy đã commit, cải thiện +0.68% Test Accuracy và giảm 7.0% Test Loss so với baseline. Các delta này thuộc lần chạy `AdamW` đã bị thay thế và cần được tính lại sau khi đo lại.
 
 Ghi chú: Run #1 và Run #2 không ghi nhận Macro F1 trong lần chạy Kaggle đã commit, nên ô này để trống thay vì suy diễn số.
 

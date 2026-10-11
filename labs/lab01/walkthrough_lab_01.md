@@ -2,7 +2,7 @@
 
 > **Lab Title:** Lab 01 — FashionMNIST Image Classification with PyTorch  
 > **Status:** [x] Completed  
-> **Primary Objective:** Construct an end-to-end deep learning pipeline classifying 10 FashionMNIST garment categories, enforce local TDD 1-batch sanity overfit testing, and evaluate 2 architectures (Baseline MLP, Tuned MLP) elevating Test Accuracy from 87.33% to 88.01% (Macro F1 for the tuned MLP: not logged in the committed run).  
+> **Primary Objective:** Construct an end-to-end deep learning pipeline classifying 10 FashionMNIST garment categories, enforce local TDD 1-batch sanity overfit testing, and evaluate 2 architectures (Baseline MLP, Tuned MLP). The previously committed run elevated Test Accuracy from 87.33% to 88.01% (Macro F1 for the tuned MLP: not logged); those figures are superseded because the Phase 1 optimizer was changed from `AdamW` to `SGD + Momentum` and are pending re-measurement.  
 > **Workflow Playbook References:** `docs/dl_flow.md` | `docs/dl_training.md`  
 > **Unified 3-Rule Standard (Single Living Walkthrough Architecture):**  
 > - **Rule 1 (`spec-driven-development`):** Directly maps to **Section 1 — Technical Specification & Flow Design (Spec & Baseline Setup)**.  
@@ -23,6 +23,8 @@ This section summarizes how the original brief in `description_lab_01.md` was in
   - The brief requires the student to "Experiment with network/hyperparameters" but gives no concrete grid; the comparison grid was fixed as a basic MLP versus an MLP with BatchNorm/Dropout.
   - The brief requires "Save and load the model"; it was decided to persist `state_dict` into `outputs/checkpoints/` and to add a verification step that reloading reproduces the original logits.
   - No quantitative acceptance threshold is given in the brief; internal thresholds were fixed per run (Baseline MLP >= 85.0%, Tuned MLP >= 87.5% Accuracy).
+  - The brief asks to experiment with optimizers but names none; it was decided to align Phase 2 with the three classical optimizers from the class presentation (SGD + Momentum, RMSprop, Adam) and to run two learning-rate scenarios (2a symmetric, 2b fair budget) so that the learning-rate question is answered by measurement rather than assumption.
+  - It was decided to hold the Phase 1 optimizer fixed at `SGD + Momentum` (lr=0.05) for both runs, so that the architecture is the only variable in the Phase 1 comparison.
 - **Remaining assumption:** The original brief contains a numbered list from 1 to 5 whose content was blank when copied; this content is treated as not provided and is not inferred. If the instructor supplies the list content, the decisions above must be re-checked against it.
 
 ### 1.1. Master Flow Design
@@ -31,9 +33,9 @@ This section summarizes how the original brief in `description_lab_01.md` was in
 graph LR
     A["1. Data Sourcing <br> (FashionMNIST 60k/10k)"] --> B["2. Preprocessing & Augment <br> (Norm mu=0.286, sigma=0.320, Flip)"]
     B --> C["3. Model Architecture <br> (Baseline MLP vs Tuned MLP)"]
-    C --> D["4. Training & Optimization <br> (AdamW, CosineAnnealing, Checkpoints)"]
+    C --> D["4. Training & Optimization <br> (SGD + Momentum, CosineAnnealing, Checkpoints)"]
     D --> E["5. Evaluation & Diagnostics <br> (Confusion Matrix, Error Slices)"]
-    E --> F["6. Decision / Selected Best <br> (Tuned MLP @ 88.01% Test Acc)"]
+    E --> F["6. Decision / Selected Best <br> (Tuned MLP; 88.01% superseded, pending re-measurement)"]
 ```
 
 **Playbook Mapping:** Each pipeline stage of this lab follows the corresponding section of the reference playbooks in `docs/`. The table below is the traceability link between lab artifacts and playbooks.
@@ -84,7 +86,7 @@ Note: this lab trains all models from scratch (no pretrained backbone), so `docs
 3. **Dataset & DataLoader:** Lazy sample loading (`__getitem__`), mini-batch bundling (batch size 64), stochastic shuffling (`shuffle=True`), and page-locked host memory transfers (`pin_memory=True`).
 4. **Torchvision Transforms:** Chained preprocessing compositions standardizing inputs and providing domain data regularization.
 5. **nn.Module:** Object-oriented neural network building blocks encapsulating parameters and the forward graph computation `forward()`.
-6. **Loss Functions & Optimizers:** `nn.CrossEntropyLoss` combining LogSoftmax and negative log-likelihood; `AdamW` featuring decoupled weight decay regularization.
+6. **Loss Functions & Optimizers:** `nn.CrossEntropyLoss` combining LogSoftmax and negative log-likelihood; `torch.optim.SGD` with momentum as the Phase 1 update rule, and the Phase 2 sweep contrasting SGD + Momentum, RMSprop, and Adam.
 7. **Model Checkpointing:** Serializing and restoring `model.state_dict()` to guarantee portability across compute runtimes.
 
 ### 1.5. Quantitative Acceptance Thresholds
@@ -94,7 +96,9 @@ Note: this lab trains all models from scratch (no pretrained backbone), so `docs
 ### 1.6. Phase 2 — Optimizer Comparison under Stratified K-Fold Cross-Validation
 
 #### 1.6.1. Objective and Scope
-The first phase held the optimizer fixed (`AdamW`) and varied the architecture. The second phase inverts the controlled variable: the architecture is frozen and the optimizer is varied. Three update rules are compared on an identical `TunedMLP` backbone:
+The first phase held the optimizer fixed (`SGD + Momentum`) and varied the architecture. The second phase inverts the controlled variable: the architecture is frozen and the optimizer is varied. Three update rules are compared on an identical `TunedMLP` backbone, under two learning-rate scenarios.
+
+**Scenario 2a — Symmetric budget** (isolates the update rule):
 
 | Arm | Optimizer | Learning Rate | Momentum | Weight Decay |
 |:---|:---|:---:|:---:|:---:|
@@ -102,11 +106,23 @@ The first phase held the optimizer fixed (`AdamW`) and varied the architecture. 
 | B | RMSprop | 1e-3 | n/a | 0.0 |
 | C | Adam | 1e-3 | n/a | 0.0 |
 
+**Scenario 2b — Fair budget** (accounts for the step size that a non-adaptive method needs):
+
+| Arm | Optimizer | Learning Rate | Momentum | Weight Decay |
+|:---|:---|:---:|:---:|:---:|
+| A | SGD + Momentum | 0.05 | 0.9 | 0.0 |
+| B | RMSprop | 1e-3 | n/a | 0.0 |
+| C | Adam | 1e-3 | n/a | 0.0 |
+
+The single factor that differs between scenario 2a and scenario 2b is the learning rate of the SGD arm. Every other factor (architecture, epoch budget, batch size, augmentation, weight decay, fold split, per-fold seeding) is held identical across all six runs. The 2a-versus-2b pair therefore isolates exactly one question: whether the weaker SGD result at `1e-3` is a property of the update rule or an artefact of an inappropriately small step size.
+
 #### 1.6.2. Controlled-Variable Rationale
-- **Shared learning rate (1e-3).** All three arms use one identical step size so that the optimizer update rule is the only manipulated factor. It is acknowledged that `1e-3` is a conservative value for SGD and near the default for RMSprop and Adam; consequently a weaker SGD result is an expected, reportable scientific outcome of a symmetric-budget design rather than a tuning artefact. This trade-off is deliberate and is not corrected by per-arm tuning.
-- **Shared epoch budget (15).** Every arm trains for exactly 15 epochs. No arm receives extra optimisation steps. This preserves budget symmetry across arms, matching the locked decision that both the learning rate and the epoch count are held equal.
+- **Scenario 2a — symmetric learning rate (1e-3).** All three arms use one identical step size so that the optimizer update rule is the only manipulated factor. It is acknowledged that `1e-3` is a conservative value for SGD and near the default for RMSprop and Adam; consequently a weaker SGD result is an expected outcome of a symmetric-budget design rather than a tuning artefact.
+- **Scenario 2b — fair budget (SGD at 0.05).** Non-adaptive first-order methods require a materially larger step size than adaptive methods to reach a comparable accuracy within a fixed epoch budget. Raising only the SGD arm to `0.05` tests whether the symmetric-budget handicap is the cause of a weaker SGD result. Because the two scenarios are otherwise byte-for-byte identical, the difference between them is attributable to the SGD step size alone. This pair of scenarios is the core of the phase: it converts a known confound into a controlled measurement instead of leaving it uncorrected.
+- **Shared epoch budget (15).** Every arm in both scenarios trains for exactly 15 epochs. No arm receives extra optimisation steps.
 - **Disabled weight decay (0.0) and no scheduler.** Regularisation is switched off so that the comparison isolates the raw update rule. Any accuracy gap is therefore attributable to the optimizer, not to a decay or scheduling interaction.
 - **Data augmentation enabled.** The training fold uses `RandomHorizontalFlip(p=0.5)` and `RandomRotation(degrees=10)`; validation folds stay deterministic.
+- **Identical fold split and per-fold seeding across all six runs.** Every arm of both scenarios sees exactly the same five stratified folds and the same per-fold initialisation, so arm-to-arm and scenario-to-scenario differences are not confounded by data or initialisation noise.
 
 #### 1.6.3. Cross-Validation Protocol
 - **Pool construction:** the official 60,000-image training partition is used as the cross-validation pool. The official 10,000-image test partition is held out untouched and is not used at any point during cross-validation.
@@ -120,18 +136,28 @@ The first phase held the optimizer fixed (`AdamW`) and varied the architecture. 
 - Per-fold accuracy and loss (all five values reported, not only the mean).
 - Global out-of-fold confusion matrix (10x10).
 - Per-class True Positive Rate (recall) and False Positive Rate.
+- All of the above are collected independently for scenario 2a and scenario 2b, so that every arm carries a symmetric-budget number and a fair-budget number. The SGD mean-accuracy delta between scenario 2a and scenario 2b is itself a reported result.
 
 #### 1.6.5. Rationale for Comparing Plain Adam rather than AdamW
 The reference playbook `docs/dl_training.md` recommends `AdamW` because of its decoupled weight decay. This phase nonetheless compares plain `Adam` for two reasons. First, the assignment asks for experimentation with optimizers and the classic three-way textbook comparison is SGD with momentum versus RMSprop versus Adam; substituting AdamW would leave the canonical Adam arm unrepresented. Second, because weight decay is disabled (0.0) in this phase, the decoupled-decay advantage of AdamW is inert, so plain Adam and AdamW would be numerically equivalent here and the distinction would carry no experimental information. The deviation from the playbook is therefore deliberate and is recorded here for traceability.
 
+For completeness, Phase 1 (Section 2) also departs from the playbook: both of its runs use `SGD + Momentum` rather than `AdamW`, so that the architecture axis is the only manipulated variable and the Phase 1 optimizer matches the SGD arm of Phase 2. The exact Phase 1 settings are recorded in the Stage 4 entry of Run #1 and Run #2.
+
 #### 1.6.6. Planned Artifacts
+Scenario 2a (symmetric budget):
 - `outputs/optimizer_comparison_curves.png` — mean validation loss and accuracy per arm.
 - `outputs/optimizer_tpr_fpr.png` — per-class TPR and FPR grouped bars.
 - `outputs/optimizer_confusion_matrices.png` — three normalized confusion matrices side by side.
 - `outputs/optimizer_experiment_results.json` — per-fold, mean/std, and per-class TPR/FPR summary.
 
+Scenario 2b (fair budget):
+- `outputs/optimizer_comparison_curves_fairbudget.png`
+- `outputs/optimizer_tpr_fpr_fairbudget.png`
+- `outputs/optimizer_confusion_matrices_fairbudget.png`
+- `outputs/optimizer_experiment_results_fairbudget.json`
+
 #### 1.6.7. Execution Constraints
-- **Compute target:** Kaggle GPU (Tesla T4). Estimated cost is 3 arms x 5 folds x 15 epochs on the lightweight `TunedMLP` backbone; at approximately 4-5 minutes per 15-epoch run this is on the order of 1 GPU-hour, within the weekly quota.
+- **Compute target:** Kaggle GPU (Tesla T4). Estimated cost is 6 arms x 5 folds x 15 epochs on the lightweight `TunedMLP` backbone; at approximately 4-5 minutes per 15-epoch run this is on the order of 2 GPU-hours, within the weekly quota.
 - **Zero Waste compliance:** no full multi-epoch training is executed locally. Local verification is limited to the 1-batch sanity overfit check and a tiny synthetic smoke test of the cross-validation plumbing.
 
 ---
@@ -154,11 +180,12 @@ The reference playbook `docs/dl_training.md` recommends `AdamW` because of its d
   - Parameter Count: **101,770** parameters (checkpoint size: 1.17 MB).
 * **Stage 4 - Training Strategy:**
   - Loss: `nn.CrossEntropyLoss()`.
-  - Optimizer: `AdamW(lr=1e-3, weight_decay=0.0)`. No scheduler. Batch size 64, 5 epochs.
+  - Optimizer: `SGD(momentum=0.9, lr=0.05, weight_decay=0.0)`. No scheduler. Batch size 64, 5 epochs. (Note: the previously committed run used `AdamW(lr=1e-3, weight_decay=0.0)`; the optimizer was switched to `SGD + Momentum` so that Phase 1 and the SGD arm of Phase 2 share one update rule.)
 * **Stage 5 - Evaluation Metrics:**
-  - Train Loss / Train Acc: 0.2750 / 89.82% (Epoch 5).
-  - Val Loss / Val Acc: 0.3265 / 88.60% (Best Val Checkpoint at Epoch 5).
-  - Test Loss / Test Acc: **0.3555 / 87.33%**.
+  - **Provenance caveat:** the figures below were produced by the previously committed run that used `AdamW`. Switching the optimizer to `SGD + Momentum` invalidates them; they are retained only as the historical record and are pending re-measurement on the next Kaggle execution.
+  - Train Loss / Train Acc: 0.2750 / 89.82% (Epoch 5) — superseded, pending re-measurement.
+  - Val Loss / Val Acc: 0.3265 / 88.60% (Best Val Checkpoint at Epoch 5) — superseded, pending re-measurement.
+  - Test Loss / Test Acc: **0.3555 / 87.33%** — superseded, pending re-measurement.
   - Primary Metric: **Test Macro F1-Score: not logged in the committed run.**
 * **Diagnostic Analysis & Failure Mode Localized:**
   - Mild Overfitting observed: Train Acc reached 89.82% while Val Acc plateaued at 88.60% (generalization gap of ~1.22%).
@@ -175,15 +202,16 @@ The reference playbook `docs/dl_training.md` recommends `AdamW` because of its d
   - [x] Stage 3: Model Architecture
   - [x] Stage 4: Training Strategy (Optimizer / Scheduler / Regularization)
 * **Technical Delta Description:**
-  - *Before (Run #1):* 2-layer MLP (128 hidden units), no Dropout/BatchNorm, no Augmentation, constant LR 1e-3, 5 epochs.
-  - *After (Run #2):* 3-layer MLP (256 -> 128 hidden units), integrating `BatchNorm1d` and `Dropout(p=0.2)` after each hidden layer; adding `RandomHorizontalFlip(p=0.5)` and `RandomRotation(degrees=10)` to the training loader; adding `CosineAnnealingLR` (decaying from 1e-3 to 1e-5); extending training to 10 epochs.
+  - *Before (Run #1):* 2-layer MLP (128 hidden units), no Dropout/BatchNorm, no Augmentation, constant LR 0.05, 5 epochs.
+  - *After (Run #2):* 3-layer MLP (256 -> 128 hidden units), integrating `BatchNorm1d` and `Dropout(p=0.2)` after each hidden layer; adding `RandomHorizontalFlip(p=0.5)` and `RandomRotation(degrees=10)` to the training loader; adding `CosineAnnealingLR` (decaying from 0.05 to 1e-5); extending training to 10 epochs. The optimizer (`SGD + Momentum`, momentum 0.9) is held constant across both runs so that only the architecture and regularization change.
 * **Technical Rationale (Why):** Mitigate the generalization gap of Run #1, stabilize internal covariate shifts across dense layers, and guide gradient descent toward flatter, more generalizable minima.
 * **Quantitative Impact on Flow:**
-  - Train Loss / Train Acc: 0.3312 / 87.69% (Epoch 10).
-  - Val Loss / Val Acc: 0.3106 / 88.37% (Best Val Checkpoint at Epoch 9).
-  - Test Loss / Test Acc: **0.3307 / 88.01%**.
+  - **Provenance caveat:** as with Run #1, these figures were produced by the previously committed `AdamW` run and are invalidated by the optimizer switch; they are retained as the historical record and are pending re-measurement.
+  - Train Loss / Train Acc: 0.3312 / 87.69% (Epoch 10) — superseded, pending re-measurement.
+  - Val Loss / Val Acc: 0.3106 / 88.37% (Best Val Checkpoint at Epoch 9) — superseded, pending re-measurement.
+  - Test Loss / Test Acc: **0.3307 / 88.01%** — superseded, pending re-measurement.
   - Test Macro F1-Score: **not logged in the committed run.**
-  - Delta vs Run #1: Test Acc gained +0.68% (87.33% -> 88.01%), Test Loss dropped from 0.3555 to 0.3307. Best Val Acc moved from 88.60% to 88.37% (-0.23%).
+  - Delta vs Run #1: Test Acc gained +0.68% (87.33% -> 88.01%), Test Loss dropped from 0.3555 to 0.3307. Best Val Acc moved from 88.60% to 88.37% (-0.23%). These deltas describe the superseded AdamW run and must be recomputed after re-measurement.
 * **Subsequent Diagnosis:** While explicit regularization substantially lowered the training-set accuracy (87.69% at the final epoch versus 89.82% for Run #1), it delivered a higher held-out Test Accuracy (+0.68%), indicating reduced overfitting. This run is the terminal flow of the lab. It is acknowledged that a flattened MLP discards the 2D spatial structure of the image and that a convolutional architecture would be the natural next step; that avenue is deliberately out of scope for this revision, so the lab closes with the two MLP runs and the Tuned MLP as the selected best model.
 
 ---
@@ -199,14 +227,16 @@ The reference playbook `docs/dl_training.md` recommends `AdamW` because of its d
 | **Model Architecture** | Baseline MLP (2 layers) | Tuned MLP (3 layers, BN, Drop) | **Tuned MLP (Run #2)** |
 | **Total Parameters** | 101,770 | 235,914 | Run #1 (Lightest) |
 | **Checkpoint Size** | 1.17 MB | 2.72 MB | Run #1 (Smallest) |
-| **Optimizer & LR** | AdamW (constant lr=1e-3) | AdamW + CosineAnnealing | Run #2 |
-| **Epochs / Time** | 5 epochs / 73.2s | 10 epochs / 227.4s | Run #1 (Fastest) |
-| **Train Loss / Acc** | 0.2750 / 89.82% | 0.3312 / 87.69% | Run #1 (higher train acc) |
-| **Best Val Acc** | **88.60%** | 88.37% | Run #1 |
-| **Test Accuracy** | 87.33% | **88.01%** | **Run #2 (+0.68%)** |
+| **Optimizer & LR** | SGD + Momentum (constant lr=0.05) | SGD + Momentum (lr=0.05) + CosineAnnealing | Run #2 |
+| **Epochs / Time** | 5 epochs / 73.2s (superseded) | 10 epochs / 227.4s (superseded) | Run #1 (Fastest) |
+| **Train Loss / Acc** | 0.2750 / 89.82% (superseded) | 0.3312 / 87.69% (superseded) | Run #1 (higher train acc) |
+| **Best Val Acc** | **88.60%** (superseded) | 88.37% (superseded) | Run #1 |
+| **Test Accuracy** | 87.33% (superseded) | **88.01%** (superseded) | **Run #2 (+0.68%)** |
 | **Test Macro F1** | not logged | not logged | n/a (not logged) |
-| **Test Loss** | 0.3555 | **0.3307** | **Run #2 (-7.0% Loss)** |
+| **Test Loss** | 0.3555 (superseded) | **0.3307** (superseded) | **Run #2 (-7.0% Loss)** |
 | **Selection Decision** | Met baseline criteria | **Higher held-out accuracy** | **Selected Best: Run #2** |
+
+> **Staleness note:** every numeric cell in this matrix was produced by the previously committed run that used `AdamW`. The Phase 1 optimizer has since been changed to `SGD + Momentum` (lr=0.05), so these values are invalidated and are shown only as the historical record. They are pending re-measurement on the next Kaggle execution; the `superseded` tag marks each affected cell.
 
 ### 3.2. Detailed Classification Report (Best Model: Tuned MLP)
 
@@ -235,11 +265,13 @@ This table traces every important technical decision back to the corresponding d
 | Quantitative acceptance thresholds | The brief states no passing threshold. | Internal thresholds: Baseline MLP >= 85.0% and Tuned MLP >= 87.5% Accuracy. |
 | Model save/load verification | The brief requires "Save and load the model". | Persist `state_dict` into `outputs/checkpoints/` and verify that reloading reproduces the original logits. |
 | Blank numbered list 1-5 in the brief | Ambiguity: the numbered list 1 to 5 has no content. | Treat as not provided and do not infer; re-check if the instructor supplies the content. |
+| Phase 1 optimizer choice | The playbook recommends `AdamW`; the presentation topic is the three classical optimizers. | Use `SGD + Momentum` (momentum 0.9, lr=0.05) for both Phase 1 runs, so the architecture remains the only manipulated variable and the Phase 1 update rule matches the SGD arm of Phase 2. |
+| Phase 2 learning-rate policy | A single shared learning rate handicaps a non-adaptive method such as SGD. | Run two otherwise-identical scenarios: 2a with all arms at 1e-3, and 2b with only the SGD arm raised to 0.05. The pair isolates the effect of the SGD step size. |
 
 ### 3.6. Key Takeaways & Submission Deliverables
-1. **Impact of Modern Regularization:** Integrating `BatchNorm` + `Dropout` + `CosineAnnealingLR` improved the held-out Test Accuracy of the MLP by +0.68% (87.33% -> 88.01%) and lowered Test Loss from 0.3555 to 0.3307.
-2. **Bias-Variance Trade-off:** Explicit regularization reduced training-set accuracy (89.82% -> 87.69%) while raising held-out accuracy, evidencing reduced overfitting rather than improved raw fitting capacity.
-3. **Optimizer Sensitivity (Phase 2):** The secondary experiment isolates the optimizer update rule on a frozen `TunedMLP` backbone under Stratified 5-fold cross-validation; its measured outcome is recorded once the Kaggle run completes.
+1. **Impact of Modern Regularization (superseded figures):** In the previously committed `AdamW` run, integrating `BatchNorm` + `Dropout` + `CosineAnnealingLR` improved the held-out Test Accuracy of the MLP by +0.68% (87.33% -> 88.01%) and lowered Test Loss from 0.3555 to 0.3307. These figures are invalidated by the Phase 1 optimizer change and are pending re-measurement.
+2. **Bias-Variance Trade-off (superseded figures):** In the same superseded run, explicit regularization reduced training-set accuracy (89.82% -> 87.69%) while raising held-out accuracy, evidencing reduced overfitting rather than improved raw fitting capacity.
+3. **Optimizer Sensitivity (Phase 2):** The secondary experiment isolates the optimizer update rule on a frozen `TunedMLP` backbone under Stratified 5-fold cross-validation, across two scenarios that differ only in the SGD learning rate (2a symmetric at 1e-3; 2b fair budget with SGD at 0.05). Its measured outcome is recorded once the Kaggle run completes.
 4. **Generated Submission Artifacts:**
    - Best Model Weights: `outputs/checkpoints/tuned_mlp_best.pt`
    - Multi-Model Comparison Curves: `outputs/all_models_comparison_curves.png`
@@ -247,4 +279,5 @@ This table traces every important technical decision back to the corresponding d
    - Best Model Confusion Matrix: `outputs/confusion_matrix_tuned_mlp.png`
    - Test Batch Prediction Grid: `outputs/predictions_tuned_mlp.png`
    - Detailed Metric Logs: `outputs/classification_report_tuned_mlp.txt`, `outputs/experiment_results.json`
-   - Phase 2 Optimizer Artifacts: `outputs/optimizer_comparison_curves.png`, `outputs/optimizer_tpr_fpr.png`, `outputs/optimizer_confusion_matrices.png`, `outputs/optimizer_experiment_results.json`
+   - Phase 2 Optimizer Artifacts (2a symmetric): `outputs/optimizer_comparison_curves.png`, `outputs/optimizer_tpr_fpr.png`, `outputs/optimizer_confusion_matrices.png`, `outputs/optimizer_experiment_results.json`
+   - Phase 2 Optimizer Artifacts (2b fair budget): `outputs/optimizer_comparison_curves_fairbudget.png`, `outputs/optimizer_tpr_fpr_fairbudget.png`, `outputs/optimizer_confusion_matrices_fairbudget.png`, `outputs/optimizer_experiment_results_fairbudget.json`
