@@ -12,6 +12,7 @@ Danh sách kiểm tra khi bắt đầu một lab mới, đảm bảo mọi lab t
 
 ## 2. Tài liệu (Documentation)
 - [ ] Tạo `walkthrough_lab_0X.md` từ template `walkthrough_template.md`.
+- [ ] Tạo `description_lab_0X.md` từ template `description_lab_template.md` và dán đề bài gốc nguyên văn.
 - [ ] Tạo `README.md` cho lab từ template `lab_readme_template.md`.
 - [ ] Điền Section 1 (Spec) trước khi viết bất kỳ dòng code nào.
 - [ ] Không tạo file `SPEC.md` hay `REPORT.md` riêng lẻ.

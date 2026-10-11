@@ -6,7 +6,8 @@ Bài lab xây dựng pipeline Deep Learning end-to-end để phân loại 10 nh�
 
 ## Structure
 
-- `walkthrough_lab_01.md`: tài liệu sống duy nhất hợp nhất 3 Rule (Spec -> Changelog -> Report).
+- `description_lab_01.md`: đề bài gốc do giảng viên giao (đầu vào, giữ nguyên văn).
+- `walkthrough_lab_01.md`: tài liệu sống duy nhất hợp nhất 3 Rule (Spec -> Changelog -> Report) — bài làm và kết quả (đầu ra).
 - `notebooks/`: notebook Jupyter tương tác cho phân tích và trực quan hóa.
 - `src/`: các module Python tái sử dụng (`config.py`, `dataset.py`, `model.py`, `engine.py`, `utils.py`).
 - `tests/`: các bài test TDD bắt buộc.

@@ -29,4 +29,5 @@ Each practical lab is organized into modular directories and a single living doc
 - `notebooks/`: Jupyter Notebooks for interactive execution, analysis, and visualization.
 - `src/`: Modular, production-ready Python components (`config.py`, `dataset.py`, `model.py`, `engine.py`, `utils.py`).
 - `outputs/`: Artifact store for training checkpoints, evaluation logs, and high-resolution figures.
+- `description_lab_0X.md`: Original assignment brief from instructor (input, kept verbatim).
 - `walkthrough_lab_0X.md`: Single Living Walkthrough unifying 3 Core Rules (Section 1: Spec from `spec-driven-development`, Section 2: 5-Stage Changelog from `walkthrough-and-experiment-tracking`, Section 3: Final Report from `documentation-and-adrs`).

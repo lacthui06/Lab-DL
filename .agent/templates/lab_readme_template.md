@@ -6,7 +6,8 @@ Một đoạn ngắn mô tả bài lab: mục tiêu, dataset, và mô hình chí
 
 ## Structure
 
-- `walkthrough_lab_0X.md`: tài liệu sống duy nhất hợp nhất 3 Rule (Spec -> Changelog -> Report).
+- `description_lab_0X.md`: đề bài gốc do giảng viên giao (đầu vào, giữ nguyên văn).
+- `walkthrough_lab_0X.md`: tài liệu sống duy nhất hợp nhất 3 Rule (Spec -> Changelog -> Report) — bài làm và kết quả (đầu ra).
 - `notebooks/`: notebook Jupyter tương tác cho phân tích và trực quan hóa.
 - `src/`: các module Python tái sử dụng (`config.py`, `dataset.py`, `model.py`, `engine.py`, `utils.py`).
 - `tests/`: các bài test TDD bắt buộc.

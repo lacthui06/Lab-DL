@@ -29,7 +29,7 @@ Mọi kết quả phải tái lập được. Cố định seed cho toàn bộ t
 Các cổng quan trọng phải vượt qua checklist tương ứng trong `.agent/checklists/` trước khi đi tiếp: `new_lab_bootstrap.md` khi bắt đầu lab mới, `pre_commit.md` trước khi commit, `pre_kaggle_upload.md` trước khi lên Kaggle GPU, và `pre_submission.md` trước khi nộp bài. Checklist biến quy tắc "nên làm" thành bước "phải đủ mới đi tiếp".
 
 ### 1.8. Tái sử dụng khung mẫu (Template Reuse)
-Khi bắt đầu lab mới, agent phải dùng khung mẫu trong `.agent/templates/` (`walkthrough_template.md`, `lab_readme_template.md`) thay vì tự phát minh lại cấu trúc. Mọi lab phải có cùng cấu trúc để đảm bảo tính đồng nhất và giảm công rà soát.
+Khi bắt đầu lab mới, agent phải dùng khung mẫu trong `.agent/templates/` (`walkthrough_template.md`, `description_lab_template.md`, `lab_readme_template.md`) thay vì tự phát minh lại cấu trúc. Mọi lab phải có cùng cấu trúc để đảm bảo tính đồng nhất và giảm công rà soát.
 
 ### 1.9. Tài liệu sống duy nhất (Hợp nhất 3 Rule)
 Toàn bộ tài liệu kỹ thuật của một lab phải được hợp nhất vào đúng MỘT tài liệu sống duy nhất: `walkthrough_lab_0X.md`. File này duy trì liên kết tường minh với 3 rule cốt lõi:

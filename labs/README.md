@@ -6,6 +6,7 @@ This directory manages all practical coursework labs for Deep Learning. The stan
 labs/
 |-- lab01/                      <-- Standard reference directory layout for each lab
 |   |-- README.md               <-- Short entry point: objective, structure, reproduce, results
+|   |-- description_lab_0X.md   <-- Original assignment brief from instructor (input, verbatim)
 |   |-- walkthrough_lab_01.md   <-- Unified 3-Rule living document (Spec -> Changelog -> Report)
 |   |-- notebooks/              <-- Interactive Jupyter Notebooks
 |   |-- src/                    <-- Modular, reusable Python source components

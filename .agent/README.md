@@ -96,6 +96,7 @@ Ngoài ra, skill `using-ds-ai-skills` đóng vai trò **nhạc trưởng (orches
 |---|---|
 | `SKILL_TEMPLATE.md` | Khung chuẩn 9 mục để soạn một file SKILL.md |
 | `walkthrough_template.md` | Khung 3 Section cho tài liệu sống của lab mới |
+| `description_lab_template.md` | Khung ghi đề bài gốc của giảng viên cho từng lab |
 | `lab_readme_template.md` | Khung README cho từng lab |
 
 ### Danh sách kiểm tra trong `checklists/`
