@@ -32,7 +32,7 @@ Ngoài ra, skill `using-ds-ai-skills` đóng vai trò **nhạc trưởng (orches
 
 ### 0. Tầng điều phối (Meta)
 
-- **`using-ds-ai-skills`**: Nhạc trưởng tổng thể, điều phối toàn bộ vòng đời, nhận diện loại bài toán (Tabular ML hay Deep Learning) và định tuyến công việc tới đúng skill cùng playbook tương ứng trong `workflows/` và `dl_workflows/`.
+- **`using-ds-ai-skills`**: Nhạc trưởng tổng thể, điều phối toàn bộ vòng đời, nhận diện loại bài toán (Computer Vision, NLP, Audio) và định tuyến công việc tới đúng skill cùng playbook tương ứng trong `docs/`.
 
 ### 1. Khởi tạo và Xác định phạm vi (Define)
 

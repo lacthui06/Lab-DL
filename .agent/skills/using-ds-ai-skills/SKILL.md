@@ -1,13 +1,13 @@
 ---
 name: using-ds-ai-skills
-description: Điều phối và định tuyến các tác vụ Data Science, Machine Learning, Deep Learning tới đúng skill chuyên biệt và playbook workflow tương ứng trong Lab DL, đóng vai trò nhạc trưởng của toàn bộ vòng đời.
+description: Điều phối và định tuyến các tác vụ Data Science, Machine Learning, Deep Learning tới đúng skill chuyên biệt và playbook workflow tương ứng trong docs/ của Lab DL, đóng vai trò nhạc trưởng của toàn bộ vòng đời.
 ---
 
 # using-ds-ai-skills (Bản DS & AI)
 
 ## 1. Tổng quan
 
-Skill này đóng vai trò **nhạc trưởng tổng thể (master conductor)** của toàn bộ framework. Nó định tuyến mọi tác vụ thuộc Data Science, Machine Learning và Deep Learning tới các skill kỹ thuật chuẩn hóa, đồng thời liên kết trực tiếp tới các playbook chuyên ngành trong `workflows/` và `dl_workflows/`.
+Skill này đóng vai trò **nhạc trưởng tổng thể (master conductor)** của toàn bộ framework. Nó định tuyến mọi tác vụ thuộc Data Science, Machine Learning và Deep Learning tới các skill kỹ thuật chuẩn hóa, đồng thời liên kết trực tiếp tới các playbook chuyên ngành trong `docs/`.
 
 Đây là điểm vào (entry point) của framework. Khi một phiên làm việc mới bắt đầu mà chưa rõ cần dùng skill nào, skill này chịu trách nhiệm phân loại bài toán, xác định giai đoạn hiện tại, và điều phối chuỗi skill phù hợp.
 
@@ -25,7 +25,7 @@ Nguyên lý then chốt: phân loại đúng ngay từ đầu quyết định to
 - Người dùng hỏi "bây giờ làm gì tiếp".
 
 **Điều kiện tiên quyết:**
-- Đã có quyền truy cập vào cấu trúc repository và các thư mục `workflows/`, `dl_workflows/`, `.agent/skills/`.
+- Đã có quyền truy cập vào cấu trúc repository và các thư mục `docs/`, `.agent/skills/`.
 - Đã đọc `.agent/skills/INDEX.md` để nắm bảng định tuyến.
 
 ## 3. Hợp đồng Input / Output
@@ -40,7 +40,7 @@ Nguyên lý then chốt: phân loại đúng ngay từ đầu quyết định to
 ## 4. Quy trình chi tiết
 
 ### Bước 1: Phân loại tác vụ
-Xác định bài toán thuộc Tabular ML hay Deep Learning dựa trên modality dữ liệu. Tabular định tuyến tới `workflows/ML_flow.md`; Computer Vision, NLP, Audio định tuyến tới `dl_workflows/DL_flow.md`. Phân loại sai ngay bước này khiến toàn bộ quy trình phía sau lệch chuẩn.
+Xác định modality của bài toán dựa trên dữ liệu đầu vào. Computer Vision, NLP, Audio định tuyến tới `docs/dl_flow.md`; phân tích và kỹ thuật đặc trưng tham chiếu `docs/eda.md` và `docs/feature.md`. Phân loại sai ngay bước này khiến toàn bộ quy trình phía sau lệch chuẩn.
 
 ### Bước 2: Khởi tạo và Đặc tả
 Nếu yêu cầu còn mơ hồ, kích hoạt `idea-refine` và `interview-me`. Sau khi đã rõ yêu cầu, kích hoạt `spec-driven-development` để dựng đặc tả và baseline trong Section 1 của `walkthrough_lab_0X.md`.
@@ -79,7 +79,7 @@ Kích hoạt `code-simplification` để dọn code. Kích hoạt `version-contr
 
 ## 7. Chế độ thất bại thường gặp (Failure Modes)
 
-- **Phân loại sai modality:** Xử lý bài toán Tabular như Deep Learning khiến chọn sai playbook. Dấu hiệu: dùng kiến trúc phức tạp cho dữ liệu bảng nhỏ. Phòng tránh: xác định modality trước tiên ở Bước 1.
+- **Phân loại sai modality:** Chọn sai playbook cho modality thực tế (ví dụ áp kiến trúc chuỗi cho dữ liệu ảnh). Dấu hiệu: tiền xử lý và backbone không khớp với dạng dữ liệu đầu vào. Phòng tránh: xác định modality trước tiên ở Bước 1.
 - **Bỏ qua bước đặc tả:** Nhảy thẳng vào code khi chưa có spec. Dấu hiệu: không có baseline và metric rõ ràng. Phòng tránh: luôn chạy `spec-driven-development` trước.
 - **Chạy full training cục bộ:** Vi phạm Giao thức Zero Waste. Dấu hiệu: CPU chạy hàng giờ. Phòng tránh: dừng ở test 1-batch và chuyển sang Kaggle.
 - **Bỏ sót ghi vết:** Không cập nhật walkthrough sau mỗi run. Phòng tránh: kích hoạt `walkthrough-and-experiment-tracking` ngay sau mỗi lần chạy.

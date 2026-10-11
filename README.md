@@ -7,8 +7,7 @@ Repository containing source code, engineering workflows, and practical lab exer
 ## Directory Structure
 
 - `.agent/`: Skill framework and operational rules for AI Coding Agents.
-- `workflows/`: Foundational Machine Learning workflows and playbooks (EDA, Feature Engineering).
-- `dl_workflows/`: Deep Learning production playbooks (Data Augmentation, Training Loops, Optimization).
+- `docs/`: Consolidated reference documentation (EDA, Feature Engineering, Deep Learning pipeline, Data Augmentation, Training and Optimization).
 - `labs/`: Course practical lab implementations.
 
 ---

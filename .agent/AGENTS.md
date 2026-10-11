@@ -10,8 +10,8 @@ Tài liệu này đóng vai trò là **hiến pháp kỹ thuật bắt buộc** 
 Không bao giờ triển khai hay huấn luyện một kiến trúc phức tạp trước khi đã đặc tả rõ mô hình baseline đơn giản và định nghĩa metric đánh giá. Baseline là mốc neo để đo lường mọi tiến bộ về sau; thiếu baseline đồng nghĩa với việc không có căn cứ để chứng minh cải tiến.
 
 ### 1.2. Tham chiếu bắt buộc tới Playbook workflow
-- Với bài toán **Tabular ML**: bắt buộc tham chiếu [`workflows/ML_flow.md`](../workflows/ML_flow.md) và [`workflows/eda_guide.md`](../workflows/eda_guide.md).
-- Với bài toán **Deep Learning (CV, NLP, Audio)**: bắt buộc tham chiếu [`dl_workflows/DL_flow.md`](../dl_workflows/DL_flow.md), [`dl_workflows/dl_data_and_augmentation_guide.md`](../dl_workflows/dl_data_and_augmentation_guide.md) và [`dl_workflows/dl_training_and_optimization_guide.md`](../dl_workflows/dl_training_and_optimization_guide.md).
+- Tài liệu tham chiếu nền tảng chung: [`docs/eda.md`](../docs/eda.md) (Exploratory Data Analysis) và [`docs/feature.md`](../docs/feature.md) (Feature Engineering).
+- Với bài toán **Deep Learning (CV, NLP, Audio)**: bắt buộc tham chiếu [`docs/dl_flow.md`](../docs/dl_flow.md), [`docs/dl_data.md`](../docs/dl_data.md) và [`docs/dl_training.md`](../docs/dl_training.md).
 
 ### 1.3. Tái lập kết quả nghiêm ngặt (Strict Reproducibility)
 Luôn cố định random seed (`random`, `numpy`, `torch.manual_seed`, `torch.cuda.manual_seed_all`) xuyên suốt mọi lần thực thi pipeline. Không có seed cố định thì kết quả giữa các lần chạy không thể so sánh, và mọi kết luận thí nghiệm trở nên vô nghĩa.
@@ -39,7 +39,7 @@ Toàn bộ tài liệu kỹ thuật của một lab phải được hợp nhất
 
 Không được tạo file `SPEC.md` hay `REPORT.md` riêng biệt.
 
-### 1.7. Chính sách không Emoji/Icon
+### 1.10. Chính sách không Emoji/Icon
 Nghiêm cấm emoji hoặc icon đồ họa trong mọi source code (`.py`, `.sh`), câu lệnh `print()`, log formatter, docstring, comment code, hoặc markdown cell trong Jupyter Notebook (`.ipynb`). Mọi tiêu đề và chỉ báo trạng thái phải dùng text kỹ thuật thuần ASCII/UTF-8 sạch, tương thích trên mọi môi trường terminal và pipeline CI/CD.
 
 ---
@@ -50,15 +50,15 @@ Bảng dưới đây ánh xạ ý định của người dùng sang skill tươn
 
 | Ý định người dùng | Skill được kích hoạt | Tài liệu workflow tham chiếu |
 |---|---|---|
-| Yêu cầu mơ hồ / phác thảo ý tưởng ban đầu | `idea-refine` -> `interview-me` | `DL_flow.md` Stage 1 |
+| Yêu cầu mơ hồ / phác thảo ý tưởng ban đầu | `idea-refine` -> `interview-me` | `docs/dl_flow.md` Stage 1 |
 | Bắt đầu lab mới / đặc tả bài toán | `spec-driven-development` | Section 1 trong `walkthrough_lab_0X.md` |
-| Kiến trúc pipeline / phân rã công việc | `planning-and-task-breakdown` | `DL_flow.md` kiến trúc 7 giai đoạn |
-| Triển khai Dataset, DataLoader, Model | `test-driven-development` | `dl_data_and_augmentation_guide.md` |
+| Kiến trúc pipeline / phân rã công việc | `planning-and-task-breakdown` | `docs/dl_flow.md` kiến trúc 7 giai đoạn |
+| Triển khai Dataset, DataLoader, Model | `test-driven-development` | `docs/dl_data.md` |
 | Xác thực API PyTorch 2.x / Hugging Face | `source-driven-development` | Tài liệu chính thức PyTorch |
-| GPU CUDA OOM, loss NaN, lỗi môi trường Kaggle | `debugging-and-error-recovery` | `dl_training_and_optimization_guide.md` |
-| Tối ưu tốc độ huấn luyện, AMP FP16 | `performance-optimization` | `dl_training_and_optimization_guide.md` |
+| GPU CUDA OOM, loss NaN, lỗi môi trường Kaggle | `debugging-and-error-recovery` | `docs/dl_training.md` |
+| Tối ưu tốc độ huấn luyện, AMP FP16 | `performance-optimization` | `docs/dl_training.md` |
 | Độ chính xác mô hình cao bất thường (> 98%) | `doubt-driven-development` | Kiểm toán Data Leakage |
-| Đóng gói mô hình thành dịch vụ inference | `api-and-interface-design` | `DL_flow.md` Stage 7 |
+| Đóng gói mô hình thành dịch vụ inference | `api-and-interface-design` | `docs/dl_flow.md` Stage 7 |
 | Refactor code, tách module trong `src/` | `code-simplification` | Hướng dẫn Clean Architecture |
 | Ghi log các lần chạy, so sánh chênh lệch thí nghiệm | `walkthrough-and-experiment-tracking` | Section 2 trong `walkthrough_lab_0X.md` |
 | Hoàn thành lab, tạo báo cáo nộp bài cuối | `documentation-and-adrs` | Section 3 trong `walkthrough_lab_0X.md` |

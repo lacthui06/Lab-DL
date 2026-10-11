@@ -3,7 +3,7 @@
 > **Lab Title:** Lab 01 — FashionMNIST Image Classification with PyTorch  
 > **Status:** [x] Completed  
 > **Primary Objective:** Construct an end-to-end deep learning pipeline classifying 10 FashionMNIST garment categories, enforce local TDD 1-batch sanity overfit testing, and evaluate 3 distinct architectures (Baseline MLP, Tuned MLP, FashionCNN) elevating Test Accuracy from 87.39% to 92.65% (Macro F1: 92.60%).  
-> **Workflow Playbook References:** `dl_workflows/DL_flow.md` | `dl_workflows/dl_training_and_optimization_guide.md`  
+> **Workflow Playbook References:** `docs/dl_flow.md` | `docs/dl_training.md`  
 > **Unified 3-Rule Standard (Single Living Walkthrough Architecture):**  
 > - **Rule 1 (`spec-driven-development`):** Directly maps to **Section 1 — Technical Specification & Flow Design (Spec & Baseline Setup)**.  
 > - **Rule 2 (`walkthrough-and-experiment-tracking`):** Directly maps to **Section 2 — Full-Flow Experiment Lineage & Changelog**.  

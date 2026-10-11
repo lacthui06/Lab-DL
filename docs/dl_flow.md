@@ -125,8 +125,8 @@ graph TD
   * **Warmup:** Tăng dần LR trong 1-3 epoch đầu tiên để ổn định đồ thị đạo hàm trước khi giảm dần.
 
 ### Bước 3. Kỹ thuật Tăng tốc & Tiết kiệm VRAM (AMP & Gradient Accumulation)
-* **Automatic Mixed Precision (AMP):** Huấn luyện kết hợp float16 và float32 bằng `torch.amp.autocast('cuda')` và `torch.amp.GradScaler('cuda')` ➔ Tăng tốc $2\times$, giảm 50% VRAM.
-* **Gradient Accumulation:** Tích lũy gradient qua $N$ bước rồi mới cập nhật trọng số ➔ Giúp chạy batch size hiệu dụng lớn trên GPU nhỏ.
+* **Automatic Mixed Precision (AMP):** Huấn luyện kết hợp float16 và float32 bằng `torch.amp.autocast('cuda')` và `torch.amp.GradScaler('cuda')` -> Tăng tốc $2\times$, giảm 50% VRAM.
+* **Gradient Accumulation:** Tích lũy gradient qua $N$ bước rồi mới cập nhật trọng số -> Giúp chạy batch size hiệu dụng lớn trên GPU nhỏ.
 * **Gradient Clipping:** Cắt tỉa chuẩn đạo hàm (`clip_grad_norm_`) để ngăn hiện tượng bùng nổ đạo hàm (Exploding Gradients).
 
 ### Bước 4. Quản lý Trọng số & Dừng Sớm (Checkpointing & Early Stopping)
@@ -159,7 +159,7 @@ graph TD
 * **ONNX (Open Neural Network Exchange):** Xuất sang định dạng chuẩn chung để chạy với **ONNX Runtime** hoặc chuyển đổi tiếp sang **TensorRT** trên card NVIDIA (tăng tốc độ suy luận gấp 3 - 5 lần).
 
 ### Bước 2. Lượng tử hóa Mô hình (Quantization)
-* Chuyển đổi trọng số từ Float32 sang Int8 (Dynamic Quantization hoặc Post-Training Static Quantization) ➔ Giảm $4\times$ dung lượng mô hình trên đĩa và tăng tốc độ suy luận CPU.
+* Chuyển đổi trọng số từ Float32 sang Int8 (Dynamic Quantization hoặc Post-Training Static Quantization) -> Giảm $4\times$ dung lượng mô hình trên đĩa và tăng tốc độ suy luận CPU.
 
 ### Bước 3. Xây dựng Dịch vụ Suy luận (FastAPI Model Service)
 * Nạp mô hình và cấu hình `transforms` một lần duy nhất vào bộ nhớ khi ứng dụng khởi động.

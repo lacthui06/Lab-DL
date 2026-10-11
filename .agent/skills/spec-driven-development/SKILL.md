@@ -1,6 +1,6 @@
 ---
 name: spec-driven-development
-description: Soạn đặc tả kỹ thuật ML/DL trước khi triển khai code, liên kết và trích xuất chuẩn từ workflows/ML_flow.md hoặc dl_workflows/DL_flow.md, ánh xạ trực tiếp vào Section 1 của walkthrough_lab_0X.md.
+description: Soạn đặc tả kỹ thuật ML/DL trước khi triển khai code, liên kết và trích xuất chuẩn từ docs/dl_flow.md, docs/eda.md và docs/feature.md, ánh xạ trực tiếp vào Section 1 của walkthrough_lab_0X.md.
 ---
 
 # spec-driven-development (Bản DS & AI)
@@ -40,7 +40,7 @@ Nguyên lý then chốt: mọi quyết định thiết kế phải được ch�
 ## 4. Quy trình chi tiết
 
 ### Bước 1: Chọn playbook workflow tham chiếu
-Xác định bài toán là Tabular ML hay Deep Learning. Với Tabular, tham chiếu `workflows/ML_flow.md` và `workflows/eda_guide.md` cho hướng dẫn EDA, chuẩn hóa, mã hóa biến phân loại. Với Deep Learning, tham chiếu `dl_workflows/DL_flow.md` cho modality, chiều tensor, backbone, và hàm loss chuyên biệt. Trích xuất chuẩn kỹ thuật từ playbook thay vì tự phát minh.
+Xác định modality của bài toán. Với bài toán Deep Learning, tham chiếu `docs/dl_flow.md` cho modality, chiều tensor, backbone, và hàm loss chuyên biệt. Tham chiếu `docs/eda.md` và `docs/feature.md` cho hướng dẫn phân tích dữ liệu và kỹ thuật đặc trưng. Trích xuất chuẩn kỹ thuật từ playbook thay vì tự phát minh.
 
 ### Bước 2: Định hình bài toán và modality
 Ghi rõ loại tác vụ (Classification, Regression, Segmentation, Object Detection, Sequence Modeling) và modality đầu vào (Tabular DataFrame, tensor ảnh 2D `[B, C, H, W]`, chuỗi token `[B, Seq_Len]`). Xác định hợp đồng đầu vào và đầu ra về shape và dtype.

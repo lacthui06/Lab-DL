@@ -3,7 +3,7 @@
 > **Lab Title:** Lab 0X — <tên bài lab>
 > **Status:** [ ] In Progress | [ ] Completed
 > **Primary Objective:** <một câu mô tả mục tiêu chính và kết quả đạt được>
-> **Workflow Playbook References:** `dl_workflows/DL_flow.md` | `dl_workflows/dl_training_and_optimization_guide.md`
+> **Workflow Playbook References:** `docs/dl_flow.md` | `docs/dl_training.md`
 > **Unified 3-Rule Standard (Single Living Walkthrough Architecture):**
 > - **Rule 1 (`spec-driven-development`):** Ánh xạ trực tiếp vào **Section 1 — Technical Specification & Flow Design**.
 > - **Rule 2 (`walkthrough-and-experiment-tracking`):** Ánh xạ trực tiếp vào **Section 2 — Full-Flow Experiment Lineage & Changelog**.
