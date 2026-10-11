@@ -1,49 +1,44 @@
 ---
 name: performance-optimization
-description: Optimize computational throughput, data ingestion pipelines, GPU utilization, and memory consumption across Data Science, Machine Learning, and Deep Learning workloads.
+description: Tối ưu hóa throughput tính toán, pipeline nạp dữ liệu, mức sử dụng GPU và mức tiêu thụ bộ nhớ trên các workload Data Science, Machine Learning và Deep Learning.
 ---
 
-# performance-optimization (DS & AI Edition)
+# performance-optimization (Bản DS & AI)
 
-## Overview
-This skill focuses on diagnosing and eliminating computation, memory, and I/O bottlenecks. In deep learning engineering, systematic optimization reduces training turnaround from days to hours and allows training larger architectures within constrained GPU budgets.
+## Tổng quan
 
-## When to Use
-- Data loading bottlenecks leaving GPU compute underutilized (GPU Utilization < 50%).
-- GPU VRAM constraints preventing effective batch sizing.
-- High inference latency exceeding production service-level objectives (SLOs).
+Skill này tập trung vào việc chẩn đoán và loại bỏ các điểm nghẽn (bottleneck) về tính toán, bộ nhớ và I/O. Trong kỹ thuật deep learning, tối ưu hóa có hệ thống giúp giảm thời gian huấn luyện từ hàng ngày xuống hàng giờ, và cho phép huấn luyện những kiến trúc lớn hơn trong ngân sách GPU hạn chế.
 
-## The 4 Optimization Pillars in DS & AI
+Điểm mấu chốt: tối ưu hóa phải dựa trên đo lường, không dựa trên phỏng đoán. Phải xác định đúng điểm nghẽn trước khi tối ưu, nếu không công sức sẽ đổ vào nhầm chỗ.
 
-### 1. Data Pipeline and Host CPU Optimization
-- **Vectorized Computation:** Replace Python `for` loops and Pandas `.apply()` calls with vectorized **NumPy** routines or high-performance engines like **Polars**.
-- **PyTorch `DataLoader` Tuning:**
-  - Configure `num_workers = 2` or `4` to enable parallel background preprocessing.
-  - Set `pin_memory = True` for faster host-to-device page-locked memory transfers.
-  - Adopt high-throughput columnar storage formats (`Parquet` or `Feather`) over plain `.csv`.
+## Khi nào sử dụng
 
-### 2. GPU Accelerated Training Optimization
+- Điểm nghẽn nạp dữ liệu khiến GPU bị bỏ không (GPU Utilization < 50%).
+- Ràng buộc VRAM GPU ngăn cản việc đặt batch size hiệu quả.
+- Độ trễ inference cao vượt quá mục tiêu cam kết dịch vụ (SLO) production.
+
+## 4 trụ cột tối ưu trong DS & AI
+
+### 1. Tối ưu pipeline dữ liệu và CPU host
+- **Tính toán vector hóa (Vectorized Computation):** Thay thế vòng lặp `for` Python và lệnh gọi Pandas `.apply()` bằng các routine **NumPy** đã vector hóa hoặc các engine hiệu năng cao như **Polars**.
+- **Tinh chỉnh PyTorch `DataLoader`:**
+  - Cấu hình `num_workers = 2` hoặc `4` để bật tiền xử lý song song chạy nền.
+  - Đặt `pin_memory = True` để tăng tốc truyền bộ nhớ page-locked từ host sang device.
+  - Áp dụng các định dạng lưu trữ dạng cột throughput cao (`Parquet` hoặc `Feather`) thay cho `.csv` thuần.
+
+### 2. Tối ưu huấn luyện tăng tốc bằng GPU
 - **Automatic Mixed Precision (AMP FP16/BF16):**
-  - Combine 16-bit and 32-bit floating-point arithmetic to reduce VRAM requirements by ~50% and double throughput on Tensor Cores:
-  ```python
-  scaler = torch.amp.GradScaler('cuda')
-  for inputs, labels in dataloader:
-      optimizer.zero_grad(set_to_none=True)
-      with torch.amp.autocast('cuda'):
-          outputs = model(inputs)
-          loss = criterion(outputs, labels)
-      scaler.scale(loss).backward()
-      scaler.step(optimizer)
-      scaler.update()
-  ```
-- **Kernel Fusion with `torch.compile()`:** On PyTorch 2.0+, optimize execution graphs with `model = torch.compile(model)`.
+  - Kết hợp số học dấu phẩy động 16-bit và 32-bit để giảm yêu cầu VRAM khoảng 50% và tăng gấp đôi throughput trên Tensor Cores.
+  - Quy trình gồm: tạo `torch.amp.GradScaler('cuda')`, bọc forward và loss trong `torch.amp.autocast('cuda')`, sau đó gọi `scaler.scale(loss).backward()`, `scaler.step(optimizer)`, và `scaler.update()`.
+- **Hợp nhất kernel với `torch.compile()`:** Trên PyTorch 2.0+, tối ưu đồ thị thực thi với `model = torch.compile(model)`.
 
-### 3. Footprint Reduction (Quantization & Pruning)
-- Apply post-training quantization to 8-bit or 4-bit precision (via `bitsandbytes` or PyTorch Quantization).
+### 3. Giảm dấu chân bộ nhớ (Quantization & Pruning)
+- Áp dụng lượng tử hóa sau huấn luyện (post-training quantization) xuống độ chính xác 8-bit hoặc 4-bit (thông qua `bitsandbytes` hoặc PyTorch Quantization).
 
-### 4. Inference Runtime Optimization
-- **Disable Autograd Engine:** Enclose all inference passes within `with torch.inference_mode():` (more efficient than `torch.no_grad()`).
-- **Export to Optimized Runtimes:** Export trained PyTorch weights to **ONNX** or **TensorRT** for serving via `onnxruntime`.
+### 4. Tối ưu runtime inference
+- **Tắt Autograd Engine:** Bao toàn bộ lượt inference trong `with torch.inference_mode():` (hiệu quả hơn `torch.no_grad()`).
+- **Xuất sang runtime tối ưu:** Xuất trọng số PyTorch đã huấn luyện sang **ONNX** hoặc **TensorRT** để phục vụ qua `onnxruntime`.
 
-## Verification Criteria
-- Measured throughput (samples/second) shows measurable improvement, and GPU compute utilization remains consistently high (>85%).
+## Tiêu chí xác thực
+
+- Throughput đo được (samples/giây) cho thấy cải thiện rõ rệt, và mức sử dụng GPU compute duy trì ổn định ở mức cao (> 85%).

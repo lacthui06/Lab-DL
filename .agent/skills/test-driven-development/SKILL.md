@@ -1,55 +1,49 @@
 ---
 name: test-driven-development
-description: Apply specialized Test-Driven Development (TDD) protocols to Data Science and Deep Learning. Direct alignment with dl_workflows/dl_data_and_augmentation_guide.md to verify data integrity, leakage prevention, tensor dimensions, and 1-batch sanity overfitting.
+description: Áp dụng giao thức Test-Driven Development (TDD) chuyên biệt cho Data Science và Deep Learning. Liên kết trực tiếp với dl_workflows/dl_data_and_augmentation_guide.md để xác thực tính toàn vẹn dữ liệu, chống rò rỉ dữ liệu, kiểm tra chiều tensor, và bài test 1-batch sanity overfit.
 ---
 
-# test-driven-development (DS & AI Edition)
+# test-driven-development (Bản DS & AI)
 
-## Overview
-This skill adapts TDD principles to the stochastic nature of machine learning and deep learning. In deep learning engineering, automated testing is **the primary safeguard against silent bugs** (such as train-val contamination, silent tensor broadcasting errors, GPU memory leaks, or non-converging architectures).
+## Tổng quan
 
-## Workflow References
-When implementing tests, agents **MUST** apply technical standards from:
-- [`dl_workflows/dl_data_and_augmentation_guide.md`](../../dl_workflows/dl_data_and_augmentation_guide.md): File integrity scanning, lazy-loading verification, and DataLoader batch shape assertions.
-- [`dl_workflows/dl_training_and_optimization_guide.md`](../../dl_workflows/dl_training_and_optimization_guide.md): Gradient flow assertions, clipping checks, and 1-batch sanity overfit testing.
+Skill này chuyển thể nguyên lý TDD sang bản chất ngẫu nhiên (stochastic) của machine learning và deep learning. Trong kỹ thuật deep learning, kiểm thử tự động là **lá chắn chính yếu chống lại các lỗi câm (silent bugs)** - những lỗi như nhiễm bẩn tập train-val, lỗi broadcasting tensor âm thầm, rò rỉ bộ nhớ GPU, hoặc kiến trúc không hội tụ.
 
----
+Điểm khác biệt cốt lõi so với TDD phần mềm truyền thống: trong deep learning, một pipeline có thể chạy trơn tru không văng lỗi nhưng vẫn cho ra kết quả sai hoàn toàn. Test không chỉ kiểm tra "code có chạy không" mà phải kiểm tra "code có chạy đúng về mặt toán học và dữ liệu không".
 
-## The 5 Mandatory Deep Learning Tests
+## Tham chiếu workflow
 
-### 1. Data Integrity and Leakage Prevention Test
-- Scan and assert zero corrupted image or tabular files before feeding data into loaders.
-- Verify partition disjointness: $\text{Train} \cap \text{Val} = \emptyset$ (no sample or identity overlap).
-- Assert preprocessing fit boundaries: Preprocessing scalers or encoders must call `fit()` exclusively on the training partition.
-
-### 2. Custom Dataset Lazy-Loading Test
-- Assert that `Dataset.__init__` only stores index arrays or file paths, **never buffering raw image matrices directly into host RAM**.
-- Access `dataset[0]` to verify types:
-  ```python
-  image, label = dataset[0]
-  assert isinstance(image, torch.Tensor), "Output must be a Tensor"
-  assert image.dtype == torch.float32, "Image tensor must be float32"
-  ```
-
-### 3. Tensor Dimension and Shape Test
-- Pass a synthetic dummy batch through the forward path to catch dimension mismatches before full data iterations:
-  ```python
-  def test_forward_shape():
-      model = build_model(num_classes=10)
-      dummy = torch.randn(2, 1, 28, 28)
-      out = model(dummy)
-      assert out.shape == (2, 10), f"Incorrect output shape: {out.shape}"
-  ```
-
-### 4. Learning Capacity — 1-Batch Sanity Overfit Test (CRITICAL)
-- Isolate a single mini-batch (4 to 8 samples) and train the model for 30 to 50 iterations on that exact batch.
-- **Mandatory Criteria:** The training loss **MUST DROP CLOSE TO ZERO ($\approx 0.00$)** and batch accuracy must reach **100%**.
-- *Rule:* If a model cannot overfit 8 samples, the architecture, loss formulation, or optimizer contains severe defects. **STRICTLY PROHIBIT REMOTE CLOUD/KAGGLE TRAINING** until this test passes.
-
-### 5. Environment Path Compatibility Test
-- Assert that dynamic paths adapt seamlessly when executing in local vs Kaggle environments (`/kaggle/input/` and `/kaggle/working/`).
+Khi triển khai test, agent **BẮT BUỘC** phải áp dụng chuẩn kỹ thuật từ:
+- [`dl_workflows/dl_data_and_augmentation_guide.md`](../../dl_workflows/dl_data_and_augmentation_guide.md): Quét tính toàn vẹn file, xác thực lazy-loading, và khẳng định chiều batch của DataLoader.
+- [`dl_workflows/dl_training_and_optimization_guide.md`](../../dl_workflows/dl_training_and_optimization_guide.md): Khẳng định luồng gradient (gradient flow), kiểm tra clipping, và bài test 1-batch sanity overfit.
 
 ---
 
-## Anti-Rationalization
-- [X] *"Deep Learning models take too long to run, skip overfit testing and train directly on Kaggle"* -> **Rejected:** Training for hours on Kaggle only to discover the model never converges exhausts weekly GPU quotas. A 5-second local overfit verification is mandatory.
+## 5 bài test bắt buộc cho Deep Learning
+
+### 1. Test toàn vẹn dữ liệu và chống rò rỉ (Data Integrity and Leakage Prevention)
+- Quét và khẳng định không có file ảnh hoặc file dạng bảng bị hỏng trước khi nạp dữ liệu vào loader.
+- Xác thực tính rời rạc của các phân vùng: $\text{Train} \cap \text{Val} = \emptyset$ (không có mẫu hoặc định danh nào chồng lấn).
+- Khẳng định ranh giới fit của tiền xử lý: Các scaler hoặc encoder tiền xử lý chỉ được gọi `fit()` trên tập train mà thôi.
+
+### 2. Test lazy-loading của Dataset tùy chỉnh (Custom Dataset Lazy-Loading)
+- Khẳng định rằng `Dataset.__init__` chỉ lưu mảng index hoặc đường dẫn file, **không bao giờ đệm trực tiếp ma trận ảnh thô vào RAM của host**.
+- Truy cập `dataset[0]` để xác thực kiểu dữ liệu: ảnh phải là `torch.Tensor` với dtype `torch.float32`, nhãn phải là `torch.Tensor` với dtype `torch.int64`.
+
+### 3. Test chiều tensor và shape (Tensor Dimension and Shape)
+- Truyền một batch giả tổng hợp (synthetic dummy batch) qua đường forward để bắt lỗi sai chiều trước khi lặp toàn bộ dữ liệu.
+- Khẳng định output logits có shape đúng bằng `(batch_size, num_classes)`, và toàn bộ giá trị là hữu hạn (không chứa NaN hoặc Inf).
+
+### 4. Năng lực học - Test 1-Batch Sanity Overfit (QUAN TRỌNG NHẤT)
+- Cô lập một mini-batch duy nhất (4 đến 8 mẫu) và huấn luyện mô hình trong 30 đến 50 vòng lặp chỉ trên đúng batch đó.
+- **Tiêu chí bắt buộc:** Training loss **PHẢI GIẢM VỀ SÁT 0 ($\approx 0.00$)** và độ chính xác trên batch phải đạt **100%**.
+- **Quy tắc:** Nếu một mô hình không thể overfit 8 mẫu, thì kiến trúc, công thức loss, hoặc optimizer đang chứa lỗi nghiêm trọng. **NGHIÊM CẤM HUẤN LUYỆN TRÊN CLOUD/KAGGLE** cho tới khi test này pass.
+
+### 5. Test tương thích đường dẫn môi trường (Environment Path Compatibility)
+- Khẳng định rằng các đường dẫn động (dynamic path) thích ứng trơn tru khi chạy ở môi trường cục bộ so với Kaggle (`/kaggle/input/` và `/kaggle/working/`).
+
+---
+
+## Chống biện minh (Anti-Rationalization)
+
+- [X] *"Mô hình Deep Learning chạy lâu lắm, bỏ qua test overfit rồi train thẳng trên Kaggle"* -> **Bác bỏ:** Huấn luyện hàng giờ trên Kaggle chỉ để phát hiện mô hình không bao giờ hội tụ sẽ bào mòn hạn mức GPU hàng tuần. Một bước xác thực overfit cục bộ 5 giây là bắt buộc.

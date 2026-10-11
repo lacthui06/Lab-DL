@@ -1,47 +1,43 @@
 ---
 name: api-and-interface-design
-description: Design and implement production inference API services for AI and Deep Learning models using FastAPI, enforcing strict input/output validation schemas and safe model lifecycle management.
+description: Thiết kế và triển khai dịch vụ inference API production cho mô hình AI và Deep Learning bằng FastAPI, áp đặt schema xác thực input/output chặt chẽ và quản lý vòng đời mô hình an toàn.
 ---
 
-# api-and-interface-design (DS & AI Edition)
+# api-and-interface-design (Bản DS & AI)
 
-## Overview
-This skill packages trained machine learning and deep learning models into industry-standard Web API services (typically using `FastAPI`). It enables external applications to query the model with low latency, robust error handling, and validated data payloads.
+## Tổng quan
 
-## When to Use
-- Packaging a completed model into an inference API for demonstration, course project delivery, or system integration.
-- Defining formal Request and Response contracts for model serving.
+Skill này đóng gói các mô hình machine learning và deep learning đã huấn luyện thành dịch vụ Web API chuẩn công nghiệp (thường dùng `FastAPI`). Nó cho phép các ứng dụng bên ngoài truy vấn mô hình với độ trễ thấp, xử lý lỗi mạnh mẽ, và payload dữ liệu đã được xác thực.
 
-## Core Model Serving Principles
+Mục tiêu là biến một "artifact thí nghiệm" thành một "dịch vụ có thể tích hợp", với các hợp đồng request/response rõ ràng.
 
-### 1. Load Model Weights Once at Startup (Lifespan Loading)
-- **Golden Rule:** Model weights (`.pt`, `.onnx`, `.pkl`) must be loaded into memory (RAM/VRAM) **exactly once during application startup** using FastAPI lifespan context managers. Never reload weights inside individual request handlers.
+## Khi nào sử dụng
 
-### 2. Strict Schema Validation with Pydantic
-- All input features and output predictions must enforce type safety and domain constraints:
-  ```python
-  from pydantic import BaseModel, Field
-  from typing import List
+- Đóng gói một mô hình đã hoàn thành thành inference API để demo, nộp đồ án môn học, hoặc tích hợp hệ thống.
+- Định nghĩa hợp đồng Request và Response chính thức cho việc phục vụ mô hình.
 
-  class PredictRequest(BaseModel):
-      features: List[float] = Field(..., example=[5.1, 3.5, 1.4, 0.2], description="Input feature vector")
+## Nguyên tắc cốt lõi khi phục vụ mô hình
 
-  class PredictResponse(BaseModel):
-      prediction: int = Field(..., description="Predicted class index")
-      class_name: str = Field(..., description="Predicted human-readable class name")
-      confidence: float = Field(..., ge=0.0, le=1.0, description="Confidence probability")
-      latency_ms: float = Field(..., description="Inference latency in milliseconds")
-  ```
+### 1. Nạp trọng số mô hình một lần lúc khởi động (Lifespan Loading)
+- **Quy tắc vàng:** Trọng số mô hình (`.pt`, `.onnx`, `.pkl`) phải được nạp vào bộ nhớ (RAM/VRAM) **đúng một lần trong lúc ứng dụng khởi động** bằng FastAPI lifespan context manager. Không bao giờ nạp lại trọng số bên trong từng request handler.
+- Lý do: nạp lại trọng số mỗi request sẽ làm độ trễ tăng vọt và lãng phí tài nguyên một cách nghiêm trọng.
 
-### 3. Standard Endpoint Architecture
-A production model service must expose at minimum:
-1. `GET /health`: Healthcheck verifying server status and confirmed in-memory model availability.
-2. `GET /metadata`: Model metadata (architecture version, training date, target evaluation metric).
-3. `POST /predict`: Primary endpoint receiving feature payloads and returning structured inference outputs.
+### 2. Xác thực schema chặt chẽ bằng Pydantic
+- Mọi đặc trưng đầu vào và dự đoán đầu ra phải áp đặt an toàn kiểu dữ liệu và ràng buộc miền giá trị. Ví dụ schema cần có:
+  - `PredictRequest` chứa vector đặc trưng đầu vào dạng danh sách số thực kèm mô tả.
+  - `PredictResponse` chứa chỉ số lớp dự đoán, tên lớp người đọc được, độ tin cậy (ràng buộc trong khoảng 0.0 đến 1.0), và độ trễ inference tính bằng mili-giây.
+- Pydantic giúp chặn dữ liệu sai định dạng ngay tại biên hệ thống, thay vì để lỗi lan sâu vào trong mô hình.
 
-### 4. Resilient Exception Handling
-- Catch corrupted input data (e.g. invalid image buffers, malformed tensors) and return informative HTTP 400/422 responses rather than unhandled HTTP 500 crashes.
+### 3. Kiến trúc endpoint chuẩn
+Một dịch vụ mô hình production tối thiểu phải phơi bày:
+1. `GET /health`: Healthcheck xác minh trạng thái server và sự sẵn có của mô hình đã nạp trong bộ nhớ.
+2. `GET /metadata`: Metadata mô hình (phiên bản kiến trúc, ngày huấn luyện, metric đánh giá mục tiêu).
+3. `POST /predict`: Endpoint chính nhận payload đặc trưng và trả về kết quả inference có cấu trúc.
 
-## Verification Criteria
-- Service initializes cleanly and `GET /health` returns `{"status": "healthy", "model_loaded": true}`.
-- Sample payload sent to `/predict` successfully returns a typed response within acceptable latency budgets (< 200 ms).
+### 4. Xử lý ngoại lệ kiên cường (Resilient Exception Handling)
+- Bắt các dữ liệu đầu vào hỏng (ví dụ buffer ảnh không hợp lệ, tensor dị dạng) và trả về phản hồi HTTP 400/422 có thông tin, thay vì để xảy ra crash HTTP 500 không được xử lý.
+
+## Tiêu chí xác thực
+
+- Dịch vụ khởi tạo sạch và `GET /health` trả về `{"status": "healthy", "model_loaded": true}`.
+- Payload mẫu gửi tới `/predict` trả về thành công phản hồi có kiểu dữ liệu đúng trong ngân sách độ trễ chấp nhận được (< 200 ms).

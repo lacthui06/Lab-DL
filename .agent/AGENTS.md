@@ -1,51 +1,68 @@
-# AGENTS.md — Operational Constitution and Execution Protocols for AI Agents in DS & AI
+# AGENTS.md — Hiến pháp vận hành và giao thức thực thi cho AI Agent trong DS & AI
 
-This document serves as the mandatory technical constitution that all AI Coding Agents (Antigravity, Claude, Cursor, Copilot) must strictly follow when working on Data Science, Machine Learning, and Deep Learning projects within `Lab DL`.
-
----
-
-## 1. Core Principles
-
-1. **Spec & Baseline First:** Never implement or train complex architectures without first specifying a simple baseline model and defining clear evaluation metrics.
-2. **Deep Workflow Playbook References:**
-   - For Tabular ML problems: Mandatorily reference [`workflows/ML_flow.md`](../workflows/ML_flow.md) and [`workflows/eda_guide.md`](../workflows/eda_guide.md).
-   - For Deep Learning (CV, NLP, Audio): Mandatorily reference [`dl_workflows/DL_flow.md`](../dl_workflows/DL_flow.md), [`dl_workflows/dl_data_and_augmentation_guide.md`](../dl_workflows/dl_data_and_augmentation_guide.md), and [`dl_workflows/dl_training_and_optimization_guide.md`](../dl_workflows/dl_training_and_optimization_guide.md).
-3. **Strict Reproducibility:** Always fix random seeds (`random`, `numpy`, `torch.manual_seed`, `torch.cuda.manual_seed_all`) across all pipeline executions.
-4. **Mandatory 1-Batch Sanity Overfit Test:** Before submitting training jobs to remote GPU environments (e.g. Kaggle), the model must pass a fast local 1-batch overfit test driving loss close to zero (~5 seconds).
-5. **Zero Waste Protocol:** Strictly prohibit executing full training runs with multiple epochs on local CPU machines. Doing so wastes time and user token quota. Local execution stops at module completion in `src/`, interactive notebook construction in `notebooks/`, and 1-batch sanity testing. Full training is executed on Kaggle GPU (Tesla T4) or equivalent compute.
-6. **Single Living Walkthrough (3-Rule Consolidation):** All technical documentation for a lab must be unified into exactly ONE living document: `walkthrough_lab_0X.md`. This file maintains explicit bindings to 3 core rules:
-   - **Section 1 (Spec & Baseline Setup):** Governed by `spec-driven-development` (problem statement, data contracts, baseline model, acceptance thresholds).
-   - **Section 2 (Full-Flow Experiment Changelog):** Governed by `walkthrough-and-experiment-tracking` (iteration lineage, 5-stage pipeline deltas, hyperparameter adjustment rationales).
-   - **Section 3 (Results & Final Technical Report):** Governed by `documentation-and-adrs` (comparative evaluation matrices, confusion matrix diagnostics, error analysis slices, conclusion findings).
-   Do NOT generate separate `SPEC.md` or `REPORT.md` files.
-7. **No Emojis/Icons Policy:** Strictly prohibit emojis or graphical icons in any source code (`.py`, `.sh`), `print()` statements, log formatters, docstrings, code comments, or Markdown cells within Jupyter Notebooks (`.ipynb`). All headers and status indicators must use clean, professional ASCII/UTF-8 technical text compatible across all terminal environments and CI/CD pipelines.
+Tài liệu này đóng vai trò là **hiến pháp kỹ thuật bắt buộc** mà mọi AI Coding Agent (Antigravity, Claude, Cursor, Copilot) phải tuân thủ nghiêm ngặt khi làm việc trên các dự án Data Science, Machine Learning và Deep Learning trong repository `Lab DL`.
 
 ---
 
-## 2. Intent-to-Skill Mapping
+## 1. Nguyên tắc cốt lõi
 
-| User Intent | Activated Skill | Workflow Reference Document |
+### 1.1. Spec và Baseline đi trước
+Không bao giờ triển khai hay huấn luyện một kiến trúc phức tạp trước khi đã đặc tả rõ mô hình baseline đơn giản và định nghĩa metric đánh giá. Baseline là mốc neo để đo lường mọi tiến bộ về sau; thiếu baseline đồng nghĩa với việc không có căn cứ để chứng minh cải tiến.
+
+### 1.2. Tham chiếu bắt buộc tới Playbook workflow
+- Với bài toán **Tabular ML**: bắt buộc tham chiếu [`workflows/ML_flow.md`](../workflows/ML_flow.md) và [`workflows/eda_guide.md`](../workflows/eda_guide.md).
+- Với bài toán **Deep Learning (CV, NLP, Audio)**: bắt buộc tham chiếu [`dl_workflows/DL_flow.md`](../dl_workflows/DL_flow.md), [`dl_workflows/dl_data_and_augmentation_guide.md`](../dl_workflows/dl_data_and_augmentation_guide.md) và [`dl_workflows/dl_training_and_optimization_guide.md`](../dl_workflows/dl_training_and_optimization_guide.md).
+
+### 1.3. Tái lập kết quả nghiêm ngặt (Strict Reproducibility)
+Luôn cố định random seed (`random`, `numpy`, `torch.manual_seed`, `torch.cuda.manual_seed_all`) xuyên suốt mọi lần thực thi pipeline. Không có seed cố định thì kết quả giữa các lần chạy không thể so sánh, và mọi kết luận thí nghiệm trở nên vô nghĩa.
+
+### 1.4. Kiểm tra 1-Batch Sanity Overfit bắt buộc
+Trước khi đẩy job huấn luyện lên môi trường GPU từ xa (ví dụ Kaggle), mô hình bắt buộc phải vượt qua bài test overfit 1 batch chạy cục bộ, kéo loss về sát 0 (khoảng 5 giây). Bài test này là "chốt chặn" cuối cùng phát hiện lỗi kiến trúc, lỗi loss hoặc lỗi optimizer trước khi đốt GPU quota.
+
+### 1.5. Giao thức Zero Waste
+Nghiêm cấm chạy huấn luyện full nhiều epoch trên máy CPU cục bộ. Làm vậy vừa tốn thời gian vừa đốt token quota của người dùng. Thực thi cục bộ chỉ dừng ở mức: hoàn thiện module trong `src/`, dựng notebook tương tác trong `notebooks/`, và chạy test 1-batch sanity. Huấn luyện đầy đủ được thực thi trên Kaggle GPU (Tesla T4) hoặc compute tương đương.
+
+### 1.6. Tài liệu sống duy nhất (Hợp nhất 3 Rule)
+Toàn bộ tài liệu kỹ thuật của một lab phải được hợp nhất vào đúng MỘT tài liệu sống duy nhất: `walkthrough_lab_0X.md`. File này duy trì liên kết tường minh với 3 rule cốt lõi:
+- **Section 1 (Spec & Baseline Setup):** Chịu sự điều phối của `spec-driven-development` (problem statement, data contract, mô hình baseline, ngưỡng chấp nhận).
+- **Section 2 (Full-Flow Experiment Changelog):** Chịu sự điều phối của `walkthrough-and-experiment-tracking` (dòng chảy vòng lặp, chênh lệch qua 5 giai đoạn pipeline, lý do điều chỉnh hyperparameter).
+- **Section 3 (Results & Final Technical Report):** Chịu sự điều phối của `documentation-and-adrs` (ma trận so sánh, chẩn đoán confusion matrix, phân tích lỗi, kết luận).
+
+Không được tạo file `SPEC.md` hay `REPORT.md` riêng biệt.
+
+### 1.7. Chính sách không Emoji/Icon
+Nghiêm cấm emoji hoặc icon đồ họa trong mọi source code (`.py`, `.sh`), câu lệnh `print()`, log formatter, docstring, comment code, hoặc markdown cell trong Jupyter Notebook (`.ipynb`). Mọi tiêu đề và chỉ báo trạng thái phải dùng text kỹ thuật thuần ASCII/UTF-8 sạch, tương thích trên mọi môi trường terminal và pipeline CI/CD.
+
+---
+
+## 2. Ánh xạ Ý định (Intent) sang Skill
+
+Bảng dưới đây ánh xạ ý định của người dùng sang skill tương ứng và tài liệu workflow tham chiếu:
+
+| Ý định người dùng | Skill được kích hoạt | Tài liệu workflow tham chiếu |
 |---|---|---|
-| Unclear requirements / Initial ideation | `idea-refine` -> `interview-me` | `DL_flow.md` Stage 1 |
-| Starting a new lab / Task specification | `spec-driven-development` | Section 1 in `walkthrough_lab_0X.md` |
-| Pipeline architecture / Task breakdown | `planning-and-task-breakdown` | `DL_flow.md` 7-Stage Architecture |
-| Implementing Dataset, DataLoader, Model | `test-driven-development` | `dl_data_and_augmentation_guide.md` |
-| Verifying PyTorch 2.x / Hugging Face APIs | `source-driven-development` | Official PyTorch Documentation |
-| GPU CUDA OOM, NaN loss, Kaggle environment bugs | `debugging-and-error-recovery` | `dl_training_and_optimization_guide.md` |
-| Training speed optimization, AMP FP16 | `performance-optimization` | `dl_training_and_optimization_guide.md` |
-| Unusually high model accuracy (>98%) | `doubt-driven-development` | Data Leakage Audit |
-| Packaging model into inference service | `api-and-interface-design` | `DL_flow.md` Stage 7 |
-| Code refactoring, extracting modular `src/` | `code-simplification` | Clean Architecture Guidelines |
-| Logging runs, comparing experimental deltas | `walkthrough-and-experiment-tracking` | Section 2 in `walkthrough_lab_0X.md` |
-| Completing lab, generating final submission report | `documentation-and-adrs` | Section 3 in `walkthrough_lab_0X.md` |
+| Yêu cầu mơ hồ / phác thảo ý tưởng ban đầu | `idea-refine` -> `interview-me` | `DL_flow.md` Stage 1 |
+| Bắt đầu lab mới / đặc tả bài toán | `spec-driven-development` | Section 1 trong `walkthrough_lab_0X.md` |
+| Kiến trúc pipeline / phân rã công việc | `planning-and-task-breakdown` | `DL_flow.md` kiến trúc 7 giai đoạn |
+| Triển khai Dataset, DataLoader, Model | `test-driven-development` | `dl_data_and_augmentation_guide.md` |
+| Xác thực API PyTorch 2.x / Hugging Face | `source-driven-development` | Tài liệu chính thức PyTorch |
+| GPU CUDA OOM, loss NaN, lỗi môi trường Kaggle | `debugging-and-error-recovery` | `dl_training_and_optimization_guide.md` |
+| Tối ưu tốc độ huấn luyện, AMP FP16 | `performance-optimization` | `dl_training_and_optimization_guide.md` |
+| Độ chính xác mô hình cao bất thường (> 98%) | `doubt-driven-development` | Kiểm toán Data Leakage |
+| Đóng gói mô hình thành dịch vụ inference | `api-and-interface-design` | `DL_flow.md` Stage 7 |
+| Refactor code, tách module trong `src/` | `code-simplification` | Hướng dẫn Clean Architecture |
+| Ghi log các lần chạy, so sánh chênh lệch thí nghiệm | `walkthrough-and-experiment-tracking` | Section 2 trong `walkthrough_lab_0X.md` |
+| Hoàn thành lab, tạo báo cáo nộp bài cuối | `documentation-and-adrs` | Section 3 trong `walkthrough_lab_0X.md` |
 
 ---
 
-## 3. Anti-Rationalization
+## 3. Chống biện minh (Anti-Rationalization)
 
-- [X] *"Implement code directly without writing a spec"* -> **Rejected:** Violates engineering protocols; leaves no baseline or acceptance criteria for comparative analysis.
-- [X] *"Split into separate SPEC.md and REPORT.md files"* -> **Rejected:** Causes documentation fragmentation and duplicate technical narratives. Consolidate all 3 components (Spec, Changelog, Report) into `walkthrough_lab_0X.md`.
-- [X] *"Skip 1-batch overfit testing and train directly on Kaggle"* -> **Rejected:** Wastes GPU quotas and hours of compute if silent dimension or loss bugs exist.
-- [X] *"Execute full multi-epoch training on local CPU"* -> **Rejected:** Exhausts local compute resources and token quota. Stop after local 1-batch sanity verification and migrate execution to Kaggle GPU.
-- [X] *"Paste raw terminal log snippets into chat instead of documenting"* -> **Rejected:** Must update all 5 pipeline stages and quantitative metric deltas in `walkthrough_lab_0X.md`.
-- [X] *"Add emojis or icons to notebooks or scripts for decoration"* -> **Rejected:** Violates professional standards and introduces character encoding issues on diverse runtime environments. Use pure standard technical text only.
+Đây là danh sách các "lý lẽ ngụy biện" thường gặp và lý do bác bỏ chúng:
+
+- [X] *"Cứ code trực tiếp, không cần viết spec"* -> **Bác bỏ:** Vi phạm giao thức kỹ thuật; không để lại baseline hay tiêu chí chấp nhận nào cho việc phân tích so sánh về sau.
+- [X] *"Tách thành file SPEC.md và REPORT.md riêng"* -> **Bác bỏ:** Gây phân mảnh tài liệu và trùng lặp nội dung kỹ thuật. Hợp nhất cả 3 thành phần (Spec, Changelog, Report) vào `walkthrough_lab_0X.md`.
+- [X] *"Bỏ qua test overfit 1 batch, train thẳng trên Kaggle"* -> **Bác bỏ:** Đốt GPU quota và hàng giờ compute nếu tồn tại lỗi dimension hoặc lỗi loss âm thầm.
+- [X] *"Chạy huấn luyện full nhiều epoch trên CPU cục bộ"* -> **Bác bỏ:** Bào mòn tài nguyên máy cục bộ và token quota. Dừng sau khi xác thực 1-batch sanity và chuyển thực thi sang Kaggle GPU.
+- [X] *"Dán log terminal thô vào chat thay vì ghi tài liệu"* -> **Bác bỏ:** Phải cập nhật đủ 5 giai đoạn pipeline và các chênh lệch metric định lượng trong `walkthrough_lab_0X.md`.
+- [X] *"Thêm emoji hoặc icon vào notebook hay script cho đẹp"* -> **Bác bỏ:** Vi phạm chuẩn chuyên nghiệp và gây lỗi mã hóa ký tự trên nhiều môi trường runtime khác nhau. Chỉ dùng text kỹ thuật thuần túy.

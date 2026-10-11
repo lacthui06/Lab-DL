@@ -1,54 +1,59 @@
 ---
 name: walkthrough-and-experiment-tracking
-description: Automatically track, record, and update full-flow experimental lineages in Section 2 of walkthrough_lab_0X.md following each training run. Capture architectural, hyperparameter, and metric deltas across all 5 pipeline stages.
+description: Tự động theo dõi, ghi nhận và cập nhật dòng chảy thí nghiệm đầy đủ trong Section 2 của walkthrough_lab_0X.md sau mỗi lần chạy huấn luyện. Nắm bắt chênh lệch về kiến trúc, hyperparameter và metric qua cả 5 giai đoạn pipeline.
 ---
 
-# walkthrough-and-experiment-tracking
+# walkthrough-and-experiment-tracking (Bản DS & AI)
 
-## Overview
-This skill operates as the automated experiment lineage tracker for all deep learning coursework labs. After each training execution (Run #1 Baseline, Run #2 Tuned MLP, Run #3 FashionCNN), this skill mandates that agents document **changes across all 5 pipeline stages** directly in **Section 2 of the single living document `walkthrough_lab_0X.md`** (governed by Rule 2 in the 3-Rule Architecture).
+## Tổng quan
 
-> Standard: All experimental logs and hyperparameter adjustment rationales are consolidated directly into Section 2 of `walkthrough_lab_0X.md`. Do not create separate changelog files.
+Skill này hoạt động như bộ theo dõi dòng chảy thí nghiệm tự động cho mọi bài lab deep learning. Sau mỗi lần thực thi huấn luyện (Run #1 Baseline, Run #2 Tuned MLP, Run #3 FashionCNN), skill bắt buộc agent phải ghi lại **các thay đổi qua cả 5 giai đoạn pipeline** trực tiếp vào **Section 2 của tài liệu sống duy nhất `walkthrough_lab_0X.md`** (chịu sự điều phối của Rule 2 trong Kiến trúc 3 Rule).
 
-## When to Activate
-- Following completion of any training run when evaluation metrics and loss values are produced.
-- Whenever modifying any component of the pipeline (data transforms, backbone architecture, optimizer schedules).
-- When synthesizing metrics and figures for coursework submission.
+Chuẩn áp dụng: Mọi log thí nghiệm và lý do điều chỉnh hyperparameter đều được hợp nhất trực tiếp vào Section 2 của `walkthrough_lab_0X.md`. Không tạo file changelog riêng.
+
+Giá trị cốt lõi: nếu không ghi lại lý do đằng sau mỗi thay đổi, thì các lần chạy sau sẽ lặp lại sai lầm cũ hoặc không thể giải thích được vì sao một cấu hình lại tốt hơn cấu hình khác.
+
+## Khi nào kích hoạt
+
+- Sau khi hoàn thành bất kỳ lần chạy huấn luyện nào khi đã có metric đánh giá và giá trị loss.
+- Bất cứ khi nào chỉnh sửa một thành phần bất kỳ của pipeline (data transforms, kiến trúc backbone, optimizer schedule).
+- Khi tổng hợp metric và hình ảnh cho việc nộp bài môn học.
 
 ---
 
-## The 4-Step Tracking Protocol
+## Giao thức theo dõi 4 bước
 
-### Step 1: Capture Full-Flow State
-Record the configuration snapshot for the current execution (`Run #X`):
-1. **Data:** Dataset name, sample count, Train/Val/Test split ratios.
-2. **Preprocessing & Augmentation:** Applied transformations (`RandomHorizontalFlip`, `Normalize`, etc.).
-3. **Model:** Architecture name, total parameter count, depth/layers.
-4. **Training Strategy:** Loss function, optimizer, learning rate, scheduler, batch size, epoch count.
-5. **Evaluation Metrics:** Train Loss/Acc, Val Loss/Acc, Test Loss/Acc, Macro F1-Score, execution duration.
+### Bước 1: Nắm bắt trạng thái toàn dòng chảy (Capture Full-Flow State)
+Ghi lại ảnh chụp cấu hình (configuration snapshot) cho lần thực thi hiện tại (`Run #X`):
+1. **Data:** Tên dataset, số lượng mẫu, tỷ lệ chia Train/Val/Test.
+2. **Preprocessing & Augmentation:** Các biến đổi được áp dụng (`RandomHorizontalFlip`, `Normalize`, v.v.).
+3. **Model:** Tên kiến trúc, tổng số tham số, độ sâu/số layer.
+4. **Training Strategy:** Hàm loss, optimizer, learning rate, scheduler, batch size, số epoch.
+5. **Evaluation Metrics:** Train Loss/Acc, Val Loss/Acc, Test Loss/Acc, Macro F1-Score, thời gian thực thi.
 
-### Step 2: Log Technical Delta
-Answer 3 mandatory questions in the **Changelog**:
-- *Which pipeline stages changed compared to the previous run?* (Data, Preprocessing, Architecture, or Training Strategy?)
-- *What is the technical rationale (Why)?* (Mitigating overfitting, accelerating convergence, or resolving gradient vanishing?)
-- *What is the quantitative impact?* (Absolute accuracy gain, reduction in generalization gap, loss delta?)
+### Bước 2: Ghi log chênh lệch kỹ thuật (Log Technical Delta)
+Trả lời 3 câu hỏi bắt buộc trong **Changelog**:
+- *Những giai đoạn pipeline nào đã thay đổi so với lần chạy trước?* (Data, Preprocessing, Architecture, hay Training Strategy?)
+- *Lý do kỹ thuật (Why) là gì?* (Giảm overfitting, tăng tốc hội tụ, hay giải quyết gradient tiêu biến?)
+- *Tác động định lượng là gì?* (Mức tăng accuracy tuyệt đối, mức giảm khoảng cách tổng quát hóa, chênh lệch loss?)
 
-### Step 3: Update Comparison Matrix
-- Append an updated column for `Run #X` in the **Flow Comparison Matrix** in `walkthrough_lab_0X.md`.
-- Explicitly highlight which candidate holds the **Best Checkpoint** record.
+### Bước 3: Cập nhật ma trận so sánh (Update Comparison Matrix)
+- Thêm một cột mới cập nhật cho `Run #X` trong **Flow Comparison Matrix** của `walkthrough_lab_0X.md`.
+- Đánh dấu tường minh ứng viên nào đang giữ kỷ lục **Best Checkpoint**.
 
-### Step 4: Kaggle Artifact Harvesting and Findings Synthesis
-- **Harvesting from Kaggle:** When running on Kaggle GPU:
-  - Notebook writes output artifacts to `/kaggle/working/outputs/`:
+### Bước 4: Thu hoạch artifact từ Kaggle và Tổng hợp phát hiện (Harvesting and Findings Synthesis)
+- **Thu hoạch từ Kaggle:** Khi chạy trên Kaggle GPU:
+  - Notebook ghi các artifact đầu ra vào `/kaggle/working/outputs/`:
     - Model checkpoint: `outputs/checkpoints/best_model.pt`
-    - Prediction grid (Input vs Predicted): `outputs/predictions_best.png`
+    - Lưới dự đoán (Input so với Predicted): `outputs/predictions_best.png`
     - Confusion matrix: `outputs/confusion_matrix.png`
-    - Training curves: `outputs/loss_curves.png`
-  - Synchronize via GitHub or download `outputs.zip` back to local `labs/lab0X/outputs/`.
-- **Findings Synthesis:**
-  - Read output artifacts and log verified empirical numbers into `walkthrough_lab_0X.md`.
-  - Extract the key breakthrough factor, error slice patterns, and paths to saved model weights.
+    - Đường cong huấn luyện: `outputs/loss_curves.png`
+  - Đồng bộ thông qua GitHub hoặc tải `outputs.zip` trở về `labs/lab0X/outputs/` cục bộ.
+- **Tổng hợp phát hiện (Findings Synthesis):**
+  - Đọc các artifact đầu ra và ghi lại các con số thực nghiệm đã xác thực vào `walkthrough_lab_0X.md`.
+  - Trích xuất nhân tố đột phá chính, các pattern của lát cắt lỗi, và đường dẫn tới trọng số mô hình đã lưu.
 
-## Verification Criteria
-- `walkthrough_lab_0X.md` is synchronized with exact empirical numbers, free of placeholder blanks or unverified claims.
-- The living document provides an end-to-end audit trail ready for submission.
+## Tiêu chí xác thực
+
+- `walkthrough_lab_0X.md` được đồng bộ với các con số thực nghiệm chính xác, không còn chỗ trống placeholder hay tuyên bố chưa được xác thực.
+- Tài liệu sống cung cấp một dấu vết kiểm toán (audit trail) end-to-end sẵn sàng cho việc nộp bài.

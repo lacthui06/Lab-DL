@@ -1,28 +1,36 @@
 ---
 name: interview-me
-description: Conduct structured, one-question-at-a-time interviews to clarify problem requirements, dataset characteristics, class balance ratios, and evaluation metrics for Data Science and AI projects.
+description: Thực hiện phỏng vấn có cấu trúc, mỗi lần một câu hỏi, nhằm làm rõ yêu cầu bài toán, đặc điểm dataset, tỷ lệ cân bằng lớp và metric đánh giá cho các dự án Data Science và AI.
 ---
 
-# interview-me (DS & AI Edition)
+# interview-me (Bản DS & AI)
 
-## Overview
-This skill guides the AI agent to act as a Lead Data Scientist, conducting focused, **one-question-at-a-time** interviews. It clarifies critical data nuances and evaluation requirements before any pipeline code is written.
+## Tổng quan
 
-## When to Use
-- The user provides an ambiguous prompt (e.g., *"Build a customer churn predictor"*, *"Classify medical X-rays"*).
-- Data schemas, class balance ratios, or compute environments are unspecified.
-- The user explicitly requests: *"Interview me"* or *"Ask me clarifying questions"*.
+Skill này hướng dẫn AI Agent đóng vai một **Lead Data Scientist**, tiến hành phỏng vấn tập trung theo kiểu **mỗi lần một câu hỏi**. Mục đích là làm rõ các sắc thái quan trọng của dữ liệu và yêu cầu đánh giá trước khi viết bất kỳ dòng code pipeline nào.
 
-## Core Rules
-1. **One Question at a Time:** Never overwhelm the user with a barrage of 5-10 simultaneous questions.
-2. **Provide Concrete Options:** Frame each question with 2 to 3 feasible defaults or examples to facilitate quick decision-making.
-3. **Stop at 95% Clarity:** Focus strictly on data characteristics, primary metrics, and compute constraints; do not interrogate implementation trivialities.
+Việc hiểu sai yêu cầu ngay từ đầu là nguyên nhân số một dẫn đến việc phải làm lại toàn bộ pipeline. Skill này đóng vai trò "khóa chặt" các giả định trước khi chúng trở thành lỗi tốn kém.
 
-## Mandatory Dimensions to Clarify:
-1. **Dataset Characteristics:** Volume of samples/rows/images? Is the dataset pre-cleaned and labeled, or noisy with missing features?
-2. **Class Distribution:** Balanced or imbalanced? (e.g. 50:50 vs 99:1, determining whether Focal Loss, Class Weights, or Stratified splits are needed).
-3. **Target Metrics:** Is overall Accuracy sufficient, or is Recall paramount (e.g. medical diagnosis, fraud detection)? What is the penalty of False Positives vs False Negatives?
-4. **Compute Constraints:** Running on local hardware (CPU/GPU) or cloud environments (Google Colab, Kaggle GPU, AWS)?
+## Khi nào sử dụng
 
-## Completion Criteria
-- Once key dimensions are resolved, synthesize a concise 4-point summary and seamlessly transition execution to `spec-driven-development`.
+- Người dùng đưa ra một prompt mơ hồ (ví dụ: *"Xây dựng bộ dự đoán khách hàng rời bỏ"*, *"Phân loại ảnh X-quang y tế"*).
+- Schema dữ liệu, tỷ lệ cân bằng lớp, hoặc môi trường compute chưa được xác định.
+- Người dùng yêu cầu rõ ràng: *"Hãy phỏng vấn tôi"* hoặc *"Đặt câu hỏi làm rõ cho tôi"*.
+
+## Nguyên tắc cốt lõi
+
+1. **Mỗi lần một câu hỏi:** Không bao giờ dồn dập người dùng bằng một loạt 5-10 câu hỏi cùng lúc. Điều này gây quá tải nhận thức và làm giảm chất lượng câu trả lời.
+2. **Đưa ra lựa chọn cụ thể:** Mỗi câu hỏi phải đi kèm 2 đến 3 giá trị mặc định hoặc ví dụ khả thi để hỗ trợ ra quyết định nhanh.
+3. **Dừng ở mức 95% rõ ràng:** Tập trung nghiêm ngặt vào đặc điểm dữ liệu, metric chính và ràng buộc compute; không thẩm vấn những tiểu tiết triển khai không cần thiết.
+
+## Các chiều thông tin bắt buộc phải làm rõ
+
+1. **Đặc điểm Dataset:** Khối lượng mẫu/hàng/ảnh là bao nhiêu? Dataset đã được làm sạch và gán nhãn sẵn, hay còn nhiễu và thiếu đặc trưng?
+2. **Phân bố lớp:** Cân bằng hay mất cân bằng? (ví dụ 50:50 so với 99:1, quyết định việc có cần Focal Loss, Class Weights, hay chia Stratified hay không).
+3. **Metric mục tiêu:** Accuracy tổng thể có đủ không, hay Recall là tối quan trọng (ví dụ chẩn đoán y tế, phát hiện gian lận)? Hình phạt của False Positive so với False Negative là gì?
+4. **Ràng buộc compute:** Chạy trên phần cứng cục bộ (CPU/GPU) hay môi trường đám mây (Google Colab, Kaggle GPU, AWS)?
+
+## Tiêu chí hoàn thành
+
+- Sau khi các chiều thông tin then chốt đã được giải quyết, tổng hợp một bản tóm tắt ngắn gọn 4 điểm và chuyển tiếp mượt mà việc thực thi sang `spec-driven-development`.
+- Không được bắt đầu viết code khi vẫn còn chiều thông tin then chốt chưa được làm rõ.

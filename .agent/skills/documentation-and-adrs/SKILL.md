@@ -1,43 +1,48 @@
 ---
 name: documentation-and-adrs
-description: Author Model Cards, technical evaluation reports, Architecture Decision Records (ADRs), and submission documentation for Data Science and AI projects. Maps directly to Section 3 of walkthrough_lab_0X.md.
+description: Soạn Model Card, báo cáo đánh giá kỹ thuật, Architecture Decision Record (ADR) và tài liệu nộp bài cho các dự án Data Science và AI. Ánh xạ trực tiếp vào Section 3 của walkthrough_lab_0X.md.
 ---
 
-# documentation-and-adrs (DS & AI Edition)
+# documentation-and-adrs (Bản DS & AI)
 
-## Overview
-This skill handles professional technical documentation for DS and AI projects, providing industry-standard artifacts: **Model Cards**, **Comparative Evaluation Reports**, and **Architecture Decision Records (ADRs)** to guarantee full reproducibility, interpretability, and academic rigor.
+## Tổng quan
 
-## When to Use
-- Concluding experimental runs and generating final coursework or project reports.
-- Documenting why specific architectures, loss functions, or hyperparameter schedules were selected over alternatives.
-- Synthesizing confusion matrices and failure modes into actionable error analyses.
+Skill này xử lý tài liệu kỹ thuật chuyên nghiệp cho các dự án DS và AI, cung cấp các artifact chuẩn công nghiệp: **Model Card**, **Báo cáo đánh giá so sánh**, và **Architecture Decision Record (ADR)** nhằm đảm bảo khả năng tái lập đầy đủ, khả năng diễn giải, và độ chặt chẽ học thuật.
 
-## Documentation Deliverables for Coursework Labs (Integrated into Section 3 of `walkthrough_lab_0X.md`)
+Điểm cốt lõi: tài liệu không phải là thủ tục hành chính mà là bằng chứng kỹ thuật. Mọi con số trong tài liệu phải khớp 100% với log thực nghiệm.
 
-For practical labs, all quantitative evaluations, diagnostic summaries, and technical decisions are directly consolidated into **Section 3 of the single living document `walkthrough_lab_0X.md`** (governed by Rule 3 in the 3-Rule Architecture):
-- **Quantitative Evaluation & Comparison Matrix:** Head-to-head comparison table across all runs (Baseline vs Iterations) covering Test Loss, Test Accuracy, and Macro F1-Score.
-- **Confusion Matrix Diagnostics:** Deep dive into high-confusion class pairs (e.g. Shirt vs T-shirt/Pullover).
-- **Error Analysis Slices:** Visual and statistical inspection of misclassified samples, identifying root failure causes.
-- **Key Technical Findings:** Explanations for performance breakthroughs, assessing the impact of regularization, learning rate schedulers, and data augmentation.
-- **Checkpoint Verification (Save/Load):** Verification confirming that reloading `best_model.pt` reproduces 100% identical inference metrics.
+## Khi nào sử dụng
 
-> Strictly prohibit creating a separate `REPORT.md` file. All final findings are integrated directly into Section 3 of `walkthrough_lab_0X.md`.
+- Kết thúc các lần chạy thí nghiệm và tạo báo cáo môn học hoặc dự án cuối cùng.
+- Ghi lại lý do vì sao chọn một kiến trúc, hàm loss, hoặc lịch hyperparameter cụ thể thay vì các lựa chọn thay thế khác.
+- Tổng hợp confusion matrix và các chế độ thất bại thành phân tích lỗi có thể hành động.
 
-### 2. Architecture Decision Records (ADRs)
-When maintaining permanent engineering projects, record major architectural choices under `docs/adr/`:
-- *ADR 001:* Why Focal Loss over Binary Cross-Entropy? (Rationale: Mitigate severe 95:5 class imbalance).
-- *ADR 002:* Why ResNet over Vision Transformer (ViT)? (Rationale: Small sample size of 2,000 images causing ViT overfitting, plus constrained GPU memory).
+## Các tài liệu bàn giao cho bài lab môn học (tích hợp vào Section 3 của `walkthrough_lab_0X.md`)
 
-### 3. Session Handoff Reports (`HANDOFF.md`)
-Concise handoff summary for subsequent development sessions:
-- List of generated source modules and output artifacts.
-- File path to the best verified model checkpoint (`outputs/checkpoints/best_model.pt`).
-- Single-command instructions to reproduce results:
+Với các bài lab thực hành, toàn bộ đánh giá định lượng, tóm tắt chẩn đoán, và quyết định kỹ thuật được hợp nhất trực tiếp vào **Section 3 của tài liệu sống duy nhất `walkthrough_lab_0X.md`** (chịu sự điều phối của Rule 3 trong Kiến trúc 3 Rule), bao gồm:
+- **Ma trận đánh giá định lượng và so sánh:** Bảng so sánh trực tiếp giữa tất cả các lần chạy (Baseline so với các vòng lặp nâng cao), bao gồm Test Loss, Test Accuracy, và Macro F1-Score.
+- **Chẩn đoán Confusion Matrix:** Phân tích sâu các cặp lớp nhầm lẫn cao (ví dụ Shirt so với T-shirt/Pullover).
+- **Lát cắt phân tích lỗi (Error Analysis Slices):** Kiểm tra trực quan và thống kê các mẫu bị phân loại sai, xác định nguyên nhân gốc của thất bại.
+- **Phát hiện kỹ thuật chính:** Giải thích các đột phá về hiệu năng, đánh giá tác động của regularization, learning rate scheduler, và data augmentation.
+- **Xác thực Checkpoint (Save/Load):** Xác nhận rằng việc nạp lại `best_model.pt` tái lập 100% metric inference giống hệt.
+
+Nghiêm cấm tạo file `REPORT.md` riêng biệt. Mọi phát hiện cuối cùng được tích hợp trực tiếp vào Section 3 của `walkthrough_lab_0X.md`.
+
+### 2. Architecture Decision Record (ADR)
+Khi duy trì các dự án kỹ thuật lâu dài, ghi lại các lựa chọn kiến trúc quan trọng dưới `docs/adr/`:
+- *ADR 001:* Vì sao chọn Focal Loss thay vì Binary Cross-Entropy? (Lý do: Giảm mất cân bằng lớp nghiêm trọng 95:5).
+- *ADR 002:* Vì sao chọn ResNet thay vì Vision Transformer (ViT)? (Lý do: Kích thước mẫu nhỏ 2,000 ảnh gây ViT overfitting, cộng với bộ nhớ GPU hạn chế).
+
+### 3. Báo cáo bàn giao phiên làm việc (`HANDOFF.md`)
+Bản tóm tắt bàn giao ngắn gọn cho các phiên phát triển tiếp theo:
+- Danh sách các module source và artifact đầu ra đã tạo.
+- Đường dẫn file tới checkpoint mô hình tốt nhất đã xác thực (`outputs/checkpoints/best_model.pt`).
+- Hướng dẫn tái lập kết quả bằng một lệnh duy nhất:
   ```bash
   python train.py --config config.yaml
   python evaluate.py --checkpoint checkpoints/best_model.pt
   ```
 
-## Verification Criteria
-- All documented metrics match 100% with empirical logs and output confusion matrices; zero hallucinated or inaccurately rounded numbers.
+## Tiêu chí xác thực
+
+- Mọi metric được ghi tài liệu khớp 100% với log thực nghiệm và confusion matrix đầu ra; không có con số ảo tưởng hay làm tròn thiếu chính xác.
