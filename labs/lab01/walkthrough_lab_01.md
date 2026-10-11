@@ -199,7 +199,8 @@ The result of a run is only meaningful together with the environment that produc
 
 | Record | Value | Where it lives |
 |:---|:---|:---|
-| Python interpreter (local) | CPython 3.13.15 (64-bit, Windows) | comment in `requirements.txt` (a `python==3.13.15` line is invalid pip syntax and would break `pip install -r requirements.txt`) |
+| Python requirement (derived) | `>=3.12, !=3.14.1` | comment in `requirements.txt` (derived from the pinned libraries' `Requires-Python`: numpy 2.5.3 sets the `>=3.12` floor, torchvision 0.29.1 excludes `3.14.1`) |
+| Python interpreter (local, verified) | CPython 3.13.15 (64-bit, Windows) | comment in `requirements.txt` (a `python==3.13.15` line is invalid pip syntax and would break `pip install -r requirements.txt`) |
 | Python interpreter (Kaggle) | logged per run, not assumed equal to local | `outputs/environment_snapshot.json` |
 | Library versions | torch 2.14.0, torchvision 0.29.1, numpy 2.5.3, scikit-learn 1.9.1, matplotlib 3.11.2, seaborn 0.13.2, Pillow 12.3.0 | `requirements.txt` (pins) and `outputs/environment_snapshot.json` (run-time) |
 

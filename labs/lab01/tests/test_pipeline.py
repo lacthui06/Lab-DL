@@ -256,6 +256,43 @@ def test_12_environment_snapshot_records_python_version(tmp_path):
     assert reloaded == snapshot, "snapshot did not round-trip through JSON"
 
 
+def test_13_python_version_satisfies_pinned_dependencies():
+    """Test 13: Verify the interpreter satisfies the pinned dependencies' requirement.
+
+    The Python version is only a real constraint if something enforces it. This
+    test derives the requirement from the installed packages' `Requires-Python`
+    metadata (the same source the comment in `requirements.txt` is derived from)
+    and asserts the running interpreter satisfies every one of them, so the
+    recorded version cannot drift away from what the pins actually allow.
+    """
+    import importlib.metadata as md
+    import sys
+
+    from packaging.requirements import Requirement
+
+    def _satisfies(version: str, specifier: str) -> bool:
+        if not specifier:
+            return True
+        return Requirement(f"python{specifier}").specifier.contains(version)
+
+    checked = 0
+    for pkg in ["torch", "torchvision", "numpy", "scikit-learn", "matplotlib"]:
+        try:
+            meta = md.metadata(pkg)
+        except md.PackageNotFoundError:
+            continue
+        requires_python = meta.get("Requires-Python")
+        if not requires_python:
+            continue
+        checked += 1
+        assert _satisfies(sys.version.split()[0], requires_python), (
+            f"Running Python {sys.version.split()[0]} does not satisfy "
+            f"{pkg} Requires-Python '{requires_python}'"
+        )
+
+    assert checked > 0, "No Requires-Python metadata found; constraint could not be verified"
+
+
 def test_8_kfold_split_integrity():
     """Test 8: Verify Stratified K-Fold splits are disjoint, exhaustive, and class-balanced."""
     import numpy as np

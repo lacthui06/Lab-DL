@@ -2,8 +2,12 @@
 # Phiên bản ghi nhận từ môi trường cục bộ tại thời điểm hoàn thành Lab 01.
 # Dùng file này để tái lập môi trường và đối chiếu với Kaggle.
 
-# Python interpreter (bắt buộc ghi để tái lập; đây là ghi chú, KHÔNG phải dòng pip cài được)
-# Local (Windows, CPython 64-bit): 3.13.15
+# Python interpreter (ghi chú, KHÔNG phải dòng pip cài được; `python==x.y.z` là cú pháp pip không hợp lệ)
+# Yêu cầu thật (suy ra từ Requires-Python của các thư viện đã pin bên dưới):
+#   Requires Python >=3.12, !=3.14.1
+#   - >=3.12  : do numpy==2.5.3 yêu cầu >=3.12 (cao nhất trong các pin)
+#   - !=3.14.1: do torchvision==0.29.1 loại trừ 3.14.1
+# Bản đã kiểm chứng thực tế (local, Windows, CPython 64-bit): 3.13.15
 # Kaggle base image: dùng bản Python riêng của Kaggle; ghi lại chính xác tại thời điểm chạy,
 # không giả định trùng với local (xem skill environment-and-reproducibility, Bước 5).
 # Phiên bản thực tế của mỗi lần chạy được ghi vào outputs/environment_snapshot.json.
@@ -27,3 +31,6 @@ Pillow==12.3.0
 
 # Testing
 pytest==9.1.1
+# Declared explicitly: tests/test_pipeline.py imports packaging to evaluate
+# the Requires-Python specifiers of the pinned libraries (test_13).
+packaging==26.3

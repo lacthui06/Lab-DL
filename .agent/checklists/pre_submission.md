@@ -34,6 +34,7 @@ Danh sách kiểm tra bắt buộc trước khi nộp lab. Mục đích là đ�
 - [ ] Có hướng dẫn một lệnh để tái lập kết quả từ checkpoint tốt nhất.
 - [ ] Hướng dẫn cài đặt môi trường đầy đủ.
 - [ ] Phiên bản thư viện chính và phiên bản trình thông dịch Python đã được ghi lại.
+- [ ] Yêu cầu Python thật (`Requires-Python` suy ra từ các pin) đã được ghi, không chỉ phiên bản đã chạy.
 - [ ] `outputs/environment_snapshot.json` hiện diện và khớp với phiên bản trong `requirements.txt`.
 
 ## 6. Xác nhận cuối

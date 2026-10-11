@@ -55,6 +55,13 @@ Tạo và duy trì một bản ghi các thư viện chính cùng phiên bản ch
 
 Bản ghi bắt buộc phải có cả **phiên bản trình thông dịch Python** (`python --version`), không chỉ phiên bản thư viện: cùng bộ thư viện nhưng khác phiên bản Python có thể cho hành vi khác nhau (ví dụ thay đổi mặc định của `random`, thay đổi trong thư viện chuẩn). Ghi phiên bản Python dưới dạng **comment** trong `requirements.txt` (ví dụ `# Local: Python 3.13.15`), vì dòng `python==x.y.z` không phải cú pháp pip hợp lệ và sẽ làm hỏng `pip install -r requirements.txt`.
 
+Phải phân biệt hai thứ, và ghi cả hai:
+
+- **Yêu cầu thật (derived requirement):** khoảng phiên bản Python mà project thực sự chạy được, suy ra từ trường `Requires-Python` của các thư viện đã pin (lấy giao của tất cả). Cách kiểm tra: `python -c "import importlib.metadata as md; print(md.metadata('numpy').get('Requires-Python'))"`. Ví dụ với Lab 01, giao của các pin là `>=3.12, !=3.14.1` (numpy 2.5.3 đặt sàn `>=3.12`, torchvision 0.29.1 loại trừ `3.14.1`). Đây mới là thông tin người tái lập cần.
+- **Bản đã kiểm chứng (verified build):** đúng phiên bản trình thông dịch đã tạo ra kết quả, ví dụ 3.13.15.
+
+Ghi cả hai dạng comment trong `requirements.txt`. Chỉ ghi mỗi "bản đã chạy" mà bỏ "yêu cầu thật" là ghi chú trang trí, không phải ràng buộc kỹ thuật.
+
 ### Bước 5: Đồng bộ môi trường giữa local và Kaggle
 So sánh phiên bản thư viện giữa máy cục bộ và Kaggle. Ghi nhận mọi khác biệt có thể ảnh hưởng đến hành vi mô hình. Nếu có khác biệt lớn, điều chỉnh để hai môi trường gần nhau nhất có thể, hoặc ghi rõ khác biệt đó trong tài liệu.
 

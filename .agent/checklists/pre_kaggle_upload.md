@@ -13,6 +13,7 @@ Danh sách kiểm tra bắt buộc trước khi chuyển thực thi từ máy c�
 - [ ] Random seed đã được cố định cho `random`, `numpy`, `torch`, và CUDA.
 - [ ] Đã xác nhận chạy lại hai lần cho ra cùng kết quả.
 - [ ] Phiên bản thư viện (PyTorch, Torchvision) đã được ghi nhận và khớp giữa local và Kaggle.
+- [ ] Yêu cầu Python thật (`Requires-Python` suy ra từ các pin) đã được ghi, không chỉ phiên bản đã chạy.
 - [ ] Phiên bản trình thông dịch Python đã được ghi nhận (comment trong `requirements.txt`), kèm chênh lệch giữa local và Kaggle nếu có.
 
 ## 3. Đường dẫn và môi trường (Paths & Environment)
