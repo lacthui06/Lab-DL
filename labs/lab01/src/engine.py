@@ -360,6 +360,67 @@ def build_per_class_metrics(
     return per_class
 
 
+def build_convergence_metrics(
+    histories: List[Dict[str, List[float]]],
+    checkpoint_epochs: Optional[List[int]] = None,
+    thresholds: Optional[List[float]] = None,
+) -> Dict:
+    """Derives convergence-speed metrics from the per-fold validation history.
+
+    The final validation accuracy saturates for every optimizer arm on this
+    task, so it cannot separate the update rules. The per-epoch history that
+    `run_kfold_cv` already records is used instead to measure how quickly each
+    arm reaches the common ceiling: the mean validation accuracy and loss at
+    fixed epoch checkpoints, the first epoch at which the mean validation
+    accuracy crosses a threshold, and the epoch-averaged accuracy/loss (an
+    area-under-the-learning-curve summary).
+
+    Args:
+        histories: One history dict per fold, each with `val_acc` and `val_loss`
+            lists indexed by epoch.
+        checkpoint_epochs: Epoch numbers (1-indexed) at which to read the mean
+            validation accuracy and loss. Defaults to [3, 5, 10, 15].
+        thresholds: Accuracy thresholds (in percent) for which to find the first
+            reaching epoch. Defaults to [88.0, 90.0].
+
+    Returns:
+        A dictionary with `num_epochs`, `checkpoints`, `first_epoch_to_threshold`,
+        `epoch_avg_val_acc`, and `epoch_avg_val_loss`.
+    """
+    if checkpoint_epochs is None:
+        checkpoint_epochs = [3, 5, 10, 15]
+    if thresholds is None:
+        thresholds = [88.0, 90.0]
+
+    val_acc = np.asarray([h["val_acc"] for h in histories], dtype=np.float64)
+    val_loss = np.asarray([h["val_loss"] for h in histories], dtype=np.float64)
+    num_epochs = int(val_acc.shape[1])
+
+    mean_acc = val_acc.mean(axis=0)
+    mean_loss = val_loss.mean(axis=0)
+
+    checkpoints: Dict[str, Dict[str, float]] = {}
+    for epoch in checkpoint_epochs:
+        if 1 <= epoch <= num_epochs:
+            checkpoints[str(epoch)] = {
+                "mean_val_acc": round(float(mean_acc[epoch - 1]), 4),
+                "mean_val_loss": round(float(mean_loss[epoch - 1]), 4),
+            }
+
+    first_epoch_to_threshold: Dict[str, Optional[int]] = {}
+    for thr in thresholds:
+        reached = np.where(mean_acc >= thr)[0]
+        first_epoch_to_threshold[f"acc_{thr:g}"] = int(reached[0]) + 1 if reached.size > 0 else None
+
+    return {
+        "num_epochs": num_epochs,
+        "checkpoints": checkpoints,
+        "first_epoch_to_threshold": first_epoch_to_threshold,
+        "epoch_avg_val_acc": round(float(mean_acc.mean()), 4),
+        "epoch_avg_val_loss": round(float(mean_loss.mean()), 4),
+    }
+
+
 def run_kfold_cv(
     pool_train: Dataset,
     pool_eval: Dataset,
@@ -483,6 +544,7 @@ def run_kfold_cv(
         "tpr_per_class": tpr,
         "fpr_per_class": fpr,
         "histories": histories,
+        "convergence": build_convergence_metrics(histories),
         "oof_preds": oof_preds,
         "oof_targets": oof_targets,
     }

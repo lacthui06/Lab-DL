@@ -454,9 +454,71 @@ def save_optimizer_results_json(
             "std_loss": round(res["std_loss"], 4),
             "tpr_per_class": {class_names[i]: round(float(v), 4) for i, v in enumerate(res["tpr_per_class"])},
             "fpr_per_class": {class_names[i]: round(float(v), 4) for i, v in enumerate(res["fpr_per_class"])},
+            "convergence": res.get("convergence"),
         }
 
     save_path = Path(save_path)
     save_path.parent.mkdir(parents=True, exist_ok=True)
     with open(save_path, "w", encoding="utf-8") as f:
         json.dump(summary, f, indent=2)
+
+
+def plot_optimizer_convergence(
+    results: Dict[str, Dict],
+    save_path: Optional[Path] = None,
+) -> None:
+    """Plots the convergence-speed view for the optimizer arms.
+
+    Renders mean validation accuracy per epoch with the fixed-epoch checkpoints
+    marked, so that the epoch at which each arm reaches the common ceiling is
+    directly visible. This is the figure that discriminates arms which finish at
+    a similar final accuracy but converge at different speeds.
+
+    Args:
+        results: Mapping of optimizer name to its run_kfold_cv result dictionary.
+        save_path: Optional path to persist the figure.
+    """
+    fig, axes = plt.subplots(1, 2, figsize=(14, 5))
+    colors = ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728"]
+
+    for idx, (name, res) in enumerate(results.items()):
+        histories = res["histories"]
+        epochs = list(range(1, len(histories[0]["val_acc"]) + 1))
+        mean_val_acc = np.mean([h["val_acc"] for h in histories], axis=0)
+        mean_val_loss = np.mean([h["val_loss"] for h in histories], axis=0)
+        c = colors[idx % len(colors)]
+        axes[0].plot(epochs, mean_val_acc, "o-", label=name, color=c, linewidth=2)
+
+        convergence = res.get("convergence") or {}
+        for epoch_str, ckpt in convergence.get("checkpoints", {}).items():
+            epoch = int(epoch_str)
+            if epoch in epochs:
+                axes[0].scatter(
+                    epoch,
+                    ckpt["mean_val_acc"],
+                    s=110,
+                    facecolors="none",
+                    edgecolors=c,
+                    linewidths=2,
+                    zorder=5,
+                )
+        axes[1].plot(epochs, mean_val_loss, "s-", label=name, color=c, linewidth=2)
+
+    axes[0].set_title("Convergence Speed: Mean Validation Accuracy (circles = epochs 3/5/10/15)", fontsize=12, fontweight="bold")
+    axes[0].set_xlabel("Epoch", fontsize=11)
+    axes[0].set_ylabel("Accuracy (%)", fontsize=11)
+    axes[0].grid(True, linestyle="--", alpha=0.6)
+    axes[0].legend(fontsize=10)
+
+    axes[1].set_title("Mean Validation Loss Across Folds", fontsize=13, fontweight="bold")
+    axes[1].set_xlabel("Epoch", fontsize=11)
+    axes[1].set_ylabel("CrossEntropy Loss", fontsize=11)
+    axes[1].grid(True, linestyle="--", alpha=0.6)
+    axes[1].legend(fontsize=10)
+
+    plt.tight_layout()
+    if save_path:
+        save_path = Path(save_path)
+        save_path.parent.mkdir(parents=True, exist_ok=True)
+        fig.savefig(str(save_path), dpi=300, bbox_inches="tight")
+    plt.show()

@@ -149,6 +149,7 @@ The single factor that differs between scenario 2a and scenario 2b is the learni
 - Per-fold accuracy and loss (all five values reported, not only the mean).
 - Global out-of-fold confusion matrix (10x10).
 - Per-class True Positive Rate (recall) and False Positive Rate.
+- Convergence-speed metrics derived from the per-epoch validation history of each fold (see Section 1.6.8): validation accuracy and validation loss at the fixed checkpoints (epochs 3, 5, 10, 15), the first epoch at which mean validation accuracy reaches a threshold (88% and 90%), and the epoch-averaged validation accuracy and loss (an area-under-the-learning-curve summary).
 - All of the above are collected independently for scenario 2a and scenario 2b, so that every arm carries a symmetric-budget number and a fair-budget number. The SGD mean-accuracy delta between scenario 2a and scenario 2b is itself a reported result.
 
 #### 1.6.5. Rationale for Comparing Plain Adam rather than AdamW
@@ -159,13 +160,15 @@ For completeness, Phase 1 (Section 2) also departs from the playbook: both of it
 #### 1.6.6. Planned Artifacts
 Scenario 2a (symmetric budget):
 - `outputs/optimizer_comparison_curves.png` — mean validation loss and accuracy per arm.
+- `outputs/optimizer_convergence.png` — convergence-speed view: mean validation accuracy per epoch with the fixed checkpoints (epochs 3, 5, 10, 15) marked, so the epoch at which each arm reaches the threshold is visible directly.
 - `outputs/optimizer_tpr_fpr.png` — per-class TPR and FPR grouped bars.
 - `outputs/optimizer_confusion_matrices.png` — three normalized confusion matrices side by side.
-- `outputs/optimizer_experiment_results.json` — per-fold, mean/std, and per-class TPR/FPR summary.
+- `outputs/optimizer_experiment_results.json` — per-fold, mean/std, per-class TPR/FPR, and the per-epoch convergence metrics of Section 1.6.8.
 - `outputs/checkpoints/cv_{optimizer}_fold{n}.pt` — per-fold best-validation checkpoint (no suffix, scenario 2a).
 
 Scenario 2b (fair budget):
 - `outputs/optimizer_comparison_curves_fairbudget.png`
+- `outputs/optimizer_convergence_fairbudget.png`
 - `outputs/optimizer_tpr_fpr_fairbudget.png`
 - `outputs/optimizer_confusion_matrices_fairbudget.png`
 - `outputs/optimizer_experiment_results_fairbudget.json`
@@ -175,6 +178,17 @@ Scenario 2b (fair budget):
 - **Checkpoint naming rule:** every per-fold cross-validation checkpoint is named from the arm's optimizer type plus the scenario's `artifact_suffix`, so scenario 2a and scenario 2b write disjoint files. Without the suffix, the two scenarios would reuse the same SGD/RMSprop/Adam arm names and scenario 2b would silently overwrite scenario 2a's checkpoints. Metrics and figures are computed before any checkpoint is written, so a naming collision would corrupt the stored checkpoints only, not the reported numbers; the suffix removes that hazard entirely.
 - **Compute target:** Kaggle GPU (Tesla T4). Estimated cost is 6 arms x 5 folds x 15 epochs on the lightweight `TunedMLP` backbone; at approximately 4-5 minutes per 15-epoch run this is on the order of 2 GPU-hours, within the weekly quota.
 - **Zero Waste compliance:** no full multi-epoch training is executed locally. Local verification is limited to the 1-batch sanity overfit check and a tiny synthetic smoke test of the cross-validation plumbing.
+- **Artifact-packaging order rule:** the `outputs.zip` archive is created by the final notebook cell, after every Phase 1 and Phase 2 artifact has been written. An earlier revision created the archive before the Phase 2 sweep ran, so the downloaded archive could never contain the Phase 2 figures or JSON regardless of runtime. The archive step is therefore moved to the last cell; any future artifact-producing step must be inserted before the packaging cell.
+
+#### 1.6.8. Convergence-Speed Rationale (Why the Final-Accuracy Metric Alone Is Not Discriminating)
+The `TunedMLP` backbone with data augmentation saturates FashionMNIST: by the end of a 15-epoch budget all three arms reach a comparable final validation accuracy, so a comparison that reports only the final number cannot separate the update rules and the arms appear indistinguishable. That is a property of the saturated metric, not evidence that the optimizers behave the same way. The arms reach the same ceiling by different routes: adaptive methods (RMSprop, Adam) typically climb faster in the first few epochs, whereas plain SGD needs a larger step size and more epochs to catch up.
+
+To make the comparison discriminating, the phase therefore keeps the final accuracy as a reported result but adds a convergence-speed metric set derived from the per-epoch validation history that `run_kfold_cv` already records for every fold:
+- **Fixed-epoch checkpoints:** mean validation accuracy and loss at epochs 3, 5, 10, and 15. A gap that is large at epoch 3 and shrinks by epoch 15 demonstrates a convergence-speed difference that the final number hides.
+- **Threshold epoch:** the first epoch at which mean validation accuracy reaches 88% and 90%. An arm that reaches 90% at epoch 4 is measurably faster than one that reaches it at epoch 9, even when both end at the same final accuracy.
+- **Curve summary:** the mean validation accuracy and loss averaged over all epochs, a compact area-under-the-learning-curve proxy for how much of the budget was spent below the ceiling.
+
+These metrics are derived from data already stored in `histories`; no additional training is required. `save_optimizer_results_json` is extended to persist them, and `plot_optimizer_convergence` renders them as a figure. The metric set is emitted identically for both scenarios, so the 2a-versus-2b comparison is made on the same basis. Section 3.7 reports the convergence-speed comparison as the primary Phase 2 discriminator.
 
 ### 1.7. Phase 1 Diagnostic Artifacts (Symmetric Across Runs)
 The Phase 1 comparison contrasts two architectures, so every diagnostic emitted for one run must also be emitted for the other; otherwise the two runs are not comparable and the comparison matrix in Section 3.1 would rest on unequal evidence. The artifact set is therefore identical for Run #1 (Baseline MLP) and Run #2 (Tuned MLP), differing only in the `baseline_mlp` / `tuned_mlp` filename slug.
@@ -342,5 +356,27 @@ This table traces every important technical decision back to the corresponding d
    - Prediction Grids (both runs): `outputs/predictions_baseline_mlp.png`, `outputs/predictions_tuned_mlp.png`
    - Detailed Metric Logs: `outputs/classification_report_baseline_mlp.txt`, `outputs/classification_report_tuned_mlp.txt`, `outputs/per_class_metrics_baseline_mlp.json`, `outputs/per_class_metrics_tuned_mlp.json`, `outputs/experiment_results.json`
    - Environment Record: `outputs/environment_snapshot.json` (Python interpreter, platform, library versions, resolved device)
-   - Phase 2 Optimizer Artifacts (2a symmetric): `outputs/optimizer_comparison_curves.png`, `outputs/optimizer_tpr_fpr.png`, `outputs/optimizer_confusion_matrices.png`, `outputs/optimizer_experiment_results.json`
-   - Phase 2 Optimizer Artifacts (2b fair budget): `outputs/optimizer_comparison_curves_fairbudget.png`, `outputs/optimizer_tpr_fpr_fairbudget.png`, `outputs/optimizer_confusion_matrices_fairbudget.png`, `outputs/optimizer_experiment_results_fairbudget.json`
+   - Phase 2 Optimizer Artifacts (2a symmetric): `outputs/optimizer_comparison_curves.png`, `outputs/optimizer_convergence.png`, `outputs/optimizer_tpr_fpr.png`, `outputs/optimizer_confusion_matrices.png`, `outputs/optimizer_experiment_results.json`
+   - Phase 2 Optimizer Artifacts (2b fair budget): `outputs/optimizer_comparison_curves_fairbudget.png`, `outputs/optimizer_convergence_fairbudget.png`, `outputs/optimizer_tpr_fpr_fairbudget.png`, `outputs/optimizer_confusion_matrices_fairbudget.png`, `outputs/optimizer_experiment_results_fairbudget.json`
+
+### 3.7. Phase 2 Optimizer Comparison — Convergence-Speed Results
+
+This section reports the Phase 2 optimizer comparison described in Section 1.6. Because the final validation accuracy saturates for every arm (Section 1.6.8), the primary discriminator is the convergence-speed metric set, with the final accuracy reported alongside it. The table shape is fixed below so no arm and no metric is silently dropped.
+
+**Scenario 2a — Symmetric budget (all arms at lr = 1e-3):**
+
+| Arm | Mean Val Acc (final) | Val Acc @ Epoch 3 | Val Acc @ Epoch 5 | Val Acc @ Epoch 10 | First epoch to 88% | First epoch to 90% | Epoch-avg Val Acc |
+|:---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
+| SGD + Momentum | not logged | not logged | not logged | not logged | not logged | not logged | not logged |
+| RMSprop | not logged | not logged | not logged | not logged | not logged | not logged | not logged |
+| Adam | not logged | not logged | not logged | not logged | not logged | not logged | not logged |
+
+**Scenario 2b — Fair budget (SGD at lr = 0.05, others at 1e-3):**
+
+| Arm | Mean Val Acc (final) | Val Acc @ Epoch 3 | Val Acc @ Epoch 5 | Val Acc @ Epoch 10 | First epoch to 88% | First epoch to 90% | Epoch-avg Val Acc |
+|:---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
+| SGD + Momentum | not logged | not logged | not logged | not logged | not logged | not logged | not logged |
+| RMSprop | not logged | not logged | not logged | not logged | not logged | not logged | not logged |
+| Adam | not logged | not logged | not logged | not logged | not logged | not logged | not logged |
+
+Every cell above is `not logged` because the Phase 2 sweep has not yet produced artifacts: the earlier Kaggle archive was created before the Phase 2 cell ran (Section 1.6.7), so no Phase 2 JSON or figure exists. The numbers are filled in from `outputs/optimizer_experiment_results*.json` on the next Kaggle execution. Inventing them is prohibited by the no-fabrication policy. The per-arm per-class TPR/FPR and confusion matrices are reported in Section 1.6.6 artifacts; the analysis here focuses on the convergence comparison.
