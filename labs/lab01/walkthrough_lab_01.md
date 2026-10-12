@@ -253,7 +253,7 @@ This policy is recorded here, before the run, so that the momentum question cann
 
 **Budget-confound guard (fixed in advance).** The arms converge at different speeds: the adaptive methods reach the common ceiling early while SGD is still climbing at the end of the budget. A shorter epoch budget would therefore depress the SGD curve more than the adaptive curves and could make SGD look worse for a reason unrelated to its update rule. The budget is consequently held at 15 epochs, identical to 2a and 2b, so every arm is measured at the same convergence maturity and the `1e-3` column is an exact reproduction check of scenario 2a. If, despite the equal budget, an optimizer's curve is still rising at the final epoch, that is reported as a convergence-speed limitation of that arm (a fact about how many epochs it needs), never as an accuracy deficit, and the conclusion states that its optimum may be understated because the budget, not the update rule, was the binding constraint.
 
-**Honesty commitment (unchanged).** As in Section 1.6.9, no optimizer is called better unless the separation exceeds the across-fold standard deviation; a separation inside the noise is reported as within noise; a diverged cell is reported as diverged; and Section 3.7 is filled from `outputs/optimizer_lr_sweep_results.json` only, leaving a cell as `not logged` if the artifact is absent.
+**Honesty commitment (unchanged).** As in Section 1.6.9, no optimizer is called better unless the separation exceeds the across-fold standard deviation; a separation inside the noise is reported as within noise; a diverged cell is reported as diverged; and Section 3.8 is filled from `outputs/optimizer_lr_sweep_results.json` only, leaving a cell as `not logged` if the artifact is absent.
 
 ### 1.7. Phase 1 Diagnostic Artifacts (Symmetric Across Runs)
 The Phase 1 comparison contrasts two architectures, so every diagnostic emitted for one run must also be emitted for the other; otherwise the two runs are not comparable and the comparison matrix in Section 3.1 would rest on unequal evidence. The artifact set is therefore identical for Run #1 (Baseline MLP) and Run #2 (Tuned MLP), differing only in the `baseline_mlp` / `tuned_mlp` filename slug.
@@ -478,7 +478,8 @@ This table traces every important technical decision back to the corresponding d
 1. **Impact of Modern Regularization (measured):** Adding `BatchNorm` + `Dropout` + `CosineAnnealingLR` to a deeper MLP improved held-out Test Accuracy from 85.14% to 87.81% (+2.67%) and Macro F1 from 84.93% to 87.71% (+2.78%), while Test Loss dropped from 0.4443 to 0.3312 (-25.5%). The gain is broad across classes, not driven by a single class (Section 3.2).
 2. **Bias-Variance Trade-off:** The regularized model is both more accurate and better calibrated on the hard class: Shirt recall rises from 0.514 to 0.636 and the confident Sneaker-to-Sandal error visible in the Baseline prediction grid disappears in the Tuned grid (Section 3.3). The improvement is therefore a generalization gain, not a fitting-capacity gain.
 3. **Optimizer Sensitivity (Phase 2, measured):** On a frozen `TunedMLP` backbone under Stratified 5-fold cross-validation, SGD + Momentum trails RMSprop and Adam in scenario 2a (all arms at 1e-3) by 1.0233 points, a gap of about 8.8 times the per-fold standard deviation, and closes most of it in scenario 2b when only its learning rate is raised to 0.05 (+0.8116, about 79% of the gap). RMSprop and Adam are within noise of each other (0.0433, far below the 0.1167 standard deviation) and are byte-identical across the two scenarios, which shows the pipeline is deterministic and the residual gaps are not a hardware artefact. The convergence metrics show the adaptive arms reach the 88% threshold earlier (epoch 8 for RMSprop, 9 for Adam) than SGD (epoch 10 in 2b, never in 2a). Per the pre-registered rule of Section 1.6.9, the 2a gap is attributable to the SGD step size rather than to the update rule. Full numbers in Section 3.7.
-4. **Generated Submission Artifacts:**
+4. **Optimizer Learning-Rate Sensitivity (Phase 2 Scenario 2c, measured):** Sweeping five learning rates per optimizer (75 runs, 15 epochs, same protocol as 2a/2b) gives each optimizer a clear interior optimum: SGD + Momentum at `1e-2` (88.5950), RMSprop at `3e-3` (88.7967), Adam at `1e-3` (88.8083). Peak-versus-peak the three are equivalent within the fold-to-fold noise (largest gap 0.2133, below SGD's own standard deviation 0.2269), so no ranking is claimed. SGD's optimum sits at a larger step than the adaptive optima, which quantifies the step-size confound of Section 1.6.9; RMSprop is the most sensitive to overshooting its step (0.3367 from `3e-3` to `1e-2`) and Adam the least stable across folds (std 0.2888). No cell diverged. The `1e-3` column reproduced scenario 2a and the SGD `5e-2` cell reproduced scenario 2b with a delta of `+0.0000`, confirming the pipeline is deterministic. Full numbers in Section 3.8.
+5. **Generated Submission Artifacts:**
    - Best Model Weights: `outputs/checkpoints/baseline_mlp_best.pt`, `outputs/checkpoints/tuned_mlp_best.pt`
    - Multi-Model Comparison Curves: `outputs/all_models_comparison_curves.png`
    - Individual Run Learning Curves: `outputs/run1_baseline_curves.png`, `outputs/run2_tuned_mlp_curves.png`
@@ -535,9 +536,9 @@ Every cell above is taken from `outputs/optimizer_experiment_results.json` (scen
 
 ### 3.8. Phase 2 Scenario 2c - Learning-Rate Sweep Results
 
-This section reports the Scenario 2c learning-rate sweep specified in Section 1.6.10. The tables have a fixed shape so that no optimizer, no learning rate, and no diverged cell is silently dropped: every cell is present, and a value that the run has not yet produced is written as `not logged` rather than omitted or estimated. The primary comparison is each optimizer's mean validation accuracy as a function of its learning rate; the fair cross-optimizer comparison is made at each optimizer's own optimum, under the within-noise rule of Section 1.6.9.
+This section reports the Scenario 2c learning-rate sweep specified in Section 1.6.10. The tables have a fixed shape so that no optimizer, no learning rate, and no diverged cell is silently dropped: every cell is present. The primary comparison is each optimizer's mean validation accuracy as a function of its learning rate; the fair cross-optimizer comparison is made at each optimizer's own optimum, under the within-noise rule of Section 1.6.9.
 
-**Run status.** The sweep has not yet been executed on Kaggle, so `outputs/optimizer_lr_sweep_results.json` does not exist in the committed artifact set. Every value below is therefore `not logged`. This subsection is filled from `outputs/optimizer_lr_sweep_results.json` only, once that artifact is produced; no cell is populated by inference or expectation.
+**Run status.** The sweep has been executed on Kaggle GPU (Tesla T4) and `outputs/optimizer_lr_sweep_results.json` exists in the artifact set. Every value below is read from that artifact: 3 optimizers x 5 learning rates x 5 folds = 75 runs of 15 epochs each, with `num_diverged = 0` in all 15 cells. No cell is populated by inference or expectation.
 
 **Grid and budget:** 3 optimizers x 5 learning rates x 5 folds = 75 runs, 15 epochs each (identical to 2a/2b so no arm is measured at a different convergence maturity), `TunedMLP`, augmentation on, no scheduler, weight decay 0.0. SGD uses momentum 0.9; RMSprop uses PyTorch default momentum 0.0; Adam uses PyTorch default betas (0.9, 0.999).
 
@@ -545,40 +546,66 @@ This section reports the Scenario 2c learning-rate sweep specified in Section 1.
 
 | Learning rate | Mean Val Acc | Std | Mean Val Loss | Diverged folds |
 |:---:|:---:|:---:|:---:|:---:|
-| 1e-3 | not logged | not logged | not logged | not logged |
-| 5e-3 | not logged | not logged | not logged | not logged |
-| 1e-2 | not logged | not logged | not logged | not logged |
-| 5e-2 | not logged | not logged | not logged | not logged |
-| 1e-1 | not logged | not logged | not logged | not logged |
+| 1e-3 | 87.7417 | 0.1163 | 0.3364 | 0 |
+| 5e-3 | 88.4150 | 0.1831 | 0.3162 | 0 |
+| **1e-2** | **88.5950** | 0.2269 | 0.3117 | 0 |
+| 5e-2 | 88.5533 | 0.2122 | 0.3110 | 0 |
+| 1e-1 | 88.3817 | 0.2575 | 0.3171 | 0 |
 
 **RMSprop (PyTorch default momentum 0.0):**
 
 | Learning rate | Mean Val Acc | Std | Mean Val Loss | Diverged folds |
 |:---:|:---:|:---:|:---:|:---:|
-| 1e-4 | not logged | not logged | not logged | not logged |
-| 3e-4 | not logged | not logged | not logged | not logged |
-| 1e-3 | not logged | not logged | not logged | not logged |
-| 3e-3 | not logged | not logged | not logged | not logged |
-| 1e-2 | not logged | not logged | not logged | not logged |
+| 1e-4 | 88.2383 | 0.2131 | 0.3209 | 0 |
+| 3e-4 | 88.6750 | 0.1754 | 0.3096 | 0 |
+| 1e-3 | 88.7650 | 0.1167 | 0.3053 | 0 |
+| **3e-3** | **88.7967** | 0.2123 | 0.3072 | 0 |
+| 1e-2 | 88.4600 | 0.2142 | 0.3163 | 0 |
 
 **Adam (PyTorch default betas 0.9, 0.999):**
 
 | Learning rate | Mean Val Acc | Std | Mean Val Loss | Diverged folds |
 |:---:|:---:|:---:|:---:|:---:|
-| 1e-4 | not logged | not logged | not logged | not logged |
-| 3e-4 | not logged | not logged | not logged | not logged |
-| 1e-3 | not logged | not logged | not logged | not logged |
-| 3e-3 | not logged | not logged | not logged | not logged |
-| 1e-2 | not logged | not logged | not logged | not logged |
+| 1e-4 | 88.2233 | 0.1684 | 0.3210 | 0 |
+| 3e-4 | 88.7200 | 0.1739 | 0.3088 | 0 |
+| **1e-3** | **88.8083** | 0.2888 | 0.3041 | 0 |
+| 3e-3 | 88.6717 | 0.1820 | 0.3084 | 0 |
+| 1e-2 | 88.4150 | 0.2549 | 0.3166 | 0 |
 
-**Per-optimizer summary (to be read from the curves above):**
+**Convergence at each optimizer's optimum (from the same JSON, Section 1.6.8 metric set):**
+
+| Optimizer (at its best lr) | Val Acc @ Epoch 3 | @ Epoch 5 | @ Epoch 10 | @ Epoch 15 | First epoch to 88% | Epoch-avg Val Acc |
+|:---|:---:|:---:|:---:|:---:|:---:|:---:|
+| SGD + Momentum (1e-2) | 86.1333 | 86.9033 | 87.9133 | 88.4967 | 11 | 87.1898 |
+| RMSprop (3e-3) | 86.0667 | 86.8600 | 88.3033 | 88.5967 | 8 | 87.3890 |
+| Adam (1e-3) | 86.4000 | 87.0400 | 88.2433 | 88.6933 | 9 | 87.4597 |
+
+Every optimizer is still gaining accuracy over the final five epochs (SGD +0.58, Adam +0.45, RMSprop +0.29 from epoch 10 to epoch 15), so no curve has fully flattened at this budget. RMSprop and Adam reach the 88% threshold earlier (epochs 8 and 9) than SGD (epoch 11) and hold a higher epoch-average accuracy, which is the convergence-speed ordering of Section 3.7 persisting at the optima. SGD's late climb is the largest, which is why the budget-confound guard of Section 1.6.10 applies to it specifically.
+
+**Per-optimizer summary (read from the curves above):**
 
 | Optimizer | Best learning rate | Best mean Val Acc | Sensitivity (drop to next grid step) |
 |:---|:---:|:---:|:---:|
-| SGD + Momentum | not logged | not logged | not logged |
-| RMSprop | not logged | not logged | not logged |
-| Adam | not logged | not logged | not logged |
+| SGD + Momentum | 1e-2 | 88.5950 | 0.0417 to the next larger step (5e-2); 0.1800 to the next smaller step (5e-3) |
+| RMSprop | 3e-3 | 88.7967 | 0.0317 to the next smaller step (1e-3); 0.3367 to the next larger step (1e-2) |
+| Adam | 1e-3 | 88.8083 | 0.0883 to the next smaller step (3e-4); 0.1366 to the next larger step (3e-3) |
 
-**Reproducibility check against 2a and 2b (from the same JSON, once produced).** Scenario 2c uses the same 15-epoch budget, the same fold split, and the same seed as scenarios 2a and 2b, so the `1e-3` column must reproduce the scenario 2a numbers of Section 3.7 for each optimizer exactly, and the SGD cell at `5e-2` must reproduce the scenario 2b SGD number exactly. Any deviation is a discrepancy to be investigated and reported, not a rounding artefact to be ignored. This exact-reproduction requirement is what makes the `1e-3` column a determinism check on the full pipeline rather than a mere shape check.
+The sensitivity column reports the mean-accuracy drop from the peak to the next grid step on each side. The smaller of the two drops states how sharply the peak is resolved (a peak barely above its neighbour is only weakly resolved); the larger states how costly overshooting the step size is. On that reading RMSprop's peak is the least sharply resolved (0.0317 to `1e-3`, well inside its own across-fold standard deviation of 0.2123) and RMSprop is also the most damaged by overshooting (0.3367 to `1e-2`), while SGD and Adam degrade more gently.
 
-**Conclusion (to be written under the pre-registered rule of Section 1.6.10).** The conclusion is written only after `outputs/optimizer_lr_sweep_results.json` exists, and it selects exactly one of the pre-registered branches in Section 1.6.10 according to the data: an interior optimum per optimizer, an SGD peak at a larger learning rate than the adaptive arms, a flat curve, a single dominating optimizer, or a null result. No branch is asserted here in advance of the artifact.
+**Reproducibility check against 2a and 2b (verified).** Scenario 2c uses the same 15-epoch budget, the same fold split, and the same seed as scenarios 2a and 2b, so the `1e-3` column must reproduce the scenario 2a numbers of Section 3.7 for each optimizer exactly, and the SGD cell at `5e-2` must reproduce the scenario 2b SGD number exactly. The check passes to four decimals on every shared cell: SGD at `1e-3` gives 87.7417 in both 2c and 2a (delta `+0.0000`), RMSprop at `1e-3` gives 88.7650 in both (delta `+0.0000`), Adam at `1e-3` gives 88.8083 in both (delta `+0.0000`), and SGD at `5e-2` gives 88.5533 in both 2c and 2b (delta `+0.0000`). No deviation was found, so the `1e-3` column is a determinism check on the full pipeline rather than a mere shape check: a fixed seed, a fixed fold split, and unchanged hyperparameters reproduce the earlier numbers exactly, and the sweep's new cells are therefore attributable to the learning rate alone.
+
+**Conclusion (written under the pre-registered rule of Section 1.6.10).**
+
+1. **Every optimizer has an interior optimum.** SGD + Momentum peaks at `1e-2` (88.5950), RMSprop at `3e-3` (88.7967), and Adam at `1e-3` (88.8083). For all three, accuracy rises to a maximum and falls on both sides, so the first pre-registered branch applies and the reported best learning rate is that interior maximum. The fixed learning rate of scenario 2a (`1e-3`) is not the optimum for SGD, which is exactly the limitation Section 1.6.10 was written to remove.
+
+2. **The three optima are equivalent within the fold-to-fold noise.** Peak-versus-peak, Adam stands 0.2133 above SGD and 0.0116 above RMSprop, and RMSprop stands 0.2017 above SGD. The largest of these gaps (0.2133) is smaller than SGD's own across-fold standard deviation at its peak (0.2269) and much smaller than Adam's (0.2888); the RMSprop-versus-Adam gap (0.0116) is far below RMSprop's standard deviation (0.2123). Under the honesty rule of Section 1.6.9 and the peak-versus-peak rule of Section 1.6.10, no separation survives the noise, so the pre-registered null branch applies: at their respective best step sizes the three update rules are equivalent on this task, and no ranking is claimed. Adam's nominally highest mean cannot be reported as a win over RMSprop or SGD.
+
+3. **SGD's optimum sits at a larger learning rate than the adaptive optima.** SGD peaks at `1e-2`, RMSprop at `3e-3`, and Adam at `1e-3` - one and two grid steps larger respectively. This confirms and quantifies the step-size confound identified in Section 1.6.9: the non-adaptive method is not worse, it simply needs a larger step, and when each optimizer is measured at its own optimum the apparent adaptive advantage disappears.
+
+4. **The adaptive arms are not identical in stability or sensitivity.** Adam is the least stable at its peak (largest across-fold standard deviation, 0.2888), matching scenarios 2a and 2b. RMSprop's peak location is the least sharply resolved: its `1e-3` cell (88.7650) is only 0.0317 below its `3e-3` peak, well inside its own standard deviation, so its optimum could equally be reported at either step. RMSprop is also the most sensitive to overshooting the step size - moving from `3e-3` to `1e-2` costs 0.3367, about 1.6 times its own standard deviation - whereas SGD and Adam are more forgiving (their largest adjacent-step drops, 0.1800 and 0.1366, are both below their own standard deviations).
+
+5. **No divergence occurred at any cell.** All 15 (optimizer, learning rate) cells completed with `num_diverged = 0`. The highest rates in each grid (SGD `1e-1`, RMSprop and Adam `1e-2`) did not drive the loss to `NaN` or `Inf`; their curves decline in accuracy but remain finite, so the divergence-guard branch of Section 1.6.10 is unused and no cell is reported as diverged.
+
+6. **The budget remains the binding constraint for SGD, and that cuts in SGD's favour.** Every curve is still rising at the final epoch, and SGD climbs the most over the last five epochs (at its peak, the epoch-10 to epoch-15 mean validation accuracy rises by 0.58, against 0.29 for RMSprop and 0.45 for Adam). Under the budget-confound guard of Section 1.6.10 this is reported as a convergence-speed limitation of SGD, not an accuracy deficit: SGD's peak is the most likely of the three to be understated by the fixed 15-epoch budget. The equivalence in point 2 is therefore a conservative reading for SGD, not an artefact that flatters the adaptive arms.
+
+**Reading.** Scenario 2c turns the fixed-lr comparison of Section 3.7 into a sensitivity view: each optimizer is measured across two orders of magnitude of step size, each has a clear interior optimum, and at those optima the three are indistinguishable within the across-fold noise on this task. The robust separations are structural rather than numerical: SGD needs the largest step size, RMSprop is the most sensitive to overshooting it, and Adam is the least stable across folds. Those statements hold; a ranking of the three on final accuracy does not.
