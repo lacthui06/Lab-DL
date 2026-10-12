@@ -213,7 +213,14 @@ OPTIMIZER_CONFIGS = OPTIMIZER_SCENARIOS[0].arms
 # scales: SGD with momentum needs the largest step, while the adaptive methods
 # rescale each parameter's step by its recent gradient magnitude. The highest
 # learning rate in each grid is included to probe the divergence boundary.
-LR_SWEEP_EPOCHS = 10
+#
+# The epoch budget is held equal to CV_EPOCHS (15) rather than shortened. A
+# shorter budget would confound the sweep: SGD converges slowest, so cutting the
+# budget depresses the SGD curve more than the adaptive curves and could make
+# SGD look worse for a reason unrelated to its update rule. Matching the budget
+# also makes the 1e-3 column reproduce scenario 2a exactly (same folds, same
+# seed), which turns that column into a determinism check.
+LR_SWEEP_EPOCHS = CV_EPOCHS
 
 LR_SWEEP_GRID = {
     "SGD_Momentum": {
