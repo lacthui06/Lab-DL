@@ -47,4 +47,8 @@ Mô hình được chọn: **Tuned MLP (Run #2)** — cải thiện +2.67% Test 
 
 Kết luận theo rule đã đăng ký trước ở Section 1.6.9: SGD ở 1e-3 tụt sau RMSprop/Adam (chênh 1.0233 điểm, khoảng 8.8 lần độ lệch chuẩn theo fold), và khi chỉ nâng lr của SGD lên 0.05 thì phần lớn khoảng cách được thu hẹp (+0.8116, khoảng 79%). Vì vậy khoảng cách ở 2a là do bước nhảy (step size) chứ không phải do bản chất update rule. RMSprop và Adam chênh nhau 0.0433 — nhỏ hơn nhiều so với độ lệch chuẩn theo fold (0.1167) — nên được báo cáo là nằm trong nhiễu, không kết luận optimizer nào hơn. RMSprop và Adam cho ra số liệu y hệt nhau ở cả 2a và 2b, chứng tỏ pipeline deterministic và chênh lệch nhỏ không phải do phần cứng.
 
+**Phase 2 — Scenario 2c: learning-rate sweep (Stratified 5-fold CV, backbone `TunedMLP`, 10 epoch):**
+
+Vì accuracy cuối của 3 optimizer quá sát nhau ở 2a/2b, kịch bản 2c sweep learning rate để tìm lr tối ưu và độ nhạy của từng optimizer: 3 optimizer x 5 lr x 5 fold = 75 run, mỗi run 10 epoch. Lưới lr: SGD + Momentum `1e-3, 5e-3, 1e-2, 5e-2, 1e-1`; RMSprop và Adam `1e-4, 3e-4, 1e-3, 3e-3, 1e-2`. Chính sách momentum/beta chốt trước khi chạy: SGD `momentum=0.9`, RMSprop giữ mặc định PyTorch `momentum=0.0`, Adam giữ mặc định `betas=(0.9, 0.999)` (Adam không có tham số `momentum`; `beta1` là thành phần momentum-like của nó). Cell có lr quá lớn gây NaN/Inf được ghi `diverged` và loại khỏi mean/std, không nội suy. Spec ở Section 1.6.10, kết quả và bảng đầy đủ ở Section 3.8 của `walkthrough_lab_01.md`; số liệu sẽ được điền sau khi chạy Kaggle sinh ra `outputs/optimizer_lr_sweep_results.json` (hiện là `not logged`).
+
 Chi tiết đầy đủ (bảng per-class, phân tích confusion matrix, số liệu convergence theo epoch) xem tại `walkthrough_lab_01.md`.

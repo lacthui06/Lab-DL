@@ -207,6 +207,50 @@ The design is deliberately left unchanged: 15 epochs, no scheduler, no weight de
 
 **Honesty commitment.** Null and negative results are reported as such. No arm is described as "better" unless the separation exceeds the per-fold standard deviation already collected across the five folds; a gap inside the fold-to-fold noise is reported as within noise. No result is inferred, rounded into significance, or replaced by a more favourable reading. Section 3.7 fills its tables from `outputs/optimizer_experiment_results*.json` only, and leaves a cell as `not logged` if the artifact is absent.
 
+#### 1.6.10. Scenario 2c - Learning-Rate Sweep (Pre-Registered Before the Run)
+
+**Why a third scenario.** Scenarios 2a and 2b compare the three optimizers at one learning rate each (`1e-3` symmetric, then the SGD arm raised to `0.05`). The committed results show the three arms finishing within a fraction of a point of one another, so the two scenarios answer only "does SGD catch up when its step size is raised", not "which optimizer is best and how sensitive is each to its step size". A single learning rate per optimizer also risks reporting an arm at an arbitrary point on its own sensitivity curve rather than near its optimum, which would make any ranking an artefact of the chosen step size. Scenario 2c removes both limitations by sweeping the learning rate.
+
+**What 2c adds.** For each optimizer, five learning rates are trained under the identical protocol (same frozen `TunedMLP`, same 5-fold stratified split, same augmentation, no scheduler, no weight decay, same seed policy), and the full validation-accuracy and validation-loss histories are recorded per run. The sweep produces three things the fixed-lr scenarios cannot: (i) each optimizer's accuracy-versus-learning-rate curve, from which its best learning rate on this task is read directly; (ii) a sensitivity measure, the drop in mean accuracy when the learning rate moves one grid step away from the optimum, which states how forgiving or brittle each update rule is; (iii) a converged cross-optimizer comparison at each optimizer's own optimum, which is the fair comparison the fixed-lr scenarios could not provide.
+
+**Budget.** The epoch budget is reduced from 15 to 10 for this scenario, because the sweep multiplies the number of runs by roughly twelve. The cost is 3 optimizers x 5 learning rates x 5 folds = 75 runs x 10 epochs on the lightweight `TunedMLP`, on the order of 3-4 GPU-hours on a Tesla T4, within the weekly quota. The 10-epoch budget is applied identically to every run, so it does not favour any optimizer; it does lower the common ceiling relative to the 15-epoch scenarios, which is stated here so the two scenario families are not compared on absolute accuracy without that caveat.
+
+**Learning-rate grid.**
+
+| Optimizer | Learning rates | Other hyperparameters |
+|:---|:---|:---|
+| SGD + Momentum | 1e-3, 5e-3, 1e-2, 5e-2, 1e-1 | momentum 0.9 |
+| RMSprop | 1e-4, 3e-4, 1e-3, 3e-3, 1e-2 | PyTorch defaults (alpha 0.99, momentum 0.0) |
+| Adam | 1e-4, 3e-4, 1e-3, 3e-3, 1e-2 | PyTorch defaults (betas 0.9, 0.999) |
+
+The grids are offset because the three methods have different natural step-size scales: SGD with momentum requires the largest step size, while RMSprop and Adam rescale each parameter's step by its recent gradient magnitude and therefore need a smaller one. Each grid spans roughly two orders of magnitude, and the fixed-lr value of scenario 2a (`1e-3`) falls inside the SGD and RMSprop grids and at the top of the Adam grid.
+
+**Momentum and beta policy (fixed before the run).** The sweep varies exactly two factors across arms: the update rule and the learning rate. Every other optimizer hyperparameter is held at the value used in scenarios 2a and 2b, so that a difference between curves is attributable to the update rule and its step size, not to a second tuned knob. Concretely:
+
+- `SGD` uses `momentum=0.9`, unchanged from 2a and 2b. SGD momentum is the mechanism that makes plain SGD competitive and is part of the canonical "SGD with momentum" arm.
+- `RMSprop` uses PyTorch's default `momentum=0.0`. `torch.optim.RMSprop` does expose a `momentum` argument, but enabling it would change the arm into "RMSprop with momentum", a different update rule from the textbook RMSprop, and would introduce a second varying factor. It is therefore left at its default deliberately.
+- `Adam` uses PyTorch's default `betas=(0.9, 0.999)`. `torch.optim.Adam` has no `momentum` argument at all; its momentum-like term is the first-moment decay `beta1`, whose default `0.9` is already active. There is nothing to "add" to Adam without redefining the arm, so it is left at its default.
+
+This policy is recorded here, before the run, so that the momentum question cannot be decided after seeing which setting flatters which optimizer. If a later revision wants momentum or `beta1` as an explicit experimental factor, it must be a new, separately labelled sub-experiment, not a silent change to this sweep.
+
+**Relationship to scenarios 2a and 2b (consistency check, not a replacement).** The sweep subsumes both earlier scenarios on its grid: the `1e-3` column reproduces scenario 2a's symmetric setting, and the SGD curve at `5e-2` reproduces the SGD arm of scenario 2b. The sweep is not used to overwrite the 2a and 2b results; it is a finer-grained view that should agree with them at the shared points. Agreement at those points is a reproducibility check on the sweep, and a disagreement would be reported as a discrepancy rather than smoothed over. Scenario 2c's primary comparison is the per-optimizer accuracy-versus-learning-rate curve; the 2a and 2b pair remains the record of the fixed-lr comparison.
+
+**Divergence guard (recorded, not hidden).** A learning rate that is too large for a given update rule can drive the loss to `NaN` or `Inf` before epoch 10. When that happens for any fold, the run is recorded with `diverged: true` and a `null` accuracy for that fold, the remaining folds of that (optimizer, learning rate) cell still run, and the cell's mean and standard deviation are computed over the non-diverged folds with the count of diverged folds stored alongside. A diverged cell is reported as "diverged" in the results table; it is never imputed, never replaced with zero, and never silently dropped. If every fold of a cell diverges, the cell is reported as diverged with no mean. The highest learning rate in each grid (`1e-1` for SGD, `1e-2` for RMSprop and Adam) is included specifically to probe this boundary, so a divergence there is an expected and reportable outcome, not a crash.
+
+**Planned artifacts (Scenario 2c).**
+- `outputs/optimizer_lr_sweep.png` - a two-panel figure: mean validation accuracy versus learning rate (left) and mean validation loss versus learning rate (right), one line per optimizer on a logarithmic x-axis, with each optimizer's optimum marked and error bars from the across-fold standard deviation. The loss panel is included so an accuracy plateau that hides a loss difference remains visible.
+- `outputs/optimizer_lr_sweep_results.json` - per (optimizer, learning rate) cell: per-fold accuracy and loss, mean, standard deviation, diverged-fold count, and the per-epoch histories needed to reuse the convergence metrics of Section 1.6.8.
+
+**Pre-registered interpretation (fixed before the numbers).**
+
+- **If each optimizer has an interior optimum** (accuracy rises then falls as the learning rate increases): the reported best learning rate per optimizer is that interior maximum, and the width of the curve around it is the sensitivity measure. The fair cross-optimizer comparison is then made at each optimizer's own best learning rate, and the three optima are compared with the same within-noise rule as Section 1.6.9.
+- **If the SGD curve peaks at a larger learning rate than the adaptive curves:** that confirms the step-size confound identified in Section 1.6.9 and quantifies it: SGD is not worse, it needs a larger step. This is the expected pattern and is reported as such only if the data show it.
+- **If an optimizer's accuracy is flat across the whole grid:** that update rule is insensitive to the step size on this task over two orders of magnitude; that is a positive finding about its robustness and is reported as such.
+- **If one optimizer's curve dominates at every learning rate:** that is a genuine update-rule advantage that survives a step-size sweep, and it is reported as the conclusion, even if it contradicts the expected pattern.
+- **If the three curves overlap at every learning rate:** the task cannot separate the optimizers at this budget and architecture; the result is reported as a null result and no ranking is claimed.
+
+**Honesty commitment (unchanged).** As in Section 1.6.9, no optimizer is called better unless the separation exceeds the across-fold standard deviation; a separation inside the noise is reported as within noise; a diverged cell is reported as diverged; and Section 3.7 is filled from `outputs/optimizer_lr_sweep_results.json` only, leaving a cell as `not logged` if the artifact is absent.
+
 ### 1.7. Phase 1 Diagnostic Artifacts (Symmetric Across Runs)
 The Phase 1 comparison contrasts two architectures, so every diagnostic emitted for one run must also be emitted for the other; otherwise the two runs are not comparable and the comparison matrix in Section 3.1 would rest on unequal evidence. The artifact set is therefore identical for Run #1 (Baseline MLP) and Run #2 (Tuned MLP), differing only in the `baseline_mlp` / `tuned_mlp` filename slug.
 
@@ -423,6 +467,8 @@ This table traces every important technical decision back to the corresponding d
 | Phase 1 artifact symmetry | An earlier revision gave the Tuned MLP extra diagnostics that the Baseline lacked, making the two runs non-comparable. | Emit the identical diagnostic set (confusion matrix, prediction grid, per-class report) for both runs; per-run filenames use the model slug. |
 | Phase 2 discriminating metric | A final-accuracy-only comparison saturates: all three arms reach a similar ceiling, so the update rules cannot be separated by the final number. | Keep the final accuracy and add a convergence-speed metric set (fixed-epoch checkpoints, first-epoch-to-threshold, curve average) derived from the per-epoch history already recorded. The design itself is unchanged. |
 | Phase 2 reporting honesty | The interpretation of the 2a-versus-2b result must not be chosen after seeing the numbers. | Pre-register the hypothesis and the interpretation rule for every possible outcome in Section 1.6.9; report null and contrary results as such, and treat a gap inside the per-fold standard deviation as within noise. |
+| Phase 2 learning-rate sweep (Scenario 2c) | Two fixed learning rates (2a, 2b) cannot reveal each optimizer's optimum or its sensitivity to the step size, so any ranking could be an artefact of the chosen rate. | Add Scenario 2c: sweep five learning rates per optimizer (75 runs, 10 epochs) under the identical protocol, record per-cell accuracy/loss and convergence, and read each optimizer's optimum and sensitivity from its curve. The 1e-3 column and the SGD 5e-2 cell double as a reproducibility check against 2a/2b. |
+| Scenario 2c momentum/beta policy | `build_optimizer` applies momentum only to SGD; `RMSprop` exposes a `momentum` argument (default 0) and `Adam` has none (its momentum-like term is `beta1`). Whether to enable these is a design choice that changes what varies across arms. | Keep each arm's optimizer hyperparameters at their 2a/2b values: SGD `momentum=0.9`, RMSprop PyTorch default `momentum=0.0`, Adam PyTorch default `betas=(0.9, 0.999)`. Only the update rule and the learning rate vary across cells; enabling momentum on RMSprop or changing `beta1` on Adam is deferred to a separately labelled sub-experiment if ever wanted. Recorded in Section 1.6.10 before the run. |
 
 ### 3.6. Key Takeaways & Submission Deliverables
 1. **Impact of Modern Regularization (measured):** Adding `BatchNorm` + `Dropout` + `CosineAnnealingLR` to a deeper MLP improved held-out Test Accuracy from 85.14% to 87.81% (+2.67%) and Macro F1 from 84.93% to 87.71% (+2.78%), while Test Loss dropped from 0.4443 to 0.3312 (-25.5%). The gain is broad across classes, not driven by a single class (Section 3.2).
@@ -438,6 +484,7 @@ This table traces every important technical decision back to the corresponding d
    - Environment Record: `outputs/environment_snapshot.json` (Python interpreter, platform, library versions, resolved device)
    - Phase 2 Optimizer Artifacts (2a symmetric): `outputs/optimizer_comparison_curves.png`, `outputs/optimizer_convergence.png`, `outputs/optimizer_tpr_fpr.png`, `outputs/optimizer_confusion_matrices.png`, `outputs/optimizer_experiment_results.json`
    - Phase 2 Optimizer Artifacts (2b fair budget): `outputs/optimizer_comparison_curves_fairbudget.png`, `outputs/optimizer_convergence_fairbudget.png`, `outputs/optimizer_tpr_fpr_fairbudget.png`, `outputs/optimizer_confusion_matrices_fairbudget.png`, `outputs/optimizer_experiment_results_fairbudget.json`
+   - Phase 2 Optimizer Artifacts (2c learning-rate sweep): `outputs/optimizer_lr_sweep.png`, `outputs/optimizer_lr_sweep_results.json`
 
 ### 3.7. Phase 2 Optimizer Comparison — Convergence-Speed Results
 
@@ -481,3 +528,53 @@ Every cell above is taken from `outputs/optimizer_experiment_results.json` (scen
 3. **The convergence-speed metrics add what the final accuracy hides.** In 2a the epoch-3 gap is large (SGD 84.4017 versus RMSprop 86.1483 and Adam 86.3983) and only shrinks by epoch 15; RMSprop reaches the 88% threshold at epoch 8 and Adam at epoch 9, while SGD never reaches it within the budget. This is the discriminating evidence that the final-accuracy comparison cannot provide: the adaptive arms climbed faster early even though the ceiling is shared. In 2b, SGD's early curve improves markedly (epoch 3 rises to 86.1250) and it now reaches 88% at epoch 10, but RMSprop still reaches it earlier (epoch 8) and keeps a higher epoch-average accuracy (87.4631 versus SGD 87.2058). The adaptive arms therefore converge faster at both budgets; the larger SGD step size narrows the early-epoch gap but does not eliminate it at this 15-epoch budget.
 
 4. **The tiny gaps are not a hardware effect.** The measured differences are reproducible: RMSprop and Adam produce identical numbers in scenario 2a and scenario 2b because nothing in their configuration changed, which shows the pipeline is deterministic under the fixed seeds and fold splits. The ordering and the magnitude of the gaps are therefore properties of the optimizer configuration and the fixed budget, not of the Tesla T4 GPU. Where a gap is smaller than the per-fold standard deviation (RMSprop versus Adam), the correct statement is that no difference was resolved at this budget, not that one optimizer is better.
+
+### 3.8. Phase 2 Scenario 2c - Learning-Rate Sweep Results
+
+This section reports the Scenario 2c learning-rate sweep specified in Section 1.6.10. The tables have a fixed shape so that no optimizer, no learning rate, and no diverged cell is silently dropped: every cell is present, and a value that the run has not yet produced is written as `not logged` rather than omitted or estimated. The primary comparison is each optimizer's mean validation accuracy as a function of its learning rate; the fair cross-optimizer comparison is made at each optimizer's own optimum, under the within-noise rule of Section 1.6.9.
+
+**Run status.** The sweep has not yet been executed on Kaggle, so `outputs/optimizer_lr_sweep_results.json` does not exist in the committed artifact set. Every value below is therefore `not logged`. This subsection is filled from `outputs/optimizer_lr_sweep_results.json` only, once that artifact is produced; no cell is populated by inference or expectation.
+
+**Grid and budget:** 3 optimizers x 5 learning rates x 5 folds = 75 runs, 10 epochs each, `TunedMLP`, augmentation on, no scheduler, weight decay 0.0. SGD uses momentum 0.9; RMSprop uses PyTorch default momentum 0.0; Adam uses PyTorch default betas (0.9, 0.999).
+
+**SGD + Momentum (momentum 0.9):**
+
+| Learning rate | Mean Val Acc | Std | Mean Val Loss | Diverged folds |
+|:---:|:---:|:---:|:---:|:---:|
+| 1e-3 | not logged | not logged | not logged | not logged |
+| 5e-3 | not logged | not logged | not logged | not logged |
+| 1e-2 | not logged | not logged | not logged | not logged |
+| 5e-2 | not logged | not logged | not logged | not logged |
+| 1e-1 | not logged | not logged | not logged | not logged |
+
+**RMSprop (PyTorch default momentum 0.0):**
+
+| Learning rate | Mean Val Acc | Std | Mean Val Loss | Diverged folds |
+|:---:|:---:|:---:|:---:|:---:|
+| 1e-4 | not logged | not logged | not logged | not logged |
+| 3e-4 | not logged | not logged | not logged | not logged |
+| 1e-3 | not logged | not logged | not logged | not logged |
+| 3e-3 | not logged | not logged | not logged | not logged |
+| 1e-2 | not logged | not logged | not logged | not logged |
+
+**Adam (PyTorch default betas 0.9, 0.999):**
+
+| Learning rate | Mean Val Acc | Std | Mean Val Loss | Diverged folds |
+|:---:|:---:|:---:|:---:|:---:|
+| 1e-4 | not logged | not logged | not logged | not logged |
+| 3e-4 | not logged | not logged | not logged | not logged |
+| 1e-3 | not logged | not logged | not logged | not logged |
+| 3e-3 | not logged | not logged | not logged | not logged |
+| 1e-2 | not logged | not logged | not logged | not logged |
+
+**Per-optimizer summary (to be read from the curves above):**
+
+| Optimizer | Best learning rate | Best mean Val Acc | Sensitivity (drop to next grid step) |
+|:---|:---:|:---:|:---:|
+| SGD + Momentum | not logged | not logged | not logged |
+| RMSprop | not logged | not logged | not logged |
+| Adam | not logged | not logged | not logged |
+
+**Reproducibility check against 2a and 2b (from the same JSON, once produced).** The `1e-3` column should reproduce the scenario 2a numbers of Section 3.7 for each optimizer, and the SGD cell at `5e-2` should reproduce the scenario 2b SGD number. Because Scenario 2c uses a 10-epoch budget rather than the 15-epoch budget of 2a/2b, these cells are expected to differ slightly (a shorter budget reaches a lower ceiling); agreement is therefore checked on the shape and ordering of the curves, not on exact equality with the 15-epoch figures. A large disagreement would be reported as a discrepancy, not smoothed over.
+
+**Conclusion (to be written under the pre-registered rule of Section 1.6.10).** The conclusion is written only after `outputs/optimizer_lr_sweep_results.json` exists, and it selects exactly one of the pre-registered branches in Section 1.6.10 according to the data: an interior optimum per optimizer, an SGD peak at a larger learning rate than the adaptive arms, a flat curve, a single dominating optimizer, or a null result. No branch is asserted here in advance of the artifact.

@@ -441,17 +441,22 @@ def save_optimizer_results_json(
     """
     import json
 
+    def _r(x):
+        return None if x is None else round(float(x), 4)
+
     summary = {}
     for name, res in results.items():
         summary[name] = {
             "learning_rate": res.get("learning_rate"),
             "num_epochs": res.get("num_epochs"),
-            "fold_accuracies": [round(a, 4) for a in res["fold_accuracies"]],
-            "fold_losses": [round(l, 4) for l in res["fold_losses"]],
-            "mean_acc": round(res["mean_acc"], 4),
-            "std_acc": round(res["std_acc"], 4),
-            "mean_loss": round(res["mean_loss"], 4),
-            "std_loss": round(res["std_loss"], 4),
+            "fold_accuracies": [_r(a) for a in res["fold_accuracies"]],
+            "fold_losses": [_r(l) for l in res["fold_losses"]],
+            "fold_diverged": res.get("fold_diverged"),
+            "num_diverged": res.get("num_diverged"),
+            "mean_acc": _r(res.get("mean_acc")),
+            "std_acc": _r(res.get("std_acc")),
+            "mean_loss": _r(res.get("mean_loss")),
+            "std_loss": _r(res.get("std_loss")),
             "tpr_per_class": {class_names[i]: round(float(v), 4) for i, v in enumerate(res["tpr_per_class"])},
             "fpr_per_class": {class_names[i]: round(float(v), 4) for i, v in enumerate(res["fpr_per_class"])},
             "convergence": res.get("convergence"),
@@ -514,6 +519,153 @@ def plot_optimizer_convergence(
     axes[1].set_xlabel("Epoch", fontsize=11)
     axes[1].set_ylabel("CrossEntropy Loss", fontsize=11)
     axes[1].grid(True, linestyle="--", alpha=0.6)
+    axes[1].legend(fontsize=10)
+
+    plt.tight_layout()
+    if save_path:
+        save_path = Path(save_path)
+        save_path.parent.mkdir(parents=True, exist_ok=True)
+        fig.savefig(str(save_path), dpi=300, bbox_inches="tight")
+    plt.show()
+
+
+def _group_sweep_by_optimizer(results: Dict[str, Dict]) -> Dict[str, List[Tuple[float, Dict]]]:
+    """Groups Scenario 2c sweep results by optimizer, sorted by learning rate.
+
+    Cell labels are of the form ``"{optimizer}_lr{lr:g}"``; the optimizer name is
+    the label with the trailing ``_lr{value}`` removed. Cells are returned as
+    (learning_rate, result) pairs ascending by learning rate so a curve can be
+    drawn left to right.
+    """
+    grouped: Dict[str, List[Tuple[float, Dict]]] = {}
+    for label, res in results.items():
+        optimizer_name = label.rsplit("_lr", 1)[0]
+        lr = float(res["learning_rate"])
+        grouped.setdefault(optimizer_name, []).append((lr, res))
+    for name in grouped:
+        grouped[name].sort(key=lambda pair: pair[0])
+    return grouped
+
+
+def save_lr_sweep_results_json(
+    results: Dict[str, Dict],
+    save_path: Path,
+) -> None:
+    """Serializes the Scenario 2c learning-rate-sweep summary into a JSON file.
+
+    For every (optimizer, learning-rate) cell the summary records the per-fold
+    accuracies and losses, the mean and standard deviation over the non-diverged
+    folds, the number of diverged folds, and the convergence metrics of Section
+    1.6.8. A diverged cell keeps ``null`` in place of its mean and standard
+    deviation; it is never imputed.
+
+    Args:
+        results: Mapping of cell label to its run_kfold_cv result dictionary.
+        save_path: Destination JSON path.
+    """
+    import json
+
+    def _r(x):
+        return None if x is None else round(float(x), 4)
+
+    summary = {}
+    for label, res in results.items():
+        summary[label] = {
+            "optimizer": label.rsplit("_lr", 1)[0],
+            "optimizer_type": res.get("optimizer_type"),
+            "learning_rate": res.get("learning_rate"),
+            "num_epochs": res.get("num_epochs"),
+            "fold_accuracies": [_r(a) for a in res["fold_accuracies"]],
+            "fold_losses": [_r(l) for l in res["fold_losses"]],
+            "fold_diverged": res.get("fold_diverged"),
+            "num_diverged": res.get("num_diverged"),
+            "mean_acc": _r(res.get("mean_acc")),
+            "std_acc": _r(res.get("std_acc")),
+            "mean_loss": _r(res.get("mean_loss")),
+            "std_loss": _r(res.get("std_loss")),
+            "convergence": res.get("convergence"),
+        }
+
+    save_path = Path(save_path)
+    save_path.parent.mkdir(parents=True, exist_ok=True)
+    with open(save_path, "w", encoding="utf-8") as f:
+        json.dump(summary, f, indent=2)
+
+
+def plot_lr_sweep(
+    results: Dict[str, Dict],
+    save_path: Optional[Path] = None,
+) -> None:
+    """Plots mean validation accuracy and loss versus learning rate, per optimizer.
+
+    Each optimizer is one line across its learning-rate grid on a logarithmic
+    x-axis; error bars are the across-fold standard deviation. A cell with no
+    finite mean (every fold diverged) is skipped and marked as diverged on the
+    axis rather than plotted as zero. The optimum learning rate of each optimizer
+    (highest finite mean accuracy) is marked with a filled circle.
+
+    Args:
+        results: Mapping of cell label to its run_kfold_cv result dictionary.
+        save_path: Optional path to persist the figure.
+    """
+    grouped = _group_sweep_by_optimizer(results)
+    fig, axes = plt.subplots(1, 2, figsize=(14, 5))
+    colors = ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728"]
+
+    for idx, (name, cells) in enumerate(grouped.items()):
+        c = colors[idx % len(colors)]
+        lrs, accs, acc_errs, losses, loss_errs = [], [], [], [], []
+        for lr, res in cells:
+            if res.get("mean_acc") is None:
+                continue
+            lrs.append(lr)
+            accs.append(res["mean_acc"])
+            acc_errs.append(res.get("std_acc") or 0.0)
+            losses.append(res.get("mean_loss"))
+            loss_errs.append(res.get("std_loss") or 0.0)
+
+        if not lrs:
+            continue
+
+        axes[0].errorbar(
+            lrs, accs, yerr=acc_errs, fmt="o-", label=name, color=c,
+            linewidth=2, capsize=4,
+        )
+        best_i = int(np.argmax(accs))
+        axes[0].scatter(
+            lrs[best_i], accs[best_i], s=150, facecolors="none",
+            edgecolors=c, linewidths=2, zorder=5,
+        )
+        axes[0].annotate(
+            f"best lr={lrs[best_i]:g}",
+            xy=(lrs[best_i], accs[best_i]),
+            xytext=(0, 12),
+            textcoords="offset points",
+            ha="center",
+            fontsize=9,
+            color=c,
+        )
+
+        loss_lrs = [lr for lr, lo in zip(lrs, losses) if lo is not None]
+        loss_vals = [lo for lo in losses if lo is not None]
+        if loss_vals:
+            axes[1].errorbar(
+                loss_lrs, loss_vals, yerr=loss_errs[:len(loss_vals)], fmt="s-",
+                label=name, color=c, linewidth=2, capsize=4,
+            )
+
+    axes[0].set_title("Learning-Rate Sweep: Mean Validation Accuracy (circle = optimum)", fontsize=12, fontweight="bold")
+    axes[0].set_xlabel("Learning Rate (log scale)", fontsize=11)
+    axes[0].set_ylabel("Accuracy (%)", fontsize=11)
+    axes[0].set_xscale("log")
+    axes[0].grid(True, which="both", linestyle="--", alpha=0.6)
+    axes[0].legend(fontsize=10)
+
+    axes[1].set_title("Learning-Rate Sweep: Mean Validation Loss", fontsize=13, fontweight="bold")
+    axes[1].set_xlabel("Learning Rate (log scale)", fontsize=11)
+    axes[1].set_ylabel("CrossEntropy Loss", fontsize=11)
+    axes[1].set_xscale("log")
+    axes[1].grid(True, which="both", linestyle="--", alpha=0.6)
     axes[1].legend(fontsize=10)
 
     plt.tight_layout()

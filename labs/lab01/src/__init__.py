@@ -25,6 +25,10 @@ from .config import (
     OptimizerScenario,
     OPTIMIZER_CONFIGS,
     OPTIMIZER_SCENARIOS,
+    LR_SWEEP_EPOCHS,
+    LR_SWEEP_GRID,
+    LRSweepCell,
+    build_lr_sweep_cells,
 )
 from .dataset import (
     get_transforms,
@@ -50,6 +54,7 @@ from .engine import (
     build_convergence_metrics,
     run_kfold_cv,
     run_optimizer_scenario,
+    run_lr_sweep,
 )
 from .utils import (
     set_seed,
@@ -65,6 +70,8 @@ from .utils import (
     plot_tpr_fpr_comparison,
     plot_confusion_matrix_grid,
     save_optimizer_results_json,
+    save_lr_sweep_results_json,
+    plot_lr_sweep,
 )
 
 __all__ = [
@@ -92,6 +99,10 @@ __all__ = [
     "OptimizerScenario",
     "OPTIMIZER_CONFIGS",
     "OPTIMIZER_SCENARIOS",
+    "LR_SWEEP_EPOCHS",
+    "LR_SWEEP_GRID",
+    "LRSweepCell",
+    "build_lr_sweep_cells",
     "get_transforms",
     "get_dataloaders",
     "get_kfold_pool",
@@ -111,6 +122,7 @@ __all__ = [
     "build_convergence_metrics",
     "run_kfold_cv",
     "run_optimizer_scenario",
+    "run_lr_sweep",
     "set_seed",
     "collect_environment_snapshot",
     "save_checkpoint",
@@ -124,4 +136,6 @@ __all__ = [
     "plot_tpr_fpr_comparison",
     "plot_confusion_matrix_grid",
     "save_optimizer_results_json",
+    "save_lr_sweep_results_json",
+    "plot_lr_sweep",
 ]

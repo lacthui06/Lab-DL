@@ -414,6 +414,115 @@ def test_10_cv_checkpoints_disjoint_across_scenarios(tmp_path):
     assert any(f"cv_sgd{fair_suffix}_fold1.pt" == name for name in written)
 
 
+def test_14_lr_sweep_smoke(tmp_path):
+    """Test 14: Smoke-test the Scenario 2c learning-rate sweep.
+
+    Runs a reduced grid (one optimizer, two learning rates) on a tiny synthetic
+    pool for 1 epoch, then checks that cells are keyed by optimizer+lr, that the
+    per-fold checkpoints of distinct cells do not collide, and that the sweep
+    JSON saver handles the new divergence fields.
+    """
+    from torch.utils.data import TensorDataset
+    from src.config import LRSweepCell
+    from src.engine import run_lr_sweep
+    from src.utils import save_lr_sweep_results_json
+
+    torch.manual_seed(RANDOM_SEED)
+    n = 200
+    images = torch.randn(n, 1, 28, 28)
+    labels = torch.arange(n) % NUM_CLASSES
+    pool = TensorDataset(images, labels)
+
+    cells = [
+        LRSweepCell(name="Adam", optimizer_type="adam", learning_rate=1e-3, momentum=0.0),
+        LRSweepCell(name="Adam", optimizer_type="adam", learning_rate=1e-2, momentum=0.0),
+    ]
+
+    results = run_lr_sweep(
+        cells=cells,
+        pool_train=pool,
+        pool_eval=pool,
+        targets=labels,
+        model_type="tuned_mlp",
+        num_epochs=1,
+        batch_size=16,
+        device=torch.device("cpu"),
+        n_splits=2,
+        seed=RANDOM_SEED,
+        num_workers=0,
+        checkpoint_dir=tmp_path,
+        verbose=False,
+    )
+
+    assert set(results.keys()) == {"Adam_lr0.001", "Adam_lr0.01"}, f"Unexpected cells: {set(results.keys())}"
+    for label, res in results.items():
+        assert len(res["fold_accuracies"]) == 2, f"{label} did not produce 2 fold scores"
+        assert res["num_diverged"] == 0, f"{label} unexpectedly diverged on a benign lr"
+        assert res["convergence"] is not None, f"{label} convergence metrics missing"
+
+    # 2 cells x 2 folds = 4 disjoint checkpoints.
+    written = sorted(p.name for p in tmp_path.glob("cv_*.pt"))
+    assert len(written) == 4, f"Expected 4 disjoint sweep checkpoints, got {len(written)}: {written}"
+
+    # The saver must round-trip the new divergence fields without error.
+    import json
+    out = tmp_path / "sweep.json"
+    save_lr_sweep_results_json(results, out)
+    payload = json.loads(out.read_text(encoding="utf-8"))
+    assert "num_diverged" in payload["Adam_lr0.001"]
+    assert payload["Adam_lr0.001"]["optimizer"] == "Adam"
+
+
+def test_15_kfold_divergence_guard():
+    """Test 15: A diverged fold is recorded and excluded, never imputed.
+
+    Pins the Scenario 2c divergence guard: a fold whose validation loss is
+    non-finite is flagged in `fold_diverged`, stores `None` in its accuracy slot,
+    and is left out of the mean and standard deviation instead of poisoning them.
+    """
+    import numpy as np
+    from src.engine import run_kfold_cv
+
+    n = 200
+    images = torch.randn(n, 1, 28, 28)
+    labels = torch.arange(n) % NUM_CLASSES
+
+    class _BrokenDataset(torch.utils.data.Dataset):
+        """Returns NaN inputs, which force a non-finite loss on every fold."""
+        def __init__(self, imgs):
+            self.imgs = imgs
+
+        def __len__(self):
+            return len(self.imgs)
+
+        def __getitem__(self, i):
+            return torch.full_like(self.imgs[i], float("nan")), labels[i]
+
+    broken = _BrokenDataset(images)
+    res = run_kfold_cv(
+        pool_train=broken,
+        pool_eval=broken,
+        targets=labels,
+        optimizer_type="adam",
+        model_type="tuned_mlp",
+        learning_rate=1e-3,
+        num_epochs=1,
+        batch_size=16,
+        device=torch.device("cpu"),
+        n_splits=2,
+        seed=RANDOM_SEED,
+        num_workers=0,
+        checkpoint_dir=None,
+        verbose=False,
+    )
+
+    assert res["num_diverged"] == 2, f"Expected both folds to diverge, got {res['num_diverged']}"
+    assert all(res["fold_diverged"]), f"Diverged flags not set: {res['fold_diverged']}"
+    assert all(a is None for a in res["fold_accuracies"]), "Diverged folds must store None, not a number"
+    assert res["mean_acc"] is None, "A fully diverged cell must report no mean, not zero"
+    assert res["convergence"] is None, "A fully diverged cell has no convergence metrics"
+
+
 if __name__ == "__main__":
     print("Running tests via pytest...")
     pytest.main(["-v", __file__])

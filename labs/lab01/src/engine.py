@@ -465,6 +465,7 @@ def run_kfold_cv(
 
     fold_accuracies: List[float] = []
     fold_losses: List[float] = []
+    fold_diverged: List[bool] = []
     histories: List[Dict[str, List[float]]] = []
     oof_preds: List[int] = []
     oof_targets: List[int] = []
@@ -520,14 +521,42 @@ def run_kfold_cv(
             device=device,
         )
 
-        fold_accuracies.append(val_acc)
-        fold_losses.append(val_loss)
+        # Divergence guard (spec Section 1.6.10): a learning rate that is too
+        # large can drive the loss to NaN/Inf. Such a fold is recorded as
+        # diverged rather than allowed to poison the cell's mean or crash the
+        # run; it is never imputed and never silently dropped.
+        diverged = not (np.isfinite(val_loss) and np.isfinite(val_acc))
+        fold_diverged.append(bool(diverged))
+        if diverged:
+            if verbose:
+                print(f"  Fold {fold} DIVERGED (val_loss={val_loss}); excluded from mean/std.")
+            fold_accuracies.append(None)
+            fold_losses.append(None)
+        else:
+            fold_accuracies.append(val_acc)
+            fold_losses.append(val_loss)
+            oof_preds.extend(val_preds)
+            oof_targets.extend(val_targets)
         histories.append(history)
-        oof_preds.extend(val_preds)
-        oof_targets.extend(val_targets)
 
-    cm = confusion_matrix(oof_targets, oof_preds, labels=list(range(NUM_CLASSES)))
+    # A fully diverged cell has no out-of-fold predictions; sklearn raises on an
+    # empty array, so fall back to a zero matrix rather than crashing the sweep.
+    if oof_targets:
+        cm = confusion_matrix(oof_targets, oof_preds, labels=list(range(NUM_CLASSES)))
+    else:
+        cm = np.zeros((NUM_CLASSES, NUM_CLASSES), dtype=np.int64)
     tpr, fpr = compute_tpr_fpr(cm)
+
+    acc_arr = np.asarray([np.nan if a is None else a for a in fold_accuracies], dtype=np.float64)
+    loss_arr = np.asarray([np.nan if l is None else l for l in fold_losses], dtype=np.float64)
+    finite_acc = acc_arr[np.isfinite(acc_arr)]
+    finite_loss = loss_arr[np.isfinite(loss_arr)]
+    num_diverged = int(sum(fold_diverged))
+
+    # Convergence metrics use the non-diverged folds only; a single NaN history
+    # would otherwise turn every mean into NaN.
+    finite_histories = [h for h, d in zip(histories, fold_diverged) if not d]
+    convergence = build_convergence_metrics(finite_histories) if finite_histories else None
 
     return {
         "optimizer_type": optimizer_type,
@@ -536,15 +565,17 @@ def run_kfold_cv(
         "n_splits": n_splits,
         "fold_accuracies": fold_accuracies,
         "fold_losses": fold_losses,
-        "mean_acc": float(np.mean(fold_accuracies)),
-        "std_acc": float(np.std(fold_accuracies)),
-        "mean_loss": float(np.mean(fold_losses)),
-        "std_loss": float(np.std(fold_losses)),
+        "fold_diverged": fold_diverged,
+        "num_diverged": num_diverged,
+        "mean_acc": float(finite_acc.mean()) if finite_acc.size else None,
+        "std_acc": float(finite_acc.std()) if finite_acc.size else None,
+        "mean_loss": float(finite_loss.mean()) if finite_loss.size else None,
+        "std_loss": float(finite_loss.std()) if finite_loss.size else None,
         "confusion_matrix": cm,
         "tpr_per_class": tpr,
         "fpr_per_class": fpr,
         "histories": histories,
-        "convergence": build_convergence_metrics(histories),
+        "convergence": convergence,
         "oof_preds": oof_preds,
         "oof_targets": oof_targets,
     }
@@ -600,3 +631,63 @@ def run_optimizer_scenario(
             verbose=verbose,
         )
     return scenario_results
+
+
+def run_lr_sweep(
+    cells,
+    pool_train: Dataset,
+    pool_eval: Dataset,
+    targets: torch.Tensor,
+    model_type: str = "tuned_mlp",
+    num_epochs: int = 10,
+    batch_size: int = 64,
+    device: torch.device = torch.device("cpu"),
+    n_splits: int = 5,
+    seed: int = 42,
+    num_workers: int = 0,
+    checkpoint_dir: Optional[Path] = None,
+    verbose: bool = True,
+) -> Dict[str, Dict]:
+    """Runs every (optimizer, learning-rate) cell of the Scenario 2c sweep.
+
+    Each cell is a single optimizer trained at one learning rate under the
+    identical protocol, so the only factors varying across cells are the update
+    rule and its step size. Results are keyed by a label encoding both, and each
+    cell writes its checkpoints under a unique suffix so cells cannot overwrite
+    one another.
+
+    Args:
+        cells: An iterable of `LRSweepCell` (from `src.config`), each carrying
+            its own optimizer type, learning rate, and momentum.
+
+    Returns:
+        Mapping of cell label (`"{optimizer}_lr{lr:g}"`) to that cell's
+        `run_kfold_cv` result dictionary.
+    """
+    sweep_results: Dict[str, Dict] = {}
+    for cell in cells:
+        label = f"{cell.name}_lr{cell.learning_rate:g}"
+        if verbose:
+            print(
+                f"\n>>> LR sweep | {cell.name} "
+                f"(type={cell.optimizer_type}, lr={cell.learning_rate:g})"
+            )
+        sweep_results[label] = run_kfold_cv(
+            pool_train=pool_train,
+            pool_eval=pool_eval,
+            targets=targets,
+            optimizer_type=cell.optimizer_type,
+            model_type=model_type,
+            learning_rate=cell.learning_rate,
+            momentum=cell.momentum,
+            num_epochs=num_epochs,
+            batch_size=batch_size,
+            device=device,
+            n_splits=n_splits,
+            seed=seed,
+            num_workers=num_workers,
+            checkpoint_dir=checkpoint_dir,
+            checkpoint_suffix=f"_lrsweep_{cell.name}_lr{cell.learning_rate:g}",
+            verbose=verbose,
+        )
+    return sweep_results

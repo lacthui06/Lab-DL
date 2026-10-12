@@ -188,3 +188,77 @@ OPTIMIZER_SCENARIOS = [
 
 # Backward-compatible alias: the symmetric-budget (2a) arm list.
 OPTIMIZER_CONFIGS = OPTIMIZER_SCENARIOS[0].arms
+
+# ---------------------------------------------------------------------------
+# Scenario 2c - Learning-Rate Sweep (spec Section 1.6.10)
+# ---------------------------------------------------------------------------
+# Each optimizer is swept over five learning rates under an identical protocol
+# (same frozen TunedMLP, same 5-fold stratified split, no scheduler, no weight
+# decay, same seeding). Only the update rule and the learning rate vary across
+# arms; every other optimizer hyperparameter is held at its scenarios 2a/2b
+# value, so a difference between curves is attributable to the update rule and
+# its step size rather than to a second tuned knob.
+#
+# Momentum/beta policy, fixed before the run (spec Section 1.6.10):
+#   - SGD uses momentum 0.9, unchanged from 2a/2b.
+#   - RMSprop keeps PyTorch's default momentum 0.0. torch.optim.RMSprop does
+#     expose a momentum argument, but enabling it would turn the arm into
+#     "RMSprop with momentum", a different update rule from textbook RMSprop,
+#     and would introduce a second varying factor.
+#   - Adam keeps PyTorch's default betas (0.9, 0.999). torch.optim.Adam has no
+#     momentum argument at all; its momentum-like term is the first-moment decay
+#     beta1, whose default 0.9 is already active.
+#
+# The grids are offset because the methods have different natural step-size
+# scales: SGD with momentum needs the largest step, while the adaptive methods
+# rescale each parameter's step by its recent gradient magnitude. The highest
+# learning rate in each grid is included to probe the divergence boundary.
+LR_SWEEP_EPOCHS = 10
+
+LR_SWEEP_GRID = {
+    "SGD_Momentum": {
+        "optimizer_type": "sgd",
+        "momentum": CV_SGD_MOMENTUM,
+        "learning_rates": [1e-3, 5e-3, 1e-2, 5e-2, 1e-1],
+    },
+    "RMSprop": {
+        "optimizer_type": "rmsprop",
+        "momentum": 0.0,
+        "learning_rates": [1e-4, 3e-4, 1e-3, 3e-3, 1e-2],
+    },
+    "Adam": {
+        "optimizer_type": "adam",
+        "momentum": 0.0,
+        "learning_rates": [1e-4, 3e-4, 1e-3, 3e-3, 1e-2],
+    },
+}
+
+
+@dataclass
+class LRSweepCell:
+    """A single (optimizer, learning-rate) cell of the Scenario 2c sweep."""
+    name: str
+    optimizer_type: str
+    learning_rate: float
+    momentum: float = 0.0
+
+
+def build_lr_sweep_cells() -> list:
+    """Flattens LR_SWEEP_GRID into a list of LRSweepCell.
+
+    Produces one cell per (optimizer, learning rate) pair, optimizer-major, so
+    the notebook prints one optimizer's whole curve before moving to the next.
+    The default grid yields 3 optimizers x 5 learning rates = 15 cells.
+    """
+    cells = []
+    for name, spec in LR_SWEEP_GRID.items():
+        for lr in spec["learning_rates"]:
+            cells.append(
+                LRSweepCell(
+                    name=name,
+                    optimizer_type=spec["optimizer_type"],
+                    learning_rate=lr,
+                    momentum=spec["momentum"],
+                )
+            )
+    return cells
