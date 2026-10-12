@@ -190,6 +190,23 @@ To make the comparison discriminating, the phase therefore keeps the final accur
 
 These metrics are derived from data already stored in `histories`; no additional training is required. `save_optimizer_results_json` is extended to persist them, and `plot_optimizer_convergence` renders them as a figure. The metric set is emitted identically for both scenarios, so the 2a-versus-2b comparison is made on the same basis. Section 3.7 reports the convergence-speed comparison as the primary Phase 2 discriminator.
 
+#### 1.6.9. Pre-Registered Interpretation (The Lab's Story, Fixed Before the Numbers)
+The design is deliberately left unchanged: 15 epochs, no scheduler, no weight decay, augmentation on, one frozen `TunedMLP`, 5-fold stratified CV, and the same three arms in both scenarios. Only the convergence-speed metric set of Section 1.6.8 is added, because a final-accuracy-only comparison saturates. To keep the reporting honest, the hypothesis and the interpretation rule for every possible outcome are recorded here before the sweep runs, so the conclusion cannot be chosen to fit whichever numbers appear.
+
+**The question the two scenarios answer.** A single symmetric learning rate (`1e-3`) handicaps a non-adaptive method: SGD takes a fixed, small step regardless of gradient scale, whereas RMSprop and Adam rescale each parameter's step by its recent gradient magnitude. If SGD at `1e-3` trails the adaptive arms in scenario 2a, that gap is confounded: it could be a property of the update rule, or simply an inappropriately small step size. Scenario 2b removes the confound by raising only the SGD arm to `0.05`, leaving every other factor byte-for-byte identical. The 2a-versus-2b pair therefore isolates one question: is the apparent adaptive advantage a property of the update rule, or an artefact of the step size?
+
+**Pre-registered expected pattern.** SGD + Momentum is expected to trail RMSprop and Adam in scenario 2a (symmetric `1e-3`), and to close most or all of that gap in scenario 2b (`0.05`). This is the pattern the design is built to detect, and it is stated here as an expectation, not a result.
+
+**Interpretation rule (fixed in advance, applied whichever way the data falls).**
+- **If 2a shows SGD trailing and 2b shows SGD catching up (the expected pattern):** the 2a gap is attributable to the step size rather than to the update rule. The honest conclusion is that non-adaptive SGD is not intrinsically worse on this task; it requires a larger step size, and once given one it is competitive on final accuracy. The adaptive-optimizer advantage seen at a symmetric small learning rate is largely an effective-step-size effect.
+- **If 2b still shows SGD trailing after the larger step size:** the adaptive advantage survives a fair step size, so it is a genuine property of per-parameter rescaling on this task, not a step-size artefact. That is the conclusion that must be reported, even though it contradicts the expected pattern.
+- **If 2b shows SGD overtaking the adaptive arms:** the larger step size overshot the adaptive arms' advantage; the non-adaptive method generalised better at this budget. This is also reported as the result.
+- **If every arm ties in both scenarios:** the task is saturated and the final-accuracy metric cannot discriminate; the conclusion is then carried by the convergence-speed metrics alone. If those also tie, the result is reported as "no measurable difference at this budget", not spun into a winner.
+
+**Convergence metrics and the final number are read together.** Even in scenario 2b, where final accuracies may tie, the fixed-epoch checkpoints (epochs 3, 5, 10, 15) and the first-epoch-to-threshold figures state how quickly each arm reached the common ceiling. A tie in final accuracy with an earlier threshold epoch for the adaptive arms means the adaptive methods converged faster even though they finished level; that is the discriminating statement the convergence metrics exist to support. Conversely, if the curves are indistinguishable at every checkpoint, that is reported as a genuine null result.
+
+**Honesty commitment.** Null and negative results are reported as such. No arm is described as "better" unless the separation exceeds the per-fold standard deviation already collected across the five folds; a gap inside the fold-to-fold noise is reported as within noise. No result is inferred, rounded into significance, or replaced by a more favourable reading. Section 3.7 fills its tables from `outputs/optimizer_experiment_results*.json` only, and leaves a cell as `not logged` if the artifact is absent.
+
 ### 1.7. Phase 1 Diagnostic Artifacts (Symmetric Across Runs)
 The Phase 1 comparison contrasts two architectures, so every diagnostic emitted for one run must also be emitted for the other; otherwise the two runs are not comparable and the comparison matrix in Section 3.1 would rest on unequal evidence. The artifact set is therefore identical for Run #1 (Baseline MLP) and Run #2 (Tuned MLP), differing only in the `baseline_mlp` / `tuned_mlp` filename slug.
 
@@ -343,11 +360,13 @@ This table traces every important technical decision back to the corresponding d
 | Phase 1 optimizer choice | The playbook recommends `AdamW`; the presentation topic is the three classical optimizers. | Use `SGD + Momentum` (momentum 0.9, lr=0.05) for both Phase 1 runs, so the architecture remains the only manipulated variable and the Phase 1 update rule matches the SGD arm of Phase 2. |
 | Phase 2 learning-rate policy | A single shared learning rate handicaps a non-adaptive method such as SGD. | Run two otherwise-identical scenarios: 2a with all arms at 1e-3, and 2b with only the SGD arm raised to 0.05. The pair isolates the effect of the SGD step size. |
 | Phase 1 artifact symmetry | An earlier revision gave the Tuned MLP extra diagnostics that the Baseline lacked, making the two runs non-comparable. | Emit the identical diagnostic set (confusion matrix, prediction grid, per-class report) for both runs; per-run filenames use the model slug. |
+| Phase 2 discriminating metric | A final-accuracy-only comparison saturates: all three arms reach a similar ceiling, so the update rules cannot be separated by the final number. | Keep the final accuracy and add a convergence-speed metric set (fixed-epoch checkpoints, first-epoch-to-threshold, curve average) derived from the per-epoch history already recorded. The design itself is unchanged. |
+| Phase 2 reporting honesty | The interpretation of the 2a-versus-2b result must not be chosen after seeing the numbers. | Pre-register the hypothesis and the interpretation rule for every possible outcome in Section 1.6.9; report null and contrary results as such, and treat a gap inside the per-fold standard deviation as within noise. |
 
 ### 3.6. Key Takeaways & Submission Deliverables
 1. **Impact of Modern Regularization (superseded figures):** In the previously committed `AdamW` run, integrating `BatchNorm` + `Dropout` + `CosineAnnealingLR` improved the held-out Test Accuracy of the MLP by +0.68% (87.33% -> 88.01%) and lowered Test Loss from 0.3555 to 0.3307. These figures are invalidated by the Phase 1 optimizer change and are pending re-measurement.
 2. **Bias-Variance Trade-off (superseded figures):** In the same superseded run, explicit regularization reduced training-set accuracy (89.82% -> 87.69%) while raising held-out accuracy, evidencing reduced overfitting rather than improved raw fitting capacity.
-3. **Optimizer Sensitivity (Phase 2):** The secondary experiment isolates the optimizer update rule on a frozen `TunedMLP` backbone under Stratified 5-fold cross-validation, across two scenarios that differ only in the SGD learning rate (2a symmetric at 1e-3; 2b fair budget with SGD at 0.05). Its measured outcome is recorded once the Kaggle run completes.
+3. **Optimizer Sensitivity (Phase 2):** The secondary experiment isolates the optimizer update rule on a frozen `TunedMLP` backbone under Stratified 5-fold cross-validation, across two scenarios that differ only in the SGD learning rate (2a symmetric at 1e-3; 2b fair budget with SGD at 0.05). The design is unchanged; a convergence-speed metric set is added because the final accuracy saturates. The hypothesis and the interpretation rule for every possible outcome are pre-registered in Section 1.6.9, and the measured outcome is recorded in Section 3.7 once the Kaggle run completes.
 4. **Generated Submission Artifacts:**
    - Best Model Weights: `outputs/checkpoints/baseline_mlp_best.pt`, `outputs/checkpoints/tuned_mlp_best.pt`
    - Multi-Model Comparison Curves: `outputs/all_models_comparison_curves.png`
@@ -380,3 +399,14 @@ This section reports the Phase 2 optimizer comparison described in Section 1.6. 
 | Adam | not logged | not logged | not logged | not logged | not logged | not logged | not logged |
 
 Every cell above is `not logged` because the Phase 2 sweep has not yet produced artifacts: the earlier Kaggle archive was created before the Phase 2 cell ran (Section 1.6.7), so no Phase 2 JSON or figure exists. The numbers are filled in from `outputs/optimizer_experiment_results*.json` on the next Kaggle execution. Inventing them is prohibited by the no-fabrication policy. The per-arm per-class TPR/FPR and confusion matrices are reported in Section 1.6.6 artifacts; the analysis here focuses on the convergence comparison.
+
+**SGD learning-rate sensitivity (the 2a-to-2b delta):**
+
+| Quantity | Value |
+|:---|:---|
+| SGD mean val acc, scenario 2a (lr = 1e-3) | not logged |
+| SGD mean val acc, scenario 2b (lr = 0.05) | not logged |
+| SGD delta (2b - 2a) | not logged |
+| Adaptive-arm delta (2b - 2a), for reference | not logged (expected ~0: their lr is unchanged) |
+
+**Conclusion (to be written under the pre-registered rule of Section 1.6.9).** This paragraph is filled in only after the artifacts return, and it must follow the interpretation rule fixed in Section 1.6.9 rather than being written to suit the numbers. It states, in this order: (1) whether the expected pattern held (SGD trailing in 2a, catching up in 2b), or which of the pre-registered alternative outcomes occurred; (2) whether any observed separation exceeds the per-fold standard deviation, or is within noise; (3) what the convergence-speed checkpoints add beyond the final accuracy. A null or contrary result is reported as such.
