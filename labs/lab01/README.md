@@ -29,15 +29,22 @@ Bài lab xây dựng pipeline Deep Learning end-to-end để phân loại 10 nh�
 
 ## Results Summary
 
-> **Staleness note:** the figures below were produced by the previously committed run that used `AdamW`. The Phase 1 optimizer has since been changed to `SGD + Momentum` (lr=0.05), so these values are invalidated and are shown only as the historical record. They are pending re-measurement on the next Kaggle execution.
+Kết quả dưới đây lấy từ lần chạy Kaggle GPU đã commit (Phase 1 optimizer là `SGD + Momentum`, lr=0.05 cho cả hai run).
 
-| Run | Model | Test Accuracy | Macro F1 |
+| Run | Model | Test Accuracy | Test Loss | Macro F1 |
+|---|---|---|---|---|
+| Run #1 Baseline | Baseline MLP (2 layers) | 85.14% | 0.4443 | 84.93% |
+| Run #2 Tuned | Tuned MLP (3 layers, BN, Dropout) | **87.81%** | **0.3312** | **87.71%** |
+
+Mô hình được chọn: **Tuned MLP (Run #2)** — cải thiện +2.67% Test Accuracy, +2.78% Macro F1 và giảm 25.5% Test Loss so với baseline. Lớp yếu nhất ở cả hai run là Shirt (Recall 0.514 ở baseline, 0.636 ở run tuned).
+
+**Phase 2 — so sánh optimizer (Stratified 5-fold CV, backbone `TunedMLP`, 15 epoch):**
+
+| Kịch bản | SGD + Momentum | RMSprop | Adam |
 |---|---|---|---|
-| Run #1 Baseline | Baseline MLP (2 layers) | 87.33% (superseded) | không ghi nhận |
-| Run #2 Tuned | Tuned MLP (3 layers, BN, Dropout) | **88.01%** (superseded) | không ghi nhận |
+| 2a (tất cả lr = 1e-3) | 87.7417 | 88.7650 | 88.8083 |
+| 2b (SGD lr = 0.05) | 88.5533 | 88.7650 | 88.8083 |
 
-Mô hình được chọn: **Tuned MLP (Run #2)** — trong lần chạy đã commit, cải thiện +0.68% Test Accuracy và giảm 7.0% Test Loss so với baseline. Các delta này thuộc lần chạy `AdamW` đã bị thay thế và cần được tính lại sau khi đo lại.
+Kết luận theo rule đã đăng ký trước ở Section 1.6.9: SGD ở 1e-3 tụt sau RMSprop/Adam (chênh 1.0233 điểm, khoảng 8.8 lần độ lệch chuẩn theo fold), và khi chỉ nâng lr của SGD lên 0.05 thì phần lớn khoảng cách được thu hẹp (+0.8116, khoảng 79%). Vì vậy khoảng cách ở 2a là do bước nhảy (step size) chứ không phải do bản chất update rule. RMSprop và Adam chênh nhau 0.0433 — nhỏ hơn nhiều so với độ lệch chuẩn theo fold (0.1167) — nên được báo cáo là nằm trong nhiễu, không kết luận optimizer nào hơn. RMSprop và Adam cho ra số liệu y hệt nhau ở cả 2a và 2b, chứng tỏ pipeline deterministic và chênh lệch nhỏ không phải do phần cứng.
 
-Ghi chú: Run #1 và Run #2 không ghi nhận Macro F1 trong lần chạy Kaggle đã commit, nên ô này để trống thay vì suy diễn số. Theo chuẩn metric phân loại, bảng kết quả sẽ được mở rộng thêm Precision, Recall (TPR), F1 và FPR theo từng lớp ngay khi lần chạy Kaggle kế tiếp sinh ra `classification_report_baseline_mlp.txt` và `classification_report_tuned_mlp.txt`.
-
-Chi tiết đầy đủ xem tại `walkthrough_lab_01.md`.
+Chi tiết đầy đủ (bảng per-class, phân tích confusion matrix, số liệu convergence theo epoch) xem tại `walkthrough_lab_01.md`.

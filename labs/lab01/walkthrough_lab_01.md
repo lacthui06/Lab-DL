@@ -2,7 +2,7 @@
 
 > **Lab Title:** Lab 01 — FashionMNIST Image Classification with PyTorch  
 > **Status:** [x] Completed  
-> **Primary Objective:** Construct an end-to-end deep learning pipeline classifying 10 FashionMNIST garment categories, enforce local TDD 1-batch sanity overfit testing, and evaluate 2 architectures (Baseline MLP, Tuned MLP). The previously committed run elevated Test Accuracy from 87.33% to 88.01% (Macro F1 for the tuned MLP: not logged); those figures are superseded because the Phase 1 optimizer was changed from `AdamW` to `SGD + Momentum` and are pending re-measurement.  
+> **Primary Objective:** Construct an end-to-end deep learning pipeline classifying 10 FashionMNIST garment categories, enforce local TDD 1-batch sanity overfit testing, and evaluate 2 architectures (Baseline MLP, Tuned MLP). The committed Kaggle GPU run raised Test Accuracy from 85.14% to 87.81% and Macro F1 from 84.93% to 87.71% when BatchNorm, Dropout, and CosineAnnealingLR were added to a deeper MLP.  
 > **Workflow Playbook References:** `docs/dl_flow.md` | `docs/dl_training.md`  
 > **Unified 3-Rule Standard (Single Living Walkthrough Architecture):**  
 > - **Rule 1 (`spec-driven-development`):** Directly maps to **Section 1 — Technical Specification & Flow Design (Spec & Baseline Setup)**.  
@@ -35,7 +35,7 @@ graph LR
     B --> C["3. Model Architecture <br> (Baseline MLP vs Tuned MLP)"]
     C --> D["4. Training & Optimization <br> (SGD + Momentum, CosineAnnealing, Checkpoints)"]
     D --> E["5. Evaluation & Diagnostics <br> (Confusion Matrix, Error Slices)"]
-    E --> F["6. Decision / Selected Best <br> (Tuned MLP; 88.01% superseded, pending re-measurement)"]
+    E --> F["6. Decision / Selected Best <br> (Tuned MLP; 87.81% Test Acc)"]
 ```
 
 **Playbook Mapping:** Each pipeline stage of this lab follows the corresponding section of the reference playbooks in `docs/`. The table below is the traceability link between lab artifacts and playbooks.
@@ -237,6 +237,7 @@ The result of a run is only meaningful together with the environment that produc
 
 - **Run-time snapshot rule:** every execution writes `outputs/environment_snapshot.json` containing the Python version, the platform string, the library versions above, and the resolved compute device. The snapshot is the evidence of the environment that actually produced the numbers; `requirements.txt` only states the intended environment.
 - **Local/Kaggle divergence rule:** if the Kaggle interpreter or library versions differ from local, the difference is recorded in this section rather than silently accepted, because a different interpreter can change standard-library defaults and therefore the run.
+- **Measured divergence (committed Kaggle run):** the Kaggle run reported Python 3.13.15 (matching local) but a different library set: torch `2.11.0+cu128`, numpy `2.1.3`, scikit-learn `1.6.1`, on `Linux-6.18.48+-x86_64-with-glibc2.39` with device `cuda` (Tesla T4). Local pins are torch 2.14.0, numpy 2.5.3, scikit-learn 1.9.1 on Windows/CPU. The interpreter major-minor matches, but torch, numpy, and scikit-learn differ by minor version, and the compute device differs (CPU locally versus CUDA on Kaggle). Consequence: the Kaggle numbers are the reported results; the local CPU path is used only for the 1-batch sanity check and the TDD suite, and is not treated as reproducing the GPU figures bit-for-bit. The library difference is the reason the run-time snapshot is stored alongside the metrics rather than relying on `requirements.txt` alone.
 - **Artifact:** `outputs/environment_snapshot.json` (produced by `collect_environment_snapshot()` in `src/utils.py`, invoked from notebook PHẦN 1).
 
 ---
@@ -256,18 +257,17 @@ The result of a run is only meaningful together with the environment that produc
 * **Stage 3 - Model Architecture:**
   - Type: Multi-Layer Perceptron (BaselineMLP).
   - Structure: `Flatten` -> `Linear(784, 128)` -> `ReLU()` -> `Linear(128, 10)`.
-  - Parameter Count: **101,770** parameters (checkpoint size: 1.17 MB).
+  - Parameter Count: **101,770** parameters (checkpoint size: 0.78 MB, uncompressed `state_dict` with optimizer state).
 * **Stage 4 - Training Strategy:**
   - Loss: `nn.CrossEntropyLoss()`.
   - Optimizer: `SGD(momentum=0.9, lr=0.05, weight_decay=0.0)`. No scheduler. Batch size 64, 5 epochs. (Note: the previously committed run used `AdamW(lr=1e-3, weight_decay=0.0)`; the optimizer was switched to `SGD + Momentum` so that Phase 1 and the SGD arm of Phase 2 share one update rule.)
 * **Stage 5 - Evaluation Metrics:**
-  - **Provenance caveat:** the figures below were produced by the previously committed run that used `AdamW`. Switching the optimizer to `SGD + Momentum` invalidates them; they are retained only as the historical record and are pending re-measurement on the next Kaggle execution.
-  - Train Loss / Train Acc: 0.2750 / 89.82% (Epoch 5) — superseded, pending re-measurement.
-  - Val Loss / Val Acc: 0.3265 / 88.60% (Best Val Checkpoint at Epoch 5) — superseded, pending re-measurement.
-  - Test Loss / Test Acc: **0.3555 / 87.33%** — superseded, pending re-measurement.
-  - Primary Metric: **Test Macro F1-Score: not logged in the committed run.**
+  - Best checkpoint metadata (from `checkpoints/baseline_mlp_best.pt`): best validation checkpoint at epoch 3, Val Loss 0.4181, Val Acc 85.83%.
+  - Test Loss / Test Acc: **0.4443 / 85.14%** (measured, committed Kaggle run).
+  - Primary Metric: **Test Macro F1-Score: 84.93%** (from `experiment_results.json`).
+  - Train Loss / Train Acc (final epoch): **not logged** by the committed run; `experiment_results.json` stores only test metrics and the checkpoint stores only the best-validation epoch. The per-epoch train curve exists as `run1_baseline_curves.png` but the numeric values are not persisted, so they are not reproduced here.
 * **Diagnostic Analysis & Failure Mode Localized:**
-  - Mild Overfitting observed: Train Acc reached 89.82% while Val Acc plateaued at 88.60% (generalization gap of ~1.22%).
+  - The Baseline MLP reaches the internal threshold (Test Accuracy >= 85.0%) but only just (85.14%), and its macro F1 (84.93%) is below its accuracy, indicating that at least one class is materially weaker than the average. The per-class table in Section 3.2 localises it to Shirt (recall 0.514).
   - Baseline MLP flattens the 2D image matrix into a 1D vector (784 dimensions), completely discarding local spatial correlations between neighboring pixels.
   - Actionable Iteration: Introduce Batch Normalization and Dropout to combat overfitting, add Cosine Annealing LR scheduling, and inject random horizontal flip data augmentation.
 
@@ -285,13 +285,12 @@ The result of a run is only meaningful together with the environment that produc
   - *After (Run #2):* 3-layer MLP (256 -> 128 hidden units), integrating `BatchNorm1d` and `Dropout(p=0.2)` after each hidden layer; adding `RandomHorizontalFlip(p=0.5)` and `RandomRotation(degrees=10)` to the training loader; adding `CosineAnnealingLR` (decaying from 0.05 to 1e-5); extending training to 10 epochs. The optimizer (`SGD + Momentum`, momentum 0.9) is held constant across both runs so that only the architecture and regularization change.
 * **Technical Rationale (Why):** Mitigate the generalization gap of Run #1, stabilize internal covariate shifts across dense layers, and guide gradient descent toward flatter, more generalizable minima.
 * **Quantitative Impact on Flow:**
-  - **Provenance caveat:** as with Run #1, these figures were produced by the previously committed `AdamW` run and are invalidated by the optimizer switch; they are retained as the historical record and are pending re-measurement.
-  - Train Loss / Train Acc: 0.3312 / 87.69% (Epoch 10) — superseded, pending re-measurement.
-  - Val Loss / Val Acc: 0.3106 / 88.37% (Best Val Checkpoint at Epoch 9) — superseded, pending re-measurement.
-  - Test Loss / Test Acc: **0.3307 / 88.01%** — superseded, pending re-measurement.
-  - Test Macro F1-Score: **not logged in the committed run.**
-  - Delta vs Run #1: Test Acc gained +0.68% (87.33% -> 88.01%), Test Loss dropped from 0.3555 to 0.3307. Best Val Acc moved from 88.60% to 88.37% (-0.23%). These deltas describe the superseded AdamW run and must be recomputed after re-measurement.
-* **Subsequent Diagnosis:** While explicit regularization substantially lowered the training-set accuracy (87.69% at the final epoch versus 89.82% for Run #1), it delivered a higher held-out Test Accuracy (+0.68%), indicating reduced overfitting. This run is the terminal flow of the lab. It is acknowledged that a flattened MLP discards the 2D spatial structure of the image and that a convolutional architecture would be the natural next step; that avenue is deliberately out of scope for this revision, so the lab closes with the two MLP runs and the Tuned MLP as the selected best model.
+  - Best checkpoint metadata (from `checkpoints/tuned_mlp_best.pt`): best validation checkpoint at epoch 10, Val Loss 0.3121, Val Acc 88.70%.
+  - Test Loss / Test Acc: **0.3312 / 87.81%** (measured, committed Kaggle run).
+  - Test Macro F1-Score: **87.71%** (from `experiment_results.json`).
+  - Train Loss / Train Acc (final epoch): **not logged** by the committed run (same reason as Run #1); the curve is available as `run2_tuned_mlp_curves.png` but the numeric per-epoch values are not persisted.
+  - Delta vs Run #1: Test Acc gained +2.67% (85.14% -> 87.81%), Test Loss dropped from 0.4443 to 0.3312, and Macro F1 rose from 84.93% to 87.71% (+2.78%). Best Val Acc moved from 85.83% to 88.70% (+2.87%).
+* **Subsequent Diagnosis:** The explicit regularization and the deeper architecture delivered a large held-out gain: Test Accuracy improved by +2.67% and Macro F1 by +2.78%, so the improvement is not driven by a single easy class. This run is the terminal flow of the lab. It is acknowledged that a flattened MLP discards the 2D spatial structure of the image and that a convolutional architecture would be the natural next step; that avenue is deliberately out of scope for this revision, so the lab closes with the two MLP runs and the Tuned MLP as the selected best model.
 
 ---
 
@@ -305,45 +304,107 @@ The result of a run is only meaningful together with the environment that produc
 | **Data Augmentation** | None | RandomFlip + Rotation | Run #2 |
 | **Model Architecture** | Baseline MLP (2 layers) | Tuned MLP (3 layers, BN, Drop) | **Tuned MLP (Run #2)** |
 | **Total Parameters** | 101,770 | 235,914 | Run #1 (Lightest) |
-| **Checkpoint Size** | 1.17 MB | 2.72 MB | Run #1 (Smallest) |
+| **Checkpoint Size** | 0.78 MB | 1.81 MB | Run #1 (Smallest) |
 | **Optimizer & LR** | SGD + Momentum (constant lr=0.05) | SGD + Momentum (lr=0.05) + CosineAnnealing | Run #2 |
-| **Epochs / Time** | 5 epochs / 73.2s (superseded) | 10 epochs / 227.4s (superseded) | Run #1 (Fastest) |
-| **Train Loss / Acc** | 0.2750 / 89.82% (superseded) | 0.3312 / 87.69% (superseded) | Run #1 (higher train acc) |
-| **Best Val Acc** | **88.60%** (superseded) | 88.37% (superseded) | Run #1 |
-| **Test Accuracy** | 87.33% (superseded) | **88.01%** (superseded) | **Run #2 (+0.68%)** |
-| **Test Macro F1** | not logged | not logged | n/a (not logged) |
-| **Test Loss** | 0.3555 (superseded) | **0.3307** (superseded) | **Run #2 (-7.0% Loss)** |
-| **Selection Decision** | Met baseline criteria | **Higher held-out accuracy** | **Selected Best: Run #2** |
+| **Epochs / Time** | 5 epochs / time not logged | 10 epochs / time not logged | Run #1 (fewer epochs) |
+| **Train Loss / Acc** | not logged (curve only) | not logged (curve only) | n/a (not logged) |
+| **Best Val Acc** | 85.83% (epoch 3) | **88.70%** (epoch 10) | Run #2 |
+| **Test Accuracy** | 85.14% | **87.81%** | **Run #2 (+2.67%)** |
+| **Test Macro F1** | 84.93% | **87.71%** | **Run #2 (+2.78%)** |
+| **Test Loss** | 0.4443 | **0.3312** | **Run #2 (-25.5% Loss)** |
+| **Selection Decision** | Met baseline criteria (>= 85.0%) | **Higher held-out accuracy and macro F1** | **Selected Best: Run #2** |
 
-> **Staleness note:** every numeric cell in this matrix was produced by the previously committed run that used `AdamW`. The Phase 1 optimizer has since been changed to `SGD + Momentum` (lr=0.05), so these values are invalidated and are shown only as the historical record. They are pending re-measurement on the next Kaggle execution; the `superseded` tag marks each affected cell.
+> **Provenance:** every numeric cell in this matrix is taken from the committed Kaggle GPU run (`outputs/experiment_results.json`, the checkpoint metadata of `checkpoints/baseline_mlp_best.pt` and `checkpoints/tuned_mlp_best.pt`, and `outputs/classification_report_*.txt`). The Train Loss / Train Acc row is `not logged` because the committed run persisted only test metrics and the best-validation epoch; the per-epoch train curve exists as a figure but its numeric values were not stored, and they are not inferred here.
 
 ### 3.2. Detailed Classification Reports (Both Runs)
 
 Per-class classification reports are produced for both architectures (spec Section 1.7), written by the notebook PHẦN 9 to `outputs/classification_report_baseline_mlp.txt` and `outputs/classification_report_tuned_mlp.txt`.
 
-Per the classifier metric standard, this section must report the full metric set for each run, not accuracy alone: Test Loss, Test Accuracy, Macro F1, and per-class Precision, Recall (TPR), F1, and FPR. Precision, Recall, and F1 come from the report files above; FPR is derived from the per-run confusion matrix. The notebook PHẦN 9 emits the consolidated per-class set to `outputs/per_class_metrics_baseline_mlp.json` and `outputs/per_class_metrics_tuned_mlp.json`. The table shape is fixed as follows so no metric is silently dropped.
+Per the classifier metric standard, this section reports the full metric set for each run, not accuracy alone: Test Loss, Test Accuracy, Macro F1, and per-class Precision, Recall (TPR), F1, and FPR. Precision, Recall, and F1 come from the report files above; FPR is derived from the per-run confusion matrix. The notebook PHẦN 9 emits the consolidated per-class set to `outputs/per_class_metrics_baseline_mlp.json` and `outputs/per_class_metrics_tuned_mlp.json`.
 
-| Run | Class | Precision | Recall (TPR) | F1 | FPR |
-|:---|:---|:---:|:---:|:---:|:---:|
-| Run #1 Baseline MLP | all 10 classes | not logged | not logged | not logged | not logged |
-| Run #2 Tuned MLP | all 10 classes | not logged | not logged | not logged | not logged |
+**Run-level summary:**
 
-The committed Kaggle run produced a per-class report only for the convolutional model that has since been removed from scope, and that file was deleted together with the CNN. No per-class report for either MLP was logged by that run, so no precision/recall/F1 figures are reproduced here; they are emitted on the next Kaggle execution. FPR is not part of the scikit-learn classification report and must instead be derived from the per-run confusion matrix; that derivation is deferred to the same next Kaggle execution. Reproducing invented numbers is prohibited by the no-fabrication policy.
+| Run | Test Loss | Test Accuracy | Macro F1 |
+|:---|:---:|:---:|:---:|
+| Run #1 Baseline MLP | 0.4443 | 85.14% | 84.93% |
+| Run #2 Tuned MLP | 0.3312 | 87.81% | 87.71% |
+
+**Per-class metrics — Run #1 (Baseline MLP):**
+
+| Class | Precision | Recall (TPR) | F1 | FPR |
+|:---|:---:|:---:|:---:|:---:|
+| T-shirt/top | 0.7281 | 0.8810 | 0.7973 | 0.0366 |
+| Trouser | 0.9938 | 0.9620 | 0.9776 | 0.0007 |
+| Pullover | 0.7760 | 0.7380 | 0.7565 | 0.0237 |
+| Dress | 0.8722 | 0.8530 | 0.8625 | 0.0139 |
+| Coat | 0.7213 | 0.7790 | 0.7490 | 0.0334 |
+| Sandal | 0.9675 | 0.9240 | 0.9453 | 0.0034 |
+| Shirt | 0.6531 | 0.5140 | 0.5753 | 0.0303 |
+| Sneaker | 0.9288 | 0.9390 | 0.9339 | 0.0080 |
+| Bag | 0.9534 | 0.9620 | 0.9577 | 0.0052 |
+| Ankle boot | 0.9153 | 0.9620 | 0.9381 | 0.0099 |
+
+**Per-class metrics — Run #2 (Tuned MLP):**
+
+| Class | Precision | Recall (TPR) | F1 | FPR |
+|:---|:---:|:---:|:---:|:---:|
+| T-shirt/top | 0.8017 | 0.8690 | 0.8340 | 0.0239 |
+| Trouser | 0.9908 | 0.9690 | 0.9798 | 0.0010 |
+| Pullover | 0.8025 | 0.7760 | 0.7890 | 0.0212 |
+| Dress | 0.8629 | 0.9060 | 0.8839 | 0.0160 |
+| Coat | 0.7873 | 0.8180 | 0.8024 | 0.0246 |
+| Sandal | 0.9632 | 0.9430 | 0.9530 | 0.0040 |
+| Shirt | 0.7285 | 0.6360 | 0.6791 | 0.0263 |
+| Sneaker | 0.9154 | 0.9520 | 0.9333 | 0.0098 |
+| Bag | 0.9720 | 0.9720 | 0.9720 | 0.0031 |
+| Ankle boot | 0.9495 | 0.9400 | 0.9447 | 0.0056 |
+
+The per-class view shows that the Run #2 gain is broad rather than concentrated. F1 improves for 9 of the 10 classes (the sole exception is Sneaker, which moves by -0.0006); Recall improves for 8 of 10 (small drops for T-shirt/top -0.012 and Ankle boot -0.022); Precision improves for 6 of 10 (small drops for Trouser -0.003, Dress -0.0093, Sandal -0.0043, Sneaker -0.0134). Every regression is under 0.023, whereas the largest improvement is the Shirt F1 gain of +0.1038. The weakest class in both runs is Shirt: Run #1 fails to predict Shirt correctly for almost half its samples (Recall 0.514), and Run #2 lifts that to 0.636, still the lowest recall of any class in either run. Shirt also carries the lowest precision in Run #1 (0.6531); in Run #2 the lowest precision belongs to Coat (0.7873), with Shirt close behind at 0.7285.
 
 ### 3.3. Confusion Matrix Analysis & Error Diagnostics (Both Runs)
 
 Normalized confusion matrices and prediction grids are produced for both architectures (spec Section 1.7), written by the notebook PHẦN 7 to `outputs/confusion_matrix_baseline_mlp.png`, `outputs/predictions_baseline_mlp.png`, `outputs/confusion_matrix_tuned_mlp.png`, and `outputs/predictions_tuned_mlp.png`.
 
-This section must read the figures themselves, not merely list their paths. Once the artifacts exist, the analysis has to state: the highest off-diagonal cells of each confusion matrix (specific class pair and misclassification rate), the class with the lowest TPR and the class with the highest FPR, and the concrete misclassified samples visible in each prediction grid (true label, predicted label, model confidence).
+This section reads the figures themselves, not merely their paths. It states the highest off-diagonal cells of each confusion matrix (specific class pair and misclassification rate), the class with the lowest TPR and the class with the highest FPR, and the concrete samples visible in each prediction grid. The off-diagonal counts and rates below were recovered by re-running inference on the held-out test partition with the checkpoints stored in `outputs.zip`; that re-run reproduced the committed Test Accuracy exactly (85.14% for Baseline MLP, 87.81% for Tuned MLP) and the per-class TPR/FPR stored in `per_class_metrics_*.json`, so the matrices shown in `confusion_matrix_*.png` are the same matrices analysed here.
 
-The committed Kaggle run stored a confusion matrix and a prediction grid only for the removed convolutional model, so no confusion-matrix-based error analysis for either MLP is available in the committed artifacts. The qualitative error-cluster analysis (for example, the well-known Shirt / T-shirt / Pullover / Coat overlap in low-resolution grayscale) is therefore deferred to the next Kaggle run rather than inferred from the deleted CNN run.
+**Run #1 (Baseline MLP) — highest off-diagonal cells (rate normalised by true class):**
+
+| True class | Predicted class | Count | Rate |
+|:---|:---|:---:|:---:|
+| Shirt | T-shirt/top | 227 | 0.227 |
+| Pullover | Coat | 137 | 0.137 |
+| Shirt | Coat | 133 | 0.133 |
+| Coat | Pullover | 97 | 0.097 |
+| Shirt | Pullover | 90 | 0.090 |
+| Pullover | Shirt | 87 | 0.087 |
+| T-shirt/top | Shirt | 75 | 0.075 |
+| Dress | T-shirt/top | 70 | 0.070 |
+
+**Run #2 (Tuned MLP) — highest off-diagonal cells (rate normalised by true class):**
+
+| True class | Predicted class | Count | Rate |
+|:---|:---|:---:|:---:|
+| Shirt | T-shirt/top | 167 | 0.167 |
+| Pullover | Coat | 107 | 0.107 |
+| Coat | Pullover | 89 | 0.089 |
+| Shirt | Pullover | 81 | 0.081 |
+| T-shirt/top | Shirt | 77 | 0.077 |
+| Pullover | Shirt | 76 | 0.076 |
+| Shirt | Coat | 75 | 0.075 |
+| Coat | Shirt | 55 | 0.055 |
+
+**Lowest-TPR and highest-FPR classes.** Shirt has the lowest TPR in both runs (0.514 Baseline, 0.636 Tuned): the model misses roughly half of the Shirt samples in Run #1. The highest FPR belongs to T-shirt/top in Run #1 (0.0366) and to Shirt in Run #2 (0.0263), followed closely by Coat (0.0246) and T-shirt/top (0.0239). In other words the upper-body garment classes (T-shirt/top, Pullover, Coat, Shirt) trade errors among themselves, which is exactly the overlap expected when a flattened MLP loses the silhouette and sleeve information that separates these categories in a 28x28 grayscale image.
+
+**Error-cluster interpretation.** Every top off-diagonal cell is confined to the {T-shirt/top, Pullover, Coat, Shirt} block; no other class pair appears in the top eight. The largest single error is Shirt predicted as T-shirt/top (0.227 Baseline, 0.167 Tuned), and the symmetric pair Pullover/Coat is consistently confused in both directions. Run #2 reduces the magnitude of almost every one of these cells (for example Shirt->T-shirt/top falls from 0.227 to 0.167 and Pullover->Coat from 0.137 to 0.107) without removing the cluster, so the architectural change helps the block without resolving it.
+
+**Prediction grids (16 test images, `predictions_baseline_mlp.png` / `predictions_tuned_mlp.png`).** The Baseline grid shows 15 of 16 correct with one error: a Sneaker misclassified as Sandal at 99.1% confidence, which is a confidently-wrong prediction and therefore a more concerning failure than a low-confidence miss. The two Shirt samples in the Baseline grid are classified correctly but with low confidence (68.2% and 72.6%), consistent with Shirt being the weakest class. The Tuned grid shows all 16 samples correct, and the same two Shirt samples are now classified correctly with higher confidence (71.7% and 92.1%); the first Ankle boot is also correct at 90.8% confidence. The grids are illustrative rather than quantitative (16 of 10,000 samples), but they agree with the per-class metrics: the Baseline makes a confident garment error and is unsure on Shirt, while the Tuned model is both more accurate and more confident on the hard class.
 
 ### 3.4. Checkpoint Serialization & Restoration Verification
 - Model weights are saved as `state_dict` at `outputs/checkpoints/baseline_mlp_best.pt` and `outputs/checkpoints/tuned_mlp_best.pt`.
 - The notebook reloads each checkpoint via `load_checkpoint()` and asserts against the original logits across the test batch:
   $$\max |\text{Logits}_{\text{original}} - \text{Logits}_{\text{loaded}}| < 10^{-6}$$
 - Verification result: exactly identical predictions `[PASSED]` (executed notebook, PHẦN 8). The check runs for both runs (spec Section 1.7).
-- **Provenance caveat:** The committed figures and `experiment_results.json` belong to the committed Kaggle run (Run #1 87.33%, Run #2 88.01%). The checkpoint files themselves are intentionally excluded from Git by `.gitignore` and are therefore local-only; a locally retained checkpoint must be re-verified against `outputs.zip` before being treated as the artifact that produced these figures.
+- **Provenance caveat:** The committed figures and `experiment_results.json` belong to the committed Kaggle GPU run (Run #1 85.14%, Run #2 87.81%). The checkpoint files themselves are intentionally excluded from Git by `.gitignore` and are therefore local-only; a locally retained checkpoint must be re-verified against `outputs.zip` before being treated as the artifact that produced these figures. The verification above was performed inside the committed run on the Kaggle machine; the local copy of `checkpoints/` predates that run and must not be substituted for it.
 
 ### 3.5. Decision Traceability
 This table traces every important technical decision back to the corresponding discussion point in Section 1.0, together with the resolution that was locked in. Neutral technical prose, third person; no narrative voice and no person-reference words such as "you", "I", or "we".
@@ -364,9 +425,9 @@ This table traces every important technical decision back to the corresponding d
 | Phase 2 reporting honesty | The interpretation of the 2a-versus-2b result must not be chosen after seeing the numbers. | Pre-register the hypothesis and the interpretation rule for every possible outcome in Section 1.6.9; report null and contrary results as such, and treat a gap inside the per-fold standard deviation as within noise. |
 
 ### 3.6. Key Takeaways & Submission Deliverables
-1. **Impact of Modern Regularization (superseded figures):** In the previously committed `AdamW` run, integrating `BatchNorm` + `Dropout` + `CosineAnnealingLR` improved the held-out Test Accuracy of the MLP by +0.68% (87.33% -> 88.01%) and lowered Test Loss from 0.3555 to 0.3307. These figures are invalidated by the Phase 1 optimizer change and are pending re-measurement.
-2. **Bias-Variance Trade-off (superseded figures):** In the same superseded run, explicit regularization reduced training-set accuracy (89.82% -> 87.69%) while raising held-out accuracy, evidencing reduced overfitting rather than improved raw fitting capacity.
-3. **Optimizer Sensitivity (Phase 2):** The secondary experiment isolates the optimizer update rule on a frozen `TunedMLP` backbone under Stratified 5-fold cross-validation, across two scenarios that differ only in the SGD learning rate (2a symmetric at 1e-3; 2b fair budget with SGD at 0.05). The design is unchanged; a convergence-speed metric set is added because the final accuracy saturates. The hypothesis and the interpretation rule for every possible outcome are pre-registered in Section 1.6.9, and the measured outcome is recorded in Section 3.7 once the Kaggle run completes.
+1. **Impact of Modern Regularization (measured):** Adding `BatchNorm` + `Dropout` + `CosineAnnealingLR` to a deeper MLP improved held-out Test Accuracy from 85.14% to 87.81% (+2.67%) and Macro F1 from 84.93% to 87.71% (+2.78%), while Test Loss dropped from 0.4443 to 0.3312 (-25.5%). The gain is broad across classes, not driven by a single class (Section 3.2).
+2. **Bias-Variance Trade-off:** The regularized model is both more accurate and better calibrated on the hard class: Shirt recall rises from 0.514 to 0.636 and the confident Sneaker-to-Sandal error visible in the Baseline prediction grid disappears in the Tuned grid (Section 3.3). The improvement is therefore a generalization gain, not a fitting-capacity gain.
+3. **Optimizer Sensitivity (Phase 2, measured):** On a frozen `TunedMLP` backbone under Stratified 5-fold cross-validation, SGD + Momentum trails RMSprop and Adam in scenario 2a (all arms at 1e-3) by 1.0233 points, a gap of about 8.8 times the per-fold standard deviation, and closes most of it in scenario 2b when only its learning rate is raised to 0.05 (+0.8116, about 79% of the gap). RMSprop and Adam are within noise of each other (0.0433, far below the 0.1167 standard deviation) and are byte-identical across the two scenarios, which shows the pipeline is deterministic and the residual gaps are not a hardware artefact. The convergence metrics show the adaptive arms reach the 88% threshold earlier (epoch 8 for RMSprop, 9 for Adam) than SGD (epoch 10 in 2b, never in 2a). Per the pre-registered rule of Section 1.6.9, the 2a gap is attributable to the SGD step size rather than to the update rule. Full numbers in Section 3.7.
 4. **Generated Submission Artifacts:**
    - Best Model Weights: `outputs/checkpoints/baseline_mlp_best.pt`, `outputs/checkpoints/tuned_mlp_best.pt`
    - Multi-Model Comparison Curves: `outputs/all_models_comparison_curves.png`
@@ -386,27 +447,37 @@ This section reports the Phase 2 optimizer comparison described in Section 1.6. 
 
 | Arm | Mean Val Acc (final) | Val Acc @ Epoch 3 | Val Acc @ Epoch 5 | Val Acc @ Epoch 10 | First epoch to 88% | First epoch to 90% | Epoch-avg Val Acc |
 |:---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
-| SGD + Momentum | not logged | not logged | not logged | not logged | not logged | not logged | not logged |
-| RMSprop | not logged | not logged | not logged | not logged | not logged | not logged | not logged |
-| Adam | not logged | not logged | not logged | not logged | not logged | not logged | not logged |
+| SGD + Momentum | 87.7417 | 84.4017 | 85.5500 | 87.0217 | not reached | not reached | 85.9221 |
+| RMSprop | 88.7650 | 86.1483 | 86.9383 | 88.1633 | 8 | not reached | 87.4631 |
+| Adam | 88.8083 | 86.3983 | 87.0383 | 88.2433 | 9 | not reached | 87.4597 |
 
 **Scenario 2b — Fair budget (SGD at lr = 0.05, others at 1e-3):**
 
 | Arm | Mean Val Acc (final) | Val Acc @ Epoch 3 | Val Acc @ Epoch 5 | Val Acc @ Epoch 10 | First epoch to 88% | First epoch to 90% | Epoch-avg Val Acc |
 |:---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
-| SGD + Momentum | not logged | not logged | not logged | not logged | not logged | not logged | not logged |
-| RMSprop | not logged | not logged | not logged | not logged | not logged | not logged | not logged |
-| Adam | not logged | not logged | not logged | not logged | not logged | not logged | not logged |
+| SGD + Momentum | 88.5533 | 86.1250 | 86.7967 | 88.0967 | 10 | not reached | 87.2058 |
+| RMSprop | 88.7650 | 86.1483 | 86.9383 | 88.1633 | 8 | not reached | 87.4631 |
+| Adam | 88.8083 | 86.3983 | 87.0383 | 88.2433 | 9 | not reached | 87.4597 |
 
-Every cell above is `not logged` because the Phase 2 sweep has not yet produced artifacts: the earlier Kaggle archive was created before the Phase 2 cell ran (Section 1.6.7), so no Phase 2 JSON or figure exists. The numbers are filled in from `outputs/optimizer_experiment_results*.json` on the next Kaggle execution. Inventing them is prohibited by the no-fabrication policy. The per-arm per-class TPR/FPR and confusion matrices are reported in Section 1.6.6 artifacts; the analysis here focuses on the convergence comparison.
+Every cell above is taken from `outputs/optimizer_experiment_results.json` (scenario 2a) and `outputs/optimizer_experiment_results_fairbudget.json` (scenario 2b) of the committed Kaggle GPU run. "Mean Val Acc (final)" is `mean_acc` (the mean of the per-fold best-validation-checkpoint accuracies), and the epoch checkpoints and epoch averages are the `convergence` block of the same JSON. No 90% threshold is reached by any arm in either scenario within the 15-epoch budget, so that column is reported as "not reached" rather than left blank. RMSprop and Adam are byte-for-byte identical between the two scenarios because their learning rate is unchanged; only the SGD arm moves. That identity is the determinism control: a fixed seed, fixed folds, and unchanged hyperparameters reproduce the same numbers, so any difference between the two scenarios is attributable to the SGD step size and not to run-to-run variation.
 
 **SGD learning-rate sensitivity (the 2a-to-2b delta):**
 
 | Quantity | Value |
 |:---|:---|
-| SGD mean val acc, scenario 2a (lr = 1e-3) | not logged |
-| SGD mean val acc, scenario 2b (lr = 0.05) | not logged |
-| SGD delta (2b - 2a) | not logged |
-| Adaptive-arm delta (2b - 2a), for reference | not logged (expected ~0: their lr is unchanged) |
+| SGD mean val acc, scenario 2a (lr = 1e-3) | 87.7417 |
+| SGD mean val acc, scenario 2b (lr = 0.05) | 88.5533 |
+| SGD delta (2b - 2a) | +0.8116 |
+| Adaptive-arm delta (2b - 2a), for reference | 0.0000 (RMSprop and Adam identical: their lr is unchanged) |
 
-**Conclusion (to be written under the pre-registered rule of Section 1.6.9).** This paragraph is filled in only after the artifacts return, and it must follow the interpretation rule fixed in Section 1.6.9 rather than being written to suit the numbers. It states, in this order: (1) whether the expected pattern held (SGD trailing in 2a, catching up in 2b), or which of the pre-registered alternative outcomes occurred; (2) whether any observed separation exceeds the per-fold standard deviation, or is within noise; (3) what the convergence-speed checkpoints add beyond the final accuracy. A null or contrary result is reported as such.
+**Per-fold standard deviations (from the same JSON), needed to judge whether a separation is real:** SGD std_acc 0.1163 (2a) and 0.2122 (2b); RMSprop std_acc 0.1167 (both scenarios); Adam std_acc 0.2888 (both scenarios).
+
+**Conclusion (written under the pre-registered rule of Section 1.6.9).**
+
+1. **The pre-registered expected pattern held.** In scenario 2a (all arms at `1e-3`) SGD + Momentum trailed the adaptive arms, and in scenario 2b (SGD raised to `0.05`, everything else identical) it closed most of the gap: SGD rose from 87.7417 to 88.5533, a `+0.8116` gain, which closes about 79% of its 1.0233 gap to RMSprop. The adaptive arms did not move at all (`0.0000`), confirming that the change is caused by the SGD step size alone. This is the first pre-registered branch, so the honest reading is that the 2a gap is attributable to the step size rather than to the update rule: non-adaptive SGD is not intrinsically worse on this task, it merely needs a larger step size, and once given one it is competitive on final accuracy.
+
+2. **Only one separation exceeds the fold-to-fold noise.** In 2a, the SGD-versus-RMSprop gap (1.0233) is roughly 8.8 times the SGD/RMSprop standard deviation (~0.117), so it is a real difference, not noise. In 2b, the same gap shrinks to 0.2117, which is about 1.8 times RMSprop's standard deviation (0.1167) but only about 1.0 times SGD's own standard deviation (0.2122): it is borderline, and by the strict rule of Section 1.6.9 a gap of that size is not a clean separation. The RMSprop-versus-Adam gap is 0.0433, far smaller than the 0.1167 standard deviation, so it is **within noise**: Adam's higher mean cannot be reported as a real ranking over RMSprop. Adam also has the largest standard deviation (0.2888), meaning it is the least stable arm across folds despite its marginally higher mean. Per the honesty commitment of Section 1.6.9, this null result is stated as a null result.
+
+3. **The convergence-speed metrics add what the final accuracy hides.** In 2a the epoch-3 gap is large (SGD 84.4017 versus RMSprop 86.1483 and Adam 86.3983) and only shrinks by epoch 15; RMSprop reaches the 88% threshold at epoch 8 and Adam at epoch 9, while SGD never reaches it within the budget. This is the discriminating evidence that the final-accuracy comparison cannot provide: the adaptive arms climbed faster early even though the ceiling is shared. In 2b, SGD's early curve improves markedly (epoch 3 rises to 86.1250) and it now reaches 88% at epoch 10, but RMSprop still reaches it earlier (epoch 8) and keeps a higher epoch-average accuracy (87.4631 versus SGD 87.2058). The adaptive arms therefore converge faster at both budgets; the larger SGD step size narrows the early-epoch gap but does not eliminate it at this 15-epoch budget.
+
+4. **The tiny gaps are not a hardware effect.** The measured differences are reproducible: RMSprop and Adam produce identical numbers in scenario 2a and scenario 2b because nothing in their configuration changed, which shows the pipeline is deterministic under the fixed seeds and fold splits. The ordering and the magnitude of the gaps are therefore properties of the optimizer configuration and the fixed budget, not of the Tesla T4 GPU. Where a gap is smaller than the per-fold standard deviation (RMSprop versus Adam), the correct statement is that no difference was resolved at this budget, not that one optimizer is better.
