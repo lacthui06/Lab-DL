@@ -1,0 +1,245 @@
+{
+  "SGD_Momentum": {
+    "learning_rate": 0.001,
+    "num_epochs": 15,
+    "fold_accuracies": [
+      87.8667,
+      87.5667,
+      87.6917,
+      87.875,
+      87.7083
+    ],
+    "fold_losses": [
+      0.3292,
+      0.3481,
+      0.3326,
+      0.3356,
+      0.3364
+    ],
+    "fold_diverged": [
+      false,
+      false,
+      false,
+      false,
+      false
+    ],
+    "num_diverged": 0,
+    "mean_acc": 87.7417,
+    "std_acc": 0.1163,
+    "mean_loss": 0.3364,
+    "std_loss": 0.0064,
+    "tpr_per_class": {
+      "T-shirt/top": 0.8383,
+      "Trouser": 0.9685,
+      "Pullover": 0.8022,
+      "Dress": 0.8905,
+      "Coat": 0.832,
+      "Sandal": 0.9295,
+      "Shirt": 0.6575,
+      "Sneaker": 0.9485,
+      "Bag": 0.964,
+      "Ankle boot": 0.9432
+    },
+    "fpr_per_class": {
+      "T-shirt/top": 0.0194,
+      "Trouser": 0.0021,
+      "Pullover": 0.023,
+      "Dress": 0.0133,
+      "Coat": 0.0254,
+      "Sandal": 0.0045,
+      "Shirt": 0.0278,
+      "Sneaker": 0.0112,
+      "Bag": 0.004,
+      "Ankle boot": 0.0055
+    },
+    "convergence": {
+      "num_epochs": 15,
+      "checkpoints": {
+        "3": {
+          "mean_val_acc": 84.4017,
+          "mean_val_loss": 0.4307
+        },
+        "5": {
+          "mean_val_acc": 85.55,
+          "mean_val_loss": 0.3947
+        },
+        "10": {
+          "mean_val_acc": 87.0217,
+          "mean_val_loss": 0.3563
+        },
+        "15": {
+          "mean_val_acc": 87.7417,
+          "mean_val_loss": 0.3364
+        }
+      },
+      "first_epoch_to_threshold": {
+        "acc_88": null,
+        "acc_90": null
+      },
+      "epoch_avg_val_acc": 85.9221,
+      "epoch_avg_val_loss": 0.3872
+    }
+  },
+  "RMSprop": {
+    "learning_rate": 0.001,
+    "num_epochs": 15,
+    "fold_accuracies": [
+      88.9083,
+      88.8,
+      88.5667,
+      88.7167,
+      88.8333
+    ],
+    "fold_losses": [
+      0.2944,
+      0.3176,
+      0.302,
+      0.3073,
+      0.3052
+    ],
+    "fold_diverged": [
+      false,
+      false,
+      false,
+      false,
+      false
+    ],
+    "num_diverged": 0,
+    "mean_acc": 88.765,
+    "std_acc": 0.1167,
+    "mean_loss": 0.3053,
+    "std_loss": 0.0076,
+    "tpr_per_class": {
+      "T-shirt/top": 0.8607,
+      "Trouser": 0.9737,
+      "Pullover": 0.8105,
+      "Dress": 0.905,
+      "Coat": 0.8472,
+      "Sandal": 0.9463,
+      "Shirt": 0.665,
+      "Sneaker": 0.94,
+      "Bag": 0.9695,
+      "Ankle boot": 0.9587
+    },
+    "fpr_per_class": {
+      "T-shirt/top": 0.0206,
+      "Trouser": 0.0015,
+      "Pullover": 0.02,
+      "Dress": 0.0122,
+      "Coat": 0.0253,
+      "Sandal": 0.0035,
+      "Shirt": 0.0245,
+      "Sneaker": 0.008,
+      "Bag": 0.0029,
+      "Ankle boot": 0.0062
+    },
+    "convergence": {
+      "num_epochs": 15,
+      "checkpoints": {
+        "3": {
+          "mean_val_acc": 86.1483,
+          "mean_val_loss": 0.3717
+        },
+        "5": {
+          "mean_val_acc": 86.9383,
+          "mean_val_loss": 0.3528
+        },
+        "10": {
+          "mean_val_acc": 88.1633,
+          "mean_val_loss": 0.3208
+        },
+        "15": {
+          "mean_val_acc": 88.6417,
+          "mean_val_loss": 0.3066
+        }
+      },
+      "first_epoch_to_threshold": {
+        "acc_88": 8,
+        "acc_90": null
+      },
+      "epoch_avg_val_acc": 87.4631,
+      "epoch_avg_val_loss": 0.3395
+    }
+  },
+  "Adam": {
+    "learning_rate": 0.001,
+    "num_epochs": 15,
+    "fold_accuracies": [
+      89.3417,
+      88.6167,
+      88.6417,
+      88.5583,
+      88.8833
+    ],
+    "fold_losses": [
+      0.2962,
+      0.3143,
+      0.3016,
+      0.3058,
+      0.3025
+    ],
+    "fold_diverged": [
+      false,
+      false,
+      false,
+      false,
+      false
+    ],
+    "num_diverged": 0,
+    "mean_acc": 88.8083,
+    "std_acc": 0.2888,
+    "mean_loss": 0.3041,
+    "std_loss": 0.0059,
+    "tpr_per_class": {
+      "T-shirt/top": 0.8675,
+      "Trouser": 0.9747,
+      "Pullover": 0.8168,
+      "Dress": 0.9032,
+      "Coat": 0.8315,
+      "Sandal": 0.9478,
+      "Shirt": 0.677,
+      "Sneaker": 0.9397,
+      "Bag": 0.9673,
+      "Ankle boot": 0.9553
+    },
+    "fpr_per_class": {
+      "T-shirt/top": 0.0207,
+      "Trouser": 0.0015,
+      "Pullover": 0.0212,
+      "Dress": 0.0116,
+      "Coat": 0.0231,
+      "Sandal": 0.0043,
+      "Shirt": 0.0253,
+      "Sneaker": 0.008,
+      "Bag": 0.0026,
+      "Ankle boot": 0.006
+    },
+    "convergence": {
+      "num_epochs": 15,
+      "checkpoints": {
+        "3": {
+          "mean_val_acc": 86.3983,
+          "mean_val_loss": 0.3669
+        },
+        "5": {
+          "mean_val_acc": 87.0383,
+          "mean_val_loss": 0.3491
+        },
+        "10": {
+          "mean_val_acc": 88.2433,
+          "mean_val_loss": 0.3172
+        },
+        "15": {
+          "mean_val_acc": 88.6933,
+          "mean_val_loss": 0.3059
+        }
+      },
+      "first_epoch_to_threshold": {
+        "acc_88": 9,
+        "acc_90": null
+      },
+      "epoch_avg_val_acc": 87.4597,
+      "epoch_avg_val_loss": 0.3391
+    }
+  }
+}

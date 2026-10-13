@@ -1,0 +1,887 @@
+{
+  "SGD_Momentum_lr0.001": {
+    "optimizer": "SGD_Momentum",
+    "optimizer_type": "sgd",
+    "learning_rate": 0.001,
+    "num_epochs": 15,
+    "fold_accuracies": [
+      87.8667,
+      87.5667,
+      87.6917,
+      87.875,
+      87.7083
+    ],
+    "fold_losses": [
+      0.3292,
+      0.3481,
+      0.3326,
+      0.3356,
+      0.3364
+    ],
+    "fold_diverged": [
+      false,
+      false,
+      false,
+      false,
+      false
+    ],
+    "num_diverged": 0,
+    "mean_acc": 87.7417,
+    "std_acc": 0.1163,
+    "mean_loss": 0.3364,
+    "std_loss": 0.0064,
+    "convergence": {
+      "num_epochs": 15,
+      "checkpoints": {
+        "3": {
+          "mean_val_acc": 84.4017,
+          "mean_val_loss": 0.4307
+        },
+        "5": {
+          "mean_val_acc": 85.55,
+          "mean_val_loss": 0.3947
+        },
+        "10": {
+          "mean_val_acc": 87.0217,
+          "mean_val_loss": 0.3563
+        },
+        "15": {
+          "mean_val_acc": 87.7417,
+          "mean_val_loss": 0.3364
+        }
+      },
+      "first_epoch_to_threshold": {
+        "acc_88": null,
+        "acc_90": null
+      },
+      "epoch_avg_val_acc": 85.9221,
+      "epoch_avg_val_loss": 0.3872
+    }
+  },
+  "SGD_Momentum_lr0.005": {
+    "optimizer": "SGD_Momentum",
+    "optimizer_type": "sgd",
+    "learning_rate": 0.005,
+    "num_epochs": 15,
+    "fold_accuracies": [
+      88.6833,
+      88.175,
+      88.2917,
+      88.3667,
+      88.5583
+    ],
+    "fold_losses": [
+      0.3088,
+      0.326,
+      0.3114,
+      0.3166,
+      0.3184
+    ],
+    "fold_diverged": [
+      false,
+      false,
+      false,
+      false,
+      false
+    ],
+    "num_diverged": 0,
+    "mean_acc": 88.415,
+    "std_acc": 0.1831,
+    "mean_loss": 0.3162,
+    "std_loss": 0.006,
+    "convergence": {
+      "num_epochs": 15,
+      "checkpoints": {
+        "3": {
+          "mean_val_acc": 85.9833,
+          "mean_val_loss": 0.3788
+        },
+        "5": {
+          "mean_val_acc": 86.74,
+          "mean_val_loss": 0.3587
+        },
+        "10": {
+          "mean_val_acc": 87.84,
+          "mean_val_loss": 0.3293
+        },
+        "15": {
+          "mean_val_acc": 88.2683,
+          "mean_val_loss": 0.3146
+        }
+      },
+      "first_epoch_to_threshold": {
+        "acc_88": 11,
+        "acc_90": null
+      },
+      "epoch_avg_val_acc": 87.1057,
+      "epoch_avg_val_loss": 0.3493
+    }
+  },
+  "SGD_Momentum_lr0.01": {
+    "optimizer": "SGD_Momentum",
+    "optimizer_type": "sgd",
+    "learning_rate": 0.01,
+    "num_epochs": 15,
+    "fold_accuracies": [
+      88.9333,
+      88.35,
+      88.5583,
+      88.3667,
+      88.7667
+    ],
+    "fold_losses": [
+      0.3007,
+      0.3202,
+      0.3078,
+      0.3166,
+      0.3132
+    ],
+    "fold_diverged": [
+      false,
+      false,
+      false,
+      false,
+      false
+    ],
+    "num_diverged": 0,
+    "mean_acc": 88.595,
+    "std_acc": 0.2269,
+    "mean_loss": 0.3117,
+    "std_loss": 0.0069,
+    "convergence": {
+      "num_epochs": 15,
+      "checkpoints": {
+        "3": {
+          "mean_val_acc": 86.1333,
+          "mean_val_loss": 0.3754
+        },
+        "5": {
+          "mean_val_acc": 86.9033,
+          "mean_val_loss": 0.3548
+        },
+        "10": {
+          "mean_val_acc": 87.9133,
+          "mean_val_loss": 0.3265
+        },
+        "15": {
+          "mean_val_acc": 88.4967,
+          "mean_val_loss": 0.3102
+        }
+      },
+      "first_epoch_to_threshold": {
+        "acc_88": 11,
+        "acc_90": null
+      },
+      "epoch_avg_val_acc": 87.1898,
+      "epoch_avg_val_loss": 0.3464
+    }
+  },
+  "SGD_Momentum_lr0.05": {
+    "optimizer": "SGD_Momentum",
+    "optimizer_type": "sgd",
+    "learning_rate": 0.05,
+    "num_epochs": 15,
+    "fold_accuracies": [
+      88.9083,
+      88.2667,
+      88.6167,
+      88.4417,
+      88.5333
+    ],
+    "fold_losses": [
+      0.3002,
+      0.3304,
+      0.3015,
+      0.3098,
+      0.3131
+    ],
+    "fold_diverged": [
+      false,
+      false,
+      false,
+      false,
+      false
+    ],
+    "num_diverged": 0,
+    "mean_acc": 88.5533,
+    "std_acc": 0.2122,
+    "mean_loss": 0.311,
+    "std_loss": 0.0108,
+    "convergence": {
+      "num_epochs": 15,
+      "checkpoints": {
+        "3": {
+          "mean_val_acc": 86.125,
+          "mean_val_loss": 0.3732
+        },
+        "5": {
+          "mean_val_acc": 86.7967,
+          "mean_val_loss": 0.3552
+        },
+        "10": {
+          "mean_val_acc": 88.0967,
+          "mean_val_loss": 0.3204
+        },
+        "15": {
+          "mean_val_acc": 88.51,
+          "mean_val_loss": 0.3096
+        }
+      },
+      "first_epoch_to_threshold": {
+        "acc_88": 10,
+        "acc_90": null
+      },
+      "epoch_avg_val_acc": 87.2058,
+      "epoch_avg_val_loss": 0.3451
+    }
+  },
+  "SGD_Momentum_lr0.1": {
+    "optimizer": "SGD_Momentum",
+    "optimizer_type": "sgd",
+    "learning_rate": 0.1,
+    "num_epochs": 15,
+    "fold_accuracies": [
+      88.5833,
+      87.9833,
+      88.2667,
+      88.35,
+      88.725
+    ],
+    "fold_losses": [
+      0.3108,
+      0.3329,
+      0.3073,
+      0.3152,
+      0.3193
+    ],
+    "fold_diverged": [
+      false,
+      false,
+      false,
+      false,
+      false
+    ],
+    "num_diverged": 0,
+    "mean_acc": 88.3817,
+    "std_acc": 0.2575,
+    "mean_loss": 0.3171,
+    "std_loss": 0.0089,
+    "convergence": {
+      "num_epochs": 15,
+      "checkpoints": {
+        "3": {
+          "mean_val_acc": 85.8083,
+          "mean_val_loss": 0.3812
+        },
+        "5": {
+          "mean_val_acc": 86.9083,
+          "mean_val_loss": 0.3525
+        },
+        "10": {
+          "mean_val_acc": 87.7783,
+          "mean_val_loss": 0.3312
+        },
+        "15": {
+          "mean_val_acc": 88.2617,
+          "mean_val_loss": 0.3167
+        }
+      },
+      "first_epoch_to_threshold": {
+        "acc_88": 11,
+        "acc_90": null
+      },
+      "epoch_avg_val_acc": 87.0252,
+      "epoch_avg_val_loss": 0.3502
+    }
+  },
+  "RMSprop_lr0.0001": {
+    "optimizer": "RMSprop",
+    "optimizer_type": "rmsprop",
+    "learning_rate": 0.0001,
+    "num_epochs": 15,
+    "fold_accuracies": [
+      88.6,
+      88.025,
+      88.1167,
+      88.0917,
+      88.3583
+    ],
+    "fold_losses": [
+      0.3101,
+      0.3374,
+      0.314,
+      0.3219,
+      0.321
+    ],
+    "fold_diverged": [
+      false,
+      false,
+      false,
+      false,
+      false
+    ],
+    "num_diverged": 0,
+    "mean_acc": 88.2383,
+    "std_acc": 0.2131,
+    "mean_loss": 0.3209,
+    "std_loss": 0.0093,
+    "convergence": {
+      "num_epochs": 15,
+      "checkpoints": {
+        "3": {
+          "mean_val_acc": 85.3817,
+          "mean_val_loss": 0.4037
+        },
+        "5": {
+          "mean_val_acc": 86.3667,
+          "mean_val_loss": 0.3733
+        },
+        "10": {
+          "mean_val_acc": 87.6733,
+          "mean_val_loss": 0.3364
+        },
+        "15": {
+          "mean_val_acc": 88.215,
+          "mean_val_loss": 0.3203
+        }
+      },
+      "first_epoch_to_threshold": {
+        "acc_88": 13,
+        "acc_90": null
+      },
+      "epoch_avg_val_acc": 86.7183,
+      "epoch_avg_val_loss": 0.3653
+    }
+  },
+  "RMSprop_lr0.0003": {
+    "optimizer": "RMSprop",
+    "optimizer_type": "rmsprop",
+    "learning_rate": 0.0003,
+    "num_epochs": 15,
+    "fold_accuracies": [
+      88.9083,
+      88.475,
+      88.4833,
+      88.6833,
+      88.825
+    ],
+    "fold_losses": [
+      0.3038,
+      0.322,
+      0.3034,
+      0.3108,
+      0.3082
+    ],
+    "fold_diverged": [
+      false,
+      false,
+      false,
+      false,
+      false
+    ],
+    "num_diverged": 0,
+    "mean_acc": 88.675,
+    "std_acc": 0.1754,
+    "mean_loss": 0.3096,
+    "std_loss": 0.0068,
+    "convergence": {
+      "num_epochs": 15,
+      "checkpoints": {
+        "3": {
+          "mean_val_acc": 86.0733,
+          "mean_val_loss": 0.3753
+        },
+        "5": {
+          "mean_val_acc": 87.005,
+          "mean_val_loss": 0.3523
+        },
+        "10": {
+          "mean_val_acc": 88.1283,
+          "mean_val_loss": 0.3228
+        },
+        "15": {
+          "mean_val_acc": 88.51,
+          "mean_val_loss": 0.3106
+        }
+      },
+      "first_epoch_to_threshold": {
+        "acc_88": 10,
+        "acc_90": null
+      },
+      "epoch_avg_val_acc": 87.3549,
+      "epoch_avg_val_loss": 0.3432
+    }
+  },
+  "RMSprop_lr0.001": {
+    "optimizer": "RMSprop",
+    "optimizer_type": "rmsprop",
+    "learning_rate": 0.001,
+    "num_epochs": 15,
+    "fold_accuracies": [
+      88.9083,
+      88.8,
+      88.5667,
+      88.7167,
+      88.8333
+    ],
+    "fold_losses": [
+      0.2944,
+      0.3176,
+      0.302,
+      0.3073,
+      0.3052
+    ],
+    "fold_diverged": [
+      false,
+      false,
+      false,
+      false,
+      false
+    ],
+    "num_diverged": 0,
+    "mean_acc": 88.765,
+    "std_acc": 0.1167,
+    "mean_loss": 0.3053,
+    "std_loss": 0.0076,
+    "convergence": {
+      "num_epochs": 15,
+      "checkpoints": {
+        "3": {
+          "mean_val_acc": 86.1483,
+          "mean_val_loss": 0.3717
+        },
+        "5": {
+          "mean_val_acc": 86.9383,
+          "mean_val_loss": 0.3528
+        },
+        "10": {
+          "mean_val_acc": 88.1633,
+          "mean_val_loss": 0.3208
+        },
+        "15": {
+          "mean_val_acc": 88.6417,
+          "mean_val_loss": 0.3066
+        }
+      },
+      "first_epoch_to_threshold": {
+        "acc_88": 8,
+        "acc_90": null
+      },
+      "epoch_avg_val_acc": 87.4631,
+      "epoch_avg_val_loss": 0.3395
+    }
+  },
+  "RMSprop_lr0.003": {
+    "optimizer": "RMSprop",
+    "optimizer_type": "rmsprop",
+    "learning_rate": 0.003,
+    "num_epochs": 15,
+    "fold_accuracies": [
+      89.15,
+      88.4833,
+      88.7917,
+      88.75,
+      88.8083
+    ],
+    "fold_losses": [
+      0.2935,
+      0.317,
+      0.3,
+      0.3121,
+      0.3132
+    ],
+    "fold_diverged": [
+      false,
+      false,
+      false,
+      false,
+      false
+    ],
+    "num_diverged": 0,
+    "mean_acc": 88.7967,
+    "std_acc": 0.2123,
+    "mean_loss": 0.3072,
+    "std_loss": 0.0089,
+    "convergence": {
+      "num_epochs": 15,
+      "checkpoints": {
+        "3": {
+          "mean_val_acc": 86.0667,
+          "mean_val_loss": 0.3754
+        },
+        "5": {
+          "mean_val_acc": 86.8567,
+          "mean_val_loss": 0.3558
+        },
+        "10": {
+          "mean_val_acc": 88.3033,
+          "mean_val_loss": 0.3181
+        },
+        "15": {
+          "mean_val_acc": 88.5967,
+          "mean_val_loss": 0.3078
+        }
+      },
+      "first_epoch_to_threshold": {
+        "acc_88": 8,
+        "acc_90": null
+      },
+      "epoch_avg_val_acc": 87.389,
+      "epoch_avg_val_loss": 0.3413
+    }
+  },
+  "RMSprop_lr0.01": {
+    "optimizer": "RMSprop",
+    "optimizer_type": "rmsprop",
+    "learning_rate": 0.01,
+    "num_epochs": 15,
+    "fold_accuracies": [
+      88.6417,
+      88.1583,
+      88.3167,
+      88.4333,
+      88.75
+    ],
+    "fold_losses": [
+      0.3093,
+      0.3284,
+      0.3115,
+      0.317,
+      0.3153
+    ],
+    "fold_diverged": [
+      false,
+      false,
+      false,
+      false,
+      false
+    ],
+    "num_diverged": 0,
+    "mean_acc": 88.46,
+    "std_acc": 0.2142,
+    "mean_loss": 0.3163,
+    "std_loss": 0.0066,
+    "convergence": {
+      "num_epochs": 15,
+      "checkpoints": {
+        "3": {
+          "mean_val_acc": 85.3883,
+          "mean_val_loss": 0.3905
+        },
+        "5": {
+          "mean_val_acc": 86.6617,
+          "mean_val_loss": 0.365
+        },
+        "10": {
+          "mean_val_acc": 87.6767,
+          "mean_val_loss": 0.3355
+        },
+        "15": {
+          "mean_val_acc": 88.105,
+          "mean_val_loss": 0.3241
+        }
+      },
+      "first_epoch_to_threshold": {
+        "acc_88": 11,
+        "acc_90": null
+      },
+      "epoch_avg_val_acc": 86.9063,
+      "epoch_avg_val_loss": 0.3552
+    }
+  },
+  "Adam_lr0.0001": {
+    "optimizer": "Adam",
+    "optimizer_type": "adam",
+    "learning_rate": 0.0001,
+    "num_epochs": 15,
+    "fold_accuracies": [
+      88.5167,
+      88.2083,
+      88.0,
+      88.15,
+      88.2417
+    ],
+    "fold_losses": [
+      0.3127,
+      0.3304,
+      0.3226,
+      0.3188,
+      0.3204
+    ],
+    "fold_diverged": [
+      false,
+      false,
+      false,
+      false,
+      false
+    ],
+    "num_diverged": 0,
+    "mean_acc": 88.2233,
+    "std_acc": 0.1684,
+    "mean_loss": 0.321,
+    "std_loss": 0.0058,
+    "convergence": {
+      "num_epochs": 15,
+      "checkpoints": {
+        "3": {
+          "mean_val_acc": 85.1267,
+          "mean_val_loss": 0.4128
+        },
+        "5": {
+          "mean_val_acc": 86.2783,
+          "mean_val_loss": 0.376
+        },
+        "10": {
+          "mean_val_acc": 87.5733,
+          "mean_val_loss": 0.3384
+        },
+        "15": {
+          "mean_val_acc": 88.2067,
+          "mean_val_loss": 0.32
+        }
+      },
+      "first_epoch_to_threshold": {
+        "acc_88": 15,
+        "acc_90": null
+      },
+      "epoch_avg_val_acc": 86.5953,
+      "epoch_avg_val_loss": 0.3712
+    }
+  },
+  "Adam_lr0.0003": {
+    "optimizer": "Adam",
+    "optimizer_type": "adam",
+    "learning_rate": 0.0003,
+    "num_epochs": 15,
+    "fold_accuracies": [
+      88.95,
+      88.4667,
+      88.6083,
+      88.7083,
+      88.8667
+    ],
+    "fold_losses": [
+      0.301,
+      0.3202,
+      0.3059,
+      0.3087,
+      0.3083
+    ],
+    "fold_diverged": [
+      false,
+      false,
+      false,
+      false,
+      false
+    ],
+    "num_diverged": 0,
+    "mean_acc": 88.72,
+    "std_acc": 0.1739,
+    "mean_loss": 0.3088,
+    "std_loss": 0.0063,
+    "convergence": {
+      "num_epochs": 15,
+      "checkpoints": {
+        "3": {
+          "mean_val_acc": 86.185,
+          "mean_val_loss": 0.3723
+        },
+        "5": {
+          "mean_val_acc": 86.9933,
+          "mean_val_loss": 0.3519
+        },
+        "10": {
+          "mean_val_acc": 88.0383,
+          "mean_val_loss": 0.3229
+        },
+        "15": {
+          "mean_val_acc": 88.6417,
+          "mean_val_loss": 0.3086
+        }
+      },
+      "first_epoch_to_threshold": {
+        "acc_88": 10,
+        "acc_90": null
+      },
+      "epoch_avg_val_acc": 87.299,
+      "epoch_avg_val_loss": 0.3444
+    }
+  },
+  "Adam_lr0.001": {
+    "optimizer": "Adam",
+    "optimizer_type": "adam",
+    "learning_rate": 0.001,
+    "num_epochs": 15,
+    "fold_accuracies": [
+      89.3417,
+      88.6167,
+      88.6417,
+      88.5583,
+      88.8833
+    ],
+    "fold_losses": [
+      0.2962,
+      0.3143,
+      0.3016,
+      0.3058,
+      0.3025
+    ],
+    "fold_diverged": [
+      false,
+      false,
+      false,
+      false,
+      false
+    ],
+    "num_diverged": 0,
+    "mean_acc": 88.8083,
+    "std_acc": 0.2888,
+    "mean_loss": 0.3041,
+    "std_loss": 0.0059,
+    "convergence": {
+      "num_epochs": 15,
+      "checkpoints": {
+        "3": {
+          "mean_val_acc": 86.3983,
+          "mean_val_loss": 0.3669
+        },
+        "5": {
+          "mean_val_acc": 87.0383,
+          "mean_val_loss": 0.3491
+        },
+        "10": {
+          "mean_val_acc": 88.2433,
+          "mean_val_loss": 0.3172
+        },
+        "15": {
+          "mean_val_acc": 88.6933,
+          "mean_val_loss": 0.3059
+        }
+      },
+      "first_epoch_to_threshold": {
+        "acc_88": 9,
+        "acc_90": null
+      },
+      "epoch_avg_val_acc": 87.4597,
+      "epoch_avg_val_loss": 0.3391
+    }
+  },
+  "Adam_lr0.003": {
+    "optimizer": "Adam",
+    "optimizer_type": "adam",
+    "learning_rate": 0.003,
+    "num_epochs": 15,
+    "fold_accuracies": [
+      88.975,
+      88.5583,
+      88.6583,
+      88.4333,
+      88.7333
+    ],
+    "fold_losses": [
+      0.3032,
+      0.3167,
+      0.3051,
+      0.312,
+      0.3048
+    ],
+    "fold_diverged": [
+      false,
+      false,
+      false,
+      false,
+      false
+    ],
+    "num_diverged": 0,
+    "mean_acc": 88.6717,
+    "std_acc": 0.182,
+    "mean_loss": 0.3084,
+    "std_loss": 0.0052,
+    "convergence": {
+      "num_epochs": 15,
+      "checkpoints": {
+        "3": {
+          "mean_val_acc": 86.2383,
+          "mean_val_loss": 0.3707
+        },
+        "5": {
+          "mean_val_acc": 86.9633,
+          "mean_val_loss": 0.3507
+        },
+        "10": {
+          "mean_val_acc": 88.1167,
+          "mean_val_loss": 0.3203
+        },
+        "15": {
+          "mean_val_acc": 88.67,
+          "mean_val_loss": 0.3084
+        }
+      },
+      "first_epoch_to_threshold": {
+        "acc_88": 9,
+        "acc_90": null
+      },
+      "epoch_avg_val_acc": 87.3532,
+      "epoch_avg_val_loss": 0.3417
+    }
+  },
+  "Adam_lr0.01": {
+    "optimizer": "Adam",
+    "optimizer_type": "adam",
+    "learning_rate": 0.01,
+    "num_epochs": 15,
+    "fold_accuracies": [
+      88.7833,
+      88.125,
+      88.4667,
+      88.1333,
+      88.5667
+    ],
+    "fold_losses": [
+      0.3079,
+      0.3271,
+      0.3074,
+      0.3209,
+      0.3198
+    ],
+    "fold_diverged": [
+      false,
+      false,
+      false,
+      false,
+      false
+    ],
+    "num_diverged": 0,
+    "mean_acc": 88.415,
+    "std_acc": 0.2549,
+    "mean_loss": 0.3166,
+    "std_loss": 0.0077,
+    "convergence": {
+      "num_epochs": 15,
+      "checkpoints": {
+        "3": {
+          "mean_val_acc": 85.89,
+          "mean_val_loss": 0.3801
+        },
+        "5": {
+          "mean_val_acc": 86.7717,
+          "mean_val_loss": 0.3592
+        },
+        "10": {
+          "mean_val_acc": 87.87,
+          "mean_val_loss": 0.3303
+        },
+        "15": {
+          "mean_val_acc": 88.3667,
+          "mean_val_loss": 0.3165
+        }
+      },
+      "first_epoch_to_threshold": {
+        "acc_88": 11,
+        "acc_90": null
+      },
+      "epoch_avg_val_acc": 86.9933,
+      "epoch_avg_val_loss": 0.3515
+    }
+  }
+}

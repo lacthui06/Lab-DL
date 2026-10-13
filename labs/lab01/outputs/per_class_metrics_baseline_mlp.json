@@ -1,0 +1,62 @@
+{
+  "T-shirt/top": {
+    "precision": 0.7281,
+    "recall_tpr": 0.881,
+    "f1": 0.7973,
+    "fpr": 0.0366
+  },
+  "Trouser": {
+    "precision": 0.9938,
+    "recall_tpr": 0.962,
+    "f1": 0.9776,
+    "fpr": 0.0007
+  },
+  "Pullover": {
+    "precision": 0.776,
+    "recall_tpr": 0.738,
+    "f1": 0.7565,
+    "fpr": 0.0237
+  },
+  "Dress": {
+    "precision": 0.8722,
+    "recall_tpr": 0.853,
+    "f1": 0.8625,
+    "fpr": 0.0139
+  },
+  "Coat": {
+    "precision": 0.7213,
+    "recall_tpr": 0.779,
+    "f1": 0.749,
+    "fpr": 0.0334
+  },
+  "Sandal": {
+    "precision": 0.9675,
+    "recall_tpr": 0.924,
+    "f1": 0.9453,
+    "fpr": 0.0034
+  },
+  "Shirt": {
+    "precision": 0.6531,
+    "recall_tpr": 0.514,
+    "f1": 0.5753,
+    "fpr": 0.0303
+  },
+  "Sneaker": {
+    "precision": 0.9288,
+    "recall_tpr": 0.939,
+    "f1": 0.9339,
+    "fpr": 0.008
+  },
+  "Bag": {
+    "precision": 0.9534,
+    "recall_tpr": 0.962,
+    "f1": 0.9577,
+    "fpr": 0.0052
+  },
+  "Ankle boot": {
+    "precision": 0.9153,
+    "recall_tpr": 0.962,
+    "f1": 0.9381,
+    "fpr": 0.0099
+  }
+}

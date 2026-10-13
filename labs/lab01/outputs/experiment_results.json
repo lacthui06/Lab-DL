@@ -1,10 +1,12 @@
 {
   "Run1_Baseline_MLP": {
-    "loss": 0.3555,
-    "acc": 87.33
+    "test_loss": 0.4443,
+    "test_acc": 85.14,
+    "macro_f1": 84.93
   },
   "Run2_Tuned_MLP": {
-    "loss": 0.3307,
-    "acc": 88.01
+    "test_loss": 0.3312,
+    "test_acc": 87.81,
+    "macro_f1": 87.71
   }
 }
