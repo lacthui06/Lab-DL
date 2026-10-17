@@ -25,8 +25,8 @@ Nguyên lý then chốt: phân loại đúng ngay từ đầu quyết định to
 - Người dùng hỏi "bây giờ làm gì tiếp".
 
 **Điều kiện tiên quyết:**
-- Đã có quyền truy cập vào cấu trúc repository và các thư mục `docs/`, `.agent/skills/`.
-- Đã đọc `.agent/skills/INDEX.md` để nắm bảng định tuyến.
+- Đã có quyền truy cập vào cấu trúc repository và các thư mục `docs/`, `.agents/skills/`.
+- Đã đọc `.agents/skills/INDEX.md` để nắm bảng định tuyến.
 
 ## 3. Hợp đồng Input / Output
 

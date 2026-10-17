@@ -26,10 +26,10 @@ Nghiêm cấm chạy huấn luyện full nhiều epoch trên máy CPU cục bộ
 Mọi kết quả phải tái lập được. Cố định seed cho toàn bộ thư viện tại một điểm vào duy nhất, bật chế độ deterministic khi cần, ghi nhận phiên bản thư viện chính, **yêu cầu Python thật** (suy ra từ `Requires-Python` của các pin, ví dụ `>=3.12, !=3.14.1`) **và bản trình thông dịch đã kiểm chứng**, rồi đồng bộ môi trường giữa local và Kaggle. Phiên bản thực tế của mỗi lần chạy phải được ghi vào `outputs/environment_snapshot.json`; phiên bản Python không được ghi thành dòng `python==x.y.z` trong `requirements.txt` vì đó không phải cú pháp pip hợp lệ. Một kết quả không tái lập được thì không phải là kết quả khoa học. Skill chịu trách nhiệm: `environment-and-reproducibility`.
 
 ### 1.7. Cổng kiểm tra bắt buộc (Checklist Gates)
-Các cổng quan trọng phải vượt qua checklist tương ứng trong `.agent/checklists/` trước khi đi tiếp: `new_lab_bootstrap.md` khi bắt đầu lab mới, `pre_commit.md` trước khi commit, `pre_kaggle_upload.md` trước khi lên Kaggle GPU, và `pre_submission.md` trước khi nộp bài. Checklist biến quy tắc "nên làm" thành bước "phải đủ mới đi tiếp".
+Các cổng quan trọng phải vượt qua checklist tương ứng trong `.agents/checklists/` trước khi đi tiếp: `new_lab_bootstrap.md` khi bắt đầu lab mới, `pre_commit.md` trước khi commit, `pre_kaggle_upload.md` trước khi lên Kaggle GPU, và `pre_submission.md` trước khi nộp bài. Checklist biến quy tắc "nên làm" thành bước "phải đủ mới đi tiếp".
 
 ### 1.8. Tái sử dụng khung mẫu (Template Reuse)
-Khi bắt đầu lab mới, agent phải dùng khung mẫu trong `.agent/templates/` (`walkthrough_template.md`, `description_lab_template.md`, `lab_readme_template.md`) thay vì tự phát minh lại cấu trúc. Mọi lab phải có cùng cấu trúc để đảm bảo tính đồng nhất và giảm công rà soát.
+Khi bắt đầu lab mới, agent phải dùng khung mẫu trong `.agents/templates/` (`walkthrough_template.md`, `description_lab_template.md`, `lab_readme_template.md`) thay vì tự phát minh lại cấu trúc. Mọi lab phải có cùng cấu trúc để đảm bảo tính đồng nhất và giảm công rà soát.
 
 ### 1.9. Tài liệu sống duy nhất (Hợp nhất 3 Rule)
 Toàn bộ tài liệu kỹ thuật của một lab phải được hợp nhất vào đúng MỘT tài liệu sống duy nhất: `walkthrough_lab_0X.md`. File này duy trì liên kết tường minh với 3 rule cốt lõi:
@@ -66,7 +66,7 @@ Bảng dưới đây ánh xạ ý định của người dùng sang skill tươn
 | Kết quả chạy hai lần khác nhau, cần tái lập | `environment-and-reproducibility` | Giao thức cố định seed và ghi nhận phiên bản |
 | Chuyển huấn luyện lên Kaggle GPU, đồng bộ artifact | `kaggle-remote-execution` | Checklist `pre_kaggle_upload.md` |
 | Commit, push, quyết định file nào thuộc Git | `version-control-and-artifacts` | Checklist `pre_commit.md` |
-| Bắt đầu lab mới | Checklist `new_lab_bootstrap.md` | `.agent/templates/` |
+| Bắt đầu lab mới | Checklist `new_lab_bootstrap.md` | `.agents/templates/` |
 
 ---
 
@@ -84,4 +84,4 @@ Bảng dưới đây ánh xạ ý định của người dùng sang skill tươn
 - [X] *"Bỏ qua checklist cho nhanh"* -> **Bác bỏ:** Checklist là cổng chặn các lỗi tốn kém như lộ secret, đẩy file nặng, hoặc đốt GPU quota. Bỏ qua checklist tiết kiệm vài giây nhưng có thể tốn hàng giờ.
 - [X] *"Commit checkpoint nặng lên Git cũng được"* -> **Bác bỏ:** Checkpoint làm repository phình to vĩnh viễn trong lịch sử Git. Chỉ commit source, tài liệu, và figure nhẹ.
 - [X] *"Script Kaggle sẽ tự đẩy notebook lên Git"* -> **Bác bỏ:** File notebook tương tác không nằm trên đĩa container. Phải thu hồi notebook qua giao diện Kaggle rồi commit thủ công.
-- [X] *"Mỗi lab tự thiết kế cấu trúc riêng cho phù hợp"* -> **Bác bỏ:** Cấu trúc không đồng nhất khiến việc rà soát tốn công và agent phải chỉnh sửa mỗi lần. Dùng khung mẫu trong `.agent/templates/`.
+- [X] *"Mỗi lab tự thiết kế cấu trúc riêng cho phù hợp"* -> **Bác bỏ:** Cấu trúc không đồng nhất khiến việc rà soát tốn công và agent phải chỉnh sửa mỗi lần. Dùng khung mẫu trong `.agents/templates/`.

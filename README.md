@@ -6,7 +6,7 @@ Repository containing source code, engineering workflows, and practical lab exer
 
 ## Directory Structure
 
-- `.agent/`: Skill framework and operational rules for AI Coding Agents.
+- `.agents/`: Skill framework and operational rules for AI Coding Agents.
 - `docs/`: Consolidated reference documentation (EDA, Feature Engineering, Deep Learning pipeline, Data Augmentation, Training and Optimization).
 - `labs/`: Course practical lab implementations.
 

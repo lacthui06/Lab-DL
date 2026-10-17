@@ -76,7 +76,7 @@ Ngoài ra, skill `using-ds-ai-skills` đóng vai trò **nhạc trưởng (orches
 ## 3. Cấu trúc thư mục của framework
 
 ```text
-.agent/
+.agents/
     README.md              <-- File này: tổng quan framework
     AGENTS.md              <-- Hiến pháp vận hành cho AI Agent
     skills/

@@ -1,6 +1,6 @@
 # SKILL_TEMPLATE.md — Khung chuẩn để soạn một file SKILL.md
 
-File này là khuôn mẫu nội bộ. Mọi `SKILL.md` trong `.agent/skills/` phải tuân theo đúng cấu trúc 9 mục dưới đây để đảm bảo agent có thể đọc, định tuyến và thực thi nhất quán.
+File này là khuôn mẫu nội bộ. Mọi `SKILL.md` trong `.agents/skills/` phải tuân theo đúng cấu trúc 9 mục dưới đây để đảm bảo agent có thể đọc, định tuyến và thực thi nhất quán.
 
 ---
 
