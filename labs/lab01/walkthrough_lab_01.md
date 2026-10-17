@@ -44,9 +44,9 @@ graph LR
 | Lab Pipeline Stage | Implementation Artifact | Reference Playbook Section |
 |---|---|---|
 | Define Problem & Modality | Section 1.2 of this document | `docs/dl_flow.md` GIAI ĐOẠN 1 |
-| Split once + DL EDA (integrity scan, class balance, pixel statistics, spatial, similarity) | `notebooks/lab01_eda.ipynb`, `src/eda.py`, `src/split.py` | `docs/dl_flow.md` GIAI ĐOẠN 2; `docs/eda.md`; `docs/image-pipeline.md` Stage 0-1 |
+| Split once + DL EDA (integrity scan, class balance, pixel statistics, spatial, similarity) | `notebooks/lab01_eda.ipynb`, `src/eda.py`, `src/split.py` | `docs/dl_flow.md` GIAI ĐOẠN 2; `docs/eda.md`; `docs/eda-image.md` |
 | Dataset, DataLoader, Augmentation | `src/dataset.py` | `docs/dl_flow.md` GIAI ĐOẠN 3; `docs/dl_data.md` PHẦN 2, 3, 4 |
-| Feature Engineering & Normalization | `notebooks/lab01_feature_engineering.ipynb`, `src/dataset.py` (transforms), `src/config.py` | `docs/feature.md`; `docs/image-pipeline.md` Stage 2-3 |
+| Feature Engineering & Normalization | `notebooks/lab01_feature_engineering.ipynb`, `src/dataset.py` (transforms), `src/config.py` | `docs/feature.md`; `docs/feature-image.md` |
 | Architecture Selection | `src/model.py` | `docs/dl_flow.md` GIAI ĐOẠN 4 |
 | Training Loop, Loss, Optimizer | `src/engine.py` | `docs/dl_flow.md` GIAI ĐOẠN 5; `docs/dl_training.md` PHẦN 3, 4 |
 | Evaluation, Diagnostics & Checkpointing | `src/engine.py`, `src/utils.py` | `docs/dl_flow.md` GIAI ĐOẠN 6; `docs/dl_training.md` PHẦN 5 |
@@ -357,7 +357,7 @@ Evidence: `tables/class_similarity_matrix.csv`, `tables/most_similar_pairs_cosin
 
 #### 1.9.5. What Was Not Executed
 
-Steps 7 (handcrafted features), 9 (PCA / t-SNE), 10 (outlier scoring), 11 (distribution shift), and 12 (baseline separability) listed under the "extensions" heading of `docs/image-pipeline.md` Stage 4 were not executed in this pass. They are extensions, so their absence does not invalidate the core EDA. Notably, `umap` is not installed in the local environment, so the t-SNE/UMAP branch would require an explicit dependency decision rather than a silent install.
+Steps 7 (handcrafted features), 9 (PCA / t-SNE), 10 (outlier scoring), 11 (distribution shift), and 12 (baseline separability) listed under the "Nhánh mở rộng" section of `docs/feature-image.md` were not executed in this pass. They are extensions, so their absence does not invalidate the core EDA. Notably, `umap` is not installed in the local environment, so the t-SNE/UMAP branch would require an explicit dependency decision rather than a silent install.
 
 #### 1.9.6. Handoff to Feature Engineering
 

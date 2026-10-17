@@ -8,7 +8,7 @@ Bài lab xây dựng pipeline Deep Learning end-to-end để phân loại 10 nh�
 
 - `description_lab_01.md`: đề bài gốc do giảng viên giao (đầu vào, giữ nguyên văn).
 - `walkthrough_lab_01.md`: tài liệu sống duy nhất hợp nhất 3 Rule (Spec -> Changelog -> Report) — bài làm và kết quả (đầu ra).
-- Quy trình chung cho bài toán ảnh: `docs/image-pipeline.md`.
+- Quy trình chung cho bài toán ảnh: `docs/eda-image.md` và `docs/feature-image.md`.
 - `notebooks/`:
   - `lab01_eda.ipynb`: tạo stratified split một lần, chạy EDA, ghi artifact vào `outputs/eda/`.
   - `lab01_feature_engineering.ipynb`: đo và chốt thống kê normalization, kiểm tra augmentation, ghi `preprocessing_config.json`.

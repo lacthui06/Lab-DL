@@ -111,17 +111,18 @@ def test_tracked_text_file_has_no_forbidden_characters(path):
             )
 
 
-def test_image_pipeline_doc_stays_short():
-    """The shared flow document must remain readable in one sitting.
+@pytest.mark.parametrize("name", ["eda-image.md", "feature-image.md"])
+def test_image_flow_docs_stay_short(name):
+    """Each shared flow document must remain readable in one sitting.
 
     A flow document that grows past roughly 200 lines is a sign that measured
     results or lab-specific detail leaked into it. Those belong in the lab's
     walkthrough, not in the shared procedure.
     """
-    path = REPO_ROOT / "docs" / "image-pipeline.md"
-    assert path.is_file(), "docs/image-pipeline.md is missing"
+    path = REPO_ROOT / "docs" / name
+    assert path.is_file(), f"docs/{name} is missing"
     lines = len(path.read_text(encoding="utf-8").splitlines())
     assert lines <= 200, (
-        f"docs/image-pipeline.md has {lines} lines. Keep the shared flow under "
-        f"200 lines and move lab-specific numbers into walkthrough_lab_NN.md."
+        f"docs/{name} has {lines} lines. Keep the shared flow under 200 lines and "
+        f"move lab-specific numbers into walkthrough_lab_NN.md."
     )
