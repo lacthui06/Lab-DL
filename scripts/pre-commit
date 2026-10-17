@@ -1,0 +1,8 @@
+#!/bin/sh
+# Git pre-commit hook: blocks encoding damage and forbidden characters.
+#
+# Installed by scripts/install_hooks.py. Keep this file small; the real logic
+# lives in scripts/check_text_hygiene.py so it can be tested and read directly.
+
+python scripts/check_text_hygiene.py
+exit $?
