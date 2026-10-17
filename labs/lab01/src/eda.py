@@ -245,6 +245,8 @@ def integrity_report(
         (summary_df, detail_dict). `detail_dict` maps a check name to the
         DataFrame of offending samples, each carrying source_dataset,
         original_index, split and label so a sample can be traced back.
+        A `num_flagged` of None means the check was not run, which is a
+        different statement from zero.
     """
     details: Dict[str, pd.DataFrame] = {}
     split_of = np.full(len(y_train), "unassigned", dtype=object)
@@ -264,82 +266,68 @@ def integrity_report(
 
     checks: List[Dict] = []
 
+    def _record(name: str, expected: str, flagged, detail: str = "n/a") -> None:
+        """Appends one check result. Kept in one place so the column set cannot
+        drift between checks, which is how the -1/None disagreement arose."""
+        checks.append(
+            {
+                "check": name,
+                "expected": expected,
+                "num_flagged": flagged,
+                "detail_file": detail,
+            }
+        )
+
     # --- Label validity -----------------------------------------------------
-    bad_train_labels = (y_train < 0) | (y_train >= num_classes)
-    bad_test_labels = (y_test < 0) | (y_test >= num_classes)
-    details["invalid_train_labels"] = _frame(bad_train_labels)
-    details["invalid_test_labels"] = _frame(bad_test_labels, source="original_test")
-    checks.append(
-        {
-            "check": "labels_in_range",
-            "expected": f"[0, {num_classes - 1}]",
-            "num_flagged": int(bad_train_labels.sum() + bad_test_labels.sum()),
-            "detail_file": "invalid_train_labels, invalid_test_labels",
-        }
+    bad_train = (y_train < 0) | (y_train >= num_classes)
+    bad_test = (y_test < 0) | (y_test >= num_classes)
+    details["invalid_train_labels"] = _frame(bad_train)
+    details["invalid_test_labels"] = _frame(bad_test, source="original_test")
+    _record(
+        "labels_in_range",
+        f"[0, {num_classes - 1}]",
+        int(bad_train.sum() + bad_test.sum()),
+        "invalid_train_labels, invalid_test_labels",
     )
 
     # --- Pixel range --------------------------------------------------------
     # uint8 cannot exceed [0, 255] by construction; the check is still recorded
     # because it would catch a cast to a wider dtype or a corrupted IDX header.
-    out_train = int(((X_train < 0) | (X_train > 255)).sum())
-    out_test = int(((X_test < 0) | (X_test > 255)).sum())
-    checks.append(
-        {
-            "check": "pixel_range_0_255",
-            "expected": "all pixels within [0, 255]",
-            "num_flagged": out_train + out_test,
-            "detail_file": "n/a",
-        }
-    )
+    out_of_range = int(((X_train < 0) | (X_train > 255)).sum())
+    out_of_range += int(((X_test < 0) | (X_test > 255)).sum())
+    _record("pixel_range_0_255", "all pixels within [0, 255]", out_of_range)
 
     # --- NaN / Inf ----------------------------------------------------------
     # An integer array cannot hold NaN or Inf. The check is reported explicitly
     # so the absence of the problem is evidenced rather than assumed.
-    non_finite_train = int((~np.isfinite(X_train.astype(np.float32))).sum())
-    non_finite_test = int((~np.isfinite(X_test.astype(np.float32))).sum())
-    checks.append(
-        {
-            "check": "nan_or_inf_pixels",
-            "expected": "0 (uint8 storage cannot represent NaN/Inf)",
-            "num_flagged": non_finite_train + non_finite_test,
-            "detail_file": "n/a",
-        }
+    non_finite = int((~np.isfinite(X_train.astype(np.float32))).sum())
+    non_finite += int((~np.isfinite(X_test.astype(np.float32))).sum())
+    _record(
+        "nan_or_inf_pixels",
+        "0 (uint8 storage cannot represent NaN/Inf)",
+        non_finite,
     )
 
-    # --- All-black and near-black images ------------------------------------
-    train_max = X_train.reshape(len(X_train), -1).max(axis=1)
-    test_max = X_test.reshape(len(X_test), -1).max(axis=1)
-    all_black_train = train_max == 0
-    all_black_test = test_max == 0
+    # --- All-black images ---------------------------------------------------
+    all_black_train = X_train.reshape(len(X_train), -1).max(axis=1) == 0
+    all_black_test = X_test.reshape(len(X_test), -1).max(axis=1) == 0
     details["all_black_train"] = _frame(all_black_train)
     details["all_black_test"] = _frame(all_black_test, source="original_test")
-    checks.append(
-        {
-            "check": "all_black_images",
-            "expected": "0 images with maximum pixel 0",
-            "num_flagged": int(all_black_train.sum() + all_black_test.sum()),
-            "detail_file": "all_black_train, all_black_test",
-        }
+    _record(
+        "all_black_images",
+        "0 images with maximum pixel 0",
+        int(all_black_train.sum() + all_black_test.sum()),
+        "all_black_train, all_black_test",
     )
 
     # --- Split integrity ----------------------------------------------------
     overlap = int(np.intersect1d(train_indices, val_indices).size)
+    _record("split_indices_disjoint", "0 overlapping indices", overlap)
     covered = int(len(train_indices) + len(val_indices))
-    checks.append(
-        {
-            "check": "split_indices_disjoint",
-            "expected": "0 overlapping indices",
-            "num_flagged": overlap,
-            "detail_file": "n/a",
-        }
-    )
-    checks.append(
-        {
-            "check": "split_coverage",
-            "expected": f"{len(y_train)} samples covered exactly once",
-            "num_flagged": int(abs(covered - len(y_train))),
-            "detail_file": "n/a",
-        }
+    _record(
+        "split_coverage",
+        f"{len(y_train)} samples covered exactly once",
+        int(abs(covered - len(y_train))),
     )
 
     # --- Exact duplicates (content, not index) ------------------------------
@@ -378,19 +366,18 @@ def integrity_report(
     # is a leakage signal, not a modelling convenience, so it is reported even
     # when the count is zero. The official test set is never modified.
     train_hash_set = set(train_hashes)
-    cross_rows = []
-    for j, h in enumerate(test_hashes):
-        if h in train_hash_set:
-            cross_rows.append(
-                {
-                    "source_dataset": "original_test",
-                    "original_index": int(j),
-                    "split": "test",
-                    "label": int(y_test[j]),
-                    "hash": h,
-                    "matching_train_indices": str(hash_counts[h]),
-                }
-            )
+    cross_rows = [
+        {
+            "source_dataset": "original_test",
+            "original_index": int(j),
+            "split": "test",
+            "label": int(y_test[j]),
+            "hash": h,
+            "matching_train_indices": str(hash_counts[h]),
+        }
+        for j, h in enumerate(test_hashes)
+        if h in train_hash_set
+    ]
     details["exact_duplicate_train_test"] = pd.DataFrame(
         cross_rows,
         columns=[
@@ -399,43 +386,32 @@ def integrity_report(
         ],
     )
 
-    dup_train_rows = int(sum(len(idx) - 1 for idx in dup_groups.values()))
-    checks.append(
-        {
-            "check": "exact_duplicate_within_train",
-            "expected": "0 duplicated images (content hash)",
-            "num_flagged": dup_train_rows,
-            "detail_file": "exact_duplicate_train",
-        }
+    _record(
+        "exact_duplicate_within_train",
+        "0 duplicated images (content hash)",
+        int(sum(len(idx) - 1 for idx in dup_groups.values())),
+        "exact_duplicate_train",
     )
-    checks.append(
-        {
-            "check": "exact_duplicate_train_vs_test",
-            "expected": "0 identical images across partitions",
-            "num_flagged": len(cross_rows),
-            "detail_file": "exact_duplicate_train_test",
-        }
+    _record(
+        "exact_duplicate_train_vs_test",
+        "0 identical images across partitions",
+        len(cross_rows),
+        "exact_duplicate_train_test",
     )
 
     # --- Near-duplicates ----------------------------------------------------
     # Not implemented: an all-pairs near-duplicate search over 60,000 images is
     # O(n^2) without an index and is out of scope for this lab. Recorded as an
-    # explicit gap instead of being silently skipped.
-    checks.append(
-        {
-            "check": "near_duplicates",
-            "expected": "not implemented (out of scope; see walkthrough limitations)",
-            "num_flagged": -1,
-            "detail_file": "n/a",
-        }
+    # explicit gap with a None count, never as a number, so it cannot be read as
+    # "checked and clean".
+    _record(
+        "near_duplicates",
+        "not implemented (out of scope; see walkthrough limitations)",
+        None,
     )
 
     return pd.DataFrame(checks), details
 
-
-# ---------------------------------------------------------------------------
-# Step 3 - Class distribution
-# ---------------------------------------------------------------------------
 
 def class_distribution(
     y_train: np.ndarray,
@@ -1188,6 +1164,22 @@ def plot_similarity_heatmap(
 # Step 13 - Handoff tables
 # ---------------------------------------------------------------------------
 
+def _flagged_count(integrity_summary: pd.DataFrame, check_name: str):
+    """Reads the flagged count for one check from the integrity summary.
+
+    Returns None when the check is absent, which means "not run". Returning a
+    number such as -1 would be indistinguishable from a real count once written
+    to JSON or CSV, and a reader would have no way to tell the two apart.
+    """
+    row = integrity_summary.loc[
+        integrity_summary["check"] == check_name, "num_flagged"
+    ]
+    if not len(row):
+        return None
+    value = row.iloc[0]
+    return None if pd.isna(value) else int(value)
+
+
 def build_findings(
     split_meta: Dict,
     train_stats: Dict,
@@ -1218,12 +1210,6 @@ def build_findings(
     Returns:
         Flat dictionary containing only JSON-safe scalar values.
     """
-    def flagged(check_name: str) -> int:
-        row = integrity_summary.loc[
-            integrity_summary["check"] == check_name, "num_flagged"
-        ]
-        return int(row.iloc[0]) if len(row) else -1
-
     train_counts = split_meta["train_class_counts"]
     val_counts = split_meta["val_class_counts"]
 
@@ -1244,9 +1230,9 @@ def build_findings(
         "foreground_threshold": foreground_threshold,
         "foreground_ratio_mean": round(float(spatial["foreground_ratio"].mean()), 6),
         "empty_foreground_images": int(spatial["empty_foreground"].sum()),
-        "exact_duplicate_within_train": flagged("exact_duplicate_within_train"),
-        "exact_duplicate_train_vs_test": flagged("exact_duplicate_train_vs_test"),
-        "all_black_images": flagged("all_black_images"),
+        "exact_duplicate_within_train": _flagged_count(integrity_summary, "exact_duplicate_within_train"),
+        "exact_duplicate_train_vs_test": _flagged_count(integrity_summary, "exact_duplicate_train_vs_test"),
+        "all_black_images": _flagged_count(integrity_summary, "all_black_images"),
         "top_similar_pair_cosine": (
             f"{top_cosine.iloc[0]['class_a']} / {top_cosine.iloc[0]['class_b']} = "
             f"{top_cosine.iloc[0]['similarity']:.4f}"
@@ -1259,142 +1245,136 @@ def build_findings(
     }
 
 
+# Template rows for the EDA-to-FE handoff table. Placeholders in braces are
+# filled from `findings` by `build_handoff_table`. The `status` column accepts
+# exactly three values:
+#   measured   - computed in this pass and reproducible from the artifacts
+#   hypothesis - plausible but unconfirmed; the trained confusion matrix decides
+#   not_run    - deliberately skipped, with the reason recorded in `proposal`
+_HANDOFF_ROWS = [
+    (
+        "Split stratified {train_size:,}/{val_size:,}, moi lop "
+        "{train_class_count_min:,}/{val_class_count_min:,}",
+        "index-only, raw",
+        "split_metadata.json, class_distribution.csv",
+        "Dung dung artifact nay cho EDA, FE va moi run; khong chia lai",
+        "assert min==max class count trong moi partition",
+        "measured",
+    ),
+    (
+        "Global train pixel mean={train_pixel_mean:.6f}, "
+        "std(ddof=0)={train_pixel_std_ddof0:.6f}",
+        "train, scaled [0,1], truoc augmentation",
+        "normalization_stats_measurement.csv",
+        "FE do lai tren dung artifact nay va ghi preprocessing_config.json",
+        "std cua tensor sau Normalize phai ~1.0 (tolerance 0.02)",
+        "measured",
+    ),
+    (
+        "Config cu dung std={legacy_config_std:.4f}, bang mean cua per-image std "
+        "({train_per_image_std_mean:.6f}), khong phai global std",
+        "train, scaled [0,1]",
+        "normalization_stats_measurement.csv (cot per_image_std_mean)",
+        "Thay bang global std do tren split moi; version hoa preprocessing",
+        "test_normalization_yields_unit_variance",
+        "measured",
+    ),
+    (
+        "Khong co exact duplicate trong train pool va khong co train-test "
+        "overlap ({exact_duplicate_train_vs_test})",
+        "raw, md5 tren byte",
+        "integrity_report.csv",
+        "Khong loai bo mau nao; giu nguyen dataset goc",
+        "hash lai trong FE guard, phai van bang 0",
+        "measured",
+    ),
+    (
+        "Pixel 0 chiem {zero_pixel_fraction_train:.4f} tong pixel",
+        "train, scaled [0,1]",
+        "pixel_statistics.csv, pixel_histogram.png",
+        "Foreground phai dung nguong, khong dung pixel != 0",
+        "foreground_ratio khong doi nghia khi threshold thay doi nho",
+        "measured",
+    ),
+    (
+        "Cap lop giong nhau nhat (cosine): {top_similar_pair_cosine}",
+        "train, mean image",
+        "class_similarity_matrix.csv, class_similarity_heatmap.png",
+        "Chi ghi la gia thuyet ve cap lop de nham lan",
+        "confusion matrix phai xac nhan hoac bac bo",
+        "hypothesis",
+    ),
+    (
+        "Handcrafted features (Step 7)",
+        "n/a",
+        "n/a",
+        "Khong dua vao model; chi dung de mo ta",
+        "n/a",
+        "not_run",
+    ),
+    (
+        "PCA / t-SNE (Step 9)",
+        "n/a",
+        "n/a",
+        "Khong thuc hien: khong phuc vu quyet dinh nao cho cac run MLP",
+        "n/a",
+        "not_run",
+    ),
+    (
+        "Outlier scoring (Step 10)",
+        "n/a",
+        "n/a",
+        "Khong thuc hien: spec cam loai bo mau chi vi bi danh dau outlier",
+        "n/a",
+        "not_run",
+    ),
+    (
+        "Distribution shift train/val (Step 11)",
+        "n/a",
+        "pixel_histogram.png (so sanh dinh tinh)",
+        "Khong chay KS test: hai tap cung mot pool, khac biet chu yeu la "
+        "sampling noise",
+        "n/a",
+        "not_run",
+    ),
+    (
+        "Traditional baseline LR/kNN (Step 12)",
+        "n/a",
+        "n/a",
+        "Khong thuc hien: baseline cua lab la BaselineMLP",
+        "n/a",
+        "not_run",
+    ),
+]
+
+_HANDOFF_COLUMNS = [
+    "finding", "split_view", "evidence", "proposal", "validation_check", "status",
+]
+
+
 def build_handoff_table(findings: Dict, train_stats: Dict) -> pd.DataFrame:
     """Builds the EDA-to-Feature-Engineering handoff table.
 
     Each row carries the finding, the split and view it was measured on, the
     artifact that proves it, the proposed action, and the check that would
-    falsify it. The `status` column accepts exactly three values:
-
-    - `measured`: computed in this pass and reproducible from the artifacts.
-    - `hypothesis`: plausible but unconfirmed; the trained confusion matrix must
-      accept or reject it.
-    - `not_run`: deliberately skipped, with the reason recorded in `proposal`.
+    falsify it. Rows live in `_HANDOFF_ROWS`; this function only fills the
+    measured values into them.
 
     Args:
         findings: Output of `build_findings`.
-        train_stats: Output of `compute_normalization_stats` on train.
+        train_stats: Output of `compute_normalization_stats` on train. Accepted
+            for call-site compatibility; the values it would supply are already
+            inside `findings`.
 
     Returns:
         DataFrame with one row per finding, ready to write to CSV.
     """
     rows = [
-        {
-            "finding": (
-                f"Split stratified {findings['train_size']:,}/{findings['val_size']:,}, "
-                f"moi lop {findings['train_class_count_min']:,}/"
-                f"{findings['val_class_count_min']:,}"
-            ),
-            "split_view": "index-only, raw",
-            "evidence": "split_metadata.json, class_distribution.csv",
-            "proposal": "Dung dung artifact nay cho EDA, FE va moi run; khong chia lai",
-            "validation_check": "assert min==max class count trong moi partition",
-            "status": "measured",
-        },
-        {
-            "finding": (
-                f"Global train pixel mean={findings['train_pixel_mean']:.6f}, "
-                f"std(ddof=0)={findings['train_pixel_std_ddof0']:.6f}"
-            ),
-            "split_view": "train, scaled [0,1], truoc augmentation",
-            "evidence": "normalization_stats_measurement.csv",
-            "proposal": "FE do lai tren dung artifact nay va ghi preprocessing_config.json",
-            "validation_check": "std cua tensor sau Normalize phai ~1.0 (tolerance 0.02)",
-            "status": "measured",
-        },
-        {
-            "finding": (
-                f"Config cu dung std={findings['legacy_config_std']:.4f}, bang mean cua "
-                f"per-image std ({findings['train_per_image_std_mean']:.6f}), "
-                f"khong phai global std"
-            ),
-            "split_view": "train, scaled [0,1]",
-            "evidence": "normalization_stats_measurement.csv (cot per_image_std_mean)",
-            "proposal": "Thay bang global std do tren split moi; version hoa preprocessing",
-            "validation_check": "test_normalization_yields_unit_variance",
-            "status": "measured",
-        },
-        {
-            "finding": (
-                f"Khong co exact duplicate trong train pool va khong co train-test "
-                f"overlap ({findings['exact_duplicate_train_vs_test']})"
-            ),
-            "split_view": "raw, md5 tren byte",
-            "evidence": "integrity_report.csv",
-            "proposal": "Khong loai bo mau nao; giu nguyen dataset goc",
-            "validation_check": "hash lai trong FE guard, phai van bang 0",
-            "status": "measured",
-        },
-        {
-            "finding": (
-                f"Pixel 0 chiem {findings['zero_pixel_fraction_train']:.4f} tong pixel"
-            ),
-            "split_view": "train, scaled [0,1]",
-            "evidence": "pixel_statistics.csv, pixel_histogram.png",
-            "proposal": "Foreground phai dung nguong, khong dung pixel != 0",
-            "validation_check": "foreground_ratio khong doi nghia khi threshold thay doi nho",
-            "status": "measured",
-        },
-        {
-            "finding": (
-                f"Cap lop giong nhau nhat (cosine): {findings['top_similar_pair_cosine']}"
-            ),
-            "split_view": "train, mean image",
-            "evidence": "class_similarity_matrix.csv, class_similarity_heatmap.png",
-            "proposal": "Chi ghi la gia thuyet ve cap lop de nham lan",
-            "validation_check": "confusion matrix phai xac nhan hoac bac bo",
-            "status": "hypothesis",
-        },
-        {
-            "finding": "Handcrafted features (Step 7)",
-            "split_view": "n/a",
-            "evidence": "n/a",
-            "proposal": "Khong dua vao model; chi dung de mo ta",
-            "validation_check": "n/a",
-            "status": "not_run",
-        },
-        {
-            "finding": "PCA / t-SNE (Step 9)",
-            "split_view": "n/a",
-            "evidence": "n/a",
-            "proposal": "Khong thuc hien: khong phuc vu quyet dinh nao cho cac run MLP",
-            "validation_check": "n/a",
-            "status": "not_run",
-        },
-        {
-            "finding": "Outlier scoring (Step 10)",
-            "split_view": "n/a",
-            "evidence": "n/a",
-            "proposal": "Khong thuc hien: spec cam loai bo mau chi vi bi danh dau outlier",
-            "validation_check": "n/a",
-            "status": "not_run",
-        },
-        {
-            "finding": "Distribution shift train/val (Step 11)",
-            "split_view": "n/a",
-            "evidence": "pixel_histogram.png (so sanh dinh tinh)",
-            "proposal": (
-                "Khong chay KS test: hai tap cung mot pool, khac biet chu yeu la "
-                "sampling noise"
-            ),
-            "validation_check": "n/a",
-            "status": "not_run",
-        },
-        {
-            "finding": "Traditional baseline LR/kNN (Step 12)",
-            "split_view": "n/a",
-            "evidence": "n/a",
-            "proposal": "Khong thuc hien: baseline cua lab la BaselineMLP",
-            "validation_check": "n/a",
-            "status": "not_run",
-        },
+        dict(zip(_HANDOFF_COLUMNS, (row[0].format(**findings),) + tuple(row[1:])))
+        for row in _HANDOFF_ROWS
     ]
-    return pd.DataFrame(rows)
+    return pd.DataFrame(rows, columns=_HANDOFF_COLUMNS)
 
-
-# ---------------------------------------------------------------------------
-# Feature Engineering support
-# ---------------------------------------------------------------------------
 
 def build_data_review(integrity_summary: pd.DataFrame) -> pd.DataFrame:
     """Turns the integrity summary into an explicit keep/drop decision table.
@@ -1410,15 +1390,9 @@ def build_data_review(integrity_summary: pd.DataFrame) -> pd.DataFrame:
         DataFrame with issue, count, decision, and rationale. A `count` of
         `None` means the check was not run, which is different from zero.
     """
-    def flagged(check_name: str):
-        row = integrity_summary.loc[
-            integrity_summary["check"] == check_name, "num_flagged"
-        ]
-        return int(row.iloc[0]) if len(row) else None
-
-    dup_train = flagged("exact_duplicate_within_train")
-    dup_cross = flagged("exact_duplicate_train_vs_test")
-    all_black = flagged("all_black_images")
+    dup_train = _flagged_count(integrity_summary, "exact_duplicate_within_train")
+    dup_cross = _flagged_count(integrity_summary, "exact_duplicate_train_vs_test")
+    all_black = _flagged_count(integrity_summary, "all_black_images")
 
     return pd.DataFrame([
         {
