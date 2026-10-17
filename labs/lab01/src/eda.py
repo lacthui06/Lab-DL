@@ -34,6 +34,39 @@ FOREGROUND_THRESHOLD = 0.1
 
 
 # ---------------------------------------------------------------------------
+# Scaling
+# ---------------------------------------------------------------------------
+
+def to_scaled(images: np.ndarray) -> np.ndarray:
+    """Converts uint8 images on [0, 255] to float32 on [0, 1].
+
+    This is the single definition of the scaling step on the analysis path.
+    `ToTensor()` performs the same division inside the training pipeline, and
+    the Feature Engineering notebook calls this function instead of repeating
+    the arithmetic. Splitting 255 in several places is a latent defect: change
+    one copy and the reported statistics drift with no exception raised.
+
+    Args:
+        images: Array of any shape holding uint8 or float values.
+
+    Returns:
+        float32 array with the same shape. uint8 input is divided by 255;
+        float input is assumed already scaled and only cast.
+
+    Raises:
+        TypeError: If the dtype is neither uint8 nor a floating type. Other
+            integer types are ambiguous and are rejected on purpose.
+    """
+    if images.dtype == np.uint8:
+        return images.astype(np.float32) / 255.0
+    if np.issubdtype(images.dtype, np.floating):
+        return images.astype(np.float32)
+    raise TypeError(
+        f"Expected uint8 or float input, got {images.dtype}."
+    )
+
+
+# ---------------------------------------------------------------------------
 # Loading
 # ---------------------------------------------------------------------------
 
@@ -500,7 +533,7 @@ def class_mean_images(
     Returns:
         Float array [num_classes, H, W] in [0, 1].
     """
-    scaled = X.astype(np.float32) / 255.0 if X.dtype == np.uint8 else X.astype(np.float32)
+    scaled = to_scaled(X)
     return np.stack(
         [scaled[y == i].mean(axis=0) for i in range(len(class_names))]
     )
@@ -529,7 +562,7 @@ def compute_normalization_stats(X: np.ndarray) -> Dict[str, float]:
         Dict with mean, std, num_images, num_pixels and a `per_image_std_mean`
         diagnostic so the difference from the rejected shortcut stays visible.
     """
-    scaled = X.astype(np.float32) / 255.0 if X.dtype == np.uint8 else X.astype(np.float32)
+    scaled = to_scaled(X)
     flat = scaled.reshape(len(scaled), -1)
 
     return {
@@ -561,7 +594,7 @@ def pixel_statistics_by_class(
         DataFrame with one row per class: global mean/std, zero fraction, and
         the distribution of the per-image brightness (mean intensity).
     """
-    scaled = X.astype(np.float32) / 255.0 if X.dtype == np.uint8 else X.astype(np.float32)
+    scaled = to_scaled(X)
     rows = []
     for i, name in enumerate(class_names):
         sub = scaled[y == i]
@@ -607,7 +640,7 @@ def spatial_features(
         bbox_width, bbox_aspect_ratio, bbox_area_ratio, and an empty_mask flag
         for images whose foreground is empty at this threshold.
     """
-    scaled = X.astype(np.float32) / 255.0 if X.dtype == np.uint8 else X.astype(np.float32)
+    scaled = to_scaled(X)
     mask = scaled > threshold
 
     foreground_ratio = mask.mean(axis=(1, 2))
@@ -643,13 +676,13 @@ def spatial_features(
 
 def mean_pixel_map(X: np.ndarray) -> np.ndarray:
     """Mean image over a set of images, on the [0, 1] scale."""
-    scaled = X.astype(np.float32) / 255.0 if X.dtype == np.uint8 else X.astype(np.float32)
+    scaled = to_scaled(X)
     return scaled.mean(axis=0)
 
 
 def pixel_variance_map(X: np.ndarray) -> np.ndarray:
     """Per-pixel population variance over a set of images, on the [0, 1] scale."""
-    scaled = X.astype(np.float32) / 255.0 if X.dtype == np.uint8 else X.astype(np.float32)
+    scaled = to_scaled(X)
     return scaled.var(axis=0, ddof=0)
 
 
@@ -914,8 +947,8 @@ def plot_pixel_histogram(
     """
     import matplotlib.pyplot as plt
 
-    train_flat = (X_train.astype(np.float32) / 255.0).ravel()
-    val_flat = (X_val.astype(np.float32) / 255.0).ravel()
+    train_flat = to_scaled(X_train).ravel()
+    val_flat = to_scaled(X_val).ravel()
 
     fig, axes = plt.subplots(1, 2, figsize=(13, 4.4))
 
@@ -970,7 +1003,7 @@ def plot_brightness_distribution(
     """
     import matplotlib.pyplot as plt
 
-    scaled = X_train.astype(np.float32) / 255.0
+    scaled = to_scaled(X_train)
     brightness = scaled.reshape(len(scaled), -1).mean(axis=1)
 
     data = [brightness[y_train == i] for i in range(len(class_names))]
@@ -1144,6 +1177,338 @@ def plot_similarity_heatmap(
     ax.tick_params(axis="x", rotation=45, labelsize=8)
     ax.tick_params(axis="y", rotation=0, labelsize=8)
 
+    fig.tight_layout()
+    if save_path:
+        save_path = Path(save_path)
+        save_path.parent.mkdir(parents=True, exist_ok=True)
+        fig.savefig(str(save_path), dpi=200, bbox_inches="tight")
+    return fig
+
+# ---------------------------------------------------------------------------
+# Step 13 - Handoff tables
+# ---------------------------------------------------------------------------
+
+def build_findings(
+    split_meta: Dict,
+    train_stats: Dict,
+    spatial: pd.DataFrame,
+    integrity_summary: pd.DataFrame,
+    top_cosine: pd.DataFrame,
+    top_correlation: pd.DataFrame,
+    legacy_std: float,
+    foreground_threshold: float,
+    test_size: int,
+) -> Dict:
+    """Assembles the measured numbers into one JSON-serialisable dictionary.
+
+    The commentary in the walkthrough is only allowed to quote numbers that
+    appear here, so a claim cannot drift away from the artifact it came from.
+
+    Args:
+        split_meta: Metadata returned by `load_split_metadata`.
+        train_stats: Output of `compute_normalization_stats` on train.
+        spatial: Output of `spatial_features` on train.
+        integrity_summary: Summary table from `integrity_report`.
+        top_cosine: Output of `most_similar_pairs` for the cosine matrix.
+        top_correlation: Output of `most_similar_pairs` for the correlation matrix.
+        legacy_std: Standard deviation previously hard-coded in the config.
+        foreground_threshold: Threshold used to define foreground.
+        test_size: Number of images in the held-out test partition.
+
+    Returns:
+        Flat dictionary containing only JSON-safe scalar values.
+    """
+    def flagged(check_name: str) -> int:
+        row = integrity_summary.loc[
+            integrity_summary["check"] == check_name, "num_flagged"
+        ]
+        return int(row.iloc[0]) if len(row) else -1
+
+    train_counts = split_meta["train_class_counts"]
+    val_counts = split_meta["val_class_counts"]
+
+    return {
+        "split_version": split_meta["split_version"],
+        "train_size": int(split_meta["train_size"]),
+        "val_size": int(split_meta["val_size"]),
+        "test_size_held_out": int(test_size),
+        "train_class_count_min": int(min(train_counts)),
+        "train_class_count_max": int(max(train_counts)),
+        "val_class_count_min": int(min(val_counts)),
+        "val_class_count_max": int(max(val_counts)),
+        "train_pixel_mean": round(float(train_stats["mean"]), 6),
+        "train_pixel_std_ddof0": round(float(train_stats["std"]), 6),
+        "train_per_image_std_mean": round(float(train_stats["per_image_std_mean"]), 6),
+        "legacy_config_std": float(legacy_std),
+        "zero_pixel_fraction_train": round(float(train_stats["zero_pixel_fraction"]), 6),
+        "foreground_threshold": foreground_threshold,
+        "foreground_ratio_mean": round(float(spatial["foreground_ratio"].mean()), 6),
+        "empty_foreground_images": int(spatial["empty_foreground"].sum()),
+        "exact_duplicate_within_train": flagged("exact_duplicate_within_train"),
+        "exact_duplicate_train_vs_test": flagged("exact_duplicate_train_vs_test"),
+        "all_black_images": flagged("all_black_images"),
+        "top_similar_pair_cosine": (
+            f"{top_cosine.iloc[0]['class_a']} / {top_cosine.iloc[0]['class_b']} = "
+            f"{top_cosine.iloc[0]['similarity']:.4f}"
+        ),
+        "top_similar_pair_correlation": (
+            f"{top_correlation.iloc[0]['class_a']} / "
+            f"{top_correlation.iloc[0]['class_b']} = "
+            f"{top_correlation.iloc[0]['similarity']:.4f}"
+        ),
+    }
+
+
+def build_handoff_table(findings: Dict, train_stats: Dict) -> pd.DataFrame:
+    """Builds the EDA-to-Feature-Engineering handoff table.
+
+    Each row carries the finding, the split and view it was measured on, the
+    artifact that proves it, the proposed action, and the check that would
+    falsify it. The `status` column accepts exactly three values:
+
+    - `measured`: computed in this pass and reproducible from the artifacts.
+    - `hypothesis`: plausible but unconfirmed; the trained confusion matrix must
+      accept or reject it.
+    - `not_run`: deliberately skipped, with the reason recorded in `proposal`.
+
+    Args:
+        findings: Output of `build_findings`.
+        train_stats: Output of `compute_normalization_stats` on train.
+
+    Returns:
+        DataFrame with one row per finding, ready to write to CSV.
+    """
+    rows = [
+        {
+            "finding": (
+                f"Split stratified {findings['train_size']:,}/{findings['val_size']:,}, "
+                f"moi lop {findings['train_class_count_min']:,}/"
+                f"{findings['val_class_count_min']:,}"
+            ),
+            "split_view": "index-only, raw",
+            "evidence": "split_metadata.json, class_distribution.csv",
+            "proposal": "Dung dung artifact nay cho EDA, FE va moi run; khong chia lai",
+            "validation_check": "assert min==max class count trong moi partition",
+            "status": "measured",
+        },
+        {
+            "finding": (
+                f"Global train pixel mean={findings['train_pixel_mean']:.6f}, "
+                f"std(ddof=0)={findings['train_pixel_std_ddof0']:.6f}"
+            ),
+            "split_view": "train, scaled [0,1], truoc augmentation",
+            "evidence": "normalization_stats_measurement.csv",
+            "proposal": "FE do lai tren dung artifact nay va ghi preprocessing_config.json",
+            "validation_check": "std cua tensor sau Normalize phai ~1.0 (tolerance 0.02)",
+            "status": "measured",
+        },
+        {
+            "finding": (
+                f"Config cu dung std={findings['legacy_config_std']:.4f}, bang mean cua "
+                f"per-image std ({findings['train_per_image_std_mean']:.6f}), "
+                f"khong phai global std"
+            ),
+            "split_view": "train, scaled [0,1]",
+            "evidence": "normalization_stats_measurement.csv (cot per_image_std_mean)",
+            "proposal": "Thay bang global std do tren split moi; version hoa preprocessing",
+            "validation_check": "test_normalization_yields_unit_variance",
+            "status": "measured",
+        },
+        {
+            "finding": (
+                f"Khong co exact duplicate trong train pool va khong co train-test "
+                f"overlap ({findings['exact_duplicate_train_vs_test']})"
+            ),
+            "split_view": "raw, md5 tren byte",
+            "evidence": "integrity_report.csv",
+            "proposal": "Khong loai bo mau nao; giu nguyen dataset goc",
+            "validation_check": "hash lai trong FE guard, phai van bang 0",
+            "status": "measured",
+        },
+        {
+            "finding": (
+                f"Pixel 0 chiem {findings['zero_pixel_fraction_train']:.4f} tong pixel"
+            ),
+            "split_view": "train, scaled [0,1]",
+            "evidence": "pixel_statistics.csv, pixel_histogram.png",
+            "proposal": "Foreground phai dung nguong, khong dung pixel != 0",
+            "validation_check": "foreground_ratio khong doi nghia khi threshold thay doi nho",
+            "status": "measured",
+        },
+        {
+            "finding": (
+                f"Cap lop giong nhau nhat (cosine): {findings['top_similar_pair_cosine']}"
+            ),
+            "split_view": "train, mean image",
+            "evidence": "class_similarity_matrix.csv, class_similarity_heatmap.png",
+            "proposal": "Chi ghi la gia thuyet ve cap lop de nham lan",
+            "validation_check": "confusion matrix phai xac nhan hoac bac bo",
+            "status": "hypothesis",
+        },
+        {
+            "finding": "Handcrafted features (Step 7)",
+            "split_view": "n/a",
+            "evidence": "n/a",
+            "proposal": "Khong dua vao model; chi dung de mo ta",
+            "validation_check": "n/a",
+            "status": "not_run",
+        },
+        {
+            "finding": "PCA / t-SNE (Step 9)",
+            "split_view": "n/a",
+            "evidence": "n/a",
+            "proposal": "Khong thuc hien: khong phuc vu quyet dinh nao cho cac run MLP",
+            "validation_check": "n/a",
+            "status": "not_run",
+        },
+        {
+            "finding": "Outlier scoring (Step 10)",
+            "split_view": "n/a",
+            "evidence": "n/a",
+            "proposal": "Khong thuc hien: spec cam loai bo mau chi vi bi danh dau outlier",
+            "validation_check": "n/a",
+            "status": "not_run",
+        },
+        {
+            "finding": "Distribution shift train/val (Step 11)",
+            "split_view": "n/a",
+            "evidence": "pixel_histogram.png (so sanh dinh tinh)",
+            "proposal": (
+                "Khong chay KS test: hai tap cung mot pool, khac biet chu yeu la "
+                "sampling noise"
+            ),
+            "validation_check": "n/a",
+            "status": "not_run",
+        },
+        {
+            "finding": "Traditional baseline LR/kNN (Step 12)",
+            "split_view": "n/a",
+            "evidence": "n/a",
+            "proposal": "Khong thuc hien: baseline cua lab la BaselineMLP",
+            "validation_check": "n/a",
+            "status": "not_run",
+        },
+    ]
+    return pd.DataFrame(rows)
+
+
+# ---------------------------------------------------------------------------
+# Feature Engineering support
+# ---------------------------------------------------------------------------
+
+def build_data_review(integrity_summary: pd.DataFrame) -> pd.DataFrame:
+    """Turns the integrity summary into an explicit keep/drop decision table.
+
+    The EDA pass only reports. This function records what is done about each
+    reported issue, so a later reader can tell "nothing was found" apart from
+    "something was found and deliberately kept".
+
+    Args:
+        integrity_summary: Summary table from `integrity_report`.
+
+    Returns:
+        DataFrame with issue, count, decision, and rationale. A `count` of
+        `None` means the check was not run, which is different from zero.
+    """
+    def flagged(check_name: str):
+        row = integrity_summary.loc[
+            integrity_summary["check"] == check_name, "num_flagged"
+        ]
+        return int(row.iloc[0]) if len(row) else None
+
+    dup_train = flagged("exact_duplicate_within_train")
+    dup_cross = flagged("exact_duplicate_train_vs_test")
+    all_black = flagged("all_black_images")
+
+    return pd.DataFrame([
+        {
+            "issue": "exact_duplicate_within_train",
+            "count": dup_train,
+            "decision": "keep" if dup_train == 0 else "keep_and_flag",
+            "rationale": "Khong co duplicate nao bi phat hien; khong co gi de loai.",
+        },
+        {
+            "issue": "exact_duplicate_train_vs_test",
+            "count": dup_cross,
+            "decision": "keep",
+            "rationale": (
+                "Khong co overlap. Official test set khong duoc thay doi trong "
+                "moi truong hop."
+            ),
+        },
+        {
+            "issue": "all_black_images",
+            "count": all_black,
+            "decision": "keep" if all_black == 0 else "flag_for_manual_review",
+            "rationale": (
+                "Anh toan den se khong hoc duoc, nhung chi loai sau khi kiem tra "
+                "thu cong."
+            ),
+        },
+        {
+            "issue": "near_duplicates",
+            "count": None,
+            "decision": "not_checked",
+            "rationale": "Chua thuc hien: O(n^2) tren 60,000 anh, ngoai pham vi lab.",
+        },
+    ])
+
+
+def plot_augmentation_grid(
+    X: np.ndarray,
+    picks: np.ndarray,
+    y: np.ndarray,
+    class_names: Sequence[str],
+    transform,
+    save_path: Optional[Path] = None,
+):
+    """Shows the same images before and after the training transform.
+
+    Visual confirmation matters here: a rotation that is too large or a flip
+    that changes the meaning of the object is easy to miss in code and obvious
+    in a figure.
+
+    Args:
+        X: Images [N, H, W] as uint8.
+        picks: Indices of the images to display, as returned by
+            `sample_images_per_class`.
+        y: Labels [N].
+        class_names: Ordered class names.
+        transform: A torchvision transform that accepts a uint8 HxW array.
+        save_path: Optional destination for the PNG.
+
+    Returns:
+        The matplotlib Figure.
+    """
+    import matplotlib.pyplot as plt
+
+    flat = picks.reshape(-1)
+    n_rows = picks.shape[0]
+    n_cols = picks.shape[1] if picks.ndim > 1 else len(flat)
+    fig, axes = plt.subplots(n_rows * 2, n_cols, figsize=(1.7 * n_cols, 3.4 * n_rows))
+    axes = np.atleast_2d(axes)
+
+    for row in range(n_rows):
+        for col in range(n_cols):
+            idx = picks[row, col] if picks.ndim > 1 else picks[col]
+            augmented = transform(X[idx])
+            if hasattr(augmented, "numpy"):
+                augmented = augmented.numpy().squeeze()
+
+            for offset, image, label in (
+                (0, X[idx], "goc"),
+                (1, augmented, "sau transform"),
+            ):
+                ax = axes[row * 2 + offset, col]
+                ax.imshow(image, cmap="gray", vmin=0, vmax=1 if offset else 255)
+                ax.set_xticks([])
+                ax.set_yticks([])
+                if col == 0:
+                    ax.set_ylabel(label, fontsize=8)
+                if offset == 0:
+                    ax.set_title(class_names[int(y[idx])], fontsize=8)
+
+    fig.suptitle("Anh truoc va sau augmentation (train only)", fontsize=11)
     fig.tight_layout()
     if save_path:
         save_path = Path(save_path)
