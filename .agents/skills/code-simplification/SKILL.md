@@ -55,10 +55,25 @@ Bao gồm chú thích kiểu và docstring mô tả chiều tensor để loại 
 ### Bước 5: Loại bỏ dead code và import không dùng
 Dọn sạch các import không dùng, câu lệnh print nháp, và các cell thí nghiệm đã deprecated. Code chết gây nhầm lẫn và làm chậm việc đọc hiểu.
 
-### Bước 6: Áp đặt chính sách không Emoji nghiêm ngặt
+### Bước 6: Xóa script sinh code sau khi dùng xong
+Script sinh code (generator notebook, scaffolder, patch script) là script tạo ra file khác chứ không trực tiếp phân tích dữ liệu. Sau khi output đã sinh, đã chạy sạch, và đã commit, phải xóa script đó.
+
+Lý do: giữ cả generator và output tạo ra hai nguồn sự thật cho cùng một nội dung. Sửa notebook thì generator lệch; sửa generator thì notebook lệch; không có cơ chế nào phát hiện. Ngoài ra generator vẫn chiếm dung lượng và thời gian đọc trên máy người dùng dù không còn cần chạy.
+
+Ngoại lệ duy nhất: khi output cần tái sinh định kỳ từ một nguồn thay đổi. Khi đó generator là nguồn sự thật, và output phải được đánh dấu rõ là generated (không sửa tay). Trước khi xóa, xác nhận output đã nằm trong Git để có thể phục hồi từ lịch sử.
+
+### Bước 7: Notebook - code tối thiểu, output tối đa
+Notebook là tài liệu trình bày, không phải nơi chứa logic. Hai quy tắc đi kèm nhau:
+
+- **Code tối thiểu:** mỗi cell chỉ nên 3 đến 8 dòng gọi hàm từ `src/`. Logic dài, vòng lặp nhiều bước, hay hàm phụ trợ phải chuyển vào module. Cell trên 20 dòng là dấu hiệu logic đang nằm sai chỗ.
+- **Output tối đa:** mỗi cell tính toán phải hiển thị kết quả ngay trong notebook. Hàm vẽ phải vừa ghi file vừa gọi `plt.show()`; hàm thống kê phải in bảng tóm tắt. Ghi file mà không hiển thị làm notebook mất chức năng chính: người đọc không thấy gì ngoài text log.
+
+Nội dung giải thích trong markdown cell phải viết bằng tiếng Việt có dấu, như mọi tài liệu khác của dự án. Không hạ cấp sang tiếng Việt không dấu để né lỗi encoding; lỗi encoding phải chặn bằng hook, không bằng cách bỏ dấu.
+
+### Bước 8: Áp đặt chính sách không Emoji nghiêm ngặt
 Nghiêm cấm emoji và icon trang trí trong file source code, câu lệnh xuất terminal, comment, docstring, và markdown cell của notebook. Thể hiện mọi trạng thái bằng text kỹ thuật chuẩn (ví dụ `[INFO]`, `[SUCCESS]`, `[ERROR]`). Điều này ngăn ngừa sự cố `UnicodeEncodeError` trên các hệ điều hành khác nhau như Windows CP1252.
 
-### Bước 7: Xác minh hành vi không đổi
+### Bước 9: Xác minh hành vi không đổi
 Chạy lại các module đã refactor với seed cố định và so sánh loss và metric với kết quả trước refactor. Nếu kết quả khớp, refactor thành công. Nếu không khớp, có lỗi logic được đưa vào trong quá trình refactor và cần sửa.
 
 ## 5. Deliverables
@@ -66,6 +81,8 @@ Chạy lại các module đã refactor với seed cố định và so sánh loss
 - Module Python sạch trong `src/` với type hint và docstring đầy đủ.
 - File cấu hình tập trung cho hyperparameter và đường dẫn.
 - Pipeline tiền xử lý thống nhất dùng chung cho train và eval.
+- Notebook có cell ngắn gọi `src/`, hiển thị đầy đủ output, markdown tiếng Việt có dấu.
+- Không còn script sinh code đã dùng xong.
 - Bằng chứng kết quả không đổi sau refactor.
 - Xác nhận không còn emoji hoặc ký tự phi chuẩn.
 
@@ -79,11 +96,14 @@ Chạy lại các module đã refactor với seed cố định và so sánh loss
 
 ## 7. Chế độ thất bại thường gặp (Failure Modes)
 
-- **Refactor làm thay đổi kết quả:** Vô tình thay đổi logic trong quá trình dọn dẹp. Dấu hiệu: metric sau refactor khác trước. Phòng tránh: xác minh ở Bước 7.
+- **Refactor làm thay đổi kết quả:** Vô tình thay đổi logic trong quá trình dọn dẹp. Dấu hiệu: metric sau refactor khác trước. Phòng tránh: xác minh ở Bước 9.
 - **Vẫn còn hằng số hard-code:** Bỏ sót một số giá trị rải rác. Dấu hiệu: phải sửa nhiều nơi để đổi một hyperparameter. Phòng tránh: rà soát toàn bộ ở Bước 1.
 - **Tiền xử lý trùng lặp:** Giữ hai bản logic cho train và eval. Dấu hiệu: kết quả inference khác kỳ vọng. Phòng tránh: thống nhất ở Bước 3.
-- **Emoji lọt vào code:** Gây lỗi encoding trên Windows. Phòng tránh: tuân thủ chính sách ở Bước 6.
+- **Emoji lọt vào code:** Gây lỗi encoding trên Windows. Phòng tránh: tuân thủ chính sách ở Bước 8.
 - **Để lại dead code:** Không dọn sạch import và cell cũ. Phòng tránh: rà soát ở Bước 5.
+- **Hai nguồn sự thật:** Giữ cả generator và output nó sinh ra. Dấu hiệu: sửa một bên, bên kia không đổi theo. Phòng tránh: xóa generator ở Bước 6.
+- **Notebook rỗng output:** Cell chỉ `savefig` hoặc `to_csv` mà không hiển thị. Dấu hiệu: mở notebook chỉ thấy text log, không thấy bảng hay hình. Phòng tránh: áp dụng Bước 7.
+- **Logic nằm trong notebook:** Cell dài trên 20 dòng, có vòng lặp hoặc hàm phụ trợ. Dấu hiệu: không thể test cell đó bằng pytest. Phòng tránh: chuyển vào `src/` theo Bước 7.
 
 ## 8. Definition of Done
 
@@ -92,6 +112,8 @@ Chạy lại các module đã refactor với seed cố định và so sánh loss
 - [ ] Logic tiền xử lý chỉ có một nguồn chân lý duy nhất.
 - [ ] Tất cả hàm có type hint và docstring mô tả shape.
 - [ ] Đã loại bỏ dead code và import không dùng.
+- [ ] Không còn script sinh code đã hoàn thành nhiệm vụ.
+- [ ] Notebook có cell ngắn, hiển thị output, markdown tiếng Việt có dấu.
 - [ ] Không còn emoji hoặc ký tự phi chuẩn.
 - [ ] Kết quả sau refactor khớp với kết quả trước refactor.
 
@@ -101,3 +123,6 @@ Chạy lại các module đã refactor với seed cố định và so sánh loss
 - [X] *"Hằng số để rải rác cũng được, đọc hiểu được là được"* -> **Bác bỏ:** Hằng số rải rác khiến việc thay đổi cấu hình phải sửa nhiều nơi và dễ bỏ sót. Tập trung hóa là bắt buộc.
 - [X] *"Viết lại tiền xử lý cho eval riêng cho gọn"* -> **Bác bỏ:** Duy trì hai bản logic dẫn đến train/serve skew. Dùng chung một pipeline.
 - [X] *"Emoji cho đẹp thôi, không ảnh hưởng gì"* -> **Bác bỏ:** Emoji gây lỗi `UnicodeEncodeError` trên môi trường như Windows CP1252 và vi phạm chuẩn chuyên nghiệp. Chỉ dùng text thuần.
+- [X] *"Giữ generator để sau này còn sinh lại notebook"* -> **Bác bỏ:** Nếu output đã trong Git thì phục hồi được từ lịch sử. Giữ generator khi không dùng tạo hai nguồn sự thật và khiến lần sửa sau không biết phải sửa bên nào.
+- [X] *"Notebook chỉ cần lưu hình ra file, không cần hiển thị"* -> **Bác bỏ:** Notebook là tài liệu trình bày. Nếu không hiển thị thì người đọc phải mở từng file PNG bên ngoài, và notebook mất lý do tồn tại.
+- [X] *"Viết tiếng Việt không dấu cho an toàn encoding"* -> **Bác bỏ:** Né lỗi bằng cách hạ cấp nội dung là sai hướng. Lỗi encoding phải chặn bằng pre-commit hook, không bằng cách bỏ dấu tiếng Việt.
