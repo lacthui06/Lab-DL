@@ -1,10 +1,6 @@
 {
   "preproc_version": "preproc_v2_train_global_std",
   "split_version": "split_v2_stratified",
-  "split_seed": 42,
-  "val_split": 0.1,
-  "train_size": 54000,
-  "val_size": 6000,
   "normalization": {
     "mean": [
       0.286209
@@ -12,45 +8,11 @@
     "std": [
       0.35316
     ],
-    "method": "global pooled statistics over all pixels of the train split",
-    "variance": "population (ddof=0)",
-    "fitted_on": "train split only, scaled [0,1], before augmentation",
+    "computed_on": "train",
+    "view": "scaled [0,1]",
+    "ddof": 0,
     "num_images": 54000,
     "num_pixels": 42336000,
-    "rejected_alternative": {
-      "value": 0.320661,
-      "reason": "mean of per-image std is not the global std; spec forbids using it"
-    }
-  },
-  "transform": {
-    "train": [
-      "RandomHorizontalFlip(p=0.5)",
-      "RandomRotation(degrees=10)",
-      "ToTensor()",
-      "Normalize(mean, std)"
-    ],
-    "eval": [
-      "ToTensor()",
-      "Normalize(mean, std)"
-    ],
-    "augmentation_applied_to": "train only"
-  },
-  "runs": {
-    "Run1_Baseline_MLP": {
-      "augmentation": false,
-      "epochs": 5,
-      "scheduler": false
-    },
-    "Run2_Tuned_MLP": {
-      "augmentation": true,
-      "epochs": 10,
-      "scheduler": true
-    }
-  },
-  "library_versions": {
-    "torch": "2.14.0+cpu",
-    "torchvision": "0.29.1+cpu",
-    "numpy": "2.5.3",
-    "pandas": "3.0.5"
+    "augmentation": false
   }
 }

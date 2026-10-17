@@ -34,9 +34,5 @@
     600,
     600
   ],
-  "library_versions": {
-    "numpy": "2.5.3",
-    "pandas": "3.0.5"
-  },
   "foreground_threshold": 0.1
 }
