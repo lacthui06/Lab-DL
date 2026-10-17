@@ -1,0 +1,13 @@
+class_a,class_b,similarity
+Coat,Shirt,0.987286
+Pullover,Coat,0.984075
+Pullover,Shirt,0.982976
+T-shirt/top,Shirt,0.949727
+Sandal,Ankle boot,0.926082
+Trouser,Dress,0.924922
+T-shirt/top,Dress,0.923231
+Sandal,Sneaker,0.914833
+T-shirt/top,Coat,0.906569
+T-shirt/top,Pullover,0.899379
+Coat,Bag,0.893556
+Shirt,Bag,0.89332

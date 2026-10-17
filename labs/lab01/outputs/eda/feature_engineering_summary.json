@@ -1,0 +1,11 @@
+{
+  "guard_failures": [],
+  "guards_passed": true,
+  "preprocessing_config": "C:\\Users\\Win 11\\Documents\\Lab DL\\labs\\lab01\\outputs\\eda\\preprocessing_config.json",
+  "split_version": "split_v2_stratified",
+  "preproc_version": "preproc_v2_train_global_std",
+  "normalization_mean": 0.286209,
+  "normalization_std": 0.35316,
+  "legacy_std_rejected": 0.3205,
+  "legacy_normalized_std": 1.101902
+}

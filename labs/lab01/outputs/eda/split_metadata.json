@@ -1,0 +1,42 @@
+{
+  "split_version": "split_v2_stratified",
+  "source_dataset": "FashionMNIST train=True (60,000 original train images)",
+  "excluded_partition": "FashionMNIST train=False (10,000 official test images)",
+  "seed": 42,
+  "val_split": 0.1,
+  "shuffle": true,
+  "stratified": true,
+  "splitter": "sklearn.model_selection.train_test_split",
+  "pool_size": 60000,
+  "train_size": 54000,
+  "val_size": 6000,
+  "train_class_counts": [
+    5400,
+    5400,
+    5400,
+    5400,
+    5400,
+    5400,
+    5400,
+    5400,
+    5400,
+    5400
+  ],
+  "val_class_counts": [
+    600,
+    600,
+    600,
+    600,
+    600,
+    600,
+    600,
+    600,
+    600,
+    600
+  ],
+  "library_versions": {
+    "numpy": "2.5.3",
+    "pandas": "3.0.5"
+  },
+  "foreground_threshold": 0.1
+}

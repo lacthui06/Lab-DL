@@ -1,0 +1,4 @@
+partition,num_images,image_height,image_width,num_channels,array_shape,dtype,pixel_min,pixel_max,num_labels,label_min,label_max,num_classes_present,num_class_names_defined,memory_MB
+original_train,60000,28,28,1,"(60000, 28, 28)",uint8,0,255,60000,0,9,10,10,44.861
+original_test,10000,28,28,1,"(10000, 28, 28)",uint8,0,255,10000,0,9,10,10,7.477
+summary,70000,28,28,1,n/a,uint8,0,255,70000,0,9,10,10,52.338

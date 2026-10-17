@@ -1,0 +1,12 @@
+finding,split_view,evidence,proposal,validation_check,status
+"Split stratified 54,000/6,000, moi lop dung 5,400/600","index-only, raw","split_metadata.json, class_distribution.csv","Dung dung artifact nay cho EDA, FE va ca 3 run; khong chia lai",assert min==max class count trong moi partition,measured
+"Global train pixel mean=0.286209, std(ddof=0)=0.353160","train, scaled [0,1], truoc augmentation",normalization_stats_measurement.csv,FE do lai tren dung artifact nay va ghi preprocessing_config.json,std cua tensor sau Normalize phai ~1.0 (tolerance 0.02),measured
+"Config cu dung std=0.3205, bang mean cua per-image std (0.320661), khong phai global std","train, scaled [0,1]",normalization_stats_measurement.csv (cot per_image_std_mean),Thay bang global std do tren split moi; version hoa preprocessing,test_normalization_yields_unit_variance,measured
+Khong co exact duplicate trong train pool va khong co train-test overlap (0),"raw, md5 tren byte",integrity_report.csv,Khong loai bo mau nao; giu nguyen dataset goc,"hash lai trong FE guard, phai van bang 0",measured
+Pixel 0 chiem 0.5021 tong pixel,"train, scaled [0,1]","pixel_statistics.csv, pixel_histogram.png","Foreground phai dung nguong, khong dung pixel != 0",foreground_ratio khong doi nghia khi threshold thay doi nho,measured
+Cap lop giong nhau nhat (cosine): Coat / Shirt = 0.9873,"train, mean image","class_similarity_matrix.csv, class_similarity_heatmap.png",Chi ghi la gia thuyet ve cap lop de nham lan,confusion matrix cua ca 3 run phai xac nhan hoac bac bo,hypothesis
+Handcrafted features (Step 7),n/a,n/a,Khong dua vao model; chi dung de mo ta,n/a,not_run
+PCA / t-SNE (Step 9),n/a,n/a,Khong thuc hien: khong phuc vu quyet dinh nao cho 3 run MLP/CNN,n/a,not_run
+Outlier scoring (Step 10),n/a,n/a,Khong thuc hien: spec cam loai bo mau chi vi bi danh dau outlier,n/a,not_run
+Distribution shift train/val (Step 11),n/a,pixel_histogram.png (so sanh dinh tinh),"Khong chay KS test: hai tap cung mot pool, khac biet chu yeu la sampling noise",n/a,not_run
+Traditional baseline LR/kNN (Step 12),n/a,n/a,"Khong thuc hien: baseline cua lab la BaselineMLP, khong phai mo hinh tuyen tinh",n/a,not_run

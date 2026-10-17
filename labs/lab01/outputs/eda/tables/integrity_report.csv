@@ -1,0 +1,10 @@
+check,expected,num_flagged,detail_file
+labels_in_range,"[0, 9]",0,"invalid_train_labels, invalid_test_labels"
+pixel_range_0_255,"all pixels within [0, 255]",0,n/a
+nan_or_inf_pixels,0 (uint8 storage cannot represent NaN/Inf),0,n/a
+all_black_images,0 images with maximum pixel 0,0,"all_black_train, all_black_test"
+split_indices_disjoint,0 overlapping indices,0,n/a
+split_coverage,60000 samples covered exactly once,0,n/a
+exact_duplicate_within_train,0 duplicated images (content hash),0,exact_duplicate_train
+exact_duplicate_train_vs_test,0 identical images across partitions,0,exact_duplicate_train_test
+near_duplicates,not implemented (out of scope; see walkthrough limitations),-1,n/a
