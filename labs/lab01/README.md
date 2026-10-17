@@ -8,12 +8,12 @@ Bài lab xây dựng pipeline Deep Learning end-to-end để phân loại 10 nh�
 
 - `description_lab_01.md`: đề bài gốc do giảng viên giao (đầu vào, giữ nguyên văn).
 - `walkthrough_lab_01.md`: tài liệu sống duy nhất hợp nhất 3 Rule (Spec -> Changelog -> Report) — bài làm và kết quả (đầu ra).
+- Quy trình chung cho bài toán ảnh: `docs/image-pipeline.md`.
 - `notebooks/`:
   - `lab01_eda.ipynb`: tạo stratified split một lần, chạy EDA, ghi artifact vào `outputs/eda/`.
   - `lab01_feature_engineering.ipynb`: đo và chốt thống kê normalization, kiểm tra augmentation, ghi `preprocessing_config.json`.
   - `lab01_fashionmnist_walkthrough.ipynb`: huấn luyện trên Kaggle, có guard cell kiểm tra artifact trước khi train.
 - `src/`: các module Python tái sử dụng (`config.py`, `split.py`, `dataset.py`, `eda.py`, `model.py`, `engine.py`, `utils.py`).
-- `scripts/`: script sinh notebook từ code Python (để cell luôn khớp `src/`, không sửa notebook bằng tay).
 - `tests/`: các bài test TDD bắt buộc.
 - `data/`: dataset đầu vào cục bộ (được git ignore).
 - `outputs/`: checkpoint, log đánh giá và các hình trực quan. `outputs/eda/` chứa split artifact, thống kê và bảng/biểu đồ EDA.
