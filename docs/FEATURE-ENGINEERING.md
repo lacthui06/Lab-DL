@@ -658,30 +658,30 @@ Với API thư viện, kiểm chứng theo phiên bản đang cài thay vì theo
 
 ```text
 labs/lab01/
-├── data/
-├── src/
-│   ├── config.py             # paths, normalization, run configs
-│   ├── split.py              # stratified split + artifact
-│   ├── dataset.py            # transforms, DataLoaders, đọc split artifact
-│   ├── eda.py                # thống kê và biểu đồ EDA
-│   ├── model.py              # BaselineMLP và TunedMLP
-│   ├── engine.py             # training, evaluation, best checkpoint
-│   └── utils.py              # seed, checkpoint và visualization
-├── notebooks/
-│   ├── lab01_eda.ipynb
-│   ├── lab01_feature_engineering.ipynb
-│   └── lab01_fashionmnist_walkthrough.ipynb
-├── tests/
-│   └── test_pipeline.py
-├── scripts/
-│   ├── build_eda_notebook.py
-│   ├── build_fe_notebook.py
-│   └── patch_training_notebook.py
-├── outputs/
-│   ├── figures/
-│   ├── tables/
-│   └── eda/                  # split artifact, thống kê, bảng và hình EDA
-└── walkthrough_lab_01.md     # spec, changelog, report
+|-- data/
+|-- src/
+|   |-- config.py             # paths, normalization, run configs
+|   |-- split.py              # stratified split + artifact
+|   |-- dataset.py            # transforms, DataLoaders, đọc split artifact
+|   |-- eda.py                # thống kê và biểu đồ EDA
+|   |-- model.py              # BaselineMLP và TunedMLP
+|   |-- engine.py             # training, evaluation, best checkpoint
+|   `-- utils.py              # seed, checkpoint và visualization
+|-- notebooks/
+|   |-- lab01_eda.ipynb
+|   |-- lab01_feature_engineering.ipynb
+|   `-- lab01_fashionmnist_walkthrough.ipynb
+|-- tests/
+|   `-- test_pipeline.py
+|-- scripts/
+|   |-- build_eda_notebook.py
+|   |-- build_fe_notebook.py
+|   `-- patch_training_notebook.py
+|-- outputs/
+|   |-- figures/
+|   |-- tables/
+|   `-- eda/                  # split artifact, thống kê, bảng và hình EDA
+`-- walkthrough_lab_01.md     # spec, changelog, report
 ```
 
 Đây là ánh xạ vào cấu trúc Lab 01; các artifact mới chỉ tạo khi triển khai được xác nhận. Tái sử dụng source/notebook hiện có, không tạo framework `src/data`, `src/features`, `src/models`, `src/training` song song. Bảng/ảnh dùng `OUTPUTS_DIR` (local: `labs/lab01/outputs/`, Kaggle theo config); nhận xét nằm trong walkthrough. File phụ trợ AI không trộn vào source/artifact sản phẩm; nếu cần giữ phải theo vị trí `.agents/<task>/` đã xác nhận.

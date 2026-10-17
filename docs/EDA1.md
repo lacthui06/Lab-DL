@@ -508,32 +508,32 @@ Lưu ý về API thư viện: các phiên bản mới thay đổi tham số theo
 
 ```text
 labs/lab01/
-├── data/
-├── notebooks/
-│   ├── lab01_eda.ipynb                     # EDA, sinh split + thống kê
-│   ├── lab01_feature_engineering.ipynb     # chốt normalization + augmentation
-│   └── lab01_fashionmnist_walkthrough.ipynb
-├── src/
-│   ├── config.py
-│   ├── split.py
-│   ├── dataset.py
-│   ├── eda.py
-│   ├── model.py
-│   ├── engine.py
-│   └── utils.py
-├── scripts/
-│   ├── build_eda_notebook.py
-│   ├── build_fe_notebook.py
-│   └── patch_training_notebook.py
-├── outputs/
-│   └── eda/
-│       ├── split_indices.npz
-│       ├── split_metadata.json
-│       ├── eda_findings.json
-│       ├── preprocessing_config.json
-│       ├── tables/
-│       └── figures/
-└── walkthrough_lab_01.md     # nhận xét, quyết định và báo cáo
+|-- data/
+|-- notebooks/
+|   |-- lab01_eda.ipynb                     # EDA, sinh split + thống kê
+|   |-- lab01_feature_engineering.ipynb     # chốt normalization + augmentation
+|   `-- lab01_fashionmnist_walkthrough.ipynb
+|-- src/
+|   |-- config.py
+|   |-- split.py
+|   |-- dataset.py
+|   |-- eda.py
+|   |-- model.py
+|   |-- engine.py
+|   `-- utils.py
+|-- scripts/
+|   |-- build_eda_notebook.py
+|   |-- build_fe_notebook.py
+|   `-- patch_training_notebook.py
+|-- outputs/
+|   `-- eda/
+|       |-- split_indices.npz
+|       |-- split_metadata.json
+|       |-- eda_findings.json
+|       |-- preprocessing_config.json
+|       |-- tables/
+|       `-- figures/
+`-- walkthrough_lab_01.md     # nhận xét, quyết định và báo cáo
 ```
 
 Tái sử dụng notebook và module hiện có; không tạo thêm cây `src/eda/` song song. Chỉ đề xuất tách module nếu khối lượng thực tế cần và được xác nhận. File phụ trợ AI nếu cần giữ lại phải theo vị trí `.agents/<task>/` đã được xác nhận, không trộn vào artifact sản phẩm.
