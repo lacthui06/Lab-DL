@@ -1,22 +1,30 @@
 """Dataset and DataLoader module for FashionMNIST.
 Implements transforms, strict train/val splitting without data leakage,
 and clean PyTorch Dataset/DataLoader pipelines.
+
+The train/validation partition is NOT derived here. It is created once by the
+EDA notebook through `src.split.make_stratified_split` and reloaded from
+`outputs/eda/split_indices.npz`, so EDA, Feature Engineering and all three runs
+see the same partition. Re-deriving it in this module would silently produce a
+different partition whenever the splitting code or its default changed.
 """
 
 from pathlib import Path
 from typing import Tuple, List
 import torch
-from torch.utils.data import Dataset, DataLoader, Subset, random_split
+from torch.utils.data import Dataset, DataLoader, Subset
 from torchvision import datasets, transforms
 from PIL import Image
 
 from .config import (
     DATA_DIR,
+    EDA_DIR,
     RANDOM_SEED,
     FASHION_MNIST_MEAN,
     FASHION_MNIST_STD,
     CLASS_NAMES,
 )
+from .split import load_split
 
 
 def get_transforms(augment: bool = False) -> transforms.Compose:
@@ -97,19 +105,31 @@ def get_dataloaders(
     augment: bool = False,
     seed: int = RANDOM_SEED,
     num_workers: int = 0,
+    split_dir: Path = EDA_DIR,
 ) -> Tuple[DataLoader, DataLoader, DataLoader, List[str]]:
-    """Loads FashionMNIST, splits train/val, and returns DataLoaders.
-    
+    """Loads FashionMNIST, applies the persisted stratified split, and returns DataLoaders.
+
+    The split indices are loaded from `split_dir`, never regenerated here. This is
+    what guarantees that EDA, Feature Engineering and all three runs share one
+    partition; a regenerated split would make the runs incomparable and would
+    invalidate the normalization statistics measured on the original partition.
+
     Args:
         data_dir: Directory where data is stored.
         batch_size: Mini-batch size.
-        val_split: Fraction of training dataset reserved for validation (e.g. 0.1 = 10%).
+        val_split: Expected validation fraction. Checked against the persisted
+            split so a mismatched caller is caught instead of silently ignored.
         augment: Whether to apply data augmentation to training data.
-        seed: Random seed for reproducible splitting.
+        seed: Retained for call-site compatibility; the split seed lives in the
+            persisted artifact, not here.
         num_workers: Subprocesses for data loading.
-        
+        split_dir: Directory holding `split_indices.npz` (created by the EDA notebook).
+
     Returns:
         (train_loader, val_loader, test_loader, class_names)
+
+    Raises:
+        FileNotFoundError: If the split artifact is missing.
     """
     # 1. Load raw datasets without transforms (PIL images)
     raw_train_val = datasets.FashionMNIST(
@@ -118,32 +138,36 @@ def get_dataloaders(
         download=True,
         transform=None,
     )
-    
+
     raw_test = datasets.FashionMNIST(
         root=str(data_dir),
         train=False,
         download=True,
         transform=None,
     )
-    
-    # 2. Split train into train and validation sets reproducibility
-    total_train = len(raw_train_val)
-    val_size = int(total_train * val_split)
-    train_size = total_train - val_size
-    
-    generator = torch.Generator().manual_seed(seed)
-    train_subset, val_subset = random_split(
-        raw_train_val, [train_size, val_size], generator=generator
-    )
-    
+
+    # 2. Apply the persisted stratified split (created once by the EDA notebook)
+    train_indices, val_indices = load_split(split_dir, expected_pool_size=len(raw_train_val))
+
+    expected_val_size = int(len(raw_train_val) * val_split)
+    if len(val_indices) != expected_val_size:
+        raise ValueError(
+            f"The persisted split reserves {len(val_indices)} validation samples but "
+            f"val_split={val_split} on {len(raw_train_val)} images implies "
+            f"{expected_val_size}. The caller and the split artifact disagree."
+        )
+
+    train_subset = Subset(raw_train_val, train_indices.tolist())
+    val_subset = Subset(raw_train_val, val_indices.tolist())
+
     # 3. Apply appropriate transforms
     train_transform = get_transforms(augment=augment)
     eval_transform = get_transforms(augment=False)
-    
+
     train_dataset = TransformedSubset(train_subset, transform=train_transform)
     val_dataset = TransformedSubset(val_subset, transform=eval_transform)
     test_dataset = TransformedSubset(raw_test, transform=eval_transform)
-    
+
     # 4. Construct DataLoaders
     train_loader = DataLoader(
         train_dataset,
@@ -153,7 +177,7 @@ def get_dataloaders(
         pin_memory=torch.cuda.is_available(),
         drop_last=True,
     )
-    
+
     val_loader = DataLoader(
         val_dataset,
         batch_size=batch_size,
@@ -162,7 +186,7 @@ def get_dataloaders(
         pin_memory=torch.cuda.is_available(),
         drop_last=False,
     )
-    
+
     test_loader = DataLoader(
         test_dataset,
         batch_size=batch_size,
@@ -171,7 +195,7 @@ def get_dataloaders(
         pin_memory=torch.cuda.is_available(),
         drop_last=False,
     )
-    
+
     return train_loader, val_loader, test_loader, CLASS_NAMES
 
 

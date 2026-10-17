@@ -4,6 +4,8 @@ Centralizes paths, hyperparameters, and environment settings.
 
 from dataclasses import dataclass
 from pathlib import Path
+import json
+import warnings
 import torch
 
 
@@ -17,6 +19,7 @@ else:
 DATA_DIR = BASE_DIR / "data"
 OUTPUTS_DIR = BASE_DIR / "outputs"
 CHECKPOINTS_DIR = OUTPUTS_DIR / "checkpoints"
+EDA_DIR = OUTPUTS_DIR / "eda"
 
 # Ensure directories exist
 OUTPUTS_DIR.mkdir(parents=True, exist_ok=True)
@@ -31,9 +34,74 @@ IMAGE_SIZE = 28
 NUM_CHANNELS = 1
 NUM_CLASSES = 10
 
-# FashionMNIST Channel Statistics
-FASHION_MNIST_MEAN = (0.2860,)
-FASHION_MNIST_STD = (0.3205,)
+# Split Constants
+# The split is created once by the EDA notebook and reused by Feature
+# Engineering and all three training runs. It is stratified because a seeded
+# torch.utils.data.random_split does not preserve the class ratio: it produced
+# validation folds of 537-658 samples per class instead of the expected 600.
+VAL_SPLIT = 0.1
+SPLIT_VERSION = "split_v2_stratified"
+PREPROC_VERSION = "preproc_v2_train_global_std"
+
+# Fallback normalization statistics.
+# These are kept only so the module still imports before the Feature Engineering
+# notebook has produced its artifact. They are the legacy values: mean 0.2860 is
+# the global train mean (correct), but 0.3205 is the mean of the per-image
+# standard deviations, not the global standard deviation, so applying them
+# leaves the normalized data with std ~= 1.1015 instead of 1.0. The Feature
+# Engineering notebook measures the correct value on the current train split and
+# writes outputs/eda/preprocessing_config.json, which overrides these constants.
+FALLBACK_MEAN = (0.2860,)
+FALLBACK_STD = (0.3205,)
+
+PREPROCESSING_CONFIG_PATH = EDA_DIR / "preprocessing_config.json"
+
+
+def _resolve_normalization() -> tuple:
+    """Loads the measured normalization statistics, or the legacy fallback.
+
+    The statistics must come from the Feature Engineering artifact so that the
+    same numbers are used by every run and can be traced to a measurement on the
+    current train split. Falling back silently would let a run train with
+    unverified statistics, so the fallback emits a warning naming the version.
+
+    Returns:
+        (mean_tuple, std_tuple, source_string) where source_string is either
+        "artifact:<path>" or "fallback:legacy".
+    """
+    path = PREPROCESSING_CONFIG_PATH
+    if path.exists():
+        with open(path, "r", encoding="utf-8") as f:
+            config = json.load(f)
+        mean = config["normalization"]["mean"]
+        std = config["normalization"]["std"]
+        if not isinstance(mean, (list, tuple)) or not isinstance(std, (list, tuple)):
+            raise ValueError(
+                f"{path} must store normalization mean/std as lists, got "
+                f"mean={type(mean).__name__}, std={type(std).__name__}"
+            )
+        if len(mean) != NUM_CHANNELS or len(std) != NUM_CHANNELS:
+            raise ValueError(
+                f"{path} stores {len(mean)} mean / {len(std)} std values but the "
+                f"dataset has {NUM_CHANNELS} channel(s)"
+            )
+        if any(s <= 0 for s in std):
+            raise ValueError(f"{path} stores a non-positive std: {std}")
+        return tuple(float(m) for m in mean), tuple(float(s) for s in std), f"artifact:{path}"
+
+    warnings.warn(
+        f"Normalization statistics artifact not found at {path}; falling back to "
+        f"legacy values mean={FALLBACK_MEAN}, std={FALLBACK_STD}. The legacy std is "
+        f"the mean of the per-image standard deviations, not the global standard "
+        f"deviation, so the normalized data will not have unit variance. Run the "
+        f"Feature Engineering notebook to produce the measured artifact.",
+        RuntimeWarning,
+        stacklevel=2,
+    )
+    return FALLBACK_MEAN, FALLBACK_STD, "fallback:legacy"
+
+
+FASHION_MNIST_MEAN, FASHION_MNIST_STD, NORMALIZATION_SOURCE = _resolve_normalization()
 
 # Class Label Mapping
 CLASS_NAMES = [
@@ -61,7 +129,7 @@ class ExperimentConfig:
     weight_decay: float = 1e-4
     use_scheduler: bool = True
     use_augmentation: bool = False
-    val_split: float = 0.1
+    val_split: float = VAL_SPLIT
     patience: int = 5
     checkpoint_name: str = "best_model.pt"
 
@@ -98,6 +166,8 @@ RUN2_CONFIG = ExperimentConfig(
     use_augmentation=True,
     checkpoint_name="tuned_mlp_best.pt",
 )
+
+PHASE1_RUNS = [RUN1_CONFIG, RUN2_CONFIG]
 
 # ---------------------------------------------------------------------------
 # Optimizer Comparison & K-Fold Cross-Validation (Phase 2 experiment)

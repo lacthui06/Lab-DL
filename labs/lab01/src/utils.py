@@ -151,6 +151,45 @@ def plot_loss_and_acc_curves(
     plt.show()
 
 
+def unnormalize(images: torch.Tensor) -> torch.Tensor:
+    """Reverses the normalization applied by `src.dataset.get_transforms`.
+
+    The statistics are read from `src.config`, which in turn loads the values
+    measured by the Feature Engineering notebook. They are deliberately not
+    written as literals here: a hard-coded pair silently produces wrong-looking
+    images as soon as the normalization statistics are re-measured, and no test
+    would catch it.
+
+    Args:
+        images: Tensor shaped [B, C, H, W], [C, H, W], or [H, W] already
+            normalized.
+
+    Returns:
+        Tensor of the same shape, clipped to [0, 1] — the scale `imshow`
+        expects for a grayscale image.
+    """
+    from .config import FASHION_MNIST_MEAN, FASHION_MNIST_STD
+
+    mean = torch.as_tensor(FASHION_MNIST_MEAN, dtype=images.dtype, device=images.device)
+    std = torch.as_tensor(FASHION_MNIST_STD, dtype=images.dtype, device=images.device)
+
+    # A bare [H, W] image has no channel axis; add one so the statistics can be
+    # broadcast, then drop it again.
+    added_channel = images.dim() == 2
+    if added_channel:
+        images = images.unsqueeze(0)
+
+    if images.shape[-3] != mean.numel():
+        raise ValueError(
+            f"Expected {mean.numel()} channel(s) at dim -3, got {images.shape[-3]} "
+            f"for shape {tuple(images.shape)}"
+        )
+
+    shape = [1] * (images.dim() - 3) + [mean.numel(), 1, 1]
+    restored = (images * std.view(shape) + mean.view(shape)).clamp(0.0, 1.0)
+    return restored.squeeze(0) if added_channel else restored
+
+
 def plot_prediction_grid(
     model: nn.Module,
     dataloader: DataLoader,
@@ -194,11 +233,8 @@ def plot_prediction_grid(
 
     for i in range(len(images_list)):
         ax = axes[i]
-        # Unnormalize for visualization
-        # original transform: (x - 0.2860) / 0.3205 => x = img * 0.3205 + 0.2860
-        img = images_list[i].squeeze().cpu().numpy()
-        img = img * 0.3205 + 0.2860
-        img = np.clip(img, 0.0, 1.0)
+        # Unnormalize for visualization using the configured statistics.
+        img = unnormalize(images_list[i]).squeeze().cpu().numpy()
 
         pred_class = class_names[preds_list[i]]
         true_class = class_names[targets_list[i]]

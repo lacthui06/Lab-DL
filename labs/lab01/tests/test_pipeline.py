@@ -523,6 +523,296 @@ def test_15_kfold_divergence_guard():
     assert res["convergence"] is None, "A fully diverged cell has no convergence metrics"
 
 
+# ---------------------------------------------------------------------------
+# Split integrity (split_v2_stratified)
+# ---------------------------------------------------------------------------
+
+def test_16_stratified_split_preserves_class_ratio():
+    """Test 16: The split must be stratified, not merely seeded.
+
+    `torch.utils.data.random_split` with a fixed generator does not preserve the
+    class ratio: it produced validation partitions holding 537 to 658 samples per
+    class instead of 600. This test pins the contract that every class holds
+    exactly its proportional share on both sides of the split.
+    """
+    import numpy as np
+    from src.split import make_stratified_split
+
+    y = np.repeat(np.arange(NUM_CLASSES), 6_000)
+    train_idx, val_idx = make_stratified_split(y, val_split=0.1, seed=RANDOM_SEED)
+
+    assert len(train_idx) == 54_000, f"Expected 54,000 train samples, got {len(train_idx)}"
+    assert len(val_idx) == 6_000, f"Expected 6,000 validation samples, got {len(val_idx)}"
+
+    val_counts = np.bincount(y[val_idx], minlength=NUM_CLASSES)
+    train_counts = np.bincount(y[train_idx], minlength=NUM_CLASSES)
+
+    assert val_counts.tolist() == [600] * NUM_CLASSES, f"Val is not balanced: {val_counts.tolist()}"
+    assert train_counts.tolist() == [5400] * NUM_CLASSES, f"Train is not balanced: {train_counts.tolist()}"
+
+
+def test_17_stratified_split_is_disjoint_exhaustive_and_deterministic():
+    """Test 17: Same seed reproduces the same partition, with no overlap and full coverage."""
+    import numpy as np
+    from src.split import make_stratified_split
+
+    y = np.repeat(np.arange(NUM_CLASSES), 6_000)
+
+    first_train, first_val = make_stratified_split(y, seed=RANDOM_SEED)
+    second_train, second_val = make_stratified_split(y, seed=RANDOM_SEED)
+
+    assert np.array_equal(first_train, second_train), "Same seed produced a different train split"
+    assert np.array_equal(first_val, second_val), "Same seed produced a different val split"
+    assert np.intersect1d(first_train, first_val).size == 0, "Train and val overlap"
+    assert len(first_train) + len(first_val) == len(y), "Split does not cover the pool"
+
+    seen = np.zeros(len(y), dtype=bool)
+    seen[first_train] = True
+    seen[first_val] = True
+    assert seen.all(), "Some samples appear in neither partition"
+
+
+def test_18_split_artifact_round_trips(tmp_path):
+    """Test 18: The persisted split must reload to the exact same indices.
+
+    Every later stage (Feature Engineering, both training runs) reads this
+    artifact instead of re-deriving a split, so a lossy round-trip would silently
+    give those stages a different partition than EDA measured on.
+    """
+    import numpy as np
+    from src.split import make_stratified_split, save_split, load_split, load_split_metadata
+
+    y = np.repeat(np.arange(NUM_CLASSES), 1_000)
+    train_idx, val_idx = make_stratified_split(y, seed=RANDOM_SEED)
+
+    save_split(tmp_path, train_idx, val_idx, targets=y, seed=RANDOM_SEED)
+    reloaded_train, reloaded_val = load_split(tmp_path, expected_pool_size=len(y))
+
+    assert np.array_equal(reloaded_train, train_idx), "Reloaded train indices differ"
+    assert np.array_equal(reloaded_val, val_idx), "Reloaded val indices differ"
+
+    meta = load_split_metadata(tmp_path)
+    assert meta["stratified"] is True
+    assert meta["seed"] == RANDOM_SEED
+    assert meta["train_size"] == len(train_idx)
+    assert meta["val_size"] == len(val_idx)
+    assert meta["val_class_counts"] == [100] * NUM_CLASSES
+
+
+def test_19_missing_split_artifact_raises_instead_of_resplitting(tmp_path):
+    """Test 19: A missing split artifact must fail loudly, never fall back to a new split.
+
+    A silent fallback would let a run train on a different partition than the one
+    the normalization statistics were measured on, which is a data leak that no
+    later check would catch.
+    """
+    from src.split import load_split
+
+    with pytest.raises(FileNotFoundError, match="Run the EDA notebook first"):
+        load_split(tmp_path)
+
+
+def test_20_split_artifact_rejects_wrong_pool_size(tmp_path):
+    """Test 20: A split recorded for one pool must not be applied to another."""
+    import numpy as np
+    from src.split import make_stratified_split, save_split, load_split
+
+    y = np.repeat(np.arange(NUM_CLASSES), 1_000)
+    train_idx, val_idx = make_stratified_split(y, seed=RANDOM_SEED)
+    save_split(tmp_path, train_idx, val_idx, targets=y, seed=RANDOM_SEED)
+
+    with pytest.raises(ValueError, match="does not belong to this dataset"):
+        load_split(tmp_path, expected_pool_size=99_999)
+
+
+# ---------------------------------------------------------------------------
+# Normalization contract (preproc_v2_train_global_std)
+# ---------------------------------------------------------------------------
+
+def test_21_normalization_yields_unit_variance():
+    """Test 21: After Normalize, the train tensor must have mean ~0 and std ~1.
+
+    This is the check the legacy configuration fails. The legacy std (0.3205) is
+    the mean of the per-image standard deviations, not the global standard
+    deviation, so applying it leaves the data with std ~1.10. The earlier
+    assertions in test_2 (0.5 < std < 2.0) were too loose to catch that.
+
+    Real images are used, not synthetic uniform noise: uniform noise has no
+    between-image variation in brightness, so its global std equals the mean of
+    its per-image stds and the test would not exercise the property under test.
+    """
+    import numpy as np
+    from src.config import (
+        DATA_DIR,
+        FASHION_MNIST_MEAN,
+        FASHION_MNIST_STD,
+        NORMALIZATION_SOURCE,
+    )
+    from src.dataset import get_transforms
+    from src.eda import load_raw_arrays
+
+    # The statistics must come from the Feature Engineering artifact, not the
+    # hard-coded fallback; otherwise this test would validate the wrong numbers.
+    assert NORMALIZATION_SOURCE.startswith("artifact:"), (
+        f"Normalization statistics came from '{NORMALIZATION_SOURCE}'. Run "
+        f"notebooks/lab01_feature_engineering.ipynb so src/config.py reads the "
+        f"measured artifact instead of the legacy fallback."
+    )
+
+    X_train, _, _, _ = load_raw_arrays(DATA_DIR)
+    transform = get_transforms(augment=False)
+
+    # A 4,000-image slice of the train pool is enough to estimate the global
+    # statistics to well under the tolerances below.
+    sample = X_train[:4_000]
+    normalized = np.stack([transform(img).numpy().squeeze(0) for img in sample])
+
+    mean = float(normalized.mean())
+    std = float(normalized.std(ddof=0))
+
+    assert abs(mean) < 0.02, f"Normalized mean should be near 0, got {mean:.4f}"
+    assert abs(std - 1.0) < 0.02, (
+        f"Normalized std should be near 1.0, got {std:.4f}. "
+        f"Configured mean={FASHION_MNIST_MEAN}, std={FASHION_MNIST_STD}."
+    )
+
+
+def test_22_legacy_normalization_would_fail_unit_variance():
+    """Test 22: The legacy statistics must be demonstrably wrong, not just different.
+
+    Guards the reasoning behind preproc_v2: 0.3205 equals the mean of the
+    per-image standard deviations, so it understates the global std by ~9% and
+    leaves the normalized data with std ~1.10. Real images are required because
+    the gap between the global std and the mean per-image std comes from
+    between-image variation, which synthetic noise does not have.
+    """
+    import numpy as np
+    from src.config import DATA_DIR, FALLBACK_STD
+    from src.eda import compute_normalization_stats, load_raw_arrays
+
+    X_train, _, _, _ = load_raw_arrays(DATA_DIR)
+    stats = compute_normalization_stats(X_train)
+
+    normalized_std = stats["std"] / FALLBACK_STD[0]
+
+    assert abs(normalized_std - 1.0) > 0.05, (
+        f"Legacy std {FALLBACK_STD[0]} happened to normalize the real data correctly "
+        f"(resulting std {normalized_std:.4f}); the test premise no longer holds."
+    )
+    assert stats["std"] > stats["per_image_std_mean"], (
+        "The global std must exceed the mean of the per-image stds for this check to "
+        "be meaningful"
+    )
+    # The legacy value must coincide with the rejected shortcut, which is the
+    # actual defect being documented.
+    assert abs(FALLBACK_STD[0] - stats["per_image_std_mean"]) < 5e-3, (
+        f"Legacy std {FALLBACK_STD[0]} no longer matches the mean of the per-image "
+        f"stds ({stats['per_image_std_mean']:.4f}); re-derive the documented defect."
+    )
+
+
+def test_23_unnormalize_inverts_the_configured_transform():
+    """Test 23: `unnormalize` must use the configured statistics, not literals.
+
+    The previous implementation hard-coded `img * 0.3205 + 0.2860`, so re-measuring
+    the normalization statistics would have silently produced wrong-looking images
+    with no test failing.
+    """
+    from src.config import FASHION_MNIST_MEAN, FASHION_MNIST_STD
+    from src.dataset import get_transforms
+    from src.utils import unnormalize
+
+    generator = torch.Generator().manual_seed(RANDOM_SEED)
+    # [H, W]: ToTensor() treats a (1, 28, 28) numpy array as HWC, so the image is
+    # passed without a channel axis and the transform adds it.
+    original = torch.rand(28, 28, generator=generator)
+
+    normalized = get_transforms(augment=False)(original.numpy())
+    assert normalized.shape == (1, 28, 28), f"Unexpected transform output {normalized.shape}"
+
+    restored = unnormalize(normalized)
+    assert torch.allclose(restored, original.unsqueeze(0), atol=1e-5), (
+        f"unnormalize did not invert Normalize(mean={FASHION_MNIST_MEAN}, "
+        f"std={FASHION_MNIST_STD}); max diff="
+        f"{(restored - original.unsqueeze(0)).abs().max().item():.2e}"
+    )
+
+    # A bare [H, W] image (the shape the plotting helper passes) must also work.
+    restored_2d = unnormalize(normalized.squeeze(0))
+    assert restored_2d.shape == (28, 28), f"Unexpected 2D shape {restored_2d.shape}"
+
+
+# ---------------------------------------------------------------------------
+# EDA helpers
+# ---------------------------------------------------------------------------
+
+def test_24_eda_helpers_on_synthetic_data():
+    """Test 24: The EDA computations are correct on inputs with known answers.
+
+    The notebook reports whatever these functions return, so an error here would
+    propagate into the written report without any visible symptom.
+    """
+    import numpy as np
+    from src.eda import (
+        compute_normalization_stats,
+        class_distribution,
+        class_similarity_matrix,
+        most_similar_pairs,
+        spatial_features,
+    )
+
+    # Two classes, each a constant image with a known intensity.
+    images = np.zeros((4, 28, 28), dtype=np.uint8)
+    images[0:2, :14, :] = 255          # class 0: top half bright
+    images[2:4, 14:, :] = 51           # class 1: bottom half at 0.2
+    labels = np.array([0, 0, 1, 1])
+
+    stats = compute_normalization_stats(images)
+    assert stats["num_images"] == 4
+    assert stats["num_pixels"] == 4 * 28 * 28
+    # Each image is half at 255 and half at 51, so the pooled intensity is
+    # (255 + 51) / 2 = 153/255 = 0.3 on the [0, 1] scale.
+    assert stats["mean"] == pytest.approx(0.3, abs=1e-6)
+
+    distribution = class_distribution(labels[:2], labels[2:], ["a", "b"])
+    assert set(distribution["split"]) == {"train", "val"}
+    assert distribution["count"].tolist() == [2, 0, 0, 2]
+
+    # Spatial: class 0 covers the top half (ratio 0.5), bbox 14x28.
+    spatial = spatial_features(images, labels, ["a", "b"], threshold=0.1)
+    assert spatial.loc[0, "foreground_ratio"] == pytest.approx(0.5, abs=1e-6)
+    assert spatial.loc[0, "bbox_height"] == 14
+    assert spatial.loc[0, "bbox_width"] == 28
+    assert spatial.loc[0, "bbox_aspect_ratio"] == pytest.approx(2.0, abs=1e-6)
+
+    # Similarity of a matrix with itself must be 1.0 on the diagonal.
+    mean_images = np.stack([
+        images[0:2].astype(np.float32).mean(axis=0) / 255.0,
+        images[2:4].astype(np.float32).mean(axis=0) / 255.0,
+    ])
+    similarity = class_similarity_matrix(mean_images, ["a", "b"], metric="cosine")
+    assert similarity.loc["a", "a"] == pytest.approx(1.0, abs=1e-6)
+    assert similarity.loc["a", "b"] == pytest.approx(0.0, abs=1e-6)
+
+    pairs = most_similar_pairs(similarity, top_k=5)
+    assert len(pairs) == 1, "Two classes yield exactly one unordered pair"
+    assert pairs.iloc[0]["class_a"] == "a" and pairs.iloc[0]["class_b"] == "b"
+
+
+def test_25_eda_foreground_threshold_is_not_zero():
+    """Test 25: Foreground must use an explicit threshold, not `pixel != 0`.
+
+    About half of FashionMNIST pixels are exactly 0, so a `!= 0` rule would count
+    faint edge noise as garment and inflate every bounding box. This pins that the
+    threshold is a deliberate value above 0.
+    """
+    from src.eda import FOREGROUND_THRESHOLD
+
+    assert 0.0 < FOREGROUND_THRESHOLD < 0.5, (
+        f"FOREGROUND_THRESHOLD={FOREGROUND_THRESHOLD} is not a sensible cutoff"
+    )
+
+
 if __name__ == "__main__":
     print("Running tests via pytest...")
     pytest.main(["-v", __file__])
