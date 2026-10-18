@@ -56,8 +56,19 @@ def compute_normalization_stats(X: np.ndarray) -> Dict[str, float]:
 
 
 def load_raw_arrays(data_dir: Path) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
-    """Reads raw FashionMNIST IDX files directly, returning (X_train, y_train, X_test, y_test)."""
+    """Reads raw FashionMNIST IDX files directly, returning (X_train, y_train, X_test, y_test).
+    Automatically downloads the raw dataset via torchvision if not present.
+    """
     root = Path(data_dir)
+    root.mkdir(parents=True, exist_ok=True)
+
+    # Ensure raw FashionMNIST files exist
+    try:
+        from torchvision import datasets
+        datasets.FashionMNIST(root=str(root), train=True, download=True)
+        datasets.FashionMNIST(root=str(root), train=False, download=True)
+    except Exception:
+        pass
 
     def _resolve(name: str) -> Path:
         candidates = [
