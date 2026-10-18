@@ -35,31 +35,14 @@ def set_seed(seed: int = 42) -> None:
 
 
 def collect_environment_snapshot(save_path: Optional[Path] = None) -> dict:
-    """Records the interpreter and library versions that produced a run.
-
-    The Python interpreter version is captured here (not only the library
-    versions) because the same library set on a different interpreter can
-    change standard-library defaults and therefore the run. This is the
-    run-time evidence required by walkthrough_lab_01.md Section 1.8; the
-    version comment in `requirements.txt` only states the intended
-    environment. The value is written as a plain string, never as a
-    `python==x.y.z` pip line, because that is invalid pip syntax.
-
-    Args:
-        save_path: Destination JSON path. When omitted, nothing is written
-            and the snapshot is only returned.
-
-    Returns:
-        Dictionary with python_version, python_implementation, platform,
-        library versions, and the resolved compute device.
-    """
+    """Records the interpreter and library versions that produced a run."""
     import platform
     import sys
 
     try:
         import sklearn
         sklearn_version = sklearn.__version__
-    except ImportError:  # pragma: no cover - sklearn is a hard requirement
+    except ImportError:
         sklearn_version = None
 
     snapshot = {
@@ -82,7 +65,6 @@ def collect_environment_snapshot(save_path: Optional[Path] = None) -> dict:
 
     if save_path is not None:
         import json
-
         save_path = Path(save_path)
         save_path.parent.mkdir(parents=True, exist_ok=True)
         with open(save_path, "w", encoding="utf-8") as f:
@@ -103,15 +85,9 @@ def save_checkpoint(model: nn.Module, save_path: Path, metadata: Optional[dict] 
 
 
 def load_checkpoint(model: nn.Module, load_path: Path, device: torch.device) -> dict:
-    """Loads weights from checkpoint into the given model."""
-    load_path = Path(load_path)
-    if not load_path.exists():
-        raise FileNotFoundError(f"Checkpoint not found at {load_path}")
+    """Loads weights from a saved checkpoint into the model."""
     checkpoint = torch.load(str(load_path), map_location=device)
-    if "model_state_dict" in checkpoint:
-        model.load_state_dict(checkpoint["model_state_dict"])
-    else:
-        model.load_state_dict(checkpoint)
+    model.load_state_dict(checkpoint["model_state_dict"])
     model.to(device)
     return checkpoint.get("metadata", {})
 
@@ -128,7 +104,7 @@ def plot_loss_and_acc_curves(
     # Loss subplot
     axes[0].plot(epochs, history["train_loss"], "o-", color="#1f77b4", label="Train Loss", linewidth=2)
     axes[0].plot(epochs, history["val_loss"], "s--", color="#ff7f0e", label="Val Loss", linewidth=2)
-    axes[0].set_title(f"{title} — Loss Curve", fontsize=13, fontweight="bold")
+    axes[0].set_title(f"{title} - Loss Curve", fontsize=13, fontweight="bold")
     axes[0].set_xlabel("Epoch", fontsize=11)
     axes[0].set_ylabel("CrossEntropy Loss", fontsize=11)
     axes[0].grid(True, linestyle="--", alpha=0.6)
@@ -137,7 +113,7 @@ def plot_loss_and_acc_curves(
     # Accuracy subplot
     axes[1].plot(epochs, history["train_acc"], "o-", color="#2ca02c", label="Train Accuracy", linewidth=2)
     axes[1].plot(epochs, history["val_acc"], "s--", color="#d62728", label="Val Accuracy", linewidth=2)
-    axes[1].set_title(f"{title} — Accuracy Curve", fontsize=13, fontweight="bold")
+    axes[1].set_title(f"{title} - Accuracy Curve", fontsize=13, fontweight="bold")
     axes[1].set_xlabel("Epoch", fontsize=11)
     axes[1].set_ylabel("Accuracy (%)", fontsize=11)
     axes[1].grid(True, linestyle="--", alpha=0.6)
@@ -152,29 +128,12 @@ def plot_loss_and_acc_curves(
 
 
 def unnormalize(images: torch.Tensor) -> torch.Tensor:
-    """Reverses the normalization applied by `src.dataset.get_transforms`.
-
-    The statistics are read from `src.config`, which in turn loads the values
-    measured by the Feature Engineering notebook. They are deliberately not
-    written as literals here: a hard-coded pair silently produces wrong-looking
-    images as soon as the normalization statistics are re-measured, and no test
-    would catch it.
-
-    Args:
-        images: Tensor shaped [B, C, H, W], [C, H, W], or [H, W] already
-            normalized.
-
-    Returns:
-        Tensor of the same shape, clipped to [0, 1] — the scale `imshow`
-        expects for a grayscale image.
-    """
+    """Reverses the normalization applied by `src.dataset.get_transforms`."""
     from .config import FASHION_MNIST_MEAN, FASHION_MNIST_STD
 
     mean = torch.as_tensor(FASHION_MNIST_MEAN, dtype=images.dtype, device=images.device)
     std = torch.as_tensor(FASHION_MNIST_STD, dtype=images.dtype, device=images.device)
 
-    # A bare [H, W] image has no channel axis; add one so the statistics can be
-    # broadcast, then drop it again.
     added_channel = images.dim() == 2
     if added_channel:
         images = images.unsqueeze(0)
@@ -198,9 +157,7 @@ def plot_prediction_grid(
     num_images: int = 16,
     save_path: Optional[Path] = None,
 ) -> None:
-    """Displays a grid of test images with Predicted vs. Actual labels.
-    Correct predictions are labeled in green; errors are labeled in red.
-    """
+    """Displays a grid of test images with Predicted vs. Actual labels."""
     model.eval()
     model.to(device)
 
@@ -233,7 +190,6 @@ def plot_prediction_grid(
 
     for i in range(len(images_list)):
         ax = axes[i]
-        # Unnormalize for visualization using the configured statistics.
         img = unnormalize(images_list[i]).squeeze().cpu().numpy()
 
         pred_class = class_names[preds_list[i]]
@@ -249,7 +205,6 @@ def plot_prediction_grid(
         title_text = f"Pred: {pred_class} ({conf:.1f}%)\nTrue: {true_class}\n[{status}]"
         ax.set_title(title_text, fontsize=9.5, color=color, fontweight="bold", pad=6)
 
-    # Hide extra subplots
     for j in range(len(images_list), len(axes)):
         axes[j].axis("off")
 
@@ -290,421 +245,6 @@ def plot_confusion_matrix(
     ax.tick_params(axis="y", rotation=0)
     plt.tight_layout()
 
-    if save_path:
-        save_path = Path(save_path)
-        save_path.parent.mkdir(parents=True, exist_ok=True)
-        fig.savefig(str(save_path), dpi=300, bbox_inches="tight")
-    plt.show()
-
-
-def plot_comparison_curves(
-    histories: Dict[str, Dict[str, List[float]]],
-    save_path: Optional[Path] = None,
-) -> None:
-    """Compares Validation Accuracy and Validation Loss across multiple runs."""
-    fig, axes = plt.subplots(1, 2, figsize=(14, 5))
-
-    colors = ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728"]
-
-    for idx, (run_name, hist) in enumerate(histories.items()):
-        epochs = range(1, len(hist["val_acc"]) + 1)
-        c = colors[idx % len(colors)]
-        axes[0].plot(epochs, hist["val_acc"], "o-", label=run_name, color=c, linewidth=2)
-        axes[1].plot(epochs, hist["val_loss"], "s--", label=run_name, color=c, linewidth=2)
-
-    axes[0].set_title("Validation Accuracy Comparison Across Runs", fontsize=13, fontweight="bold")
-    axes[0].set_xlabel("Epoch", fontsize=11)
-    axes[0].set_ylabel("Val Accuracy (%)", fontsize=11)
-    axes[0].grid(True, linestyle="--", alpha=0.6)
-    axes[0].legend(fontsize=10)
-
-    axes[1].set_title("Validation Loss Comparison Across Runs", fontsize=13, fontweight="bold")
-    axes[1].set_xlabel("Epoch", fontsize=11)
-    axes[1].set_ylabel("Val Loss", fontsize=11)
-    axes[1].grid(True, linestyle="--", alpha=0.6)
-    axes[1].legend(fontsize=10)
-
-    plt.tight_layout()
-    if save_path:
-        save_path = Path(save_path)
-        save_path.parent.mkdir(parents=True, exist_ok=True)
-        fig.savefig(str(save_path), dpi=300, bbox_inches="tight")
-    plt.show()
-
-
-def plot_optimizer_curves(
-    results: Dict[str, Dict],
-    save_path: Optional[Path] = None,
-) -> None:
-    """Compares mean validation loss and mean validation accuracy across optimizer arms.
-
-    Args:
-        results: Mapping of optimizer name to its run_kfold_cv result dictionary.
-        save_path: Optional path to persist the figure.
-    """
-    fig, axes = plt.subplots(1, 2, figsize=(14, 5))
-    colors = ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728"]
-
-    for idx, (name, res) in enumerate(results.items()):
-        histories = res["histories"]
-        epochs = range(1, len(histories[0]["val_acc"]) + 1)
-        mean_val_loss = np.mean([h["val_loss"] for h in histories], axis=0)
-        mean_val_acc = np.mean([h["val_acc"] for h in histories], axis=0)
-        c = colors[idx % len(colors)]
-        axes[0].plot(epochs, mean_val_loss, "o-", label=name, color=c, linewidth=2)
-        axes[1].plot(epochs, mean_val_acc, "s-", label=name, color=c, linewidth=2)
-
-    axes[0].set_title("Mean Validation Loss Across Folds", fontsize=13, fontweight="bold")
-    axes[0].set_xlabel("Epoch", fontsize=11)
-    axes[0].set_ylabel("CrossEntropy Loss", fontsize=11)
-    axes[0].grid(True, linestyle="--", alpha=0.6)
-    axes[0].legend(fontsize=10)
-
-    axes[1].set_title("Mean Validation Accuracy Across Folds", fontsize=13, fontweight="bold")
-    axes[1].set_xlabel("Epoch", fontsize=11)
-    axes[1].set_ylabel("Accuracy (%)", fontsize=11)
-    axes[1].grid(True, linestyle="--", alpha=0.6)
-    axes[1].legend(fontsize=10)
-
-    plt.tight_layout()
-    if save_path:
-        save_path = Path(save_path)
-        save_path.parent.mkdir(parents=True, exist_ok=True)
-        fig.savefig(str(save_path), dpi=300, bbox_inches="tight")
-    plt.show()
-
-
-def plot_tpr_fpr_comparison(
-    results: Dict[str, Dict],
-    class_names: List[str],
-    save_path: Optional[Path] = None,
-) -> None:
-    """Plots per-class True Positive Rate and False Positive Rate as grouped bar charts.
-
-    Args:
-        results: Mapping of optimizer name to its run_kfold_cv result dictionary.
-        class_names: Ordered list of class names.
-        save_path: Optional path to persist the figure.
-    """
-    names = list(results.keys())
-    x = np.arange(len(class_names))
-    width = 0.8 / max(len(names), 1)
-
-    fig, axes = plt.subplots(2, 1, figsize=(13, 10))
-
-    for idx, name in enumerate(names):
-        res = results[name]
-        offset = (idx - (len(names) - 1) / 2.0) * width
-        axes[0].bar(x + offset, res["tpr_per_class"], width, label=name)
-        axes[1].bar(x + offset, res["fpr_per_class"], width, label=name)
-
-    axes[0].set_title("Per-Class True Positive Rate (Recall) by Optimizer", fontsize=13, fontweight="bold")
-    axes[0].set_ylabel("TPR", fontsize=11)
-    axes[1].set_title("Per-Class False Positive Rate by Optimizer", fontsize=13, fontweight="bold")
-    axes[1].set_ylabel("FPR", fontsize=11)
-
-    for ax in axes:
-        ax.set_xticks(x)
-        ax.set_xticklabels(class_names, rotation=45, ha="right", fontsize=9)
-        ax.grid(True, axis="y", linestyle="--", alpha=0.6)
-        ax.legend(fontsize=10)
-
-    plt.tight_layout()
-    if save_path:
-        save_path = Path(save_path)
-        save_path.parent.mkdir(parents=True, exist_ok=True)
-        fig.savefig(str(save_path), dpi=300, bbox_inches="tight")
-    plt.show()
-
-
-def plot_confusion_matrix_grid(
-    results: Dict[str, Dict],
-    class_names: List[str],
-    save_path: Optional[Path] = None,
-) -> None:
-    """Plots normalized confusion matrices side by side, one panel per optimizer arm.
-
-    Args:
-        results: Mapping of optimizer name to its run_kfold_cv result dictionary.
-        class_names: Ordered list of class names.
-        save_path: Optional path to persist the figure.
-    """
-    names = list(results.keys())
-    n = len(names)
-    fig, axes = plt.subplots(1, n, figsize=(7 * n, 6.5))
-    if n == 1:
-        axes = [axes]
-
-    for ax, name in zip(axes, names):
-        cm = results[name]["confusion_matrix"].astype(np.float64)
-        row_sums = cm.sum(axis=1, keepdims=True)
-        cm_norm = np.divide(cm, row_sums, out=np.zeros_like(cm), where=row_sums > 0)
-        sns.heatmap(
-            cm_norm,
-            annot=True,
-            fmt=".2f",
-            cmap="Blues",
-            xticklabels=class_names,
-            yticklabels=class_names,
-            cbar=False,
-            ax=ax,
-        )
-        ax.set_title(f"{name}: Normalized Confusion Matrix", fontsize=12, fontweight="bold", pad=10)
-        ax.set_xlabel("Predicted Class", fontsize=10)
-        ax.set_ylabel("Ground Truth Class", fontsize=10)
-        ax.tick_params(axis="x", rotation=45, labelsize=8)
-        ax.tick_params(axis="y", rotation=0, labelsize=8)
-
-    plt.tight_layout()
-    if save_path:
-        save_path = Path(save_path)
-        save_path.parent.mkdir(parents=True, exist_ok=True)
-        fig.savefig(str(save_path), dpi=300, bbox_inches="tight")
-    plt.show()
-
-
-def save_optimizer_results_json(
-    results: Dict[str, Dict],
-    class_names: List[str],
-    save_path: Path,
-) -> None:
-    """Serializes the optimizer-comparison summary into a JSON file.
-
-    Args:
-        results: Mapping of optimizer name to its run_kfold_cv result dictionary.
-        class_names: Ordered list of class names.
-        save_path: Destination JSON path.
-    """
-    import json
-
-    def _r(x):
-        return None if x is None else round(float(x), 4)
-
-    summary = {}
-    for name, res in results.items():
-        summary[name] = {
-            "learning_rate": res.get("learning_rate"),
-            "num_epochs": res.get("num_epochs"),
-            "fold_accuracies": [_r(a) for a in res["fold_accuracies"]],
-            "fold_losses": [_r(l) for l in res["fold_losses"]],
-            "fold_diverged": res.get("fold_diverged"),
-            "num_diverged": res.get("num_diverged"),
-            "mean_acc": _r(res.get("mean_acc")),
-            "std_acc": _r(res.get("std_acc")),
-            "mean_loss": _r(res.get("mean_loss")),
-            "std_loss": _r(res.get("std_loss")),
-            "tpr_per_class": {class_names[i]: round(float(v), 4) for i, v in enumerate(res["tpr_per_class"])},
-            "fpr_per_class": {class_names[i]: round(float(v), 4) for i, v in enumerate(res["fpr_per_class"])},
-            "convergence": res.get("convergence"),
-        }
-
-    save_path = Path(save_path)
-    save_path.parent.mkdir(parents=True, exist_ok=True)
-    with open(save_path, "w", encoding="utf-8") as f:
-        json.dump(summary, f, indent=2)
-
-
-def plot_optimizer_convergence(
-    results: Dict[str, Dict],
-    save_path: Optional[Path] = None,
-) -> None:
-    """Plots the convergence-speed view for the optimizer arms.
-
-    Renders mean validation accuracy per epoch with the fixed-epoch checkpoints
-    marked, so that the epoch at which each arm reaches the common ceiling is
-    directly visible. This is the figure that discriminates arms which finish at
-    a similar final accuracy but converge at different speeds.
-
-    Args:
-        results: Mapping of optimizer name to its run_kfold_cv result dictionary.
-        save_path: Optional path to persist the figure.
-    """
-    fig, axes = plt.subplots(1, 2, figsize=(14, 5))
-    colors = ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728"]
-
-    for idx, (name, res) in enumerate(results.items()):
-        histories = res["histories"]
-        epochs = list(range(1, len(histories[0]["val_acc"]) + 1))
-        mean_val_acc = np.mean([h["val_acc"] for h in histories], axis=0)
-        mean_val_loss = np.mean([h["val_loss"] for h in histories], axis=0)
-        c = colors[idx % len(colors)]
-        axes[0].plot(epochs, mean_val_acc, "o-", label=name, color=c, linewidth=2)
-
-        convergence = res.get("convergence") or {}
-        for epoch_str, ckpt in convergence.get("checkpoints", {}).items():
-            epoch = int(epoch_str)
-            if epoch in epochs:
-                axes[0].scatter(
-                    epoch,
-                    ckpt["mean_val_acc"],
-                    s=110,
-                    facecolors="none",
-                    edgecolors=c,
-                    linewidths=2,
-                    zorder=5,
-                )
-        axes[1].plot(epochs, mean_val_loss, "s-", label=name, color=c, linewidth=2)
-
-    axes[0].set_title("Convergence Speed: Mean Validation Accuracy (circles = epochs 3/5/10/15)", fontsize=12, fontweight="bold")
-    axes[0].set_xlabel("Epoch", fontsize=11)
-    axes[0].set_ylabel("Accuracy (%)", fontsize=11)
-    axes[0].grid(True, linestyle="--", alpha=0.6)
-    axes[0].legend(fontsize=10)
-
-    axes[1].set_title("Mean Validation Loss Across Folds", fontsize=13, fontweight="bold")
-    axes[1].set_xlabel("Epoch", fontsize=11)
-    axes[1].set_ylabel("CrossEntropy Loss", fontsize=11)
-    axes[1].grid(True, linestyle="--", alpha=0.6)
-    axes[1].legend(fontsize=10)
-
-    plt.tight_layout()
-    if save_path:
-        save_path = Path(save_path)
-        save_path.parent.mkdir(parents=True, exist_ok=True)
-        fig.savefig(str(save_path), dpi=300, bbox_inches="tight")
-    plt.show()
-
-
-def _group_sweep_by_optimizer(results: Dict[str, Dict]) -> Dict[str, List[Tuple[float, Dict]]]:
-    """Groups Scenario 2c sweep results by optimizer, sorted by learning rate.
-
-    Cell labels are of the form ``"{optimizer}_lr{lr:g}"``; the optimizer name is
-    the label with the trailing ``_lr{value}`` removed. Cells are returned as
-    (learning_rate, result) pairs ascending by learning rate so a curve can be
-    drawn left to right.
-    """
-    grouped: Dict[str, List[Tuple[float, Dict]]] = {}
-    for label, res in results.items():
-        optimizer_name = label.rsplit("_lr", 1)[0]
-        lr = float(res["learning_rate"])
-        grouped.setdefault(optimizer_name, []).append((lr, res))
-    for name in grouped:
-        grouped[name].sort(key=lambda pair: pair[0])
-    return grouped
-
-
-def save_lr_sweep_results_json(
-    results: Dict[str, Dict],
-    save_path: Path,
-) -> None:
-    """Serializes the Scenario 2c learning-rate-sweep summary into a JSON file.
-
-    For every (optimizer, learning-rate) cell the summary records the per-fold
-    accuracies and losses, the mean and standard deviation over the non-diverged
-    folds, the number of diverged folds, and the convergence metrics of Section
-    1.6.8. A diverged cell keeps ``null`` in place of its mean and standard
-    deviation; it is never imputed.
-
-    Args:
-        results: Mapping of cell label to its run_kfold_cv result dictionary.
-        save_path: Destination JSON path.
-    """
-    import json
-
-    def _r(x):
-        return None if x is None else round(float(x), 4)
-
-    summary = {}
-    for label, res in results.items():
-        summary[label] = {
-            "optimizer": label.rsplit("_lr", 1)[0],
-            "optimizer_type": res.get("optimizer_type"),
-            "learning_rate": res.get("learning_rate"),
-            "num_epochs": res.get("num_epochs"),
-            "fold_accuracies": [_r(a) for a in res["fold_accuracies"]],
-            "fold_losses": [_r(l) for l in res["fold_losses"]],
-            "fold_diverged": res.get("fold_diverged"),
-            "num_diverged": res.get("num_diverged"),
-            "mean_acc": _r(res.get("mean_acc")),
-            "std_acc": _r(res.get("std_acc")),
-            "mean_loss": _r(res.get("mean_loss")),
-            "std_loss": _r(res.get("std_loss")),
-            "convergence": res.get("convergence"),
-        }
-
-    save_path = Path(save_path)
-    save_path.parent.mkdir(parents=True, exist_ok=True)
-    with open(save_path, "w", encoding="utf-8") as f:
-        json.dump(summary, f, indent=2)
-
-
-def plot_lr_sweep(
-    results: Dict[str, Dict],
-    save_path: Optional[Path] = None,
-) -> None:
-    """Plots mean validation accuracy and loss versus learning rate, per optimizer.
-
-    Each optimizer is one line across its learning-rate grid on a logarithmic
-    x-axis; error bars are the across-fold standard deviation. A cell with no
-    finite mean (every fold diverged) is skipped and marked as diverged on the
-    axis rather than plotted as zero. The optimum learning rate of each optimizer
-    (highest finite mean accuracy) is marked with a filled circle.
-
-    Args:
-        results: Mapping of cell label to its run_kfold_cv result dictionary.
-        save_path: Optional path to persist the figure.
-    """
-    grouped = _group_sweep_by_optimizer(results)
-    fig, axes = plt.subplots(1, 2, figsize=(14, 5))
-    colors = ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728"]
-
-    for idx, (name, cells) in enumerate(grouped.items()):
-        c = colors[idx % len(colors)]
-        lrs, accs, acc_errs, losses, loss_errs = [], [], [], [], []
-        for lr, res in cells:
-            if res.get("mean_acc") is None:
-                continue
-            lrs.append(lr)
-            accs.append(res["mean_acc"])
-            acc_errs.append(res.get("std_acc") or 0.0)
-            losses.append(res.get("mean_loss"))
-            loss_errs.append(res.get("std_loss") or 0.0)
-
-        if not lrs:
-            continue
-
-        axes[0].errorbar(
-            lrs, accs, yerr=acc_errs, fmt="o-", label=name, color=c,
-            linewidth=2, capsize=4,
-        )
-        best_i = int(np.argmax(accs))
-        axes[0].scatter(
-            lrs[best_i], accs[best_i], s=150, facecolors="none",
-            edgecolors=c, linewidths=2, zorder=5,
-        )
-        axes[0].annotate(
-            f"best lr={lrs[best_i]:g}",
-            xy=(lrs[best_i], accs[best_i]),
-            xytext=(0, 12),
-            textcoords="offset points",
-            ha="center",
-            fontsize=9,
-            color=c,
-        )
-
-        loss_lrs = [lr for lr, lo in zip(lrs, losses) if lo is not None]
-        loss_vals = [lo for lo in losses if lo is not None]
-        if loss_vals:
-            axes[1].errorbar(
-                loss_lrs, loss_vals, yerr=loss_errs[:len(loss_vals)], fmt="s-",
-                label=name, color=c, linewidth=2, capsize=4,
-            )
-
-    axes[0].set_title("Learning-Rate Sweep: Mean Validation Accuracy (circle = optimum)", fontsize=12, fontweight="bold")
-    axes[0].set_xlabel("Learning Rate (log scale)", fontsize=11)
-    axes[0].set_ylabel("Accuracy (%)", fontsize=11)
-    axes[0].set_xscale("log")
-    axes[0].grid(True, which="both", linestyle="--", alpha=0.6)
-    axes[0].legend(fontsize=10)
-
-    axes[1].set_title("Learning-Rate Sweep: Mean Validation Loss", fontsize=13, fontweight="bold")
-    axes[1].set_xlabel("Learning Rate (log scale)", fontsize=11)
-    axes[1].set_ylabel("CrossEntropy Loss", fontsize=11)
-    axes[1].set_xscale("log")
-    axes[1].grid(True, which="both", linestyle="--", alpha=0.6)
-    axes[1].legend(fontsize=10)
-
-    plt.tight_layout()
     if save_path:
         save_path = Path(save_path)
         save_path.parent.mkdir(parents=True, exist_ok=True)

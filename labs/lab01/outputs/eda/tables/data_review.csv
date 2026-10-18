@@ -1,5 +1,0 @@
-issue,count,decision,rationale
-exact_duplicate_within_train,0.0,keep,Khong co duplicate nao bi phat hien; khong co gi de loai.
-exact_duplicate_train_vs_test,0.0,keep,Khong co overlap. Official test set khong duoc thay doi trong moi truong hop.
-all_black_images,0.0,keep,"Anh toan den se khong hoc duoc, nhung chi loai sau khi kiem tra thu cong."
-near_duplicates,,not_checked,"Chua thuc hien: O(n^2) tren 60,000 anh, ngoai pham vi lab."

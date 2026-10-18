@@ -1,78 +1,55 @@
-"""Model architecture definitions for FashionMNIST Classification.
-Provides:
-1. BaselineMLP: Simple 2-layer perceptron for initial baseline.
-2. TunedMLP: Deep perceptron with BatchNorm and Dropout regularization.
+"""Model architecture definition for FashionMNIST Classification.
+
+Provides a single pure PyTorch Multi-Layer Perceptron (FashionMLP)
+using only 3 basic layer types: nn.Flatten, nn.Linear, nn.ReLU.
+No BatchNorm, No Dropout - keeping the architecture transparent, simple, and fast.
 """
 
-from typing import Tuple
+from typing import Tuple, Sequence, Optional
 import torch
 import torch.nn as nn
 
 
-class BaselineMLP(nn.Module):
-    """Simple 2-layer Multi-Layer Perceptron (Baseline).
-    Input: [B, 1, 28, 28] -> Output: [B, 10]
-    """
-    def __init__(self, in_features: int = 28 * 28, hidden_dim: int = 128, num_classes: int = 10):
-        super().__init__()
-        self.net = nn.Sequential(
-            nn.Flatten(),
-            nn.Linear(in_features, hidden_dim),
-            nn.ReLU(),
-            nn.Linear(hidden_dim, num_classes),
-        )
-
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
-        return self.net(x)
-
-
-class TunedMLP(nn.Module):
-    """Deep Multi-Layer Perceptron with Batch Normalization and Dropout.
-    Demonstrates regularization and deeper feature extraction for tabular/flattened data.
+class FashionMLP(nn.Module):
+    """Pure Multi-Layer Perceptron using only 3 basic layer types.
+    Default architecture:
+        Flatten -> Linear(784, 256) -> ReLU -> Linear(256, 128) -> ReLU -> Linear(128, 10).
     """
     def __init__(
         self,
         in_features: int = 28 * 28,
-        hidden_dims: Tuple[int, int] = (256, 128),
+        hidden_dims: Sequence[int] = (256, 128),
         num_classes: int = 10,
-        dropout_rate: float = 0.2,
+        hidden_dim: Optional[int] = None,
     ):
         super().__init__()
-        h1, h2 = hidden_dims
-        self.net = nn.Sequential(
-            nn.Flatten(),
-            nn.Linear(in_features, h1),
-            nn.BatchNorm1d(h1),
-            nn.ReLU(),
-            nn.Dropout(p=dropout_rate),
-            nn.Linear(h1, h2),
-            nn.BatchNorm1d(h2),
-            nn.ReLU(),
-            nn.Dropout(p=dropout_rate),
-            nn.Linear(h2, num_classes),
-        )
+        if hidden_dim is not None:
+            hidden_dims = (hidden_dim,)
+
+        layers = [nn.Flatten()]
+        prev_dim = in_features
+        for h_dim in hidden_dims:
+            layers.append(nn.Linear(prev_dim, h_dim))
+            layers.append(nn.ReLU())
+            prev_dim = h_dim
+        layers.append(nn.Linear(prev_dim, num_classes))
+        self.net = nn.Sequential(*layers)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         return self.net(x)
 
 
-def build_model(model_type: str, num_classes: int = 10) -> nn.Module:
-    """Factory function to build models by name.
+def build_model(model_type: str = "mlp", num_classes: int = 10) -> nn.Module:
+    """Factory function to instantiate the single FashionMLP model.
     
     Args:
-        model_type: 'baseline_mlp' or 'tuned_mlp'.
-        num_classes: Number of classification targets.
+        model_type: Model identifier (e.g. 'mlp', 'fashion_mlp').
+        num_classes: Number of classification categories.
         
     Returns:
-        Instantiated nn.Module.
+        Instantiated FashionMLP nn.Module.
     """
-    model_type = model_type.lower()
-    if model_type in ["baseline_mlp", "baseline"]:
-        return BaselineMLP(num_classes=num_classes)
-    elif model_type in ["tuned_mlp", "mlp"]:
-        return TunedMLP(num_classes=num_classes)
-    else:
-        raise ValueError(f"Unknown model_type '{model_type}'. Choose from 'baseline_mlp' or 'tuned_mlp'.")
+    return FashionMLP(num_classes=num_classes)
 
 
 def count_parameters(model: nn.Module) -> dict:

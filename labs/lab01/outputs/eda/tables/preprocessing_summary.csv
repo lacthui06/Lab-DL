@@ -1,9 +1,0 @@
-item,value
-split_version,split_v2_stratified
-preproc_version,preproc_v2_train_global_std
-train_size,54000
-val_size,6000
-mean,"(0.286209,)"
-std,"(0.35316,)"
-normalized_std,1.003188
-augmentation,horizontal_flip + rotation(10)

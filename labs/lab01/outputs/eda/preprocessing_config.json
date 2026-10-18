@@ -1,6 +1,8 @@
 {
-  "preproc_version": "preproc_v2_train_global_std",
-  "split_version": "split_v2_stratified",
+  "version": "preproc_v2_train_global_std",
+  "dataset": "FashionMNIST",
+  "train_size": 54000,
+  "val_size": 6000,
   "normalization": {
     "mean": [
       0.286209
@@ -8,11 +10,10 @@
     "std": [
       0.35316
     ],
-    "computed_on": "train",
-    "view": "scaled [0,1]",
-    "ddof": 0,
-    "num_images": 54000,
-    "num_pixels": 42336000,
-    "augmentation": false
+    "formula": "Normalize(mean, std) where x in [0, 1]"
+  },
+  "diagnostics": {
+    "per_image_std_mean": 0.320661,
+    "zero_pixel_fraction": 0.502143
   }
 }
