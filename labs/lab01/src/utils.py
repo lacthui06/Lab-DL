@@ -225,17 +225,17 @@ def plot_confusion_matrix(
     title: str = "Confusion Matrix",
     save_path: Optional[Path] = None,
 ) -> None:
-    """Plots a normalized heatmap confusion matrix."""
-    cm = confusion_matrix(y_true, y_pred, normalize="true")
+    """Plots an integer count heatmap confusion matrix."""
+    cm = confusion_matrix(y_true, y_pred)
     fig, ax = plt.subplots(figsize=(10, 8))
     sns.heatmap(
         cm,
         annot=True,
-        fmt=".2f",
+        fmt="d",
         cmap="Blues",
         xticklabels=class_names,
         yticklabels=class_names,
-        cbar_kws={"label": "Normalized Proportion"},
+        cbar_kws={"label": "Số lượng mẫu (Sample Count)"},
         ax=ax,
     )
     ax.set_title(title, fontsize=14, fontweight="bold", pad=12)
@@ -250,3 +250,4 @@ def plot_confusion_matrix(
         save_path.parent.mkdir(parents=True, exist_ok=True)
         fig.savefig(str(save_path), dpi=300, bbox_inches="tight")
     plt.show()
+

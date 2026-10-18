@@ -412,6 +412,7 @@ def plot_eda_figures(
     if save_dir:
         save_dir = Path(save_dir)
         save_dir.mkdir(parents=True, exist_ok=True)
+        out_root = save_dir.parent.parent if save_dir.name == "figures" and save_dir.parent.name == "eda" else None
 
     figs = {}
 
@@ -430,6 +431,8 @@ def plot_eda_figures(
     fig_samples.tight_layout()
     if save_dir:
         fig_samples.savefig(str(save_dir / "sample_images.png"), dpi=200, bbox_inches="tight")
+        if out_root and out_root.exists():
+            fig_samples.savefig(str(out_root / "eda_sample_images.png"), dpi=200, bbox_inches="tight")
     figs["samples"] = fig_samples
 
     # 2. Class Mean Images
@@ -445,6 +448,8 @@ def plot_eda_figures(
     fig_means.tight_layout()
     if save_dir:
         fig_means.savefig(str(save_dir / "class_mean_images.png"), dpi=200, bbox_inches="tight")
+        if out_root and out_root.exists():
+            fig_means.savefig(str(out_root / "eda_class_mean_images.png"), dpi=200, bbox_inches="tight")
     figs["means"] = fig_means
 
     # 3. Class Distribution Bar Chart
@@ -464,6 +469,8 @@ def plot_eda_figures(
     fig_dist.tight_layout()
     if save_dir:
         fig_dist.savefig(str(save_dir / "class_distribution.png"), dpi=200, bbox_inches="tight")
+        if out_root and out_root.exists():
+            fig_dist.savefig(str(out_root / "eda_class_distribution.png"), dpi=200, bbox_inches="tight")
     figs["distribution"] = fig_dist
 
     return figs

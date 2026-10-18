@@ -105,8 +105,11 @@ def run_optuna_optimizer_study(
                     best_val_acc = val_acc
                 trial.report(val_acc, ep)
                 if trial.should_prune():
+                    print(f"  [Optuna Trial {trial.number + 1:02d}/{num_trials:02d}] Optimizer={opt_name:<7s} | lr={lr:.6f} -> Pruned tai epoch {ep + 1}")
                     raise optuna.TrialPruned()
 
+            mom_str = f"| mom={momentum:.2f}" if opt_name == "SGD" else "            "
+            print(f"  [Optuna Trial {trial.number + 1:02d}/{num_trials:02d}] Optimizer={opt_name:<7s} | lr={lr:.6f} {mom_str} -> Val Acc: {best_val_acc:.2f}%")
             return best_val_acc
 
         study = optuna.create_study(
@@ -130,7 +133,7 @@ def run_optuna_optimizer_study(
         return best_results, trials_df
 
     except ImportError:
-        print("[THÔNG BÁO] Optuna chưa được cài đặt. Sử dụng bộ siêu tham số tối ưu chuẩn:")
+        print("[INFO] Optuna chua duoc cai dat tren moi truong nay. Su dung bo sieu tham so toi uu chuan:")
         best_results = {
             "SGD": {"params": {"lr": 0.05, "momentum": 0.9}, "best_val_acc": 88.55},
             "RMSprop": {"params": {"lr": 0.001}, "best_val_acc": 88.76},
@@ -145,7 +148,7 @@ def run_optuna_optimizer_study(
 
 
 # ---------------------------------------------------------------------------
-# 2. Wall-clock Time & Convergence Comparison
+# 2. Optimizer Comparison by Epoch (Accuracy & Loss)
 # ---------------------------------------------------------------------------
 
 def compare_optimizers_wallclock(
@@ -157,11 +160,11 @@ def compare_optimizers_wallclock(
     device: torch.device = DEVICE,
     seed: int = RANDOM_SEED,
     save_fig_path: Optional[Path] = None,
-) -> Tuple[pd.DataFrame, nn.Module, str]:
-    """Trains 3 optimizers, tracks exact wall-clock seconds per epoch and convergence speed.
+) -> Tuple[pd.DataFrame, nn.Module, str, plt.Figure]:
+    """Trains optimizers, tracking Validation Accuracy and Loss progression across epochs.
 
     Returns:
-        Tuple of (Summary DataFrame, Winner PyTorch Model, Winner Optimizer Name).
+        Tuple of (Summary DataFrame, Winner PyTorch Model, Winner Optimizer Name, Matplotlib Figure).
     """
     criterion = nn.CrossEntropyLoss()
     results_summary = []
@@ -179,7 +182,7 @@ def compare_optimizers_wallclock(
 
         epoch_times = []
         val_accs = []
-        cumulative_times = []
+        val_losses = []
         total_start = time.perf_counter()
         time_to_target = None
         epoch_to_target = None
@@ -190,10 +193,10 @@ def compare_optimizers_wallclock(
             ep_duration = time.perf_counter() - ep_start
             epoch_times.append(ep_duration)
 
-            _, val_acc, _, _ = evaluate(model, val_loader, criterion, device)
+            val_loss, val_acc, _, _ = evaluate(model, val_loader, criterion, device)
             val_accs.append(val_acc)
+            val_losses.append(val_loss)
             elapsed_so_far = time.perf_counter() - total_start
-            cumulative_times.append(elapsed_so_far)
 
             if time_to_target is None and val_acc >= target_accuracy:
                 time_to_target = elapsed_so_far
@@ -202,51 +205,71 @@ def compare_optimizers_wallclock(
         total_duration = time.perf_counter() - total_start
         trained_models[opt_name] = model
         run_histories[opt_name] = {
-            "cumulative_times": cumulative_times,
             "val_accs": val_accs,
+            "val_losses": val_losses,
             "final_acc": val_accs[-1],
+            "best_acc": max(val_accs),
+            "final_loss": val_losses[-1],
+            "min_loss": min(val_losses),
         }
 
         results_summary.append({
             "Optimizer": opt_name,
             "Learning Rate": lr,
             "Final Val Acc (%)": round(val_accs[-1], 2),
-            "Total Time (s)": round(total_duration, 2),
+            "Best Val Acc (%)": round(max(val_accs), 2),
+            "Final Val Loss": round(val_losses[-1], 4),
+            "Min Val Loss": round(min(val_losses), 4),
             "Avg Sec/Epoch": round(float(np.mean(epoch_times)), 3),
-            "Time to 87% (s)": round(time_to_target, 2) if time_to_target else "N/A",
             "Epoch to 87%": epoch_to_target if epoch_to_target else "N/A",
         })
 
     summary_df = pd.DataFrame(results_summary)
-    winner_row = summary_df.sort_values(by=["Final Val Acc (%)", "Total Time (s)"], ascending=[False, True]).iloc[0]
+    winner_row = summary_df.sort_values(by=["Best Val Acc (%)", "Min Val Loss"], ascending=[False, True]).iloc[0]
     winner_name = str(winner_row["Optimizer"])
     winner_model = trained_models[winner_name]
 
-    # Plot Wall-Clock Time Comparison
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(13, 5))
+    # Plot Accuracy and Loss by Epoch
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 5))
     colors = {"SGD": "#1f77b4", "RMSprop": "#ff7f0e", "Adam": "#2ca02c"}
+    epochs_range = list(range(1, num_epochs + 1))
 
-    # Subplot 1: Val Acc vs Epochs
+    # Subplot 1: Validation Accuracy vs Epochs
     for opt_name, hist in run_histories.items():
-        ax1.plot(range(1, num_epochs + 1), hist["val_accs"], marker="o", label=f"{opt_name} (Đỉnh: {hist['final_acc']:.2f}%)", color=colors.get(opt_name))
+        c = colors.get(opt_name, "#333333")
+        ax1.plot(
+            epochs_range,
+            hist["val_accs"],
+            marker="o",
+            linewidth=2,
+            label=f"{opt_name} (Đỉnh: {hist['best_acc']:.2f}%)",
+            color=c,
+        )
     ax1.axhline(target_accuracy, color="red", linestyle=":", label=f"Mục tiêu {target_accuracy}%")
-    ax1.set_title("Độ chính xác theo Epochs", fontsize=11, fontweight="bold")
+    ax1.set_title("Độ chính xác kiểm định (Validation Accuracy) theo Epoch", fontsize=11, fontweight="bold")
     ax1.set_xlabel("Epoch", fontsize=10)
     ax1.set_ylabel("Validation Accuracy (%)", fontsize=10)
     ax1.grid(True, linestyle="--", alpha=0.5)
     ax1.legend(fontsize=9)
 
-    # Subplot 2: Val Acc vs Wall-Clock Time (Seconds)
+    # Subplot 2: Validation Loss vs Epochs
     for opt_name, hist in run_histories.items():
-        ax2.plot(hist["cumulative_times"], hist["val_accs"], marker="s", label=f"{opt_name}", color=colors.get(opt_name))
-    ax2.axhline(target_accuracy, color="red", linestyle=":", label=f"Mục tiêu {target_accuracy}%")
-    ax2.set_title("Tốc độ hội tụ theo thời gian thực (Giây)", fontsize=11, fontweight="bold")
-    ax2.set_xlabel("Thời gian tích lũy trên GPU (Giây)", fontsize=10)
-    ax2.set_ylabel("Validation Accuracy (%)", fontsize=10)
+        c = colors.get(opt_name, "#333333")
+        ax2.plot(
+            epochs_range,
+            hist["val_losses"],
+            marker="s",
+            linewidth=2,
+            label=f"{opt_name} (Đáy: {hist['min_loss']:.4f})",
+            color=c,
+        )
+    ax2.set_title("Hàm mất mát kiểm định (Validation Loss) theo Epoch", fontsize=11, fontweight="bold")
+    ax2.set_xlabel("Epoch", fontsize=10)
+    ax2.set_ylabel("CrossEntropy Loss", fontsize=10)
     ax2.grid(True, linestyle="--", alpha=0.5)
     ax2.legend(fontsize=9)
 
-    fig.suptitle("So sánh 3 Optimizer: Độ chính xác vs Thời gian thực thi trên GPU", fontsize=12, fontweight="bold")
+    fig.suptitle("So sánh 3 Optimizer: Validation Accuracy & Loss Theo Epoch", fontsize=13, fontweight="bold")
     fig.tight_layout()
     if save_fig_path:
         save_fig_path = Path(save_fig_path)
