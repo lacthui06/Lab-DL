@@ -90,7 +90,10 @@ Sau khi thu hồi artifact, đọc các con số thực nghiệm và cập nhậ
 - **Không tìm thấy notebook sau khi chạy:** Kỳ vọng file `.ipynb` nằm trên đĩa container. Dấu hiệu: lệnh tìm file notebook trả về rỗng. Phòng tránh: hiểu rằng notebook do trình duyệt quản lý, phải thu hồi qua giao diện Kaggle.
 - **Chỉ output được push, notebook thì không:** Script container chỉ thấy file trên đĩa nên chỉ push được `outputs/`. Phòng tránh: dùng Bước 7 để thu hồi notebook thủ công.
 - **Lộ token trong output cell:** Token bị in ra output rồi lưu vào notebook và đẩy lên Git. Phòng tránh: không in token, dùng Secret và đảm bảo không xuất hiện trong output.
-- **Quên bật Internet:** Không tải được trọng số pretrained. Dấu hiệu: connection refused khi tải model. Phòng tránh: bật Internet trong cài đặt notebook.
+- **Quên bật Internet:** Không tải được trọng số pretrained hoặc raw dataset. Dấu hiệu: connection refused khi tải model hoặc dữ liệu. Phòng tránh: bật Internet trong cài đặt notebook.
+- **Bẫy môi trường trắng tinh (Clean Slate Data Trap):** Code test pass ở local vì máy đã có sẵn dữ liệu trong `data/`, nhưng khi lên Kaggle container mới tinh thì văng `FileNotFoundError` ngay Cell nạp data. Phòng tránh: hàm đọc dataset thô phải luôn có cơ chế tự động nạp/tải `download=True` nếu thư mục dữ liệu chưa có file.
+- **Bẫy sập nguồn ở Cell cuối cùng (Last-Cell NameError Crash):** Huấn luyện cả tiếng đồng hồ thành công nhưng bị văng lỗi biến ở Cell cuối (ví dụ `NameError` khi zip file), khiến phiên *Save & Run All (Commit)* thất bại và mất sạch artifact. Phòng tránh: rà soát toàn bộ biến ở cell cuối cùng, chỉ sử dụng các biến chắc chắn đã nạp từ đầu (như `OUTPUTS_DIR.parent`).
+- **Bẫy thiếu hiển thị đồ thị trực quan:** Lạm dụng `plt.close(fig)` trong module tiện ích để tránh lỗi GUI khi test dòng lệnh khiến Notebook không render được đồ thị. Phòng tránh: các hàm vẽ trong `src/` phải trả về đối tượng `fig`, và Notebook gọi `plt.show()` để hiển thị trực quan.
 
 ## 8. Definition of Done
 

@@ -19,8 +19,9 @@ Danh sách kiểm tra bắt buộc trước khi chuyển thực thi từ máy c�
 ## 3. Đường dẫn và môi trường (Paths & Environment)
 - [ ] Đường dẫn dữ liệu dùng đúng `/kaggle/input/` (chỉ đọc) và không cố ghi vào đó.
 - [ ] Mọi mục tiêu ghi (checkpoint, log, figure) đều trỏ về `/kaggle/working/`.
-- [ ] Notebook có cơ chế tự động clone `src/` nếu chưa được gắn như Kaggle Dataset.
-- [ ] Đã xác nhận bật Internet trong cài đặt notebook nếu cần tải trọng số pretrained.
+- [ ] Notebook có cơ chế tự động tìm nạp `src/` linh hoạt từ Dataset hoặc fallback.
+- [ ] Hàm nạp dữ liệu thô có cơ chế tự động `download=True` nếu thư mục `data/` chưa có file trên môi trường mới.
+- [ ] Đã xác nhận bật Internet trong cài đặt notebook nếu cần tải trọng số pretrained hoặc raw dataset.
 
 ## 4. Tài nguyên (Resources)
 - [ ] `num_workers` của DataLoader được đặt ở mức an toàn (2 hoặc 0) để tránh bus error do `/dev/shm`.
@@ -28,7 +29,9 @@ Danh sách kiểm tra bắt buộc trước khi chuyển thực thi từ máy c�
 - [ ] Batch size và AMP FP16 đã được cân nhắc để nằm trong ngân sách VRAM 15GB.
 
 ## 5. Đồng bộ kết quả (Artifact Harvesting)
-- [ ] Đã có kế hoạch đồng bộ artifact: qua GitHub Secret token hoặc tải `outputs.zip`.
+- [ ] Đã có kế hoạch đồng bộ artifact: qua GitHub Secret token hoặc tự động nén `all_outputs.zip`.
+- [ ] Đã kiểm tra kỹ các biến ở Cell cuối cùng (tránh `NameError` khi đóng gói zip làm hỏng phiên chạy ngầm).
+- [ ] Các hàm vẽ biểu đồ trong `src/` trả về đối tượng `fig` và Notebook gọi `plt.show()` để kết quả trực quan hiển thị đầy đủ.
 - [ ] Đã hiểu rằng file `.ipynb` tương tác không nằm trên đĩa container; phải tải qua File -> Download Notebook hoặc Save Version.
 - [ ] Đã chuẩn bị sẵn quy trình cập nhật `walkthrough_lab_0X.md` với số liệu thu về.
 
