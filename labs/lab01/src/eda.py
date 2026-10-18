@@ -359,6 +359,15 @@ def run_eda_and_fe_pipeline(
     train_idx, val_idx = load_split(eda_dir, expected_pool_size=len(X_train))
     dist_df = class_distribution(y_train[train_idx], y_train[val_idx], class_names)
 
+    figures = plot_eda_figures(
+        X_train=X_train,
+        y_train=y_train,
+        train_idx=train_idx,
+        val_idx=val_idx,
+        class_names=class_names,
+        save_dir=eda_dir / "figures",
+    )
+
     if verbose:
         print("--- 1. TỔNG QUAN CẤU TRÚC DỮ LIỆU THÔ (STRUCTURAL OVERVIEW) ---")
         print(overview_df.to_string(index=False))
@@ -369,6 +378,7 @@ def run_eda_and_fe_pipeline(
         print(f"Tổng mẫu: Tập Train = {len(train_idx):,} mẫu | Tập Val = {len(val_idx):,} mẫu | Tập Test = {len(X_test):,} mẫu")
         print(f"\n--- 4. THỐNG KÊ ĐIỂM ẢNH TẬP TRAIN: Mean = {train_stats['mean']:.4f} | Std = {train_stats['std']:.4f} ---")
         print(f"[ARTIFACTS LOCKED] {split_path.name} & {preproc_path.name}")
+        print(f"[EDA FIGURES SAVED] sample_images.png, class_mean_images.png, class_distribution.png -> {eda_dir / 'figures'}")
 
     return {
         "overview_df": overview_df,
@@ -380,7 +390,83 @@ def run_eda_and_fe_pipeline(
         "train_idx": train_idx,
         "val_idx": val_idx,
         "num_test": len(X_test),
+        "figures": figures,
     }
+
+
+def plot_eda_figures(
+    X_train: np.ndarray,
+    y_train: np.ndarray,
+    train_idx: np.ndarray,
+    val_idx: np.ndarray,
+    class_names: Sequence[str],
+    save_dir: Optional[Path] = None,
+) -> Dict[str, Any]:
+    """Generates standardized visual inspection plots for EDA:
+    1. sample_images.png: 10 classes x 2 sample images grid.
+    2. class_mean_images.png: Mean intensity image per class.
+    3. class_distribution.png: Train vs Val class count distribution.
+    """
+    import matplotlib.pyplot as plt
+
+    if save_dir:
+        save_dir = Path(save_dir)
+        save_dir.mkdir(parents=True, exist_ok=True)
+
+    figs = {}
+
+    # 1. Sample Images Grid (10 classes x 2 samples)
+    fig_samples, axes = plt.subplots(2, 10, figsize=(15, 3.8))
+    for c_idx, name in enumerate(class_names):
+        c_indices = train_idx[y_train[train_idx] == c_idx][:2]
+        for row in range(2):
+            ax = axes[row, c_idx]
+            if len(c_indices) > row:
+                ax.imshow(X_train[c_indices[row]], cmap="gray")
+            ax.axis("off")
+            if row == 0:
+                ax.set_title(name, fontsize=8.5, fontweight="bold")
+    fig_samples.suptitle("FashionMNIST: Ảnh Mẫu Đại Diện 10 Lớp Trang Phục", fontsize=12, fontweight="bold", y=1.02)
+    fig_samples.tight_layout()
+    if save_dir:
+        fig_samples.savefig(str(save_dir / "sample_images.png"), dpi=200, bbox_inches="tight")
+    figs["samples"] = fig_samples
+
+    # 2. Class Mean Images
+    fig_means, axes = plt.subplots(1, 10, figsize=(15, 2.2))
+    for c_idx, name in enumerate(class_names):
+        c_imgs = X_train[train_idx[y_train[train_idx] == c_idx]]
+        mean_img = c_imgs.mean(axis=0)
+        ax = axes[c_idx]
+        ax.imshow(mean_img, cmap="inferno")
+        ax.axis("off")
+        ax.set_title(name, fontsize=8.5, fontweight="bold")
+    fig_means.suptitle("FashionMNIST: Ảnh Trung Bình Pixel (Mean Images) Từng Lớp", fontsize=12, fontweight="bold", y=1.05)
+    fig_means.tight_layout()
+    if save_dir:
+        fig_means.savefig(str(save_dir / "class_mean_images.png"), dpi=200, bbox_inches="tight")
+    figs["means"] = fig_means
+
+    # 3. Class Distribution Bar Chart
+    fig_dist, ax = plt.subplots(figsize=(10, 4))
+    train_counts = np.bincount(y_train[train_idx], minlength=len(class_names))
+    val_counts = np.bincount(y_train[val_idx], minlength=len(class_names))
+    x = np.arange(len(class_names))
+    width = 0.38
+    ax.bar(x - width/2, train_counts, width, label="Tập Train (54,000)", color="#1f77b4")
+    ax.bar(x + width/2, val_counts, width, label="Tập Val (6,000)", color="#ff7f0e")
+    ax.set_ylabel("Số lượng mẫu")
+    ax.set_title("Phân Phối Số Lượng Mẫu 10 Lớp Trên Tập Train và Validation", fontsize=11, fontweight="bold")
+    ax.set_xticks(x)
+    ax.set_xticklabels(class_names, rotation=35, ha="right", fontsize=9)
+    ax.legend()
+    ax.grid(True, linestyle="--", alpha=0.4)
+    fig_dist.tight_layout()
+    if save_dir:
+        fig_dist.savefig(str(save_dir / "class_distribution.png"), dpi=200, bbox_inches="tight")
+    figs["distribution"] = fig_dist
+
+    return figs
 
 
 def verify_pipeline_handoff(
