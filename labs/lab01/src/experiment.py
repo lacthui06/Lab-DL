@@ -252,9 +252,8 @@ def compare_optimizers_wallclock(
         save_fig_path = Path(save_fig_path)
         save_fig_path.parent.mkdir(parents=True, exist_ok=True)
         fig.savefig(str(save_fig_path), dpi=200, bbox_inches="tight")
-    plt.close(fig)
 
-    return summary_df, winner_model, winner_name
+    return summary_df, winner_model, winner_name, fig
 
 
 # ---------------------------------------------------------------------------
@@ -323,14 +322,13 @@ def plot_roc_curves(
         save_fig_path = Path(save_fig_path)
         save_fig_path.parent.mkdir(parents=True, exist_ok=True)
         fig.savefig(str(save_fig_path), dpi=200, bbox_inches="tight")
-    plt.close(fig)
 
     print("\n--- KẾT QUẢ ROC-AUC THEO TỪNG LỚP (ONE-VS-REST) ---")
     print(f"Macro-average ROC-AUC: {macro_auc:.4f}")
     for c_name in class_names:
         print(f"  Lớp {c_name:12s}: AUC = {roc_auc[c_name]:.4f}")
 
-    return roc_auc
+    return roc_auc, fig
 
 
 # ---------------------------------------------------------------------------
@@ -398,7 +396,6 @@ def run_threshold_scan(
         save_fig_path = Path(save_fig_path)
         save_fig_path.parent.mkdir(parents=True, exist_ok=True)
         fig.savefig(str(save_fig_path), dpi=200, bbox_inches="tight")
-    plt.close(fig)
 
     # Tracking Table
     print("\n--- KẾT QUẢ QUÉT NGƯỠNG TỐI ƯU ---")
@@ -423,4 +420,4 @@ def run_threshold_scan(
     print("=== BẢNG THEO DÕI QUÁ TRÌNH TỐI ƯU HÓA NGƯỠNG (BƯỚC 0.05) ===")
     print(tracking_df.to_string(index=False))
 
-    return best_t, best_f1, tracking_df
+    return best_t, best_f1, tracking_df, fig

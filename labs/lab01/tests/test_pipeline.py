@@ -539,7 +539,7 @@ def test_29_experiment_runner_signatures(sample_loaders):
         "Adam": {"params": {"lr": 0.001}},
         "SGD": {"params": {"lr": 0.01, "momentum": 0.9}},
     }
-    summary_df, winner_model, winner_name = compare_optimizers_wallclock(
+    summary_df, winner_model, winner_name, fig = compare_optimizers_wallclock(
         train_loader, val_loader, toy_configs, num_epochs=1, device=DEVICE
     )
     assert isinstance(summary_df, pd.DataFrame)
