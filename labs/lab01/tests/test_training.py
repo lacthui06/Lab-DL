@@ -10,13 +10,26 @@ LAB01_DIR = Path(__file__).resolve().parent.parent
 if str(LAB01_DIR) not in sys.path:
     sys.path.insert(0, str(LAB01_DIR))
 
-from src.config import DATA_DIR, EDA_DIR, DEVICE, RANDOM_SEED, CLASS_NAMES
+from src.utils.helpers import (
+    DATA_DIR,
+    DEVICE,
+    EDA_DIR,
+    RANDOM_SEED,
+    CLASS_NAMES,
+    collect_environment_snapshot,
+    load_checkpoint,
+    save_checkpoint,
+    set_seed,
+)
 from src.datasets.classification import get_dataloaders
 from src.models import build_model
 from src.training.trainer import Trainer, build_optimizer, sanity_overfit_check
-from src.utils.helpers import set_seed, save_checkpoint, load_checkpoint, collect_environment_snapshot
-from src.utils.metrics import compute_tpr_fpr, build_per_class_metrics
-from src.experiment import predict_proba, run_optuna_optimizer_study, compare_optimizers_wallclock
+from src.utils.metrics import build_per_class_metrics, compute_tpr_fpr
+from src.training.experiments import (
+    compare_optimizers_wallclock,
+    predict_proba,
+    run_optuna_optimizer_study,
+)
 
 
 @pytest.fixture(scope="module")

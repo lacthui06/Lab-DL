@@ -30,7 +30,7 @@ def get_transforms(
     """Builds torchvision transformation pipeline."""
     if mean is None or std is None:
         try:
-            from ..config import FASHION_MNIST_MEAN, FASHION_MNIST_STD
+            from ..utils.helpers import FASHION_MNIST_MEAN, FASHION_MNIST_STD
             mean = FASHION_MNIST_MEAN if mean is None else mean
             std = FASHION_MNIST_STD if std is None else std
         except Exception:

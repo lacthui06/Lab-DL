@@ -1,7 +1,7 @@
-"""Exploratory Data Analysis and data measurement helpers for Lab 01 (FashionMNIST).
+"""Exploratory Data Analysis and data measurement module for Lab 01 (FashionMNIST).
 
-Contains core data loading, normalization measurement, structural overview,
-data integrity verification, spatial profiling, and class similarity calculations.
+Contains raw data loading, normalization measurement, structural overview,
+data integrity verification, spatial profiling, class similarity, and pipeline handoff verification.
 """
 
 import gzip
@@ -12,17 +12,18 @@ from typing import Any, Dict, List, Optional, Sequence, Tuple
 import numpy as np
 import pandas as pd
 
-from .config import (
-    PREPROC_VERSION,
-    SPLIT_VERSION,
+from .base import load_split, make_stratified_split, save_split
+from ..utils.helpers import (
+    CLASS_NAMES,
     DATA_DIR,
     EDA_DIR,
-    VAL_SPLIT,
+    PREPROC_VERSION,
     RANDOM_SEED,
-    CLASS_NAMES,
+    SPLIT_VERSION,
+    VAL_SPLIT,
     _resolve_normalization,
 )
-from .datasets.base import make_stratified_split, save_split, load_split
+from ..utils.plots import plot_eda_figures
 
 # A pixel is treated as foreground above this intensity (on the [0, 1] scale).
 # 0.1 (about 26/255) keeps clearly visible garment pixels while discarding near-black background noise.
@@ -39,7 +40,7 @@ def to_scaled(images: np.ndarray) -> np.ndarray:
 
 
 def compute_normalization_stats(X: np.ndarray) -> Dict[str, float]:
-    """Computes the global mean and population standard deviation for Normalize."""
+    """Computes global mean and population standard deviation for Normalize."""
     scaled = to_scaled(X)
     flat = scaled.reshape(len(scaled), -1)
 
@@ -57,12 +58,11 @@ def compute_normalization_stats(X: np.ndarray) -> Dict[str, float]:
 
 def load_raw_arrays(data_dir: Path) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """Reads raw FashionMNIST IDX files directly, returning (X_train, y_train, X_test, y_test).
-    Automatically downloads the raw dataset via torchvision if not present.
+    Automatically downloads raw dataset via torchvision if not present.
     """
     root = Path(data_dir)
     root.mkdir(parents=True, exist_ok=True)
 
-    # Ensure raw FashionMNIST files exist
     try:
         from torchvision import datasets
         datasets.FashionMNIST(root=str(root), train=True, download=True)
@@ -137,6 +137,8 @@ def check_data_integrity(
     y_test: np.ndarray,
 ) -> pd.DataFrame:
     """Core EDA Step 5: Data integrity verification (missing values, corruption, exact duplicates)."""
+    import hashlib
+
     # 1. Missing / NaN check
     train_has_nan = np.isnan(X_train).any() or np.isnan(y_train).any()
     test_has_nan = np.isnan(X_test).any() or np.isnan(y_test).any()
@@ -145,8 +147,7 @@ def check_data_integrity(
     pixels_in_bounds = (X_train.min() >= 0) and (X_train.max() <= 255) and (X_test.min() >= 0) and (X_test.max() <= 255)
     labels_in_bounds = (y_train.min() >= 0) and (y_train.max() <= 9) and (y_test.min() >= 0) and (y_test.max() <= 9)
 
-    # 3. Duplicate check via MD5 hashes (internal duplicates and cross-split overlap)
-    import hashlib
+    # 3. Duplicate check via MD5 hashes
     train_flat = np.ascontiguousarray(X_train.reshape(len(X_train), -1))
     test_flat = np.ascontiguousarray(X_test.reshape(len(X_test), -1))
     train_hash_list = [hashlib.md5(row.tobytes()).hexdigest() for row in train_flat]
@@ -285,13 +286,9 @@ def lock_eda_fe_artifacts(
     val_split: float = 0.1,
     seed: int = 42,
 ) -> Tuple[Path, Path, Dict[str, float]]:
-    """Generates and locks official EDA & Feature Engineering artifacts.
-
+    """Generates and locks official EDA & Feature Engineering artifacts:
     1. Stratified Split (split_indices.npz & split_metadata.json).
     2. Global normalization statistics measured on Train set (preprocessing_config.json).
-
-    Returns:
-        (split_path, preproc_path, train_stats)
     """
     out_dir = Path(out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -340,11 +337,7 @@ def run_eda_and_fe_pipeline(
     class_names: Sequence[str] = CLASS_NAMES,
     verbose: bool = True,
 ) -> Dict[str, Any]:
-    """Runs the full Core EDA & Feature Engineering pipeline and locks artifacts.
-
-    Returns:
-        Dictionary containing overview_df, integrity_df, dist_df, split_path, preproc_path, train_stats.
-    """
+    """Runs the full Core EDA & Feature Engineering pipeline and locks artifacts."""
     X_train, y_train, X_test, y_test = load_raw_arrays(data_dir)
 
     overview_df = get_structural_overview(X_train, y_train, X_test, y_test, class_names)
@@ -394,100 +387,12 @@ def run_eda_and_fe_pipeline(
     }
 
 
-def plot_eda_figures(
-    X_train: np.ndarray,
-    y_train: np.ndarray,
-    train_idx: np.ndarray,
-    val_idx: np.ndarray,
-    class_names: Sequence[str],
-    save_dir: Optional[Path] = None,
-) -> Dict[str, Any]:
-    """Generates standardized visual inspection plots for EDA:
-    1. sample_images.png: 10 classes x 2 sample images grid.
-    2. class_mean_images.png: Mean intensity image per class.
-    3. class_distribution.png: Train vs Val class count distribution.
-    """
-    import matplotlib.pyplot as plt
-
-    if save_dir:
-        save_dir = Path(save_dir)
-        save_dir.mkdir(parents=True, exist_ok=True)
-        out_root = save_dir.parent.parent if save_dir.name == "figures" and save_dir.parent.name == "eda" else None
-
-    figs = {}
-
-    # 1. Sample Images Grid (10 classes x 2 samples)
-    fig_samples, axes = plt.subplots(2, 10, figsize=(15, 3.8))
-    for c_idx, name in enumerate(class_names):
-        c_indices = train_idx[y_train[train_idx] == c_idx][:2]
-        for row in range(2):
-            ax = axes[row, c_idx]
-            if len(c_indices) > row:
-                ax.imshow(X_train[c_indices[row]], cmap="gray")
-            ax.axis("off")
-            if row == 0:
-                ax.set_title(name, fontsize=8.5, fontweight="bold")
-    fig_samples.suptitle("FashionMNIST: Ảnh Mẫu Đại Diện 10 Lớp Trang Phục", fontsize=12, fontweight="bold", y=1.02)
-    fig_samples.tight_layout()
-    if save_dir:
-        fig_samples.savefig(str(save_dir / "sample_images.png"), dpi=200, bbox_inches="tight")
-        if out_root and out_root.exists():
-            fig_samples.savefig(str(out_root / "eda_sample_images.png"), dpi=200, bbox_inches="tight")
-    figs["samples"] = fig_samples
-
-    # 2. Class Mean Images
-    fig_means, axes = plt.subplots(1, 10, figsize=(15, 2.2))
-    for c_idx, name in enumerate(class_names):
-        c_imgs = X_train[train_idx[y_train[train_idx] == c_idx]]
-        mean_img = c_imgs.mean(axis=0)
-        ax = axes[c_idx]
-        ax.imshow(mean_img, cmap="inferno")
-        ax.axis("off")
-        ax.set_title(name, fontsize=8.5, fontweight="bold")
-    fig_means.suptitle("FashionMNIST: Ảnh Trung Bình Pixel (Mean Images) Từng Lớp", fontsize=12, fontweight="bold", y=1.05)
-    fig_means.tight_layout()
-    if save_dir:
-        fig_means.savefig(str(save_dir / "class_mean_images.png"), dpi=200, bbox_inches="tight")
-        if out_root and out_root.exists():
-            fig_means.savefig(str(out_root / "eda_class_mean_images.png"), dpi=200, bbox_inches="tight")
-    figs["means"] = fig_means
-
-    # 3. Class Distribution Bar Chart
-    fig_dist, ax = plt.subplots(figsize=(10, 4))
-    train_counts = np.bincount(y_train[train_idx], minlength=len(class_names))
-    val_counts = np.bincount(y_train[val_idx], minlength=len(class_names))
-    x = np.arange(len(class_names))
-    width = 0.38
-    ax.bar(x - width/2, train_counts, width, label="Tập Train (54,000)", color="#1f77b4")
-    ax.bar(x + width/2, val_counts, width, label="Tập Val (6,000)", color="#ff7f0e")
-    ax.set_ylabel("Số lượng mẫu")
-    ax.set_title("Phân Phối Số Lượng Mẫu 10 Lớp Trên Tập Train và Validation", fontsize=11, fontweight="bold")
-    ax.set_xticks(x)
-    ax.set_xticklabels(class_names, rotation=35, ha="right", fontsize=9)
-    ax.legend()
-    ax.grid(True, linestyle="--", alpha=0.4)
-    fig_dist.tight_layout()
-    if save_dir:
-        fig_dist.savefig(str(save_dir / "class_distribution.png"), dpi=200, bbox_inches="tight")
-        if out_root and out_root.exists():
-            fig_dist.savefig(str(out_root / "eda_class_distribution.png"), dpi=200, bbox_inches="tight")
-    figs["distribution"] = fig_dist
-
-    return figs
-
-
 def verify_pipeline_handoff(
     train_loader,
     val_loader,
     eda_dir: Path = EDA_DIR,
 ) -> bool:
-    """Mandatory Guard Assert Gate (docs/feature-image.md Step 9).
-    Verifies 4 core criteria before training handoff:
-    1. Artifact existence (split_indices.npz / split_metadata.json, preprocessing_config.json).
-    2. Version matching (SPLIT_VERSION, PREPROC_VERSION).
-    3. Normalization source matches locked artifact values.
-    4. DataLoader sample counts strictly match metadata train_size and val_size.
-    """
+    """Mandatory Guard Assert Gate: verifies 4 core criteria before training handoff."""
     eda_dir = Path(eda_dir)
     split_meta_path = eda_dir / "split_metadata.json"
     preproc_path = eda_dir / "preprocessing_config.json"

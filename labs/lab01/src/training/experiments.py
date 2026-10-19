@@ -1,16 +1,8 @@
-"""Experiment management module for Lab 01 (FashionMNIST).
-
-Handles:
-1. Optuna Hyperparameter Study: Automated search for optimal learning rates across optimizers.
-2. Wall-clock Time Optimizer Comparison: Measures convergence speed and seconds-per-epoch.
-3. Multi-Class One-vs-Rest ROC Curves & ROC-AUC calculation.
-4. Decision Threshold Scan: Sweeps 100 probability thresholds, plots 4-curve trade-off,
-   and outputs tracking table matching user specification.
-"""
+"""Experiment runner module for Lab 01: Optuna tuning, optimizer comparison, ROC curves, and threshold scanning."""
 
 import time
 from pathlib import Path
-from typing import Dict, List, Optional, Sequence, Tuple
+from typing import Any, Dict, List, Optional, Sequence, Tuple
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -20,16 +12,19 @@ import torch.nn as nn
 from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score
 from torch.utils.data import DataLoader
 
-from .config import CLASS_NAMES, DEVICE, RANDOM_SEED
-from .training import build_optimizer, evaluate, train_one_epoch
-from .models import build_model
-from .utils import set_seed
+from ..models import build_model
+from ..utils.helpers import CLASS_NAMES, DEVICE, RANDOM_SEED, load_yaml_config, set_seed
+from ..utils.plots import (
+    plot_optimizer_comparison,
+    plot_roc_curves_fig,
+    plot_threshold_scan_fig,
+)
+from .trainer import build_optimizer, evaluate, train_one_epoch
 
 
 # ---------------------------------------------------------------------------
 # Common Inference Helper: Predict Probabilities
 # ---------------------------------------------------------------------------
-
 def predict_proba(
     model: nn.Module,
     dataloader: DataLoader,
@@ -61,20 +56,30 @@ def predict_proba(
 # ---------------------------------------------------------------------------
 # 1. Optuna Hyperparameter Optimization
 # ---------------------------------------------------------------------------
-
 def run_optuna_optimizer_study(
     train_loader: DataLoader,
     val_loader: DataLoader,
-    num_trials: int = 15,
-    epochs_per_trial: int = 3,
+    num_trials: Optional[int] = None,
+    epochs_per_trial: Optional[int] = None,
     device: torch.device = DEVICE,
     seed: int = RANDOM_SEED,
+    config_path: Optional[Path] = None,
 ) -> Tuple[Dict[str, dict], pd.DataFrame]:
-    """Runs a compact Optuna study to find the best learning rate for SGD, RMSprop, and Adam.
+    """Runs a compact Optuna study to find the best learning rate for SGD, RMSprop, and Adam."""
+    # Load configuration from yaml if available
+    exp_cfg = {}
+    if config_path is None:
+        default_cfg_path = Path(__file__).resolve().parent.parent.parent / "config" / "experiments.yaml"
+        if default_cfg_path.exists():
+            config_path = default_cfg_path
 
-    Returns:
-        Tuple of (best_results dict, trials_df DataFrame)
-    """
+    if config_path and Path(config_path).exists():
+        loaded = load_yaml_config(Path(config_path))
+        exp_cfg = loaded.get("optuna", {})
+
+    trials_count = num_trials if num_trials is not None else exp_cfg.get("num_trials", 15)
+    epochs_count = epochs_per_trial if epochs_per_trial is not None else exp_cfg.get("epochs_per_trial", 3)
+
     set_seed(seed)
     criterion = nn.CrossEntropyLoss()
 
@@ -98,18 +103,18 @@ def run_optuna_optimizer_study(
             optimizer = build_optimizer(opt_name, model, learning_rate=lr, momentum=momentum)
 
             best_val_acc = 0.0
-            for ep in range(epochs_per_trial):
+            for ep in range(epochs_count):
                 train_one_epoch(model, train_loader, criterion, optimizer, device)
                 _, val_acc, _, _ = evaluate(model, val_loader, criterion, device)
                 if val_acc > best_val_acc:
                     best_val_acc = val_acc
                 trial.report(val_acc, ep)
                 if trial.should_prune():
-                    print(f"  [Optuna Trial {trial.number + 1:02d}/{num_trials:02d}] Optimizer={opt_name:<7s} | lr={lr:.6f} -> Pruned tai epoch {ep + 1}")
+                    print(f"  [Optuna Trial {trial.number + 1:02d}/{trials_count:02d}] Optimizer={opt_name:<7s} | lr={lr:.6f} -> Pruned tai epoch {ep + 1}")
                     raise optuna.TrialPruned()
 
             mom_str = f"| mom={momentum:.2f}" if opt_name == "SGD" else "            "
-            print(f"  [Optuna Trial {trial.number + 1:02d}/{num_trials:02d}] Optimizer={opt_name:<7s} | lr={lr:.6f} {mom_str} -> Val Acc: {best_val_acc:.2f}%")
+            print(f"  [Optuna Trial {trial.number + 1:02d}/{trials_count:02d}] Optimizer={opt_name:<7s} | lr={lr:.6f} {mom_str} -> Val Acc: {best_val_acc:.2f}%")
             return best_val_acc
 
         study = optuna.create_study(
@@ -117,7 +122,7 @@ def run_optuna_optimizer_study(
             sampler=optuna.samplers.TPESampler(seed=seed),
             pruner=optuna.pruners.MedianPruner(n_startup_trials=3, n_warmup_steps=2),
         )
-        study.optimize(objective, n_trials=num_trials)
+        study.optimize(objective, n_trials=trials_count)
 
         best_results = {}
         for opt in ["SGD", "RMSprop", "Adam"]:
@@ -148,25 +153,45 @@ def run_optuna_optimizer_study(
 
 
 # ---------------------------------------------------------------------------
-# 2. Optimizer Comparison by Epoch (Accuracy & Loss)
+# 2. Optimizer Comparison by Epoch
 # ---------------------------------------------------------------------------
-
 def compare_optimizers_wallclock(
     train_loader: DataLoader,
     val_loader: DataLoader,
-    optimizer_configs: Dict[str, dict],
-    num_epochs: int = 15,
-    target_accuracy: float = 87.0,
+    optimizer_configs: Optional[Dict[str, dict]] = None,
+    num_epochs: Optional[int] = None,
+    target_accuracy: Optional[float] = None,
     device: torch.device = DEVICE,
     seed: int = RANDOM_SEED,
-    use_scheduler: bool = True,
+    use_scheduler: Optional[bool] = None,
     save_fig_path: Optional[Path] = None,
+    config_path: Optional[Path] = None,
 ) -> Tuple[pd.DataFrame, nn.Module, str, plt.Figure]:
-    """Trains optimizers, tracking Validation Accuracy and Loss progression across epochs.
+    """Trains optimizers, tracking Validation Accuracy and Loss progression across epochs."""
+    # Resolve config from experiments.yaml
+    if config_path is None:
+        default_cfg_path = Path(__file__).resolve().parent.parent.parent / "config" / "experiments.yaml"
+        if default_cfg_path.exists():
+            config_path = default_cfg_path
 
-    Returns:
-        Tuple of (Summary DataFrame, Winner PyTorch Model, Winner Optimizer Name, Matplotlib Figure).
-    """
+    comp_cfg = {}
+    if config_path and Path(config_path).exists():
+        comp_cfg = load_yaml_config(Path(config_path)).get("comparison", {})
+
+    epochs = num_epochs if num_epochs is not None else comp_cfg.get("num_epochs", 10)
+    target_acc = target_accuracy if target_accuracy is not None else comp_cfg.get("target_accuracy", 87.0)
+    sched_flag = use_scheduler if use_scheduler is not None else comp_cfg.get("use_scheduler", True)
+
+    if optimizer_configs is None:
+        if "optimizers" in comp_cfg:
+            optimizer_configs = comp_cfg["optimizers"]
+        else:
+            optimizer_configs = {
+                "SGD": {"lr": 0.05, "momentum": 0.9},
+                "RMSprop": {"lr": 0.001, "momentum": 0.0},
+                "Adam": {"lr": 0.001, "momentum": 0.0},
+            }
+
     criterion = nn.CrossEntropyLoss()
     results_summary = []
     run_histories = {}
@@ -181,8 +206,8 @@ def compare_optimizers_wallclock(
         momentum = params.get("momentum", 0.9) if opt_name == "SGD" else 0.0
         optimizer = build_optimizer(opt_name, model, learning_rate=lr, momentum=momentum)
         scheduler = (
-            torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=num_epochs, eta_min=1e-5)
-            if use_scheduler
+            torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=epochs, eta_min=1e-5)
+            if sched_flag
             else None
         )
 
@@ -193,7 +218,7 @@ def compare_optimizers_wallclock(
         time_to_target = None
         epoch_to_target = None
 
-        for epoch in range(1, num_epochs + 1):
+        for epoch in range(1, epochs + 1):
             ep_start = time.perf_counter()
             train_one_epoch(model, train_loader, criterion, optimizer, device)
             ep_duration = time.perf_counter() - ep_start
@@ -207,11 +232,10 @@ def compare_optimizers_wallclock(
             val_losses.append(val_loss)
             elapsed_so_far = time.perf_counter() - total_start
 
-            if time_to_target is None and val_acc >= target_accuracy:
+            if time_to_target is None and val_acc >= target_acc:
                 time_to_target = elapsed_so_far
                 epoch_to_target = epoch
 
-        total_duration = time.perf_counter() - total_start
         trained_models[opt_name] = model
         run_histories[opt_name] = {
             "val_accs": val_accs,
@@ -230,7 +254,7 @@ def compare_optimizers_wallclock(
             "Final Val Loss": round(val_losses[-1], 4),
             "Min Val Loss": round(min(val_losses), 4),
             "Avg Sec/Epoch": round(float(np.mean(epoch_times)), 3),
-            "Epoch to 87%": epoch_to_target if epoch_to_target else "N/A",
+            f"Epoch to {target_acc:.0f}%": epoch_to_target if epoch_to_target else "N/A",
         })
 
     summary_df = pd.DataFrame(results_summary)
@@ -238,52 +262,12 @@ def compare_optimizers_wallclock(
     winner_name = str(winner_row["Optimizer"])
     winner_model = trained_models[winner_name]
 
-    # Plot Accuracy and Loss by Epoch
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 5))
-    colors = {"SGD": "#1f77b4", "RMSprop": "#ff7f0e", "Adam": "#2ca02c"}
-    epochs_range = list(range(1, num_epochs + 1))
-
-    # Subplot 1: Validation Accuracy vs Epochs
-    for opt_name, hist in run_histories.items():
-        c = colors.get(opt_name, "#333333")
-        ax1.plot(
-            epochs_range,
-            hist["val_accs"],
-            marker="o",
-            linewidth=2,
-            label=f"{opt_name} (Đỉnh: {hist['best_acc']:.2f}%)",
-            color=c,
-        )
-    ax1.axhline(target_accuracy, color="red", linestyle=":", label=f"Mục tiêu {target_accuracy}%")
-    ax1.set_title("Độ chính xác kiểm định (Validation Accuracy) theo Epoch", fontsize=11, fontweight="bold")
-    ax1.set_xlabel("Epoch", fontsize=10)
-    ax1.set_ylabel("Validation Accuracy (%)", fontsize=10)
-    ax1.grid(True, linestyle="--", alpha=0.5)
-    ax1.legend(fontsize=9)
-
-    # Subplot 2: Validation Loss vs Epochs
-    for opt_name, hist in run_histories.items():
-        c = colors.get(opt_name, "#333333")
-        ax2.plot(
-            epochs_range,
-            hist["val_losses"],
-            marker="s",
-            linewidth=2,
-            label=f"{opt_name} (Đáy: {hist['min_loss']:.4f})",
-            color=c,
-        )
-    ax2.set_title("Hàm mất mát kiểm định (Validation Loss) theo Epoch", fontsize=11, fontweight="bold")
-    ax2.set_xlabel("Epoch", fontsize=10)
-    ax2.set_ylabel("CrossEntropy Loss", fontsize=10)
-    ax2.grid(True, linestyle="--", alpha=0.5)
-    ax2.legend(fontsize=9)
-
-    fig.suptitle("So sánh 3 Optimizer: Validation Accuracy & Loss Theo Epoch", fontsize=13, fontweight="bold")
-    fig.tight_layout()
-    if save_fig_path:
-        save_fig_path = Path(save_fig_path)
-        save_fig_path.parent.mkdir(parents=True, exist_ok=True)
-        fig.savefig(str(save_fig_path), dpi=200, bbox_inches="tight")
+    fig = plot_optimizer_comparison(
+        run_histories=run_histories,
+        num_epochs=epochs,
+        target_accuracy=target_acc,
+        save_fig_path=save_fig_path,
+    )
 
     return summary_df, winner_model, winner_name, fig
 
@@ -291,82 +275,33 @@ def compare_optimizers_wallclock(
 # ---------------------------------------------------------------------------
 # 3. Multi-Class One-vs-Rest ROC Curves & ROC-AUC Score
 # ---------------------------------------------------------------------------
-
 def plot_roc_curves(
     model: nn.Module,
     dataloader: DataLoader,
     class_names: Sequence[str] = CLASS_NAMES,
     device: torch.device = DEVICE,
     save_fig_path: Optional[Path] = None,
-) -> Dict[str, float]:
-    """Computes and plots One-vs-Rest ROC curves and AUC scores for all 10 classes."""
-    from sklearn.metrics import roc_curve, auc
-    from sklearn.preprocessing import label_binarize
-
+) -> Tuple[Dict[str, float], plt.Figure]:
+    """Computes probabilities and plots One-vs-Rest ROC curves and AUC scores."""
     y_probs, y_true = predict_proba(model, dataloader, device)
-    n_classes = len(class_names)
-    y_true_bin = label_binarize(y_true, classes=list(range(n_classes)))
-
-    fpr = dict()
-    tpr = dict()
-    roc_auc = dict()
-
-    for i in range(n_classes):
-        fpr[i], tpr[i], _ = roc_curve(y_true_bin[:, i], y_probs[:, i])
-        roc_auc[class_names[i]] = float(auc(fpr[i], tpr[i]))
-
-    # Compute macro-average ROC curve and AUC
-    all_fpr = np.unique(np.concatenate([fpr[i] for i in range(n_classes)]))
-    mean_tpr = np.zeros_like(all_fpr)
-    for i in range(n_classes):
-        mean_tpr += np.interp(all_fpr, fpr[i], tpr[i])
-    mean_tpr /= n_classes
-    macro_auc = float(auc(all_fpr, mean_tpr))
-    roc_auc["macro_avg"] = macro_auc
-
-    # Plot
-    fig, ax = plt.subplots(figsize=(10, 7))
-    colors = plt.cm.tab10(np.linspace(0, 1, n_classes))
-
-    for i, color in zip(range(n_classes), colors):
-        c_name = class_names[i]
-        ax.plot(
-            fpr[i], tpr[i], color=color, lw=1.5,
-            label=f"{c_name} (AUC = {roc_auc[c_name]:.3f})",
-        )
-
-    ax.plot(
-        all_fpr, mean_tpr, color="black", linestyle="--", lw=2.5,
-        label=f"Macro-average (AUC = {macro_auc:.3f})",
+    roc_auc, fig = plot_roc_curves_fig(
+        y_true=y_true,
+        y_probs=y_probs,
+        class_names=class_names,
+        save_fig_path=save_fig_path,
     )
-    ax.plot([0, 1], [0, 1], color="grey", linestyle=":", lw=1.2, label="Đoán ngẫu nhiên (AUC = 0.500)")
-
-    ax.set_xlim([-0.02, 1.0])
-    ax.set_ylim([0.0, 1.05])
-    ax.set_xlabel("False Positive Rate (FPR)", fontsize=11)
-    ax.set_ylabel("True Positive Rate (TPR / Recall)", fontsize=11)
-    ax.set_title("Đường cong One-vs-Rest (OvR) ROC & Điểm AUC - FashionMLP", fontsize=12, fontweight="bold")
-    ax.legend(loc="lower right", fontsize=8.5, framealpha=0.9)
-    ax.grid(True, linestyle="--", alpha=0.4)
-
-    fig.tight_layout()
-    if save_fig_path:
-        save_fig_path = Path(save_fig_path)
-        save_fig_path.parent.mkdir(parents=True, exist_ok=True)
-        fig.savefig(str(save_fig_path), dpi=200, bbox_inches="tight")
 
     print("\n--- KẾT QUẢ ROC-AUC THEO TỪNG LỚP (ONE-VS-REST) ---")
-    print(f"Macro-average ROC-AUC: {macro_auc:.4f}")
+    print(f"Macro-average ROC-AUC: {roc_auc.get('macro_avg', 0.0):.4f}")
     for c_name in class_names:
-        print(f"  Lớp {c_name:12s}: AUC = {roc_auc[c_name]:.4f}")
+        print(f"  Lớp {c_name:12s}: AUC = {roc_auc.get(c_name, 0.0):.4f}")
 
     return roc_auc, fig
 
 
 # ---------------------------------------------------------------------------
-# 4. Decision Threshold Scan (Matches user-specified plot and table)
+# 4. Decision Threshold Scan
 # ---------------------------------------------------------------------------
-
 def run_threshold_scan(
     y_true_binary: Optional[np.ndarray] = None,
     y_probs_positive: Optional[np.ndarray] = None,
@@ -378,7 +313,7 @@ def run_threshold_scan(
     step_display: float = 0.05,
     title: str = "Đồ thị quét ngưỡng phân loại (Decision Threshold Scan)",
     save_fig_path: Optional[Path] = None,
-) -> Tuple[float, float, pd.DataFrame]:
+) -> Tuple[float, float, pd.DataFrame, plt.Figure]:
     """Sweeps thresholds on binary probability predictions, plots trade-offs, and prints tracking table."""
     if model is not None and dataloader is not None:
         y_probs, y_true = predict_proba(model, dataloader, device)
@@ -408,33 +343,23 @@ def run_threshold_scan(
     best_r = float(recalls[best_idx])
     best_acc = float(accuracies[best_idx])
 
-    # Plot
-    fig, ax = plt.subplots(figsize=(10, 5.5))
-    ax.plot(thresholds, precisions, label="Precision (Độ chính xác)", color="#1f77b4", linewidth=2)
-    ax.plot(thresholds, recalls, label="Recall (Độ nhạy)", color="#2ca02c", linewidth=2)
-    ax.plot(thresholds, f1_scores, label="F1-Score (Trung bình điều hòa)", color="#ff7f0e", linewidth=2.5)
-    ax.plot(thresholds, accuracies, label="Accuracy (Độ chính xác toàn cục)", color="#9467bd", linestyle="--", linewidth=1.8)
-
-    ax.axvline(best_t, color="red", linestyle=":", linewidth=2, label=f"Ngưỡng F1 tối ưu = {best_t:.2f} (F1={best_f1:.2f})")
-    ax.set_title(title, fontsize=12, fontweight="bold")
-    ax.set_xlabel("Ngưỡng phân loại (Threshold)", fontsize=10)
-    ax.set_ylabel("Giá trị chỉ số", fontsize=10)
-    ax.set_ylim(-0.02, 1.05)
-    ax.grid(True, linestyle="--", alpha=0.4)
-    ax.legend(loc="lower left", fontsize=9)
-
-    fig.tight_layout()
-    if save_fig_path:
-        save_fig_path = Path(save_fig_path)
-        save_fig_path.parent.mkdir(parents=True, exist_ok=True)
-        fig.savefig(str(save_fig_path), dpi=200, bbox_inches="tight")
+    fig = plot_threshold_scan_fig(
+        thresholds=thresholds,
+        precisions=precisions,
+        recalls=recalls,
+        f1_scores=f1_scores,
+        accuracies=accuracies,
+        best_t=best_t,
+        best_f1=best_f1,
+        title=title,
+        save_fig_path=save_fig_path,
+    )
 
     # Tracking Table
     print("\n--- KẾT QUẢ QUÉT NGƯỠNG TỐI ƯU ---")
     print(f"Ngưỡng tối ưu theo F1-Score: {best_t:.4f} (F1-Score = {best_f1:.4f})")
     print(f"Tại ngưỡng này: Precision = {best_p:.4f}, Recall = {best_r:.4f}, Accuracy = {best_acc:.4f}\n")
 
-    # Table with step_display (0.05)
     display_rows = []
     for t_step in np.arange(0.0, 1.01, step_display):
         closest_idx = int(np.argmin(np.abs(thresholds - t_step)))

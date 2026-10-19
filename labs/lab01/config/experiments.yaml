@@ -1,0 +1,40 @@
+# Experiment and hyperparameter optimization configurations for Lab 01
+
+optuna:
+  num_trials: 15
+  epochs_per_trial: 3
+  seed: 42
+  search_space:
+    SGD:
+      lr_min: 0.01
+      lr_max: 0.1
+      momentum_min: 0.8
+      momentum_max: 0.95
+    RMSprop:
+      lr_min: 0.0001
+      lr_max: 0.01
+      momentum: 0.0
+    Adam:
+      lr_min: 0.0001
+      lr_max: 0.01
+      momentum: 0.0
+
+comparison:
+  num_epochs: 10
+  target_accuracy: 87.0
+  use_scheduler: true
+  optimizers:
+    SGD:
+      lr: 0.05
+      momentum: 0.9
+    RMSprop:
+      lr: 0.001
+      momentum: 0.0
+    Adam:
+      lr: 0.001
+      momentum: 0.0
+
+threshold_scan:
+  num_thresholds: 100
+  step_display: 0.05
+  positive_class_idx: 0

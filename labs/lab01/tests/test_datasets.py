@@ -10,12 +10,10 @@ LAB01_DIR = Path(__file__).resolve().parent.parent
 if str(LAB01_DIR) not in sys.path:
     sys.path.insert(0, str(LAB01_DIR))
 
-from src.config import DATA_DIR, EDA_DIR, RANDOM_SEED, CLASS_NAMES, FASHION_MNIST_MEAN, FASHION_MNIST_STD, FALLBACK_STD
+from src.utils.helpers import DATA_DIR, EDA_DIR, RANDOM_SEED, CLASS_NAMES, FASHION_MNIST_MEAN, FASHION_MNIST_STD, FALLBACK_STD, set_seed
 from src.datasets.classification import get_dataloaders, get_transforms
 from src.datasets.base import make_stratified_split, save_split, load_split
-from src.utils.helpers import set_seed
-from src.utils.plots import unnormalize
-from src.eda import (
+from src.datasets.eda import (
     compute_normalization_stats,
     class_distribution,
     class_similarity_matrix,
@@ -26,6 +24,7 @@ from src.eda import (
     check_data_integrity,
     verify_pipeline_handoff,
 )
+from src.utils.plots import unnormalize
 
 
 @pytest.fixture(scope="module")
