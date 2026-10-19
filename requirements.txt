@@ -38,4 +38,3 @@ packaging==26.3
 
 # Configuration parsing
 pyyaml==6.0.3
-

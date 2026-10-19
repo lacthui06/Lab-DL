@@ -172,21 +172,46 @@ def class_distribution(
     return pd.DataFrame(rows)
 
 
+def _foreground_bbox(mask: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+    """Return enclosing height/width, including interior gaps; empty masks yield zero."""
+    rows = mask.any(axis=2)
+    cols = mask.any(axis=1)
+    nonempty = rows.any(axis=1)
+    height = np.where(nonempty, rows.shape[1] - rows[:, ::-1].argmax(axis=1)
+                      - rows.argmax(axis=1), 0)
+    width = np.where(nonempty, cols.shape[1] - cols[:, ::-1].argmax(axis=1)
+                     - cols.argmax(axis=1), 0)
+    return height, width
+
+
 def spatial_features(
     X: np.ndarray,
     y: np.ndarray,
     class_names: Sequence[str],
     threshold: float = FOREGROUND_THRESHOLD,
+    *,
+    original_indices: Sequence[int],
+    split: str,
 ) -> pd.DataFrame:
-    """Core EDA Step 4: Per-image spatial descriptors derived from foreground mask."""
+    """Per-image descriptors with explicit indices into the original training pool.
+
+    Callers must supply aligned, unique indices and a train/val split name.
+    Empty foreground has zero box dimensions/area and NaN aspect ratio.
+    """
+    indices = np.asarray(original_indices)
+    if (indices.ndim != 1 or len(indices) != len(X)
+            or not np.issubdtype(indices.dtype, np.integer)
+            or np.any(indices < 0) or len(np.unique(indices)) != len(indices)):
+        raise ValueError("original_indices must be aligned, unique, non-negative integers")
+    if len(y) != len(X):
+        raise ValueError("Images and labels must have equal lengths")
+    if split not in ("train", "val"):
+        raise ValueError("split must be 'train' or 'val' for the original training pool")
     scaled = to_scaled(X)
     mask = scaled > threshold
 
     foreground_ratio = mask.mean(axis=(1, 2))
-    rows_any = mask.any(axis=2)
-    cols_any = mask.any(axis=1)
-    bbox_h = rows_any.sum(axis=1)
-    bbox_w = cols_any.sum(axis=1)
+    bbox_h, bbox_w = _foreground_bbox(mask)
     h, w = scaled.shape[1], scaled.shape[2]
 
     with np.errstate(divide="ignore", invalid="ignore"):
@@ -194,8 +219,8 @@ def spatial_features(
 
     return pd.DataFrame({
         "source_dataset": "original_train",
-        "original_index": np.arange(len(scaled), dtype=np.int64),
-        "split": "unassigned",
+        "original_index": indices.astype(np.int64),
+        "split": split,
         "label": y.astype(np.int64),
         "class_name": [class_names[int(v)] for v in y],
         "foreground_threshold": threshold,
@@ -295,10 +320,7 @@ def compute_handcrafted_features(
     mask = scaled > threshold
 
     fg_ratios = mask.mean(axis=(1, 2))
-    rows_any = mask.any(axis=2)
-    cols_any = mask.any(axis=1)
-    bbox_h = rows_any.sum(axis=1)
-    bbox_w = cols_any.sum(axis=1)
+    bbox_h, bbox_w = _foreground_bbox(mask)
     h, w = scaled.shape[1], scaled.shape[2]
     with np.errstate(divide="ignore", invalid="ignore"):
         aspect = np.where(bbox_h > 0, bbox_w / bbox_h, np.nan)
@@ -405,7 +427,10 @@ def run_eda_and_fe_pipeline(
     pixel_stats_df.to_csv(tables_dir / "pixel_statistics.csv", index=False, encoding="utf-8")
 
     # Step 6: Spatial Analysis Descriptors
-    spatial_df = spatial_features(X_train[train_idx], y_train[train_idx], class_names)
+    spatial_df = spatial_features(
+        X_train[train_idx], y_train[train_idx], class_names,
+        original_indices=train_idx, split="train",
+    )
     spatial_df.to_csv(tables_dir / "spatial_features.csv", index=False, encoding="utf-8")
 
     # Step 7: Handcrafted Feature Analysis
