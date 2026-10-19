@@ -51,7 +51,7 @@ def get_transforms(
 
 
 def get_dataloaders(
-    data_dir: Path,
+    data_dir: Optional[Path] = None,
     split_dir: Optional[Path] = None,
     batch_size: int = 64,
     val_split: float = 0.1,
@@ -60,6 +60,13 @@ def get_dataloaders(
     seed: int = 42,
 ) -> Tuple[DataLoader, DataLoader, DataLoader, List[str]]:
     """Constructs train, validation, and test DataLoaders for FashionMNIST."""
+    if data_dir is None:
+        from ..utils.helpers import DATA_DIR
+        data_dir = DATA_DIR
+    if split_dir is None:
+        from ..utils.helpers import EDA_DIR
+        split_dir = EDA_DIR
+
     data_dir = Path(data_dir)
     data_dir.mkdir(parents=True, exist_ok=True)
 

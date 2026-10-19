@@ -338,15 +338,18 @@ def verify_pipeline_handoff(
     with open(preproc_path, "r", encoding="utf-8") as f:
         preproc_cfg = json.load(f)
 
-    assert split_meta.get("split_version") == SPLIT_VERSION, "split_version mismatch"
+    meta_split_version = split_meta.get("split_version") or split_meta.get("version")
+    assert meta_split_version == SPLIT_VERSION, f"split_version mismatch: {meta_split_version} != {SPLIT_VERSION}"
     assert preproc_cfg.get("version") == PREPROC_VERSION, "preprocessing version mismatch"
 
     current_mean, _, current_source = _resolve_normalization()
     assert current_source.startswith("artifact:"), "NORMALIZATION_SOURCE must start with artifact:"
     expected_mean = preproc_cfg["normalization"]["mean"][0]
     assert round(current_mean[0], 4) == round(expected_mean, 4), f"Mean mismatch: {current_mean[0]} != {expected_mean}"
-    assert len(train_loader.dataset) == split_meta["train_size"], "train_loader size mismatch"
-    assert len(val_loader.dataset) == split_meta["val_size"], "val_loader size mismatch"
+    expected_train_size = split_meta.get("train_size") or split_meta.get("train_count")
+    expected_val_size = split_meta.get("val_size") or split_meta.get("val_count")
+    assert len(train_loader.dataset) == expected_train_size, f"train_loader size mismatch: {len(train_loader.dataset)} != {expected_train_size}"
+    assert len(val_loader.dataset) == expected_val_size, f"val_loader size mismatch: {len(val_loader.dataset)} != {expected_val_size}"
 
     print("[GUARD ASSERT PASSED] Toàn bộ 4 tiêu chí bàn giao EDA đã được xác thực 100%!")
     return True

@@ -59,9 +59,12 @@ def save_split(
     with open(meta_path, "w", encoding="utf-8") as f:
         json.dump({
             "version": "split_v2_stratified",
+            "split_version": "split_v2_stratified",
             "val_split": val_split,
             "seed": seed,
+            "train_size": len(train_idx),
             "train_count": len(train_idx),
+            "val_size": len(val_idx),
             "val_count": len(val_idx),
             "total_count": len(train_idx) + len(val_idx),
         }, f, indent=2)
