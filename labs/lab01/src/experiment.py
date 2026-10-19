@@ -159,6 +159,7 @@ def compare_optimizers_wallclock(
     target_accuracy: float = 87.0,
     device: torch.device = DEVICE,
     seed: int = RANDOM_SEED,
+    use_scheduler: bool = True,
     save_fig_path: Optional[Path] = None,
 ) -> Tuple[pd.DataFrame, nn.Module, str, plt.Figure]:
     """Trains optimizers, tracking Validation Accuracy and Loss progression across epochs.
@@ -179,6 +180,11 @@ def compare_optimizers_wallclock(
         lr = params.get("lr", 0.001)
         momentum = params.get("momentum", 0.9) if opt_name == "SGD" else 0.0
         optimizer = build_optimizer(opt_name, model, learning_rate=lr, momentum=momentum)
+        scheduler = (
+            torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=num_epochs, eta_min=1e-5)
+            if use_scheduler
+            else None
+        )
 
         epoch_times = []
         val_accs = []
@@ -192,6 +198,9 @@ def compare_optimizers_wallclock(
             train_one_epoch(model, train_loader, criterion, optimizer, device)
             ep_duration = time.perf_counter() - ep_start
             epoch_times.append(ep_duration)
+
+            if scheduler is not None:
+                scheduler.step()
 
             val_loss, val_acc, _, _ = evaluate(model, val_loader, criterion, device)
             val_accs.append(val_acc)

@@ -1,0 +1,34 @@
+# Configuration for Lab 01: FashionMNIST Classification
+project:
+  name: "lab01_fashionmnist"
+  seed: 42
+
+dataset:
+  name: "FashionMNIST"
+  num_classes: 10
+  image_size: 28
+  num_channels: 1
+  val_split: 0.1
+  batch_size: 64
+  num_workers: 2
+
+model:
+  architecture: "mlp"
+  hidden_dims: [512, 256, 128]
+  dropout: 0.0
+
+training:
+  epochs: 10
+  optimizer: "Adam"
+  learning_rate: 0.001
+  weight_decay: 0.0
+  scheduler: "cosine"
+  target_accuracy: 87.0
+
+paths:
+  data_dir: "data"
+  outputs_dir: "outputs"
+  checkpoints_dir: "outputs/checkpoints"
+  logs_dir: "outputs/logs"
+  predictions_dir: "outputs/predictions"
+  eda_dir: "outputs/eda"

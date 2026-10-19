@@ -34,3 +34,7 @@ pytest==9.1.1
 # Declared explicitly: tests/test_pipeline.py imports packaging to evaluate
 # the Requires-Python specifiers of the pinned libraries (test_13).
 packaging==26.3
+
+# Configuration parsing
+pyyaml==6.0.3
+

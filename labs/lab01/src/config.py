@@ -18,11 +18,15 @@ else:
 DATA_DIR = BASE_DIR / "data"
 OUTPUTS_DIR = BASE_DIR / "outputs"
 CHECKPOINTS_DIR = OUTPUTS_DIR / "checkpoints"
+LOGS_DIR = OUTPUTS_DIR / "logs"
+PREDICTIONS_DIR = OUTPUTS_DIR / "predictions"
 EDA_DIR = OUTPUTS_DIR / "eda"
 
 # Ensure output directories exist
 OUTPUTS_DIR.mkdir(parents=True, exist_ok=True)
 CHECKPOINTS_DIR.mkdir(parents=True, exist_ok=True)
+LOGS_DIR.mkdir(parents=True, exist_ok=True)
+PREDICTIONS_DIR.mkdir(parents=True, exist_ok=True)
 EDA_DIR.mkdir(parents=True, exist_ok=True)
 
 # Device Configuration
