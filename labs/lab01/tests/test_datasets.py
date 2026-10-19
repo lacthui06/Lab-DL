@@ -19,12 +19,63 @@ from src.datasets.eda import (
     class_similarity_matrix,
     most_similar_pairs,
     spatial_features,
+    compute_handcrafted_features,
     FOREGROUND_THRESHOLD,
     get_structural_overview,
     check_data_integrity,
     verify_pipeline_handoff,
 )
 from src.utils.plots import unnormalize
+
+
+def test_spatial_provenance_and_disconnected_foreground():
+    images = np.zeros((2, 6, 7), dtype=np.uint8)
+    images[0, 1, 2] = 255
+    images[0, 4, 5] = 255
+    result = spatial_features(
+        images, np.array([0, 0]), ["item"],
+        original_indices=np.array([125, 830]), split="train",
+    )
+    assert result.original_index.tolist() == [125, 830]
+    assert result.split.tolist() == ["train", "train"]
+    first, empty = result.iloc[0], result.iloc[1]
+    assert first.bbox_height == 4 and first.bbox_width == 4
+    assert first.bbox_area_ratio == pytest.approx(16 / 42)
+    assert first.bbox_aspect_ratio == 1.0
+    assert first.foreground_ratio == pytest.approx(2 / 42)
+    assert not first.empty_foreground
+    assert empty.bbox_height == 0 and empty.bbox_width == 0
+    assert empty.bbox_area_ratio == 0 and np.isnan(empty.bbox_aspect_ratio)
+    assert empty.empty_foreground
+
+
+def test_handcrafted_uses_enclosing_bounding_box():
+    images = np.zeros((1, 6, 7), dtype=np.uint8)
+    images[0, 1, 2] = 255
+    images[0, 4, 5] = 255
+    result = compute_handcrafted_features(images, np.array([0]), ["item"]).iloc[0]
+    assert result.bbox_height_mean == 4 and result.bbox_width_mean == 4
+    assert result.bbox_area_ratio_mean == pytest.approx(round(16 / 42, 4))
+
+
+def test_spatial_single_pixel_and_asymmetric_box():
+    images = np.zeros((2, 6, 7), dtype=np.uint8)
+    images[0, 3, 4] = 255
+    images[1, 1, 1] = 255
+    images[1, 3, 5] = 255
+    result = spatial_features(images, np.array([0, 0]), ["item"],
+                              original_indices=[5, 9], split="val")
+    assert result.bbox_height.tolist() == [1, 3]
+    assert result.bbox_width.tolist() == [1, 5]
+    assert result.bbox_aspect_ratio.tolist() == pytest.approx([1, 5 / 3])
+
+
+@pytest.mark.parametrize("indices,split", [([1], "train"), ([-1, 2], "train"),
+                         ([1.5, 2], "train"), ([1, 1], "train"), ([1, 2], "unassigned")])
+def test_spatial_rejects_invalid_provenance(indices, split):
+    with pytest.raises(ValueError):
+        spatial_features(np.zeros((2, 3, 3), dtype=np.uint8), np.array([0, 0]),
+                         ["item"], original_indices=np.array(indices), split=split)
 
 
 @pytest.fixture(scope="module")
