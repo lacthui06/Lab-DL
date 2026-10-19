@@ -1,6 +1,7 @@
 """Training engine and Trainer class with scheduler support."""
 
 from pathlib import Path
+import time
 from typing import Dict, List, Optional, Tuple
 import torch
 import torch.nn as nn
@@ -107,8 +108,10 @@ class Trainer:
         best_val_acc = 0.0
 
         for ep in range(1, epochs + 1):
+            ep_start = time.perf_counter()
             train_loss, train_acc = self.train_one_epoch(train_loader)
             val_loss, val_acc, _, _ = self.evaluate(val_loader)
+            ep_duration = time.perf_counter() - ep_start
 
             if self.scheduler is not None:
                 self.scheduler.step()
@@ -125,7 +128,7 @@ class Trainer:
 
             if verbose and self.optimizer is not None:
                 lr_curr = self.optimizer.param_groups[0]["lr"]
-                print(f"Epoch {ep:02d}/{epochs:02d} | Train Loss: {train_loss:.4f} - Acc: {train_acc:.2f}% | Val Loss: {val_loss:.4f} - Acc: {val_acc:.2f}% | LR: {lr_curr:.6f}")
+                print(f"Epoch {ep:02d}/{epochs:02d} ({ep_duration:.2f}s) | Train Loss: {train_loss:.4f} - Acc: {train_acc:.2f}% | Val Loss: {val_loss:.4f} - Acc: {val_acc:.2f}% | LR: {lr_curr:.6f}")
 
         return history
 
