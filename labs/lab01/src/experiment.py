@@ -21,8 +21,8 @@ from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_sc
 from torch.utils.data import DataLoader
 
 from .config import CLASS_NAMES, DEVICE, RANDOM_SEED
-from .engine import build_optimizer, evaluate, train_one_epoch
-from .model import build_model
+from .training import build_optimizer, evaluate, train_one_epoch
+from .models import build_model
 from .utils import set_seed
 
 

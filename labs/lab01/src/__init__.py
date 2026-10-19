@@ -14,24 +14,23 @@ from .config import (
     FASHION_MNIST_STD,
     NORMALIZATION_SOURCE,
 )
-from .dataset import (
+from .datasets import (
     get_transforms,
     get_dataloaders,
     TransformedSubset,
 )
-from .model import (
+from .models import (
     FashionMLP,
     build_model,
     count_parameters,
 )
-from .engine import (
+from .training import (
+    Trainer,
     build_optimizer,
     train_one_epoch,
     evaluate,
     train_model,
     sanity_overfit_check,
-    compute_tpr_fpr,
-    build_per_class_metrics,
 )
 from .utils import (
     set_seed,
@@ -42,6 +41,8 @@ from .utils import (
     plot_prediction_grid,
     plot_confusion_matrix,
     unnormalize,
+    compute_tpr_fpr,
+    build_per_class_metrics,
 )
 from .eda import (
     load_raw_arrays,

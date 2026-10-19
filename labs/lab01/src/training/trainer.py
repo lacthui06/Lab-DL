@@ -170,3 +170,53 @@ def sanity_overfit_check(
 
     passed = (final_loss < 0.15) and (final_acc >= 90.0)
     return passed, final_loss, final_acc
+
+
+def train_one_epoch(
+    model: nn.Module,
+    dataloader: DataLoader,
+    criterion: nn.Module,
+    optimizer: torch.optim.Optimizer,
+    device: torch.device,
+) -> Tuple[float, float]:
+    """Module-level function wrapping Trainer.train_one_epoch."""
+    trainer = Trainer(model, criterion, optimizer, device)
+    return trainer.train_one_epoch(dataloader)
+
+
+def evaluate(
+    model: nn.Module,
+    dataloader: DataLoader,
+    criterion: nn.Module,
+    device: torch.device,
+) -> Tuple[float, float, List[int], List[int]]:
+    """Module-level function wrapping Trainer.evaluate."""
+    trainer = Trainer(model, criterion, None, device)
+    return trainer.evaluate(dataloader)
+
+
+def train_model(
+    model: nn.Module,
+    train_loader: DataLoader,
+    val_loader: DataLoader,
+    criterion: nn.Module,
+    optimizer: torch.optim.Optimizer,
+    scheduler: Optional[torch.optim.lr_scheduler.LRScheduler] = None,
+    num_epochs: int = 10,
+    device: Optional[torch.device] = None,
+    save_path: Optional[Path] = None,
+    verbose: bool = True,
+) -> Tuple[Dict[str, List[float]], float]:
+    """Module-level function wrapping Trainer.fit."""
+    if device is None:
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    trainer = Trainer(model, criterion, optimizer, device, scheduler=scheduler)
+    history = trainer.fit(
+        train_loader=train_loader,
+        val_loader=val_loader,
+        epochs=num_epochs,
+        checkpoint_path=save_path,
+        verbose=verbose,
+    )
+    best_val_acc = max(history["val_acc"]) if history["val_acc"] else 0.0
+    return history, best_val_acc

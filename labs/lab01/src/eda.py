@@ -22,7 +22,7 @@ from .config import (
     CLASS_NAMES,
     _resolve_normalization,
 )
-from .split import make_stratified_split, save_split, load_split
+from .datasets.base import make_stratified_split, save_split, load_split
 
 # A pixel is treated as foreground above this intensity (on the [0, 1] scale).
 # 0.1 (about 26/255) keeps clearly visible garment pixels while discarding near-black background noise.
