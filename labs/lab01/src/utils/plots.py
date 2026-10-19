@@ -15,14 +15,12 @@ from torch.utils.data import DataLoader
 from .helpers import FASHION_MNIST_MEAN, FASHION_MNIST_STD
 
 
-def _save_fig(fig: plt.Figure, save_path: Optional[Path], extra_path: Optional[Path] = None) -> None:
-    """Helper to save a figure safely to primary and optional secondary paths."""
+def _save_fig(fig: plt.Figure, save_path: Optional[Path]) -> None:
+    """Helper to save a figure safely to target path."""
     if save_path:
         p = Path(save_path)
         p.parent.mkdir(parents=True, exist_ok=True)
         fig.savefig(str(p), dpi=200, bbox_inches="tight")
-        if extra_path and extra_path.parent.exists():
-            fig.savefig(str(extra_path), dpi=200, bbox_inches="tight")
 
 
 def unnormalize(
@@ -59,7 +57,6 @@ def plot_eda_figures(
 ) -> Dict[str, plt.Figure]:
     """Generates standardized visual inspection plots for EDA."""
     s_dir = Path(save_dir) if save_dir else None
-    out_root = s_dir.parent.parent if s_dir and s_dir.name == "figures" and s_dir.parent.name == "eda" else None
     figs = {}
 
     # 1. Sample Images Grid (10 classes x 2 samples)
@@ -75,7 +72,7 @@ def plot_eda_figures(
                 ax.set_title(name, fontsize=8.5, fontweight="bold")
     f_samples.suptitle("FashionMNIST: Ảnh Mẫu Đại Diện 10 Lớp Trang Phục", fontsize=12, fontweight="bold", y=1.02)
     f_samples.tight_layout()
-    _save_fig(f_samples, s_dir / "sample_images.png" if s_dir else None, out_root / "eda_sample_images.png" if out_root else None)
+    _save_fig(f_samples, s_dir / "sample_images.png" if s_dir else None)
     figs["samples"] = f_samples
 
     # 2. Class Mean Images
@@ -87,7 +84,7 @@ def plot_eda_figures(
         axes[c_idx].set_title(name, fontsize=8.5, fontweight="bold")
     f_means.suptitle("FashionMNIST: Ảnh Trung Bình Pixel Từng Lớp", fontsize=12, fontweight="bold", y=1.05)
     f_means.tight_layout()
-    _save_fig(f_means, s_dir / "class_mean_images.png" if s_dir else None, out_root / "eda_class_mean_images.png" if out_root else None)
+    _save_fig(f_means, s_dir / "class_mean_images.png" if s_dir else None)
     figs["means"] = f_means
 
     # 3. Class Distribution Bar Chart
@@ -105,7 +102,7 @@ def plot_eda_figures(
     ax.legend()
     ax.grid(True, linestyle="--", alpha=0.4)
     f_dist.tight_layout()
-    _save_fig(f_dist, s_dir / "class_distribution.png" if s_dir else None, out_root / "eda_class_distribution.png" if out_root else None)
+    _save_fig(f_dist, s_dir / "class_distribution.png" if s_dir else None)
     figs["distribution"] = f_dist
 
     return figs
@@ -301,34 +298,3 @@ def plot_roc_curves_fig(
     fig.tight_layout()
     _save_fig(fig, save_fig_path)
     return roc_auc, fig
-
-
-def plot_threshold_scan_fig(
-    thresholds: np.ndarray,
-    precisions: List[float],
-    recalls: List[float],
-    f1_scores: List[float],
-    accuracies: List[float],
-    best_t: float,
-    best_f1: float,
-    title: str = "Đồ thị quét ngưỡng phân loại (Decision Threshold Scan)",
-    save_fig_path: Optional[Path] = None,
-) -> plt.Figure:
-    """Plots 4-curve trade-off for decision threshold scanning."""
-    fig, ax = plt.subplots(figsize=(10, 5.5))
-    ax.plot(thresholds, precisions, label="Precision", color="#1f77b4", lw=2)
-    ax.plot(thresholds, recalls, label="Recall", color="#2ca02c", lw=2)
-    ax.plot(thresholds, f1_scores, label="F1-Score", color="#ff7f0e", lw=2.5)
-    ax.plot(thresholds, accuracies, label="Accuracy", color="#9467bd", linestyle="--", lw=1.8)
-
-    ax.axvline(best_t, color="red", linestyle=":", lw=2, label=f"Ngưỡng F1 tối ưu = {best_t:.2f} (F1={best_f1:.2f})")
-    ax.set_title(title, fontsize=12, fontweight="bold")
-    ax.set_xlabel("Ngưỡng phân loại (Threshold)")
-    ax.set_ylabel("Giá trị chỉ số")
-    ax.set_ylim(-0.02, 1.05)
-    ax.grid(True, linestyle="--", alpha=0.4)
-    ax.legend(loc="lower left", fontsize=9)
-
-    fig.tight_layout()
-    _save_fig(fig, save_fig_path)
-    return fig

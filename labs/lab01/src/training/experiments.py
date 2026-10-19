@@ -1,4 +1,4 @@
-"""Experiment runner module for Lab 01: Optuna tuning, optimizer comparison, ROC curves, and threshold scanning."""
+"""Experiment runner module for Lab 01: Optuna tuning, optimizer comparison, and ROC curves."""
 
 import time
 from pathlib import Path
@@ -9,16 +9,11 @@ import numpy as np
 import pandas as pd
 import torch
 import torch.nn as nn
-from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score
 from torch.utils.data import DataLoader
 
 from ..models import build_model
 from ..utils.helpers import CLASS_NAMES, DEVICE, RANDOM_SEED, load_yaml_config, set_seed
-from ..utils.plots import (
-    plot_optimizer_comparison,
-    plot_roc_curves_fig,
-    plot_threshold_scan_fig,
-)
+from ..utils.plots import plot_optimizer_comparison, plot_roc_curves_fig
 from .trainer import build_optimizer, evaluate, train_one_epoch
 
 
@@ -232,58 +227,3 @@ def plot_roc_curves(
         print(f"  Lớp {c_name:12s}: AUC = {roc_auc.get(c_name, 0.0):.4f}")
 
     return roc_auc, fig
-
-
-def run_threshold_scan(
-    y_true_binary: Optional[np.ndarray] = None,
-    y_probs_positive: Optional[np.ndarray] = None,
-    model: Optional[nn.Module] = None,
-    dataloader: Optional[DataLoader] = None,
-    positive_class_idx: int = 0,
-    device: torch.device = DEVICE,
-    num_thresholds: int = 100,
-    step_display: float = 0.05,
-    title: str = "Đồ thị quét ngưỡng phân loại (Decision Threshold Scan)",
-    save_fig_path: Optional[Path] = None,
-) -> Tuple[float, float, pd.DataFrame, plt.Figure]:
-    """Sweeps thresholds on binary probability predictions, plots trade-offs, and prints tracking table."""
-    if model is not None and dataloader is not None:
-        y_probs, y_true = predict_proba(model, dataloader, device)
-        y_probs_positive = y_probs[:, positive_class_idx]
-        y_true_binary = (y_true == positive_class_idx).astype(int)
-
-    if y_true_binary is None or y_probs_positive is None:
-        raise ValueError("Yêu cầu cung cấp (y_true_binary, y_probs_positive) hoặc (model, dataloader).")
-
-    thresholds = np.linspace(0.0, 1.0, num_thresholds)
-    precisions, recalls, f1_scores, accuracies = [], [], [], []
-
-    for t in thresholds:
-        y_pred_t = (y_probs_positive >= t).astype(int)
-        precisions.append(precision_score(y_true_binary, y_pred_t, pos_label=1, zero_division=0))
-        recalls.append(recall_score(y_true_binary, y_pred_t, pos_label=1, zero_division=0))
-        f1_scores.append(f1_score(y_true_binary, y_pred_t, pos_label=1, zero_division=0))
-        accuracies.append(accuracy_score(y_true_binary, y_pred_t))
-
-    best_idx = int(np.argmax(f1_scores))
-    best_t, best_f1 = float(thresholds[best_idx]), float(f1_scores[best_idx])
-
-    fig = plot_threshold_scan_fig(thresholds, precisions, recalls, f1_scores, accuracies, best_t, best_f1, title, save_fig_path)
-
-    display_rows = []
-    for t_step in np.arange(0.0, 1.01, step_display):
-        closest_idx = int(np.argmin(np.abs(thresholds - t_step)))
-        display_rows.append({
-            "Threshold": f"{thresholds[closest_idx]:.4f}",
-            "Precision": f"{precisions[closest_idx]:.4f}",
-            "Recall": f"{recalls[closest_idx]:.4f}",
-            "F1-Score": f"{f1_scores[closest_idx]:.4f}",
-            "Accuracy": f"{accuracies[closest_idx]:.4f}",
-            "Optimal": "*" if closest_idx == best_idx else "",
-        })
-
-    tracking_df = pd.DataFrame(display_rows)
-    print(f"\n--- KẾT QUẢ QUÉT NGƯỠNG TỐI ƯU ---\nNgưỡng tối ưu theo F1-Score: {best_t:.4f} (F1 = {best_f1:.4f})")
-    print(tracking_df.to_string(index=False))
-
-    return best_t, best_f1, tracking_df, fig

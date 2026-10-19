@@ -35,7 +35,6 @@ from .training import (
     plot_roc_curves,
     predict_proba,
     run_optuna_optimizer_study,
-    run_threshold_scan,
     sanity_overfit_check,
     train_model,
     train_one_epoch,
@@ -75,7 +74,6 @@ from .utils import (
     plot_optimizer_comparison,
     plot_prediction_grid,
     plot_roc_curves_fig,
-    plot_threshold_scan_fig,
     save_checkpoint,
     set_seed,
     unnormalize,
@@ -141,7 +139,6 @@ __all__ = [
     "predict_proba",
     "run_optuna_optimizer_study",
     "compare_optimizers_wallclock",
-    "run_threshold_scan",
     "plot_roc_curves",
     # Utils & Metrics & Plots
     "set_seed",
@@ -158,5 +155,4 @@ __all__ = [
     "plot_eda_figures",
     "plot_optimizer_comparison",
     "plot_roc_curves_fig",
-    "plot_threshold_scan_fig",
 ]

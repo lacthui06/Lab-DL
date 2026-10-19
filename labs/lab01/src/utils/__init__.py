@@ -41,7 +41,6 @@ from .plots import (
     plot_optimizer_comparison,
     plot_prediction_grid,
     plot_roc_curves_fig,
-    plot_threshold_scan_fig,
     unnormalize,
 )
 
@@ -86,5 +85,4 @@ __all__ = [
     "plot_eda_figures",
     "plot_optimizer_comparison",
     "plot_roc_curves_fig",
-    "plot_threshold_scan_fig",
 ]

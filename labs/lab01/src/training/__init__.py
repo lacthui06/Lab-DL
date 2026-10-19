@@ -5,7 +5,6 @@ from .experiments import (
     plot_roc_curves,
     predict_proba,
     run_optuna_optimizer_study,
-    run_threshold_scan,
 )
 from .trainer import (
     Trainer,
@@ -29,5 +28,4 @@ __all__ = [
     "run_optuna_optimizer_study",
     "compare_optimizers_wallclock",
     "plot_roc_curves",
-    "run_threshold_scan",
 ]

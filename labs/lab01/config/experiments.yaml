@@ -33,8 +33,3 @@ comparison:
     Adam:
       lr: 0.001
       momentum: 0.0
-
-threshold_scan:
-  num_thresholds: 100
-  step_display: 0.05
-  positive_class_idx: 0
