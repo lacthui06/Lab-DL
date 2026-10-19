@@ -14,31 +14,34 @@ labs/lab01/
 │   └── experiments.yaml                # Cấu hình không gian tìm kiếm Optuna và so sánh Optimizer
 ├── data/                               # Dữ liệu thô FashionMNIST (tự động tải qua torchvision)
 ├── outputs/                            # Artifacts sinh ra từ các pipeline
-│   ├── checkpoints/                    # Trọng số mô hình tốt nhất (fashion_mlp_best.pt)
-│   ├── logs/                           # training_history.json, environment_snapshot.json
+│   ├── checkpoints/                    # Trọng số mô hình tốt nhất (fashion_mlp_best.pt, fashion_mlp_final.pt)
+│   ├── logs/                           # training_history.json, environment_snapshot.json, optimizer_study_results.json
 │   ├── predictions/                    # Đồ thị đánh giá: learning_curves.png, confusion_matrix.png,
-│   │                                   # roc_curves.png, threshold_scan.png, prediction_grid.png
-│   └── eda/                            # Artifacts chuẩn hóa (split_indices.npz, preprocessing_config.json)
-│       └── figures/                    # 3 biểu đồ EDA: sample_images, class_mean_images, class_distribution
+│   │                                   # roc_curves.png, optimizer_comparison.png, optimizer_fixed_lr_comparison.png,
+│   │                                   # prediction_grid.png, test_prediction_grid.png
+│   └── eda/                            # Artifacts chuẩn hóa (split_indices.npz, split_metadata.json, preprocessing_config.json)
+│       ├── tables/                     # 7 bảng thống kê CSV (overview, integrity, distribution, pixel_stats, spatial, handcrafted, similarity)
+│       └── figures/                    # 7 biểu đồ EDA (sample_images, class_mean_images, class_distribution, pixel_histogram,
+│                                       # mean_pixel_heatmap, pixel_variance_heatmap, class_similarity_heatmap)
 ├── src/                                # Gói thư viện lõi (Core Python Package)
-│   ├── __init__.py                     # Re-export API hợp nhất, tương thích ngược 100%
+│   ├── __init__.py                     # Re-export API hợp nhất
 │   ├── datasets/                       # Quản lý dữ liệu và tiền xử lý
 │   │   ├── __init__.py
 │   │   ├── base.py                     # TransformedSubset và phân chia Stratified Split
-│   │   ├── classification.py           # Dataset, Transforms pipeline và DataLoader factory
-│   │   └── eda.py                      # Đo đạc thống kê, quét dữ liệu hỏng, khóa artifact EDA
+│   │   ├── classification.py           # Dataset, Transforms pipeline (kết nối augmentations.yaml) và DataLoader factory
+│   │   └── eda.py                      # Đầy đủ 9 bước Core EDA & Feature Engineering, khóa artifact chuẩn hóa
 │   ├── models/                         # Thiết kế kiến trúc mạng nơ-ron
 │   │   ├── __init__.py
-│   │   └── mlp.py                      # Mô hình FashionMLP (3 hidden layers, Dropout, BatchNorm)
+│   │   └── mlp.py                      # Mô hình FashionMLP thuần PyTorch (Flatten -> 256 -> 128 -> 10, 235,146 tham số)
 │   ├── training/                       # Động cơ huấn luyện và tối ưu hóa
 │   │   ├── __init__.py
 │   │   ├── trainer.py                  # Class Trainer, train loop, evaluate, 1-batch sanity check
-│   │   └── experiments.py              # Optuna study, so sánh 3 optimizer, ROC-AUC, threshold sweep
+│   │   └── experiments.py              # Optuna study, so sánh 3 optimizer (Fixed LR vs Optuna), đa lớp OvR ROC-AUC
 │   └── utils/                          # Công cụ bổ trợ
 │       ├── __init__.py
-│       ├── helpers.py                  # Định tuyến đường dẫn động, device CUDA/CPU, seed, checkpoint
+│       ├── helpers.py                  # Định tuyến đường dẫn động, device CUDA/CPU, seed, đọc chuẩn hóa, checkpoint
 │       ├── metrics.py                  # Tính TPR, FPR, F1-Score, Precision, Recall theo từng lớp
-│       `── plots.py                    # Module visualization duy nhất cho toàn bộ biểu đồ
+│       └── plots.py                    # Module visualization duy nhất cho toàn bộ biểu đồ EDA và đánh giá
 ├── scripts/                            # Điểm thực thi dòng lệnh (CLI Entry Points)
 │   ├── train.py                        # Huấn luyện mô hình từ terminal
 │   ├── eval.py                         # Đánh giá checkpoint mô hình trên tập test
@@ -48,7 +51,7 @@ labs/lab01/
 │   ├── test_models.py                  # Kiểm tra số lượng tham số và tensor output shape
 │   └── test_training.py                # Kiểm tra 1-batch sanity overfit, checkpoint roundtrip, metric
 ├── notebooks/
-│   └── lab01.ipynb                     # Sổ tay tương tác hoàn chỉnh từ EDA đến xuất báo cáo
+│   └── lab01.ipynb                     # Sổ tay tương tác hoàn chỉnh 10 bước từ EDA đến kiểm chứng Test & đóng gói
 ├── requirements.txt                    # Danh sách các thư viện phụ thuộc đã kiểm chứng
 └── README.md                           # Tài liệu hướng dẫn sử dụng này
 ```
@@ -57,10 +60,11 @@ labs/lab01/
 
 ## 2. Điểm Nhấn Kiến Trúc & Lý Thuyết
 
-- **Chống rò rỉ dữ liệu (Anti-leakage):** Thống kê chuẩn hóa (`mean = 0.286209`, `std = 0.353160`) được đo đạc nghiêm ngặt độc quyền trên tập Train thông qua phân chia Stratified Split cố định (`seed=42`), sau đó khóa cứng vào `outputs/eda/preprocessing_config.json`.
-- **Tập trung hóa trực quan (Centralized Visualization):** Toàn bộ mã nguồn vẽ đồ họa `matplotlib` và `seaborn` (từ 3 hình ảnh EDA, learning curves, ma trận nhầm lẫn đến đường cong ROC và Threshold sweep) được gom duy nhất vào `src/utils/plots.py`.
-- **Nguyên tắc thuần túy cho RMSprop:** Giữ nguyên `momentum=0.0` để bảo toàn bản chất lý thuyết tách biệt với Adam. Đường cong hội tụ được làm mượt hoàn hảo thông qua bộ lập lịch `CosineAnnealingLR`.
-- **Cổng kiểm soát 1-Batch Sanity Overfit:** Mô hình bắt buộc phải overfit 1 mini-batch (8 mẫu) kéo loss về sát 0 trước khi huấn luyện dài hạn.
+- **Chống rò rỉ dữ liệu & Không dùng số liệu giả (Zero Fake Stats):** Thống kê chuẩn hóa (`mean = 0.286209`, `std = 0.353160`) được đo đạc nghiêm ngặt độc quyền trên tập Train (54,000 mẫu) thông qua phân chia Stratified Split cố định (`seed=42`), khóa cứng vào `outputs/eda/preprocessing_config.json` và được nạp qua một hàm hợp nhất duy nhất `resolve_normalization_stats()`.
+- **Kết nối cấu hình Augmentation động:** Hàm `get_transforms(augment=True)` tự động đọc quy tắc tăng cường ảnh từ `config/augmentations.yaml` (`random_horizontal_flip`, `random_rotation`, `random_crop`) mà không cần sửa code trong `src/`.
+- **Tập trung hóa trực quan (Centralized Visualization):** Toàn bộ mã nguồn vẽ đồ họa `matplotlib` và `seaborn` (từ 7 biểu đồ EDA, learning curves, ma trận nhầm lẫn, lưới dự đoán đến đường cong ROC đa lớp) được gom duy nhất vào `src/utils/plots.py`.
+- **Nguyên tắc thuần túy cho RMSprop:** Giữ nguyên `momentum=0.0` để bảo toàn bản chất lý thuyết tách biệt với Adam. Đường cong hội tụ được làm mượt thông qua bộ lập lịch `CosineAnnealingLR`.
+- **Cổng kiểm soát 1-Batch Sanity Overfit:** Mô hình bắt buộc phải overfit 1 mini-batch (8 mẫu) kéo loss về sát 0 (`0.0005 < 0.15`) trước khi huấn luyện chính thức.
 
 ---
 
@@ -82,7 +86,7 @@ python scripts/infer.py --sample_idx 0
 ### Cách 2: Sử Dụng Jupyter Notebook
 
 Mở và chạy toàn bộ sổ tay tương tác tại [`notebooks/lab01.ipynb`](file:///c:/Users/Win%2011/Documents/Lab%20DL/labs/lab01/notebooks/lab01.ipynb):
-- Chạy 8 bước tuần tự: EDA dữ liệu thô -> Phân chia Stratified Split -> Kiểm tra 1-Batch Sanity -> Huấn luyện mô hình -> So sánh 3 Optimizer (SGD, RMSprop, Adam) với Optuna -> Đánh giá đa chiều (ROC-AUC, Threshold sweep) -> Xuất gói bàn giao `all_outputs.zip`.
+- Chạy 10 bước tuần tự: Thiết lập môi trường -> Đầy đủ 9 bước EDA & Khóa cấu hình FE (7 bảng CSV & 7 biểu đồ PNG) -> Nạp DataLoaders & Guard Assert -> Khởi tạo FashionMLP & Kiểm tra 1-Batch Sanity -> Huấn luyện mô hình 10 epochs -> Đánh giá & Ma trận nhầm lẫn -> So sánh 3 Optimizer (Cùng LR 1e-3 vs Optuna) -> Khảo sát ROC-AUC đa lớp (One-vs-Rest) -> Lưu Checkpoint -> Tải lại mô hình kiểm chứng trên 10,000 ảnh Test (`test_prediction_grid.png`) & Đóng gói `all_outputs.zip`.
 
 ---
 
@@ -96,7 +100,7 @@ $env:MPLBACKEND="Agg"; pytest tests/ -v
 
 Kết quả mong đợi:
 ```text
-============================= 22 passed in ~25s =============================
+============================= 22 passed =============================
 ```
 
 ---
@@ -105,8 +109,9 @@ Kết quả mong đợi:
 
 | Chỉ số đánh giá | Kết quả đạt được | Ngưỡng yêu cầu | Trạng thái |
 |---|:---:|:---:|:---:|
-| **Test Accuracy** | **88.62%** | >= 87.00% | ĐẠT |
-| **Macro F1-Score** | **0.8851** | >= 0.8500 | ĐẠT |
-| **Macro ROC-AUC** | **0.9912** | >= 0.9500 | ĐẠT |
-| **1-Batch Sanity Overfit Loss** | **< 0.05** | < 0.15 | ĐẠT |
-| **Số lượng tham số mô hình** | **232,714** | < 500,000 | TỐI ƯU |
+| **Validation Accuracy (Best)** | **90.92%** | >= 87.00% | ĐẠT |
+| **Test Accuracy (10,000 ảnh)** | **89.30%** | >= 87.00% | ĐẠT |
+| **Macro F1-Score (Validation)** | **0.9085** | >= 0.8500 | ĐẠT |
+| **Macro ROC-AUC (One-vs-Rest)** | **0.9943** | >= 0.9500 | ĐẠT |
+| **1-Batch Sanity Overfit Loss** | **0.0005** | < 0.15 | ĐẠT |
+| **Số lượng tham số mô hình** | **235,146** | < 500,000 | TỐI ƯU |

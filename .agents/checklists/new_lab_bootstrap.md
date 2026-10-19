@@ -6,9 +6,9 @@ Danh sách kiểm tra khi bắt đầu một lab mới, đảm bảo mọi lab t
 
 ## 1. Khung thư mục (Directory Scaffold)
 - [ ] Tạo thư mục `labs/lab0X/` theo đúng cấu trúc chuẩn.
-- [ ] Tạo các thư mục con: `notebooks/`, `src/`, `tests/`, `data/`, `outputs/`.
+- [ ] Tạo các thư mục con: `config/`, `notebooks/`, `src/`, `scripts/`, `tests/`, `data/`, `outputs/`.
 - [ ] Thêm file `.gitkeep` vào `data/`, `notebooks/`, `outputs/` để giữ cấu trúc trên Git.
-- [ ] Tạo thư mục `outputs/checkpoints/` cho trọng số mô hình.
+- [ ] Tạo các thư mục con trong `outputs/`: `checkpoints/`, `logs/`, `predictions/`, `eda/tables/`, `eda/figures/`.
 
 ## 2. Tài liệu (Documentation)
 - [ ] Tạo `walkthrough_lab_0X.md` từ template `walkthrough_template.md`.
@@ -18,14 +18,14 @@ Danh sách kiểm tra khi bắt đầu một lab mới, đảm bảo mọi lab t
 - [ ] Điền Section 1 (Spec) trước khi viết bất kỳ dòng code nào.
 - [ ] Không tạo file `SPEC.md` hay `REPORT.md` riêng lẻ.
 
-## 3. Module source (Source Modules)
-- [ ] Tạo `src/__init__.py`.
-- [ ] Tạo `src/config.py` cho hằng số, đường dẫn, hyperparameter tập trung.
-- [ ] Tạo `src/dataset.py`, `src/model.py`, `src/engine.py`, `src/utils.py` theo nhu cầu.
-- [ ] Đảm bảo mọi module có type hint và docstring mô tả shape tensor.
+## 3. Module source (Source Modules & Configs)
+- [ ] Tạo các file cấu hình YAML trong `config/` (`config.yaml`, `augmentations.yaml`, `experiments.yaml`).
+- [ ] Tạo `src/__init__.py` và 4 phân hệ chuẩn: `src/datasets/` (`base.py`, `classification.py`, `eda.py`), `src/models/`, `src/training/` (`trainer.py`, `experiments.py`), `src/utils/` (`helpers.py`, `metrics.py`, `plots.py`).
+- [ ] Tạo các script dòng lệnh trong `scripts/` (`train.py`, `eval.py`, `infer.py`).
+- [ ] Đảm bảo mọi module có type hint và docstring mô tả shape tensor, không dùng hằng số thống kê giả lập (phải đọc từ artifact EDA).
 
 ## 4. Kiểm thử (Testing)
-- [ ] Tạo `tests/test_pipeline.py` với 5 bài test TDD bắt buộc.
+- [ ] Tạo bộ test TDD trong `tests/` (`test_datasets.py`, `test_models.py`, `test_training.py`).
 - [ ] Chạy `pytest` và xác nhận tất cả pass trước khi viết thêm code.
 - [ ] Xác nhận bài test 1-batch sanity overfit hoạt động.
 

@@ -68,8 +68,8 @@ Thumbs.db
 # Ngoại lệ: bảng EDA nhỏ là bằng chứng cho các con số trong walkthrough.
 # spatial_features.csv (5.5 MB, một dòng mỗi ảnh) được tái tạo từ notebook nên
 # vẫn nằm ngoài Git; whitelist ở đây chỉ áp dụng cho bảng tổng hợp.
-!labs/lab01/outputs/eda/tables/*.csv
-labs/lab01/outputs/eda/tables/spatial_features.csv
+!labs/*/outputs/eda/tables/*.csv
+labs/*/outputs/eda/tables/spatial_features.csv
 
 # Model checkpoints & weights (trọng số mô hình nặng, lưu ở Kaggle/Google Drive)
 *.pt

@@ -3,7 +3,7 @@
 > **Lab Title:** Lab 0X — <tên bài lab>
 > **Status:** [ ] In Progress | [ ] Completed
 > **Primary Objective:** <một câu mô tả mục tiêu chính và kết quả đạt được>
-> **Workflow Playbook References:** `docs/dl_flow.md` | `docs/dl_training.md`
+> **Workflow Playbook References:** `docs/dl_flow.md` | `docs/dl_data.md` | `docs/dl_training.md` | `docs/eda.md` | `docs/eda-image.md` | `docs/feature.md` | `docs/feature-image.md`
 > **Unified 3-Rule Standard (Single Living Walkthrough Architecture):**
 > - **Rule 1 (`spec-driven-development`):** Ánh xạ trực tiếp vào **Section 1 — Technical Specification & Flow Design**.
 > - **Rule 2 (`walkthrough-and-experiment-tracking`):** Ánh xạ trực tiếp vào **Section 2 — Full-Flow Experiment Lineage & Changelog**.
@@ -48,7 +48,7 @@ Sơ đồ luồng end-to-end của pipeline, từ nạp dữ liệu tới quyế
 ### 1.6. Execution Environment Constraints
 - **Compute Target:** <local CPU/GPU hoặc Kaggle GPU Tesla T4>
 - **Python Requirement:** <khoảng phiên bản suy ra từ `Requires-Python` của các pin, ví dụ `>=3.12, !=3.14.1`; ghi dạng comment trong `requirements.txt`>
-- **Python Interpreter (verified):** <phiên bản CPython đã chạy thật, ví dụ 3.13.15; ghi lại phiên bản thực tế của mỗi lần chạy vào `outputs/environment_snapshot.json`>
+- **Python Interpreter (verified):** <phiên bản CPython đã chạy thật, ví dụ 3.13.15; ghi lại phiên bản thực tế của mỗi lần chạy vào `outputs/logs/environment_snapshot.json`>
 - **Library Versions:** <PyTorch, Torchvision, NumPy, Scikit-learn cùng phiên bản chính xác>
 - **Filesystem Compatibility:** <đường dẫn input chỉ đọc và working ghi được>
 - **Memory Constraints:** <ngân sách VRAM và cấu hình AMP>

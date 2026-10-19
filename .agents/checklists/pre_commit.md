@@ -12,8 +12,8 @@ Danh sách kiểm tra bắt buộc phải tick đủ trước mỗi lần commit
 
 ## 2. Kỷ luật file nặng (Artifact Hygiene)
 - [ ] Không có checkpoint mô hình (`*.pt`, `*.pth`, `*.ckpt`, `*.onnx`, `*.pkl`) bị commit.
-- [ ] Không có dataset thô (`*.csv`, `*.zip`, `*.parquet`, `*.h5`) bị commit.
-- [ ] Các file trong `outputs/` được commit chỉ là figure (`.png`), báo cáo (`.txt`), và bảng kết quả (`.json`) — không phải trọng số.
+- [ ] Không có dataset thô hoặc bảng dữ liệu nặng (`*.csv`, `*.zip`, `*.parquet`, `*.h5`) bị commit (ngoại trừ các bảng thống kê tổng hợp EDA nhỏ trong `outputs/eda/tables/*.csv` đã được whitelist trong `.gitignore`).
+- [ ] Các file trong `outputs/` được commit chỉ là figure (`.png`), báo cáo (`.txt`), bảng kết quả (`.json`), và bảng tổng hợp EDA nhỏ (`outputs/eda/tables/*.csv`) — không phải trọng số.
 - [ ] `.gitignore` đã bao phủ đúng các loại file nặng mới phát sinh.
 
 ## 3. Toàn vẹn nội dung (Content Integrity)

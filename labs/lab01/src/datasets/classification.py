@@ -7,42 +7,56 @@ from torch.utils.data import DataLoader, Subset
 from torchvision import datasets, transforms
 
 from .base import TransformedSubset, load_split
-
-
-def resolve_normalization_stats(eda_dir: Optional[Path] = None) -> Tuple[Tuple[float], Tuple[float]]:
-    """Loads measured train-set normalization statistics or returns standard fallback."""
-    if eda_dir is not None:
-        cfg_path = Path(eda_dir) / "preprocessing_config.json"
-        if cfg_path.exists():
-            import json
-            with open(cfg_path, "r", encoding="utf-8") as f:
-                data = json.load(f)
-            norm = data.get("normalization", {})
-            return tuple(norm.get("mean", [0.2860])), tuple(norm.get("std", [0.3530]))
-    return (0.2860,), (0.3530,)
+from ..utils.helpers import (
+    AUGMENTATIONS_CONFIG_PATH,
+    CLASS_NAMES,
+    DATA_DIR,
+    EDA_DIR,
+    FASHION_MNIST_MEAN,
+    FASHION_MNIST_STD,
+    IMAGE_SIZE,
+    load_yaml_config,
+    resolve_normalization_stats,
+)
 
 
 def get_transforms(
     augment: bool = False,
-    mean: Optional[Tuple[float]] = None,
-    std: Optional[Tuple[float]] = None,
+    mean: Optional[Tuple[float, ...]] = None,
+    std: Optional[Tuple[float, ...]] = None,
+    aug_config_path: Optional[Path] = None,
 ) -> transforms.Compose:
-    """Builds torchvision transformation pipeline."""
+    """Builds torchvision transformation pipeline connected to config/augmentations.yaml."""
     if mean is None or std is None:
-        try:
-            from ..utils.helpers import FASHION_MNIST_MEAN, FASHION_MNIST_STD
-            mean = FASHION_MNIST_MEAN if mean is None else mean
-            std = FASHION_MNIST_STD if std is None else std
-        except Exception:
-            mean = (0.2860,) if mean is None else mean
-            std = (0.3530,) if std is None else std
+        mean = FASHION_MNIST_MEAN if mean is None else mean
+        std = FASHION_MNIST_STD if std is None else std
 
     t_list = []
     if augment:
-        t_list.extend([
-            transforms.RandomHorizontalFlip(p=0.5),
-            transforms.RandomRotation(degrees=10),
-        ])
+        cfg_path = Path(aug_config_path) if aug_config_path is not None else AUGMENTATIONS_CONFIG_PATH
+        if cfg_path.exists():
+            aug_cfg = load_yaml_config(cfg_path).get("train", {})
+            hflip = aug_cfg.get("random_horizontal_flip", {})
+            if hflip.get("enabled", False):
+                prob = float(hflip.get("p", hflip.get("prob", 0.5)))
+                t_list.append(transforms.RandomHorizontalFlip(p=prob))
+
+            rot = aug_cfg.get("random_rotation", {})
+            if rot.get("enabled", False):
+                degrees = float(rot.get("degrees", 10))
+                t_list.append(transforms.RandomRotation(degrees=degrees))
+
+            crop = aug_cfg.get("random_crop", {})
+            if crop.get("enabled", False):
+                size = int(crop.get("size", IMAGE_SIZE))
+                padding = int(crop.get("padding", 2))
+                t_list.append(transforms.RandomCrop(size=size, padding=padding))
+        else:
+            t_list.extend([
+                transforms.RandomHorizontalFlip(p=0.5),
+                transforms.RandomRotation(degrees=10),
+            ])
+
     t_list.extend([
         transforms.ToTensor(),
         transforms.Normalize(mean, std),
@@ -60,34 +74,18 @@ def get_dataloaders(
     seed: int = 42,
 ) -> Tuple[DataLoader, DataLoader, DataLoader, List[str]]:
     """Constructs train, validation, and test DataLoaders for FashionMNIST."""
-    if data_dir is None:
-        from ..utils.helpers import DATA_DIR
-        data_dir = DATA_DIR
-    if split_dir is None:
-        from ..utils.helpers import EDA_DIR
-        split_dir = EDA_DIR
-
-    data_dir = Path(data_dir)
+    data_dir = Path(data_dir) if data_dir is not None else DATA_DIR
+    split_dir = Path(split_dir) if split_dir is not None else EDA_DIR
     data_dir.mkdir(parents=True, exist_ok=True)
-
-    class_names = [
-        "T-shirt/top", "Trouser", "Pullover", "Dress", "Coat",
-        "Sandal", "Shirt", "Sneaker", "Bag", "Ankle boot",
-    ]
 
     # 1. Download/load raw datasets
     raw_train_val = datasets.FashionMNIST(root=str(data_dir), train=True, download=True, transform=None)
     raw_test = datasets.FashionMNIST(root=str(data_dir), train=False, download=True, transform=None)
 
-    # 2. Resolve split
-    if split_dir is not None and (Path(split_dir) / "split_indices.npz").exists():
-        train_idx, val_idx = load_split(split_dir, expected_pool_size=len(raw_train_val))
-    else:
-        from .base import make_stratified_split
-        targets = [raw_train_val[i][1] for i in range(len(raw_train_val))]
-        train_idx, val_idx = make_stratified_split(targets, val_split=val_split, seed=seed)
+    # 2. Load locked split and measured normalization stats from EDA artifacts
+    train_idx, val_idx = load_split(split_dir, expected_pool_size=len(raw_train_val))
+    mean, std, _ = resolve_normalization_stats(split_dir)
 
-    mean, std = resolve_normalization_stats(split_dir)
     train_transform = get_transforms(augment=augment, mean=mean, std=std)
     eval_transform = get_transforms(augment=False, mean=mean, std=std)
 
@@ -121,4 +119,4 @@ def get_dataloaders(
         drop_last=False,
     )
 
-    return train_loader, val_loader, test_loader, class_names
+    return train_loader, val_loader, test_loader, list(CLASS_NAMES)

@@ -1,14 +1,14 @@
 """Utils package initialization: helpers, metrics, and plots."""
 
 from .helpers import (
+    AUGMENTATIONS_CONFIG_PATH,
     BASE_DIR,
     CHECKPOINTS_DIR,
     CLASS_NAMES,
+    CONFIG_DIR,
     DATA_DIR,
     DEVICE,
     EDA_DIR,
-    FALLBACK_MEAN,
-    FALLBACK_STD,
     FASHION_MNIST_MEAN,
     FASHION_MNIST_STD,
     IMAGE_SIZE,
@@ -27,6 +27,7 @@ from .helpers import (
     collect_environment_snapshot,
     load_checkpoint,
     load_yaml_config,
+    resolve_normalization_stats,
     save_checkpoint,
     set_seed,
 )
@@ -47,6 +48,8 @@ from .plots import (
 __all__ = [
     # Helpers & Paths
     "BASE_DIR",
+    "CONFIG_DIR",
+    "AUGMENTATIONS_CONFIG_PATH",
     "DATA_DIR",
     "OUTPUTS_DIR",
     "CHECKPOINTS_DIR",
@@ -61,9 +64,8 @@ __all__ = [
     "VAL_SPLIT",
     "SPLIT_VERSION",
     "PREPROC_VERSION",
-    "FALLBACK_MEAN",
-    "FALLBACK_STD",
     "PREPROCESSING_CONFIG_PATH",
+    "resolve_normalization_stats",
     "_resolve_normalization",
     "FASHION_MNIST_MEAN",
     "FASHION_MNIST_STD",

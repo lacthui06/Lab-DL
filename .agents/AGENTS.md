@@ -11,6 +11,7 @@ Không bao giờ triển khai hay huấn luyện một kiến trúc phức tạp
 
 ### 1.2. Tham chiếu bắt buộc tới Playbook workflow
 - Tài liệu tham chiếu nền tảng chung: [`docs/eda.md`](../docs/eda.md) (Exploratory Data Analysis) và [`docs/feature.md`](../docs/feature.md) (Feature Engineering).
+- Với bài toán **Computer Vision / Image**: bắt buộc tham chiếu thêm [`docs/eda-image.md`](../docs/eda-image.md) (9 bước Core EDA cho ảnh) và [`docs/feature-image.md`](../docs/feature-image.md) (Feature Engineering & Preprocessing cho ảnh).
 - Với bài toán **Deep Learning (CV, NLP, Audio)**: bắt buộc tham chiếu [`docs/dl_flow.md`](../docs/dl_flow.md), [`docs/dl_data.md`](../docs/dl_data.md) và [`docs/dl_training.md`](../docs/dl_training.md).
 
 ### 1.3. Tái lập kết quả nghiêm ngặt (Strict Reproducibility)
@@ -23,7 +24,7 @@ Trước khi đẩy job huấn luyện lên môi trường GPU từ xa (ví dụ
 Nghiêm cấm chạy huấn luyện full nhiều epoch trên máy CPU cục bộ. Làm vậy vừa tốn thời gian vừa đốt token quota của người dùng. Thực thi cục bộ chỉ dừng ở mức: hoàn thiện module trong `src/`, dựng notebook tương tác trong `notebooks/`, và chạy test 1-batch sanity. Huấn luyện đầy đủ được thực thi trên Kaggle GPU (Tesla T4) hoặc compute tương đương.
 
 ### 1.6. Tái lập nghiêm ngặt và ghi nhận môi trường
-Mọi kết quả phải tái lập được. Cố định seed cho toàn bộ thư viện tại một điểm vào duy nhất, bật chế độ deterministic khi cần, ghi nhận phiên bản thư viện chính, **yêu cầu Python thật** (suy ra từ `Requires-Python` của các pin, ví dụ `>=3.12, !=3.14.1`) **và bản trình thông dịch đã kiểm chứng**, rồi đồng bộ môi trường giữa local và Kaggle. Phiên bản thực tế của mỗi lần chạy phải được ghi vào `outputs/environment_snapshot.json`; phiên bản Python không được ghi thành dòng `python==x.y.z` trong `requirements.txt` vì đó không phải cú pháp pip hợp lệ. Một kết quả không tái lập được thì không phải là kết quả khoa học. Skill chịu trách nhiệm: `environment-and-reproducibility`.
+Mọi kết quả phải tái lập được. Cố định seed cho toàn bộ thư viện tại một điểm vào duy nhất, bật chế độ deterministic khi cần, ghi nhận phiên bản thư viện chính, **yêu cầu Python thật** (suy ra từ `Requires-Python` của các pin, ví dụ `>=3.12, !=3.14.1`) **và bản trình thông dịch đã kiểm chứng**, rồi đồng bộ môi trường giữa local và Kaggle. Phiên bản thực tế của mỗi lần chạy phải được ghi vào `outputs/logs/environment_snapshot.json`; phiên bản Python không được ghi thành dòng `python==x.y.z` trong `requirements.txt` vì đó không phải cú pháp pip hợp lệ. Một kết quả không tái lập được thì không phải là kết quả khoa học. Skill chịu trách nhiệm: `environment-and-reproducibility`.
 
 ### 1.7. Cổng kiểm tra bắt buộc (Checklist Gates)
 Các cổng quan trọng phải vượt qua checklist tương ứng trong `.agents/checklists/` trước khi đi tiếp: `new_lab_bootstrap.md` khi bắt đầu lab mới, `pre_commit.md` trước khi commit, `pre_kaggle_upload.md` trước khi lên Kaggle GPU, và `pre_submission.md` trước khi nộp bài. Checklist biến quy tắc "nên làm" thành bước "phải đủ mới đi tiếp".

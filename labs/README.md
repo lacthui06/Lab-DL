@@ -8,11 +8,13 @@ labs/
 |   |-- README.md               <-- Short entry point: objective, structure, reproduce, results
 |   |-- description_lab_0X.md   <-- Original assignment brief from instructor (input, verbatim)
 |   |-- walkthrough_lab_01.md   <-- Unified 3-Rule living document (Spec -> Changelog -> Report)
+|   |-- config/                 <-- Declarative YAML configs (config, augmentations, experiments)
 |   |-- notebooks/              <-- Interactive Jupyter Notebooks
-|   |-- src/                    <-- Modular, reusable Python source components
-|   |-- tests/                  <-- Mandatory TDD tests
+|   |-- src/                    <-- Modular Python subpackages (datasets, models, training, utils)
+|   |-- scripts/                <-- CLI entry points (train.py, eval.py, infer.py)
+|   |-- tests/                  <-- Mandatory TDD tests (test_datasets, test_models, test_training)
 |   |-- data/                   <-- Local input datasets (git-ignored)
-|   +-- outputs/                <-- Checkpoints, evaluation logs, and visualization figures
+|   +-- outputs/                <-- Checkpoints, evaluation logs, EDA artifacts, and figures
 ```
 
 ---

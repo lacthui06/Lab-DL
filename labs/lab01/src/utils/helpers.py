@@ -46,28 +46,28 @@ VAL_SPLIT = 0.1
 SPLIT_VERSION = "split_v2_stratified"
 PREPROC_VERSION = "preproc_v2_train_global_std"
 
-# Fallback normalization statistics (used only when artifact is missing).
-FALLBACK_MEAN = (0.2860,)
-FALLBACK_STD = (0.3205,)
-
+CONFIG_DIR = BASE_DIR / "config"
+AUGMENTATIONS_CONFIG_PATH = CONFIG_DIR / "augmentations.yaml"
 PREPROCESSING_CONFIG_PATH = EDA_DIR / "preprocessing_config.json"
 
 
-def _resolve_normalization() -> Tuple[Tuple[float, ...], Tuple[float, ...], str]:
-    """Loads measured normalization statistics from artifact, or returns fallback.
+def resolve_normalization_stats(
+    eda_dir: Optional[Path] = None,
+) -> Tuple[Tuple[float, ...], Tuple[float, ...], str]:
+    """Loads measured train-set normalization statistics strictly from artifact.
+
+    Args:
+        eda_dir: Directory containing preprocessing_config.json (defaults to EDA_DIR).
 
     Returns:
         (mean_tuple, std_tuple, source_string)
     """
-    path = PREPROCESSING_CONFIG_PATH
+    path = (Path(eda_dir) / "preprocessing_config.json") if eda_dir is not None else PREPROCESSING_CONFIG_PATH
     if not path.exists():
-        warnings.warn(
-            f"Chua tim thay artifact {path}. Su dung thong so fallback ({FALLBACK_MEAN}, {FALLBACK_STD}). "
-            f"Hay chay buoc EDA & Feature Engineering de khoa thong so do dac chinh xac tren tap train.",
-            RuntimeWarning,
-            stacklevel=2,
+        raise FileNotFoundError(
+            f"Missing preprocessing artifact at {path}. "
+            "Run EDA & Feature Engineering pipeline (run_eda_and_fe_pipeline) first to lock train-set statistics."
         )
-        return FALLBACK_MEAN, FALLBACK_STD, "fallback:legacy"
 
     with open(path, "r", encoding="utf-8") as f:
         config = json.load(f)
@@ -76,7 +76,10 @@ def _resolve_normalization() -> Tuple[Tuple[float, ...], Tuple[float, ...], str]
     return tuple(float(m) for m in mean), tuple(float(s) for s in std), f"artifact:{path}"
 
 
-FASHION_MNIST_MEAN, FASHION_MNIST_STD, NORMALIZATION_SOURCE = _resolve_normalization()
+# Alias for backward compatibility in internal handoff verification
+_resolve_normalization = resolve_normalization_stats
+
+FASHION_MNIST_MEAN, FASHION_MNIST_STD, NORMALIZATION_SOURCE = resolve_normalization_stats()
 
 # Class Label Mapping
 CLASS_NAMES = [

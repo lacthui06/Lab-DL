@@ -18,7 +18,7 @@ from ..utils.helpers import (
     RANDOM_SEED,
     SPLIT_VERSION,
     VAL_SPLIT,
-    _resolve_normalization,
+    resolve_normalization_stats,
 )
 from ..utils.plots import plot_eda_figures
 
@@ -387,12 +387,10 @@ def run_eda_and_fe_pipeline(
     # Step 1: Structural Overview
     overview_df = get_structural_overview(X_train, y_train, X_test, y_test, class_names)
     overview_df.to_csv(tables_dir / "structural_overview.csv", index=False, encoding="utf-8")
-    overview_df.to_csv(eda_dir / "structural_overview.csv", index=False, encoding="utf-8")
 
     # Step 2: Data Integrity Check
     integrity_df = check_data_integrity(X_train, y_train, X_test, y_test)
     integrity_df.to_csv(tables_dir / "integrity_report.csv", index=False, encoding="utf-8")
-    integrity_df.to_csv(eda_dir / "integrity_report.csv", index=False, encoding="utf-8")
 
     # Step 9 (Part 1): Khóa Stratified Split và tiền xử lý
     split_path, preproc_path, train_stats = lock_eda_fe_artifacts(X_train, y_train, eda_dir, val_split, seed)
@@ -401,28 +399,23 @@ def run_eda_and_fe_pipeline(
     # Step 3: Class Distribution
     dist_df = class_distribution(y_train[train_idx], y_train[val_idx], class_names)
     dist_df.to_csv(tables_dir / "class_distribution.csv", index=False, encoding="utf-8")
-    dist_df.to_csv(eda_dir / "class_distribution.csv", index=False, encoding="utf-8")
 
     # Step 5: Pixel Intensity Statistics
     pixel_stats_df = compute_pixel_statistics(X_train, y_train, train_idx, class_names)
     pixel_stats_df.to_csv(tables_dir / "pixel_statistics.csv", index=False, encoding="utf-8")
-    pixel_stats_df.to_csv(eda_dir / "pixel_statistics.csv", index=False, encoding="utf-8")
 
     # Step 6: Spatial Analysis Descriptors
     spatial_df = spatial_features(X_train[train_idx], y_train[train_idx], class_names)
     spatial_df.to_csv(tables_dir / "spatial_features.csv", index=False, encoding="utf-8")
-    spatial_df.to_csv(eda_dir / "spatial_features.csv", index=False, encoding="utf-8")
 
     # Step 7: Handcrafted Feature Analysis
     handcrafted_df = compute_handcrafted_features(X_train[train_idx], y_train[train_idx], class_names)
     handcrafted_df.to_csv(tables_dir / "handcrafted_features.csv", index=False, encoding="utf-8")
-    handcrafted_df.to_csv(eda_dir / "handcrafted_features.csv", index=False, encoding="utf-8")
 
     # Step 8: Inter-Class Similarity Matrix
     mean_images = np.array([X_train[train_idx[y_train[train_idx] == c]].mean(axis=0) for c in range(len(class_names))])
     sim_df = class_similarity_matrix(mean_images, class_names, metric="cosine")
     sim_df.to_csv(tables_dir / "class_similarity_matrix.csv", encoding="utf-8")
-    sim_df.to_csv(eda_dir / "class_similarity_matrix.csv", encoding="utf-8")
     similar_pairs_df = most_similar_pairs(sim_df, top_k=5)
 
     # Step 3, 4, 5, 6, 8: Trực quan hóa toàn bộ 7 figures vào eda_dir/figures
@@ -490,7 +483,7 @@ def verify_pipeline_handoff(
     assert meta_split_version == SPLIT_VERSION, f"split_version mismatch: {meta_split_version} != {SPLIT_VERSION}"
     assert preproc_cfg.get("version") == PREPROC_VERSION, "preprocessing version mismatch"
 
-    current_mean, _, current_source = _resolve_normalization()
+    current_mean, _, current_source = resolve_normalization_stats(eda_dir)
     assert current_source.startswith("artifact:"), "NORMALIZATION_SOURCE must start with artifact:"
     expected_mean = preproc_cfg["normalization"]["mean"][0]
     assert round(current_mean[0], 4) == round(expected_mean, 4), f"Mean mismatch: {current_mean[0]} != {expected_mean}"

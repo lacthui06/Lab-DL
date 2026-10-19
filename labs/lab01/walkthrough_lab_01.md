@@ -44,12 +44,12 @@ graph LR
 | Lab Pipeline Stage | Implementation Artifact | Reference Playbook Section |
 |---|---|---|
 | Define Problem & Modality | Section 1.2 of this document | `docs/dl_flow.md` GIAI ĐOẠN 1 |
-| Split once + DL EDA (integrity scan, class balance, pixel statistics, spatial, similarity) | `notebooks/lab01_eda.ipynb`, `src/eda.py`, `src/split.py` | `docs/dl_flow.md` GIAI ĐOẠN 2; `docs/eda.md`; `docs/eda-image.md` |
-| Dataset, DataLoader, Augmentation | `src/dataset.py` | `docs/dl_flow.md` GIAI ĐOẠN 3; `docs/dl_data.md` PHẦN 2, 3, 4 |
-| Feature Engineering & Normalization | `notebooks/lab01_feature_engineering.ipynb`, `src/dataset.py` (transforms), `src/config.py` | `docs/feature.md`; `docs/feature-image.md` |
-| Architecture Selection | `src/model.py` | `docs/dl_flow.md` GIAI ĐOẠN 4 |
-| Training Loop, Loss, Optimizer | `src/engine.py` | `docs/dl_flow.md` GIAI ĐOẠN 5; `docs/dl_training.md` PHẦN 3, 4 |
-| Evaluation, Diagnostics & Checkpointing | `src/engine.py`, `src/utils.py` | `docs/dl_flow.md` GIAI ĐOẠN 6; `docs/dl_training.md` PHẦN 5 |
+| Split once + DL EDA (9 canonical steps: overview, integrity, class balance, visual inspection, pixel stats, spatial, handcrafted features, similarity, lock) | `notebooks/lab01.ipynb`, `src/datasets/eda.py`, `src/datasets/base.py`, `src/utils/plots.py` | `docs/dl_flow.md` GIAI ĐOẠN 2; `docs/eda.md`; `docs/eda-image.md` |
+| Dataset, DataLoader, Augmentation (`config/augmentations.yaml`) | `src/datasets/classification.py`, `config/augmentations.yaml` | `docs/dl_flow.md` GIAI ĐOẠN 3; `docs/dl_data.md` PHẦN 2, 3, 4 |
+| Feature Engineering & Normalization (`preproc_v2_train_global_std`) | `src/datasets/eda.py`, `src/utils/helpers.py`, `src/datasets/classification.py` | `docs/feature.md`; `docs/feature-image.md` |
+| Architecture Selection (`FashionMLP`) | `src/models/mlp.py`, `config/config.yaml` | `docs/dl_flow.md` GIAI ĐOẠN 4 |
+| Training Loop, Loss, Optimizer, Optuna Study | `src/training/trainer.py`, `src/training/experiments.py` | `docs/dl_flow.md` GIAI ĐOẠN 5; `docs/dl_training.md` PHẦN 3, 4 |
+| Evaluation, Diagnostics & Checkpointing | `src/training/trainer.py`, `src/utils/metrics.py`, `src/utils/plots.py`, `src/utils/helpers.py` | `docs/dl_flow.md` GIAI ĐOẠN 6; `docs/dl_training.md` PHẦN 5 |
 
 Note: this lab trains all models from scratch (no pretrained backbone), so `docs/dl_flow.md` GIAI ĐOẠN 4 is referenced for architecture selection criteria only, not for the Transfer Learning procedure.
 
@@ -75,13 +75,13 @@ Note: this lab trains all models from scratch (no pretrained backbone), so `docs
 - **Partitioning Strategy (`split_v2_stratified`):**
   - **Train split:** 54,000 samples (90% of original training data) — gradient parameter updates.
   - **Validation split:** 6,000 samples (10% of original training data) — checkpoint selection and early monitoring.
-  - Both splits are produced once by `sklearn.model_selection.train_test_split(test_size=0.1, random_state=42, shuffle=True, stratify=y)` inside `notebooks/lab01_eda.ipynb`, then persisted to `outputs/eda/split_indices.npz` + `split_metadata.json`. `src/dataset.py` only reloads that artifact through `load_split()`; it never re-derives a split. Stratification gives exactly 5,400 and 600 samples per class.
+  - Both splits are produced once by `sklearn.model_selection.train_test_split(test_size=0.1, random_state=42, shuffle=True, stratify=y)` inside `src/datasets/eda.py` (`lock_eda_fe_artifacts`), then persisted to `outputs/eda/split_indices.npz` + `split_metadata.json`. `src/datasets/classification.py` reloads that artifact strictly through `load_split()`; it never re-derives a split. Stratification gives exactly 5,400 and 600 samples per class.
   - **Test split:** 10,000 completely held-out samples — final unadjusted benchmark evaluation.
 - **Feature Normalization (`preproc_v2_train_global_std`):**
   - `ToTensor()` maps pixel intensities to $[0.0, 1.0]$.
   - Gaussian normalization using statistics measured on the 54,000-image train split, pooled over all pixels before augmentation, with population variance (`ddof=0`): $\mu = 0.286209$, $\sigma = 0.353160$.
-  - `src/config.py` reads these values from `outputs/eda/preprocessing_config.json`. If the artifact is missing it falls back to `FALLBACK_MEAN`/`FALLBACK_STD` and raises a `RuntimeWarning`; the training notebook guard asserts that the artifact was actually used.
-  - Data Augmentation (for advanced iterations): `RandomHorizontalFlip(p=0.5)` and `RandomRotation(degrees=10)`, applied before `ToTensor` and only on the train split.
+  - `src/utils/helpers.py` (`resolve_normalization_stats()`) reads these values strictly from `outputs/eda/preprocessing_config.json` (zero fake fallback numbers; raises `FileNotFoundError` if the artifact has not been locked). The training notebook guard (`verify_pipeline_handoff`) asserts that the artifact was actually used.
+  - Data Augmentation (configured in `config/augmentations.yaml` and wired into `get_transforms(augment=True)`): `RandomHorizontalFlip(p=0.5)`, `RandomRotation(degrees=10)`, and optional `RandomCrop`, applied before `ToTensor` and only on the train split.
 
 **Why the legacy constants were replaced.** The previous configuration used $\sigma = 0.3205$. That number is the mean of the per-image standard deviations ($0.320661$), not the global standard deviation. Dividing by it left the normalized tensor with std $\approx 1.1019$ instead of $1.0$, so the step did not do what a `Normalize` transform is supposed to do. The two quantities differ because the mean of per-image stds ignores between-image variance; on data where roughly half of all pixels are background, the gap is large and systematic.
 
@@ -295,73 +295,61 @@ The result of a run is only meaningful together with the environment that produc
 - **Run-time snapshot rule:** every execution writes `outputs/environment_snapshot.json` containing the Python version, the platform string, the library versions above, and the resolved compute device. The snapshot is the evidence of the environment that actually produced the numbers; `requirements.txt` only states the intended environment.
 - **Local/Kaggle divergence rule:** if the Kaggle interpreter or library versions differ from local, the difference is recorded in this section rather than silently accepted, because a different interpreter can change standard-library defaults and therefore the run.
 - **Measured divergence (committed Kaggle run):** the Kaggle run reported Python 3.13.15 (matching local) but a different library set: torch `2.11.0+cu128`, numpy `2.1.3`, scikit-learn `1.6.1`, on `Linux-6.18.48+-x86_64-with-glibc2.39` with device `cuda` (Tesla T4). Local pins are torch 2.14.0, numpy 2.5.3, scikit-learn 1.9.1 on Windows/CPU. The interpreter major-minor matches, but torch, numpy, and scikit-learn differ by minor version, and the compute device differs (CPU locally versus CUDA on Kaggle). Consequence: the Kaggle numbers are the reported results; the local CPU path is used only for the 1-batch sanity check and the TDD suite, and is not treated as reproducing the GPU figures bit-for-bit. The library difference is the reason the run-time snapshot is stored alongside the metrics rather than relying on `requirements.txt` alone.
-- **Artifact:** `outputs/environment_snapshot.json` (produced by `collect_environment_snapshot()` in `src/utils.py`, invoked from notebook PHẦN 1).
+- **Artifact:** `outputs/logs/environment_snapshot.json` (produced by `collect_environment_snapshot()` in `src/utils/helpers.py`, invoked from `notebooks/lab01.ipynb` Step 1).
 
 ---
 
-### 1.9. EDA and Feature Engineering Results (Measured)
+### 1.9. EDA and Feature Engineering Results (Measured — 9 Canonical Steps)
 
-All numbers below were produced by executing `notebooks/lab01_eda.ipynb` (26 cells) and `notebooks/lab01_feature_engineering.ipynb` (22 cells) locally on CPU. The raw tables and figures live in `outputs/eda/`; the JSON files are the machine-readable source, and this section only summarizes them.
+All numbers below were produced by executing `run_eda_and_fe_pipeline()` in `src/datasets/eda.py` from `notebooks/lab01.ipynb` (Step 2). The 7 CSV tables live in `outputs/eda/tables/*.csv`, the 7 diagnostic figures live in `outputs/eda/figures/*.png`, and the locked split/normalization artifacts live in `outputs/eda/`.
 
-#### 1.9.1. Structural and Integrity Findings
+#### 1.9.1. Structural and Integrity Findings (Steps 1, 2 & 3)
 
 | Check | Result | Evidence |
 |:---|:---|:---|
 | Image shape / dtype | `(28, 28)` `uint8`, 1 channel | `tables/structural_overview.csv` |
 | Pixel range | `[0, 255]` in both splits, no out-of-range value | `tables/integrity_report.csv` |
-| Class counts | train 6,000/class, test 1,000/class | `tables/class_distribution.csv` |
+| Class counts | train 5,400/class, val 600/class, test 1,000/class | `tables/class_distribution.csv`, `figures/class_distribution.png` |
 | Labels in `[0, 9]` | 0 violations | `tables/integrity_report.csv` |
 | NaN / Inf | 0 | `tables/integrity_report.csv` |
-| All-black images | 0 | `tables/integrity_report.csv` |
-| Exact duplicates within train | 0 | `tables/integrity_report.csv` |
-| Exact duplicates within test | 0 | `tables/integrity_report.csv` |
-| Train ↔ test exact overlap | 0 | `tables/integrity_report.csv` |
-| Split index disjointness and coverage | 0 violations | `tables/integrity_report.csv` |
+| Constant / All-black images | 0 | `tables/integrity_report.csv` |
+| Exact duplicates within train | 43 pairs (0.072%) | `tables/integrity_report.csv` |
+| Exact duplicates within test | 2 pairs (0.020%) | `tables/integrity_report.csv` |
+| Train ↔ test exact overlap | 16 pairs (0.027%) | `tables/integrity_report.csv` |
+| Split index disjointness and coverage | 0 violations (54,000 train / 6,000 val) | `split_metadata.json` |
 
-**Decision:** no sample was removed. The dataset is clean for the checks performed, so `tables/data_cleaning_log.csv` records a no-op decision rather than being left empty.
-
-The `near_duplicates` row reports `-1`, which means "not computed", not "zero found". Near-duplicate detection was out of the executed scope; recording it as `-1` keeps the distinction visible instead of letting a reader assume a clean result.
-
-#### 1.9.2. Pixel Intensity Findings
+#### 1.9.2. Visual Inspection & Pixel Intensity Findings (Steps 4 & 5)
 
 | Quantity | Value | Note |
 |:---|---:|:---|
-| Global mean (train, scaled `[0,1]`) | `0.286209` | pooled over all pixels |
-| Global std, `ddof=0` (train, scaled) | `0.353160` | **used for `Normalize`** |
-| Mean of per-image std | `0.320661` | rejected: different quantity |
-| Zero-pixel fraction | `0.502143` | about half of all pixels are background |
+| Global mean (train 54,000 samples, scaled `[0,1]`) | `0.286209` | pooled over all pixels (`tables/pixel_statistics.csv`) |
+| Global std, `ddof=0` (train, scaled) | `0.353160` | **locked in `preprocessing_config.json` for `Normalize`** |
+| Mean of per-image std | `0.320673` | diagnostic only (`preprocessing_config.json`) |
+| Zero-pixel fraction | `0.501887` | about half of all pixels are background (`figures/pixel_histogram.png`) |
 
-The two std values differ by about 10%, and the legacy configuration had used the rejected one. Evidence: `tables/normalization_stats_measurement.csv` and `preprocessing_config.json`.
+Visual samples and per-class mean silhouettes are saved to `figures/sample_images.png` and `figures/class_mean_images.png`.
 
-#### 1.9.3. Spatial Findings
+#### 1.9.3. Spatial & Handcrafted Feature Findings (Steps 6 & 7)
 
-Foreground is defined by `FOREGROUND_THRESHOLD = 0.1` on the scaled view, declared as a named constant in `src/eda.py` rather than a literal inside a function. With half of all pixels at background, a threshold of 0 would have merged background noise into the bounding box and made every aspect ratio meaningless.
+Foreground is defined by `FOREGROUND_THRESHOLD = 0.1` on the scaled view (`src/datasets/eda.py`).
+- Spatial maps across the $28 \times 28$ grid are saved to `figures/mean_pixel_heatmap.png` and `figures/pixel_variance_heatmap.png`, with per-image descriptors in `tables/spatial_features.csv`.
+- Per-class handcrafted feature summaries (mean intensity, std intensity, foreground ratio, bounding-box height/width/aspect/area ratio, and edge density) are persisted in `tables/handcrafted_features.csv`. For example, `Trouser` exhibits a narrow bounding box width (`14.79` px, aspect ratio `0.5416`), whereas `Coat` (`mean_intensity = 0.3852`, `foreground_ratio = 0.6599`) and `Pullover` (`mean_intensity = 0.3769`, `foreground_ratio = 0.6656`) share nearly identical spatial footprints.
 
-Per-class bounding box width, height, aspect ratio, and foreground ratio are in `tables/spatial_features.csv` (one row per image, 5.5 MB, regenerable and therefore not tracked in Git). The aggregated view is `figures/spatial_by_class.png`.
+#### 1.9.4. Inter-Class Similarity (Step 8)
 
-#### 1.9.4. Inter-Class Similarity (Hypothesis Only)
-
-Top cosine similarities between class mean images:
+Top cosine similarities between class mean images (`tables/class_similarity_matrix.csv`, `figures/class_similarity_heatmap.png`):
 
 | Class A | Class B | Cosine similarity |
 |:---|:---|---:|
-| Coat | Shirt | 0.987286 |
-| Pullover | Coat | 0.984075 |
-| Pullover | Shirt | 0.982976 |
-| T-shirt/top | Shirt | 0.949727 |
-| Sandal | Ankle boot | 0.926082 |
+| Coat | Shirt | 0.987391 |
+| Pullover | Coat | 0.984122 |
+| Pullover | Shirt | 0.982908 |
+| T-shirt/top | Shirt | 0.949657 |
+| Sandal | Ankle boot | 0.925568 |
 
-Evidence: `tables/class_similarity_matrix.csv`, `tables/most_similar_pairs_cosine.csv`, `figures/class_similarity_heatmap.png`.
+#### 1.9.5. Handoff to Feature Engineering & Pipeline Lock (Step 9)
 
-**This is a hypothesis, not a conclusion.** A mean image discards within-class variance, so two classes can have near-identical means while remaining perfectly separable, and vice versa. The cluster {T-shirt/top, Pullover, Coat, Shirt} does match the confusion pattern observed in the Phase 1 confusion matrices, but that agreement is consistent with the hypothesis rather than proof of it. Confirmation requires per-class precision/recall/F1 on the new split.
-
-#### 1.9.5. What Was Not Executed
-
-Steps 7 (handcrafted features), 9 (PCA / t-SNE), 10 (outlier scoring), 11 (distribution shift), and 12 (baseline separability) listed under the "Nhánh mở rộng" section of `docs/feature-image.md` were not executed in this pass. They are extensions, so their absence does not invalidate the core EDA. Notably, `umap` is not installed in the local environment, so the t-SNE/UMAP branch would require an explicit dependency decision rather than a silent install.
-
-#### 1.9.6. Handoff to Feature Engineering
-
-`tables/eda_to_fe_handoff.csv` records each finding in the form `finding | split/view | evidence | proposal | validation check | status`. The two findings that changed code are the split (→ `split_v2_stratified`) and the normalization statistic (→ `preproc_v2_train_global_std`). Both were implemented and covered by tests before any training run used them.
+`lock_eda_fe_artifacts()` writes `outputs/eda/split_indices.npz`, `outputs/eda/split_metadata.json` (`split_v2_stratified`), and `outputs/eda/preprocessing_config.json` (`preproc_v2_train_global_std`). Before training begins, `verify_pipeline_handoff()` asserts 100% agreement between the loaded `DataLoader` instances and the locked EDA artifacts.
 
 ---
 
@@ -685,3 +673,21 @@ The sensitivity column reports the mean-accuracy drop from the peak to the next 
 6. **The budget remains the binding constraint for SGD, and that cuts in SGD's favour.** Every curve is still rising at the final epoch, and SGD climbs the most over the last five epochs (at its peak, the epoch-10 to epoch-15 mean validation accuracy rises by 0.58, against 0.29 for RMSprop and 0.45 for Adam). Under the budget-confound guard of Section 1.6.10 this is reported as a convergence-speed limitation of SGD, not an accuracy deficit: SGD's peak is the most likely of the three to be understated by the fixed 15-epoch budget. The equivalence in point 2 is therefore a conservative reading for SGD, not an artefact that flatters the adaptive arms.
 
 **Reading.** Scenario 2c turns the fixed-lr comparison of Section 3.7 into a sensitivity view: each optimizer is measured across two orders of magnitude of step size, each has a clear interior optimum, and at those optima the three are indistinguishable within the across-fold noise on this task. The robust separations are structural rather than numerical: SGD needs the largest step size, RMSprop is the most sensitive to overshooting it, and Adam is the least stable across folds. Those statements hold; a ranking of the three on final accuracy does not.
+
+### 3.9. Phase 3 — Modular Clean-Architecture Execution (`notebooks/lab01.ipynb`, `split_v2_stratified` & `preproc_v2_train_global_std`)
+
+Following the transition to `split_v2_stratified` (54,000 train / 6,000 val, exact 9:1 per class) and `preproc_v2_train_global_std` ($\mu = 0.286209$, $\sigma = 0.353160$), the unified pipeline in `notebooks/lab01.ipynb` was executed end-to-end using the pure PyTorch `FashionMLP` (`784 -> 256 -> 128 -> 10`, **235,146** trainable parameters):
+
+1. **1-Batch Sanity Overfit Check (Step 4):** Overfitted an 8-sample mini-batch in 50 steps from initial loss `2.2981` down to `0.0005` (`< 0.15` threshold, `[PASSED]`).
+2. **10-Epoch Training with Adam & CosineAnnealingLR (Steps 5 & 6):**
+   - Trained `FashionMLP` with `Adam(lr=1e-3)` and `CosineAnnealingLR(T_max=10, eta_min=1e-5)`.
+   - Reached **Best Validation Accuracy = 90.92%** (Val Loss `0.2563`, Train Acc `93.64%`, Train Loss `0.1739` at Epoch 10) and **Validation Macro F1 = 0.9085**.
+   - Generated `outputs/predictions/learning_curves.png`, `outputs/predictions/confusion_matrix.png` (integer counts on 6,000 validation samples), and `outputs/predictions/prediction_grid.png`.
+3. **Optimizer Comparison — Fixed LR (`1e-3`) vs. Optuna Peak-to-Peak (Step 7):**
+   - **Scenario 1 (Fixed LR `1e-3`, 10 epochs):** Adam achieved `90.22%` Val Acc, RMSprop (`momentum=0.0`) achieved `90.10%`, while SGD (`momentum=0.9`) reached `86.43%` (`outputs/predictions/optimizer_fixed_lr_comparison.png`).
+   - **Scenario 2 (Optuna 12-trial TPE + CosineAnnealingLR Peak-to-Peak, 10 epochs):** Optuna selected optimal hyperparameters (`Adam`: `lr=0.001432`, `RMSprop`: `lr=0.000847`, `SGD`: `lr=0.056115, momentum=0.9098`). In the 10-epoch head-to-head race with `CosineAnnealingLR`, all three converged to >90% Validation Accuracy: **Adam (`90.85%`)**, **RMSprop (`90.68%`)**, and **SGD (`90.47%`)** (`outputs/predictions/optimizer_comparison.png`, `outputs/logs/optimizer_study_results.json`).
+4. **Multi-Class One-vs-Rest ROC-AUC Evaluation (Step 8):**
+   - Evaluated the winning model across all 10 classes (`outputs/predictions/roc_curves.png`), achieving **Macro-average ROC-AUC = 0.9943** and **Micro-average ROC-AUC = 0.9946** (with `Trouser` AUC `0.9995`, `Bag` `0.9988`, `Sandal` `0.9987`, and `Shirt` `0.9679`).
+5. **Checkpoint Roundtrip & Held-Out Test Set Verification (Steps 9 & 10):**
+   - Saved `outputs/checkpoints/fashion_mlp_final.pt`, reloaded weights into a fresh `FashionMLP` instance via `load_checkpoint()`, and evaluated on the 10,000 held-out Test images: **Test Accuracy = 89.30%**, **Test Loss = 0.3071**, with visual predictions saved to `outputs/predictions/test_prediction_grid.png` and packaged into `all_outputs.zip`.
+

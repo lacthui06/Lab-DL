@@ -15,8 +15,8 @@ Repository containing source code, engineering workflows, and practical lab exer
 ## Environment
 
 - **Python requirement:** `>=3.12, !=3.14.1`, derived from the pinned libraries (numpy 2.5.3 needs `>=3.12`; torchvision 0.29.1 excludes `3.14.1`). Verified local build: CPython **3.13.15** (64-bit). The requirement and the verified build are recorded as comments in `requirements.txt`, never as a `python==x.y.z` pip line (invalid pip syntax).
-- **Library pins:** see `requirements.txt` (torch 2.14.0, torchvision 0.29.1, numpy 2.5.3, scikit-learn 1.9.1, matplotlib 3.11.2, seaborn 0.13.2, Pillow 12.3.0, pytest 9.1.1).
-- **Run-time evidence:** each lab run writes `outputs/environment_snapshot.json` with the interpreter version, platform, library versions, and the resolved compute device. The Kaggle interpreter is logged per run rather than assumed equal to local.
+- **Library pins:** see `requirements.txt` (torch 2.14.0, torchvision 0.29.1, numpy 2.5.3, pandas 3.0.2, scikit-learn 1.9.1, matplotlib 3.11.2, seaborn 0.13.2, Pillow 12.3.0, optuna 4.8.0, pyyaml 6.0.3, pytest 9.1.1).
+- **Run-time evidence:** each lab run writes `outputs/logs/environment_snapshot.json` with the interpreter version, platform, library versions, and the resolved compute device. The Kaggle interpreter is logged per run rather than assumed equal to local.
 
 ---
 
@@ -33,9 +33,12 @@ Repository containing source code, engineering workflows, and practical lab exer
 
 Each practical lab is organized into modular directories and a single living documentation file:
 
+- `config/`: Declarative YAML configurations (`config.yaml`, `augmentations.yaml`, `experiments.yaml`).
 - `data/`: Experimental datasets (ignored by git).
 - `notebooks/`: Jupyter Notebooks for interactive execution, analysis, and visualization.
-- `src/`: Modular, production-ready Python components (`config.py`, `dataset.py`, `model.py`, `engine.py`, `utils.py`).
-- `outputs/`: Artifact store for training checkpoints, evaluation logs, and high-resolution figures.
+- `src/`: Modular, production-ready Python subpackages (`datasets/`, `models/`, `training/`, `utils/`).
+- `scripts/`: Command-line entry points (`train.py`, `eval.py`, `infer.py`).
+- `tests/`: Mandatory TDD test suites (`test_datasets.py`, `test_models.py`, `test_training.py`).
+- `outputs/`: Artifact store for training checkpoints (`checkpoints/`), evaluation logs (`logs/`), EDA tables & figures (`eda/`), and prediction figures (`predictions/`).
 - `description_lab_0X.md`: Original assignment brief from instructor (input, kept verbatim).
 - `walkthrough_lab_0X.md`: Single Living Walkthrough unifying 3 Core Rules (Section 1: Spec with brief interpretation (Mục 1.0) from `spec-driven-development`, Section 2: 5-Stage Changelog from `walkthrough-and-experiment-tracking`, Section 3: Final Report with decision traceability from `documentation-and-adrs`).

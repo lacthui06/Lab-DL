@@ -10,29 +10,30 @@
 # Bản đã kiểm chứng thực tế (local, Windows, CPython 64-bit): 3.13.15
 # Kaggle base image: dùng bản Python riêng của Kaggle; ghi lại chính xác tại thời điểm chạy,
 # không giả định trùng với local (xem skill environment-and-reproducibility, Bước 5).
-# Phiên bản thực tế của mỗi lần chạy được ghi vào outputs/environment_snapshot.json.
+# Phiên bản thực tế của mỗi lần chạy được ghi vào outputs/logs/environment_snapshot.json.
 
 # Core deep learning framework (CPU build cho cục bộ; Kaggle dùng bản CUDA tương ứng)
 torch==2.14.0
 torchvision==0.29.1
 
-# Numerical and scientific computing
+# Numerical, tabular, and scientific computing
 numpy==2.5.3
+pandas>=2.2.0
 
-# Classical machine learning utilities (metrics, split, reports)
+# Classical machine learning utilities & Hyperparameter optimization
 scikit-learn==1.9.1
+optuna>=3.6.0
 
 # Visualization
 matplotlib==3.11.2
 seaborn==0.13.2
 
-# Image I/O (used by src/dataset.py)
+# Image I/O (used by src/datasets/classification.py)
 Pillow==12.3.0
 
 # Testing
 pytest==9.1.1
-# Declared explicitly: tests/test_pipeline.py imports packaging to evaluate
-# the Requires-Python specifiers of the pinned libraries (test_13).
+# Declared explicitly: used to evaluate the Requires-Python specifiers of pinned libraries.
 packaging==26.3
 
 # Configuration parsing
