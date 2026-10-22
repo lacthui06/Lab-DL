@@ -12,7 +12,7 @@ Mục tiêu là so sánh dung lượng MLP và tác động của handcrafted fe
 
 SmallMLP so với MainMLP trả lời câu hỏi tăng dung lượng có cải thiện kết quả không. MainMLP so với MainMLP_FE trả lời câu hỏi việc cung cấp mô tả hình học/cường độ có hữu ích không. Không mặc định FE phải tăng accuracy; kết luận chỉ được viết sau lượt chạy thật. Mean/std pixel và feature scaler phải fit train, không sử dụng test để điều chỉnh cấu hình.
 
-Notebook 01 chuẩn bị dữ liệu và minh họa phương pháp; notebook 02 điều phối huấn luyện, đánh giá và so sánh. Notebook lab01.ipynb cũ là lịch sử. Mã tính toán tái sử dụng đặt ở src; notebook không chứa bản sao vòng lặp train.
+Notebook 01 chuẩn bị dữ liệu và minh họa phương pháp; notebook 02 điều phối huấn luyện, đánh giá và so sánh. Mã tính toán tái sử dụng đặt ở src; notebook không chứa bản sao vòng lặp train.
 
 ### 2. Phân biệt rescaling và standardization
 

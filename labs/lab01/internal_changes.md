@@ -80,3 +80,11 @@ Roadmap đầu hai notebook đã chuyển sang bảng 5 cột theo mẫu ngườ
 - Xóa toàn bộ labs/lab01/archive/ (local và GitHub) theo yêu cầu người dùng. Không có source/test/config nào import hoặc đọc archive; chỉ tài liệu và docstring tham chiếu.
 - Cập nhật tham chiếu trong README, walkthrough, description, notebooks/lab01.ipynb, docstring scripts/eval.py và scripts/infer.py sang lịch sử Git. Các mục nhật ký phía trên nhắc tới archive được giữ nguyên như lịch sử.
 - Khôi phục khi cần: `git checkout e0fd041 -- labs/lab01/archive`.
+
+## Dọn module, config và file ma — 22/10/2026
+
+- Xóa 3 module legacy chỉ còn được gọi từ test cũ: `src/datasets/classification.py`, `src/training/experiments.py`, `src/utils/metrics.py`.
+- Xóa 3 file config YAML cũ không thuộc pipeline `workflow.json`: `config/config.yaml`, `config/augmentations.yaml`, `config/experiments.yaml`.
+- Xóa notebook điều hướng trống `notebooks/lab01.ipynb`, các file `outputs/predictions/*.png`, `outputs/logs/training_history.json` và thư mục local `outputs/checkpoints/`. Giữ nguyên `outputs/eda/` (được walkthrough tham chiếu) và toàn bộ `outputs/runs/`.
+- Loại bỏ các hàm/class/hằng số không còn dùng trong `src/datasets/base.py` (`TransformedSubset`), `src/datasets/eda.py` (`verify_pipeline_handoff`), `src/training/trainer.py` (`train_model`, wrappers `train_one_epoch`/`evaluate`), `src/utils/helpers.py` (`NUM_CHANNELS`, `NUM_CLASSES`, `_resolve_normalization`, `CHECKPOINTS_DIR`, `PREDICTIONS_DIR`, `AUGMENTATIONS_CONFIG_PATH`, `load_yaml_config`), `src/utils/plots.py` (`unnormalize`, `plot_confusion_matrix`, `plot_prediction_grid`, `plot_optimizer_comparison`, `plot_roc_curves_fig`) và tinh gọn các file `__init__.py`.
+- Cập nhật test suite (`39 passed` với `MPLBACKEND=Agg`) và cây thư mục trong `README.md`.

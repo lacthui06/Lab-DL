@@ -104,24 +104,6 @@ def test_plot_exports_with_synthetic_fixture(tmp_path,monkeypatch):
     assert (out/"manifest.json").is_file()
 
 
-def test_optimizer_returns_best_epoch_weights(monkeypatch,tmp_path):
-    import src.training.experiments as experiments
-    model=torch.nn.Linear(2,2)
-    with torch.no_grad(): model.weight.zero_(); model.bias.zero_()
-    monkeypatch.setattr(experiments,"build_model",lambda *a,**k:model)
-    def step(*args):
-        with torch.no_grad(): model.weight.add_(1)
-    values=iter([90.,80.])
-    monkeypatch.setattr(experiments,"train_one_epoch",step)
-    monkeypatch.setattr(experiments,"evaluate",lambda *a:(1.,next(values),[],[]))
-    _,winner,_,fig=experiments.compare_optimizers_wallclock(None,None,
-        optimizer_configs={"Adam":{"lr":.001}},num_epochs=2,use_scheduler=False,
-        device=torch.device("cpu"),save_fig_path=tmp_path/"optimizer.png")
-    import matplotlib.pyplot as plt
-    plt.close(fig)
-    assert torch.all(winner.weight==1)
-
-
 def test_model_runner_smoke_all_three(tmp_path,monkeypatch):
     import src.training.comparison as comparison
     monkeypatch.setattr(comparison,"DEVICE",torch.device("cpu"))

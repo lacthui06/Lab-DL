@@ -3,29 +3,21 @@
 import sys
 from pathlib import Path
 import pytest
-import torch
 import numpy as np
 
 LAB01_DIR = Path(__file__).resolve().parent.parent
 if str(LAB01_DIR) not in sys.path:
     sys.path.insert(0, str(LAB01_DIR))
 
-from src.utils.helpers import DATA_DIR, EDA_DIR, RANDOM_SEED, CLASS_NAMES, resolve_normalization_stats, set_seed
-from src.datasets.classification import get_dataloaders, get_transforms
 from src.datasets.base import make_stratified_split, save_split, load_split
 from src.datasets.eda import (
     compute_normalization_stats,
-    class_distribution,
-    class_similarity_matrix,
-    most_similar_pairs,
     spatial_features,
     compute_handcrafted_features,
     FOREGROUND_THRESHOLD,
     get_structural_overview,
     check_data_integrity,
-    verify_pipeline_handoff,
 )
-from src.utils.plots import unnormalize
 
 
 def test_spatial_provenance_and_disconnected_foreground():
@@ -78,38 +70,6 @@ def test_spatial_rejects_invalid_provenance(indices, split):
                          ["item"], original_indices=np.array(indices), split=split)
 
 
-@pytest.fixture(scope="module")
-def sample_loaders():
-    set_seed(RANDOM_SEED)
-    return get_dataloaders(
-        data_dir=DATA_DIR,
-        split_dir=EDA_DIR,
-        batch_size=8,
-        val_split=0.1,
-        num_workers=0,
-    )
-
-
-def test_1_data_integrity_and_shape(sample_loaders):
-    train_loader, val_loader, test_loader, names = sample_loaders
-    assert len(names) == 10, "FashionMNIST must have exactly 10 classes"
-    images, targets = next(iter(train_loader))
-    assert images.shape == (8, 1, 28, 28), f"Expected shape (8, 1, 28, 28), got {images.shape}"
-    assert targets.shape == (8,), f"Expected shape (8,), got {targets.shape}"
-    assert targets.min() >= 0 and targets.max() < 10, "Target labels must be in range [0, 9]"
-
-
-def test_2_lazy_loading_and_tensor_types(sample_loaders):
-    train_loader, _, _, _ = sample_loaders
-    images, targets = next(iter(train_loader))
-    assert isinstance(images, torch.Tensor), "Images must be torch.Tensor"
-    assert images.dtype == torch.float32, "Image tensors must be float32"
-    assert isinstance(targets, torch.Tensor), "Targets must be torch.Tensor"
-    assert targets.dtype == torch.int64, "Targets must be int64"
-    assert abs(images.mean().item()) < 1.0, "Normalized batch mean should be reasonably centered"
-    assert 0.5 < images.std().item() < 2.0, "Normalized batch std should be reasonable"
-
-
 def test_16_stratified_split_preserves_class_ratio():
     targets = np.array([0] * 100 + [1] * 200 + [2] * 300)
     train_idx, val_idx = make_stratified_split(targets, val_split=0.1, seed=42)
@@ -147,19 +107,10 @@ def test_20_split_artifact_rejects_wrong_pool_size(tmp_path):
         load_split(tmp_path, expected_pool_size=999)
 
 
-def test_23_unnormalize_inverts_transform():
-    generator = torch.Generator().manual_seed(RANDOM_SEED)
-    original = torch.rand(28, 28, generator=generator)
-    normalized = get_transforms(augment=False)(original.numpy())
-    restored = unnormalize(normalized)
-    assert torch.allclose(restored, original.unsqueeze(0), atol=1e-5)
-
-
 def test_24_eda_helpers_on_synthetic_data():
     images = np.zeros((4, 28, 28), dtype=np.uint8)
     images[0:2, :14, :] = 255
     images[2:4, 14:, :] = 51
-    labels = np.array([0, 0, 1, 1])
 
     stats = compute_normalization_stats(images)
     assert stats["num_images"] == 4
@@ -180,8 +131,3 @@ def test_27_core_eda_checks_contract():
     assert len(overview) == 2
     integrity = check_data_integrity(X_train, y_train, X_test, y_test)
     assert len(integrity) == 6
-
-
-def test_28_eda_pipeline_handoff_contract(sample_loaders):
-    train_loader, val_loader, _, _ = sample_loaders
-    assert verify_pipeline_handoff(train_loader, val_loader)

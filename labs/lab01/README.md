@@ -11,10 +11,7 @@ Hai notebook hiện hành dùng chung cấu hình và artifact: notebook 01 chu�
 ```text
 labs/lab01/
 ├── config/
-│   ├── workflow.json                  # Cấu hình hiện hành, kiến trúc và danh mục run được chọn
-│   ├── config.yaml                    # Cấu hình CLI cũ; giữ tương thích lịch sử
-│   ├── augmentations.yaml             # Cấu hình augmentation của pipeline cũ
-│   └── experiments.yaml               # Cấu hình optimizer cũ; không điều khiển notebook mới
+│   └── workflow.json                  # Cấu hình hiện hành, kiến trúc và danh mục run được chọn
 ├── data/                              # FashionMNIST thô, tải bằng torchvision khi cần
 ├── outputs/
 │   ├── runs/                          # Artifact hiện hành, mỗi lần chạy có thư mục riêng
@@ -49,9 +46,7 @@ labs/lab01/
 │   │   │   └── tuning_progress.png
 │   │   └── <verification-run>/        # Log kiểm thử, kiểm tra dữ liệu và notebook đã thực thi
 │   ├── eda/                           # Output lịch sử; không tự coi là preparation run mới
-│   ├── checkpoints/                   # Checkpoint lịch sử
-│   ├── logs/                          # Log lịch sử
-│   └── predictions/                   # Hình đánh giá lịch sử
+│   └── logs/                          # Snapshot môi trường dùng chung
 ├── src/
 │   ├── workflow.py                    # Load cấu hình, chọn train/view và điều phối các giai đoạn
 │   ├── inference.py                   # Eval/infer theo metadata và prepared data của run
@@ -59,19 +54,16 @@ labs/lab01/
 │   │   ├── base.py                    # Stratified split, indices và dataset helpers
 │   │   ├── eda.py                     # Core EDA, integrity, phân bố và thống kê dữ liệu
 │   │   ├── features.py                # Định nghĩa chung cho 10 feature, bbox và cường độ/cạnh
-│   │   ├── preparation.py             # Chạy EDA, fit scaler và tạo prepared.npz
-│   │   └── classification.py          # Transforms/DataLoader của luồng lịch sử
+│   │   └── preparation.py             # Chạy EDA, fit scaler và tạo prepared.npz
 │   ├── models/
 │   │   └── mlp.py                     # Class FashionMLP dùng chung cho ba cấu hình
 │   ├── training/
 │   │   ├── trainer.py                 # Train/evaluate loop, optimizer factory, sanity overfit
 │   │   ├── comparison.py              # Ba cấu hình model, best checkpoint và test evaluation
-│   │   ├── tuning.py                  # Fixed LR, Optuna, refit và tổng hợp optimizer
-│   │   └── experiments.py             # API thí nghiệm lịch sử, giữ để tương thích
+│   │   └── tuning.py                  # Fixed LR, Optuna, refit và tổng hợp optimizer
 │   └── utils/
 │       ├── helpers.py                 # Seed, device, environment, đường dẫn và checkpoint
 │       ├── runs.py                    # Run ID, stdout/stderr log, trạng thái và SHA256 manifest
-│       ├── metrics.py                 # Metric theo lớp cho API lịch sử
 │       ├── plots.py                   # Hình EDA và các hàm visualization dùng chung
 │       └── comparison_plots.py        # Model comparison, confusion matrix, ROC/PR OvR
 ├── scripts/
@@ -82,15 +74,14 @@ labs/lab01/
 ├── tests/
 │   ├── test_datasets.py               # Integrity, split, bbox và preprocessing
 │   ├── test_models.py                 # Kiến trúc, số tham số và tensor shape
-│   ├── test_training.py               # Training/checkpoint/sanity và API lịch sử
+│   ├── test_training.py               # Training, checkpoint, optimizer và sanity overfit
 │   ├── test_bootstrap.py              # Fresh runtime và thiếu Optuna
 │   ├── test_features_comparison.py    # Feature, ba model, artifact và visualization
 │   ├── test_tuning.py                 # Study budgets, pruning, refit và test isolation
 │   └── test_workflow.py               # View không train, feature chung và inference contract
 ├── notebooks/
 │   ├── 01_eda_preprocessing_features.ipynb
-│   ├── 02_modeling_comparison.ipynb
-│   └── lab01.ipynb                     # Trang chỉ dẫn đến notebook hiện hành
+│   └── 02_modeling_comparison.ipynb
 ├── description_lab_01.md              # Đề bài gốc và phạm vi đã thống nhất
 ├── walkthrough_lab_01.md              # Phương pháp và kết quả có bằng chứng
 ├── internal_changes.md                # Nhật ký nội bộ, không đưa vào báo cáo PDF
@@ -121,7 +112,7 @@ FashionMNIST gốc [0,255]
 - Train/validation gồm 54.000/6.000 ảnh; test gốc có 10.000 ảnh. Mean/std của preparation run đã chọn xấp xỉ 0.2862/0.3532; giá trị thực đọc từ artifact thay vì nhập lại vào code.
 - Feature scaler chỉ fit train rồi áp dụng validation/test. Bảng tổng hợp theo lớp phục vụ EDA; bảng theo từng ảnh mới là dữ liệu dùng cho modeling.
 - 10 feature gồm mean, std, foreground ratio, bbox width/height, aspect ratio, centroid x/y, symmetry và edge density. Foreground dùng ngưỡng 0.1 trên ảnh [0,1]. Công thức chi tiết nằm trong walkthrough và source.
-- Lượt comparison hiện tại không augmentation để giữ pixel và handcrafted feature tương ứng cùng một ảnh. Cấu hình augmentation cũ vẫn được giữ cho lịch sử, không tự bật trong pipeline mới.
+- Lượt comparison hiện tại không augmentation để giữ pixel và handcrafted feature tương ứng cùng một ảnh. Pipeline hiện hành không bật augmentation trên pixel để tránh lệch với handcrafted features.
 - Bảng EDA lịch sử có định nghĩa edge density khác. Không đổi cách diễn giải artifact cũ; EDA mới dùng helper đo cường độ/cạnh chung với modeling.
 
 ### 2.2. Ba cấu hình model
@@ -229,16 +220,16 @@ Không phải mọi hình đều tự hiển thị trong notebook; hình phụ v
 
 ```powershell
 $env:MPLBACKEND = "Agg"
-python -m pytest labs/lab01/tests -q -k "not experiment_runner_signatures"
+python -m pytest labs/lab01/tests -q
 ```
 
-Kết quả đã xác minh sau đợt rà soát confusion matrix, roadmap và cấu hình:
+Kết quả sau khi loại bỏ các module/config/test lịch sử không còn sử dụng:
 
 ```text
-47 passed, 1 deselected
+39 passed
 ```
 
-Test `experiment_runner_signatures` lịch sử chạy nhiều lượt training nên không thuộc bộ regression ngắn trên. Test suite gồm split/integrity, bbox và feature, input 784/794, forward/backward, one-batch overfit, checkpoint, logging khi lỗi/pruning, Optuna integration, artifact export, số đếm/tỷ lệ confusion matrix, chế độ view không train, phát hiện comparison lệch model run và kiến trúc tùy chỉnh qua cấu hình.
+Test suite gồm split/integrity, bbox và feature, input 784/794, forward/backward, one-batch overfit, checkpoint, logging khi lỗi/pruning, Optuna integration, artifact export, số đếm/tỷ lệ confusion matrix, chế độ view không train, phát hiện comparison lệch model run và kiến trúc tùy chỉnh qua cấu hình.
 
 Hai notebook đã thực thi toàn bộ ở MODE=view. Đánh giá lại checkpoint MainMLP giữ nguyên Accuracy/Macro F1. Đối chiếu feature của 256 ảnh với artifact trước dọn đạt tolerance 2e-6; sai lệch tối đa khoảng 4.77e-7. Các fixture synthetic chỉ phục vụ kiểm thử, không phải benchmark FashionMNIST.
 

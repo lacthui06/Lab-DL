@@ -19,7 +19,6 @@ from ..utils.helpers import (
     RANDOM_SEED,
     SPLIT_VERSION,
     VAL_SPLIT,
-    resolve_normalization_stats,
 )
 from ..utils.plots import plot_eda_figures
 
@@ -473,38 +472,3 @@ def run_eda_and_fe_pipeline(
         "num_test": len(X_test),
         "figures": figures,
     }
-
-
-def verify_pipeline_handoff(
-    train_loader,
-    val_loader,
-    eda_dir: Path = EDA_DIR,
-) -> bool:
-    """Verifies 4 core criteria before training handoff."""
-    eda_dir = Path(eda_dir)
-    split_meta_path = eda_dir / "split_metadata.json"
-    preproc_path = eda_dir / "preprocessing_config.json"
-    split_npz_path = eda_dir / "split_indices.npz"
-
-    assert split_meta_path.exists() and preproc_path.exists() and split_npz_path.exists(), "[LỖI] Thiếu artifact bàn giao!"
-
-    with open(split_meta_path, "r", encoding="utf-8") as f:
-        split_meta = json.load(f)
-    with open(preproc_path, "r", encoding="utf-8") as f:
-        preproc_cfg = json.load(f)
-
-    meta_split_version = split_meta.get("split_version") or split_meta.get("version")
-    assert meta_split_version == SPLIT_VERSION, f"split_version mismatch: {meta_split_version} != {SPLIT_VERSION}"
-    assert preproc_cfg.get("version") == PREPROC_VERSION, "preprocessing version mismatch"
-
-    current_mean, _, current_source = resolve_normalization_stats(eda_dir)
-    assert current_source.startswith("artifact:"), "NORMALIZATION_SOURCE must start with artifact:"
-    expected_mean = preproc_cfg["normalization"]["mean"][0]
-    assert round(current_mean[0], 4) == round(expected_mean, 4), f"Mean mismatch: {current_mean[0]} != {expected_mean}"
-    expected_train_size = split_meta.get("train_size") or split_meta.get("train_count")
-    expected_val_size = split_meta.get("val_size") or split_meta.get("val_count")
-    assert len(train_loader.dataset) == expected_train_size, f"train_loader size mismatch: {len(train_loader.dataset)} != {expected_train_size}"
-    assert len(val_loader.dataset) == expected_val_size, f"val_loader size mismatch: {len(val_loader.dataset)} != {expected_val_size}"
-
-    print("[GUARD ASSERT PASSED] Toàn bộ 4 tiêu chí bàn giao EDA đã được xác thực 100%!")
-    return True

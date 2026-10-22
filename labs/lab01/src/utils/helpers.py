@@ -22,16 +22,12 @@ BASE_DIR = Path(os.environ.get(
 
 DATA_DIR = BASE_DIR / "data"
 OUTPUTS_DIR = BASE_DIR / "outputs"
-CHECKPOINTS_DIR = OUTPUTS_DIR / "checkpoints"
 LOGS_DIR = OUTPUTS_DIR / "logs"
-PREDICTIONS_DIR = OUTPUTS_DIR / "predictions"
 EDA_DIR = OUTPUTS_DIR / "eda"
 
 # Ensure output directories exist
 OUTPUTS_DIR.mkdir(parents=True, exist_ok=True)
-CHECKPOINTS_DIR.mkdir(parents=True, exist_ok=True)
 LOGS_DIR.mkdir(parents=True, exist_ok=True)
-PREDICTIONS_DIR.mkdir(parents=True, exist_ok=True)
 EDA_DIR.mkdir(parents=True, exist_ok=True)
 
 # Device Configuration
@@ -40,14 +36,11 @@ DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 # Dataset & Split Constants
 RANDOM_SEED = 42
 IMAGE_SIZE = 28
-NUM_CHANNELS = 1
-NUM_CLASSES = 10
 VAL_SPLIT = 0.1
 SPLIT_VERSION = "split_v2_stratified"
 PREPROC_VERSION = "preproc_v2_train_global_std"
 
 CONFIG_DIR = SOURCE_DIR / "config"
-AUGMENTATIONS_CONFIG_PATH = CONFIG_DIR / "augmentations.yaml"
 PREPROCESSING_CONFIG_PATH = EDA_DIR / "preprocessing_config.json"
 
 
@@ -76,8 +69,6 @@ def resolve_normalization_stats(
     return tuple(float(m) for m in mean), tuple(float(s) for s in std), f"artifact:{path}"
 
 
-# Alias for backward compatibility in internal handoff verification
-_resolve_normalization = resolve_normalization_stats
 
 
 
@@ -108,19 +99,6 @@ def set_seed(seed: int = 42) -> None:
         torch.cuda.manual_seed_all(seed)
         torch.backends.cudnn.deterministic = True
         torch.backends.cudnn.benchmark = False
-
-
-def load_yaml_config(config_path: Path) -> Dict[str, Any]:
-    """Loads a YAML configuration file safely."""
-    path = Path(config_path)
-    if not path.exists():
-        raise FileNotFoundError(f"Configuration file not found at: {path}")
-    try:
-        import yaml
-        with open(path, "r", encoding="utf-8") as f:
-            return yaml.safe_load(f)
-    except ImportError:
-        raise ImportError("Package 'pyyaml' is required to load YAML config. Install with: pip install pyyaml")
 
 
 def save_checkpoint(

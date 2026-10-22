@@ -1,31 +1,9 @@
-"""Base dataset wrapper and stratified split utilities."""
+"""Stratified split utilities."""
 
 import json
 from pathlib import Path
 from typing import Optional, Sequence, Tuple
 import numpy as np
-import torch
-from torch.utils.data import Dataset, Subset
-from torchvision import transforms
-
-
-class TransformedSubset(Dataset):
-    """Wraps a torch.utils.data.Subset to apply transforms dynamically.
-    Ensures Train set can receive augmentations while Validation stays unaugmented.
-    """
-
-    def __init__(self, subset: Subset, transform: Optional[transforms.Compose] = None):
-        self.subset = subset
-        self.transform = transform
-
-    def __getitem__(self, index: int) -> Tuple[torch.Tensor, int]:
-        image, label = self.subset[index]
-        if self.transform is not None:
-            image = self.transform(image)
-        return image, label
-
-    def __len__(self) -> int:
-        return len(self.subset)
 
 
 def make_stratified_split(
