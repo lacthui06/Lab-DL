@@ -1,4 +1,4 @@
-"""Current run-based infer entry point; see archived scripts for legacy YAML interface."""
+"""Current run-based infer entry point; legacy YAML interface is in Git history (e0fd041)."""
 import argparse
 import sys
 from pathlib import Path

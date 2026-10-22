@@ -90,9 +90,7 @@ labs/lab01/
 ├── notebooks/
 │   ├── 01_eda_preprocessing_features.ipynb
 │   ├── 02_modeling_comparison.ipynb
-│   └── lab01.ipynb                     # Trang chỉ dẫn đến notebook hiện hành và bản lịch sử
-├── archive/
-│   └── pre_cleanup_20261022/           # Bản tài liệu/notebook/config/CLI trước hợp nhất
+│   └── lab01.ipynb                     # Trang chỉ dẫn đến notebook hiện hành
 ├── description_lab_01.md              # Đề bài gốc và phạm vi đã thống nhất
 ├── walkthrough_lab_01.md              # Phương pháp và kết quả có bằng chứng
 ├── internal_changes.md                # Nhật ký nội bộ, không đưa vào báo cáo PDF
@@ -150,7 +148,7 @@ TPESampler được cấu hình 10 startup trials. Với ngân sách 10 trial/op
 
 Run ID gồm thời gian UTC, tên giai đoạn và mã định danh. Mỗi run giữ config/môi trường, stdout/stderr, trạng thái và SHA256 manifest. Trial pruned vẫn giữ partial history và checkpoint nếu có; không bị coi là lỗi phần mềm. History model được ghi sau mỗi epoch, checkpoint được chọn theo validation.
 
-`config/workflow.json` chỉ rõ run được dùng để trình bày; không tự chọn run mới nhất. Archive giữ lịch sử source/tài liệu; `outputs/runs/` giữ bằng chứng thực nghiệm. Việc dọn tài liệu không sửa CSV, prediction hoặc weights của run cũ.
+`config/workflow.json` chỉ rõ run được dùng để trình bày; không tự chọn run mới nhất. Lịch sử source/tài liệu được giữ trong Git (bản trước hợp nhất: commit `e0fd041`); `outputs/runs/` giữ bằng chứng thực nghiệm. Việc dọn tài liệu không sửa CSV, prediction hoặc weights của run cũ.
 
 ---
 
@@ -204,7 +202,7 @@ python labs/lab01/scripts/eval.py --run "<model-run>" --data "<preparation-run>/
 python labs/lab01/scripts/run_optimizer_experiments.py "<preparation-run>/prepared.npz" --epochs 10 --trials 10 --threads 2
 ```
 
-Thay các phần `<...>` bằng đường dẫn thật. Giao diện CLI hiện hành dùng run directory; tùy chọn `--checkpoint`/YAML và `--sample_idx` của bản cũ không còn là giao diện chính. Script cũ được giữ trong archive để truy vết.
+Thay các phần `<...>` bằng đường dẫn thật. Giao diện CLI hiện hành dùng run directory; tùy chọn `--checkpoint`/YAML và `--sample_idx` của bản cũ không còn là giao diện chính. Script cũ có thể truy vết qua lịch sử Git.
 
 ### 3.5. Local và Kaggle
 
@@ -283,7 +281,7 @@ Bản refit **best trong study** dùng Adam, LR=0.0015930522616241021 và weight
 - [Description](description_lab_01.md): đề bài gốc, phạm vi và các quyết định hiện hành.
 - [Walkthrough](walkthrough_lab_01.md): giải thích phương pháp, triển khai và kết quả có artifact; nguồn để phát triển báo cáo lab.
 - [Internal changes](internal_changes.md): nhật ký chỉnh sửa/kiểm tra nội bộ, không đưa vào báo cáo PDF.
-- [Archive](archive/README.md): bản tài liệu, notebook/config và CLI trước hợp nhất; không phải entry point hiện hành.
+- Bản tài liệu, notebook/config và CLI trước hợp nhất đã được gỡ khỏi cây thư mục; khôi phục khi cần bằng `git checkout e0fd041 -- labs/lab01/archive`.
 
 Không xóa run bất lợi hoặc run lỗi để làm đẹp kết quả. `outputs/runs/` được gitignore vì chứa dữ liệu và weights; `git pull` không tải các artifact này. Khi chuyển máy/Kaggle phải đồng bộ run directory riêng và cập nhật đường dẫn trong workflow.json.
 

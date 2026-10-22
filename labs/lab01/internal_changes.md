@@ -74,3 +74,9 @@ Roadmap đầu hai notebook đã chuyển sang bảng 5 cột theo mẫu ngườ
 - Theo phản hồi không thấy FE trong notebook EDA: thêm mục 2.1 hiển thị source thực của features.py và 10 hàng train_features.csv với đủ 10 cột feature, index, label. Cell tạo run feature_code_preview giữ feature_source.txt, train_feature_preview.csv, log/status/manifest. Notebook thực thi view để lưu output; không train lại hoặc sửa dữ liệu.
 
 - Sửa lệch roadmap notebook EDA: trước đây chạy gộp prepare_data rồi in source/CSV và dồn hình cuối; nay trình bày đủ 7 giai đoạn với output tại chỗ. Backend chạy gộp được giải thích rõ, không giả định mỗi cell tạo một giai đoạn độc lập. FE cell thực thi extractor trên 10 ảnh thật, kiểm tra CSV, nhãn/index, scaler và NPZ; giữ snapshot source, extracted_features.csv, verification.json cùng log/manifest trong run riêng. Bản notebook trước sửa được lưu trong run eda_roadmap_restructure.
+
+## Gỡ archive — 22/10/2026
+
+- Xóa toàn bộ labs/lab01/archive/ (local và GitHub) theo yêu cầu người dùng. Không có source/test/config nào import hoặc đọc archive; chỉ tài liệu và docstring tham chiếu.
+- Cập nhật tham chiếu trong README, walkthrough, description, notebooks/lab01.ipynb, docstring scripts/eval.py và scripts/infer.py sang lịch sử Git. Các mục nhật ký phía trên nhắc tới archive được giữ nguyên như lịch sử.
+- Khôi phục khi cần: `git checkout e0fd041 -- labs/lab01/archive`.

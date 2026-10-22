@@ -19,7 +19,7 @@ Implement: Load FashionMNIST, apply transforms, build a neural network, create a
 
 ## Quy ước tài liệu và lịch sử
 
-README hướng dẫn chạy; description chứa yêu cầu và quyết định hiện hành; walkthrough trình bày bài làm/kết quả; internal_changes là nhật ký nội bộ. Bản trước hợp nhất, đề bài đã chú giải và các lựa chọn cũ được giữ nguyên trong archive/pre_cleanup_20261022. Không xóa outputs/runs. Danh mục run đang dùng nằm trong config/workflow.json, không tự chọn run mới nhất.
+README hướng dẫn chạy; description chứa yêu cầu và quyết định hiện hành; walkthrough trình bày bài làm/kết quả; internal_changes là nhật ký nội bộ. Bản trước hợp nhất, đề bài đã chú giải và các lựa chọn cũ được truy vết qua lịch sử Git (commit e0fd041). Không xóa outputs/runs. Danh mục run đang dùng nằm trong config/workflow.json, không tự chọn run mới nhất.
 
 ## Rà soát tính nhất quán sau triển khai
 

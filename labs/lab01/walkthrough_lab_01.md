@@ -1,6 +1,6 @@
 # Walkthrough — Lab01: FashionMNIST
 
-Tài liệu hiện hành hợp nhất phương pháp và kết quả có artifact; nhật ký dọn/chỉnh sửa ở internal_changes.md. Toàn bộ bản trước hợp nhất được giữ trong archive/pre_cleanup_20261022/walkthrough_lab_01.md. Không sử dụng các kết quả lịch sử K-fold/75-run sweep chưa xác minh làm bằng chứng cho pipeline hiện hành.
+Tài liệu hiện hành hợp nhất phương pháp và kết quả có artifact; nhật ký dọn/chỉnh sửa ở internal_changes.md. Bản trước hợp nhất được truy vết qua lịch sử Git (commit e0fd041). Không sử dụng các kết quả lịch sử K-fold/75-run sweep chưa xác minh làm bằng chứng cho pipeline hiện hành.
 
 ## 1. Đặc tả và thiết kế
 
@@ -206,7 +206,7 @@ Một seed chưa đủ kết luận ý nghĩa thống kê cho chênh lệch nh�
 
 Nguồn API: [Optuna MedianPruner](https://optuna.readthedocs.io/en/stable/reference/generated/optuna.pruners.MedianPruner.html), [Optuna RDB](https://optuna.readthedocs.io/en/stable/tutorial/20_recipes/001_rdb.html).
 
-Bản hiện hành sử dụng config/workflow.json và một chế độ train/view chung cho notebook. Source/cấu hình trước hợp nhất được lưu trong archive; các run nguồn của kết quả bên trên vẫn bất biến. Kiểm tra sau hợp nhất: 44 tests passed, 1 test historical training deselected; log nội bộ được lưu riêng, không thuộc bản báo cáo xuất.
+Bản hiện hành sử dụng config/workflow.json và một chế độ train/view chung cho notebook. Source/cấu hình trước hợp nhất được truy vết qua lịch sử Git; các run nguồn của kết quả bên trên vẫn bất biến. Kiểm tra sau hợp nhất: 44 tests passed, 1 test historical training deselected; log nội bộ được lưu riêng, không thuộc bản báo cáo xuất.
 
 
 ### Trình bày huấn luyện sau search và lưu/tải model
