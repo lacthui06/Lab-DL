@@ -1,0 +1,15 @@
+# Image Augmentation Rules for FashionMNIST
+# Normalization (mean/std) is NOT stored here — it is strictly loaded from
+# outputs/eda/preprocessing_config.json to prevent data leakage or fake stats.
+train:
+  random_horizontal_flip:
+    enabled: true
+    p: 0.5
+  random_rotation:
+    enabled: true
+    degrees: 10
+  random_crop:
+    enabled: false
+    size: 28
+    padding: 2
+

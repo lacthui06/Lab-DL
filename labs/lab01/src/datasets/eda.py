@@ -10,6 +10,7 @@ import numpy as np
 import pandas as pd
 
 from .base import load_split, make_stratified_split, save_split
+from .features import measure_intensity, foreground_bbox
 from ..utils.helpers import (
     CLASS_NAMES,
     DATA_DIR,
@@ -172,16 +173,7 @@ def class_distribution(
     return pd.DataFrame(rows)
 
 
-def _foreground_bbox(mask: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
-    """Return enclosing height/width, including interior gaps; empty masks yield zero."""
-    rows = mask.any(axis=2)
-    cols = mask.any(axis=1)
-    nonempty = rows.any(axis=1)
-    height = np.where(nonempty, rows.shape[1] - rows[:, ::-1].argmax(axis=1)
-                      - rows.argmax(axis=1), 0)
-    width = np.where(nonempty, cols.shape[1] - cols[:, ::-1].argmax(axis=1)
-                     - cols.argmax(axis=1), 0)
-    return height, width
+_foreground_bbox = foreground_bbox
 
 
 def spatial_features(
@@ -326,12 +318,9 @@ def compute_handcrafted_features(
         aspect = np.where(bbox_h > 0, bbox_w / bbox_h, np.nan)
     area_ratio = bbox_h * bbox_w / (h * w)
 
-    diff_h = np.abs(np.diff(scaled, axis=1))[:, :, :-1]
-    diff_w = np.abs(np.diff(scaled, axis=2))[:, :-1, :]
-    edge_density = ((diff_h + diff_w) > 0.15).mean(axis=(1, 2))
-
-    img_means = scaled.mean(axis=(1, 2))
-    img_stds = scaled.std(axis=(1, 2))
+    # Same definition used by modeling. Historical outputs retain their original formula.
+    per_image = np.asarray([measure_intensity(image, threshold) for image in scaled])
+    img_means, img_stds, edge_density = per_image.T
 
     rows = []
     for c_idx, name in enumerate(class_names):

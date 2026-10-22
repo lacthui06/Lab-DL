@@ -1,3 +1,4 @@
+# Legacy compatibility configuration. Current workflow: config/workflow.json
 # Configuration for Lab 01: FashionMNIST Classification
 project:
   name: "lab01_fashionmnist"

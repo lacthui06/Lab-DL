@@ -1,3 +1,4 @@
+# Legacy compatibility configuration. Current workflow: config/workflow.json
 # Image Augmentation Rules for FashionMNIST
 # Normalization (mean/std) is NOT stored here — it is strictly loaded from
 # outputs/eda/preprocessing_config.json to prevent data leakage or fake stats.

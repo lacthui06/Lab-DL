@@ -12,8 +12,6 @@ from ..utils.helpers import (
     CLASS_NAMES,
     DATA_DIR,
     EDA_DIR,
-    FASHION_MNIST_MEAN,
-    FASHION_MNIST_STD,
     IMAGE_SIZE,
     load_yaml_config,
     resolve_normalization_stats,
@@ -28,8 +26,9 @@ def get_transforms(
 ) -> transforms.Compose:
     """Builds torchvision transformation pipeline connected to config/augmentations.yaml."""
     if mean is None or std is None:
-        mean = FASHION_MNIST_MEAN if mean is None else mean
-        std = FASHION_MNIST_STD if std is None else std
+        measured_mean, measured_std, _ = resolve_normalization_stats()
+        mean = measured_mean if mean is None else mean
+        std = measured_std if std is None else std
 
     t_list = []
     if augment:

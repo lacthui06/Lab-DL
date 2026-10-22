@@ -10,7 +10,7 @@ LAB01_DIR = Path(__file__).resolve().parent.parent
 if str(LAB01_DIR) not in sys.path:
     sys.path.insert(0, str(LAB01_DIR))
 
-from src.utils.helpers import DATA_DIR, EDA_DIR, RANDOM_SEED, CLASS_NAMES, FASHION_MNIST_MEAN, FASHION_MNIST_STD, resolve_normalization_stats, set_seed
+from src.utils.helpers import DATA_DIR, EDA_DIR, RANDOM_SEED, CLASS_NAMES, resolve_normalization_stats, set_seed
 from src.datasets.classification import get_dataloaders, get_transforms
 from src.datasets.base import make_stratified_split, save_split, load_split
 from src.datasets.eda import (

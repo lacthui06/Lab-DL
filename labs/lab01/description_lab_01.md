@@ -1,95 +1,36 @@
-# Description — Lab 01: PyTorch FashionMNIST Classification
+# Description — Lab01: FashionMNIST với PyTorch
 
-> **Lab:** Lab 01
+## Đề bài gốc
 
----
-
-## Ghi chú về file này
-
-Đây là bản ghi **đề bài gốc** (đầu vào) do giảng viên giao kèm phần **làm rõ và thống nhất phạm vi thực hiện** sau khi thảo luận chi tiết.
-
-Bài làm và toàn bộ kết quả thực nghiệm nằm ở `walkthrough_lab_01.md` (đầu ra). Hai file bổ sung cho nhau:
-- `description_lab_01.md`: đề bài nhận vào và phạm vi đã chốt.
-- `walkthrough_lab_01.md`: bài làm và báo cáo kỹ thuật hoàn chỉnh.
-
----
-
-## 1. Bối cảnh và Mục tiêu
-
-### 1.1. Đề bài gốc (Original Brief)
 Learn: Study PyTorch Tensors, Datasets/Loaders, Transforms, Model Building, Autograd, Optimization, and Model Saving/Loading.
 
-### 1.2. Thống nhất thực hiện (Agreed Scope & Objectives)
-- **Chuẩn hóa dữ liệu theo EDA/FE:** Sử dụng dữ liệu đã qua phân tầng nghiêm ngặt (Stratified Split 54,000 train / 6,000 val) và bộ tham số chuẩn hóa đo đạc thực nghiệm (Global Mean = 0.286209, Global Std = 0.353160).
-- **Kiến trúc mô hình thuần PyTorch (FashionMLP):** Sử dụng một kiến trúc mạng MLP duy nhất được xây dựng từ đúng 3 loại layer cơ bản: `nn.Flatten`, `nn.Linear`, `nn.ReLU` (không BatchNorm, không Dropout) với cấu hình 3 tầng Linear (`784 -> 256 -> 128 -> 10`) vừa vặn, đạt dung lượng biểu diễn tốt.
-- **Tự động dò tìm siêu tham số bằng Optuna:** Áp dụng framework Optuna (thuật toán Bayesian Optimization TPE) để tự động tìm ra bộ learning rate và momentum tối ưu nhất cho từng thuật toán (SGD + Momentum, RMSprop, Adam) theo cùng một tiêu chí công bằng (Validation Accuracy).
-- **So sánh 3 thuật toán Optimizer toàn diện (Fixed LR vs Optuna):** Đánh giá 3 bộ tối ưu (SGD + Momentum, RMSprop, Adam) qua 2 kịch bản: dùng chung Learning Rate `1e-3` và tự động dò tìm siêu tham số đỉnh cao bằng Optuna (Peak-to-Peak kết hợp `CosineAnnealingLR`).
-- **Đánh giá đường cong ROC-AUC đa lớp (One-vs-Rest) & Kiểm chứng Model Roundtrip:** Tính xác suất phân lớp softmax trên 10 lớp, vẽ đường cong ROC đa lớp độc lập với ngưỡng quyết định, lưu/tải lại checkpoint mô hình chiến thắng và đánh giá kiểm chứng trên 10,000 ảnh tập Test kèm lưới 16 ảnh dự đoán trực quan.
+Implement: Load FashionMNIST, apply transforms, build a neural network, create a training loop, evaluate accuracy, save/load the model. Experiment with network/hyperparameters, visualize loss and predicted-vs-actual images. Deliver Python code, report, loss graphs and image displays. Use PyTorch documentation/tutorials.
 
----
+## Phạm vi hiện hành đã thống nhất
 
-## 2. Yêu cầu (Requirements & Tasks)
+1. Hai notebook: EDA/preprocessing/feature engineering và modeling/optimizer/tuning. Roadmap dạng bảng 5 cột ở đầu mỗi notebook. Chế độ view/train dùng cùng cell hiển thị, tránh phần đọc lại lặp cuối notebook.
+2. FashionMNIST 28×28 grayscale, split stratified 54.000 train/6.000 validation, test gốc 10.000; giữ indices. Rescale /255, đo thống kê pixel và fit feature scaler chỉ trên train.
+3. Trích xuất 10 feature từ ảnh [0,1]: mean, std, foreground ratio, bbox width/height, aspect ratio, centroid x/y, symmetry, edge density. Pixel và feature được standardize riêng. Không augmentation trong comparison này.
+4. SmallMLP 784-128-10; MainMLP 784-256-128-10; MainMLP_FE 794-256-128-10. Cùng split/seed/config để so dung lượng và tác động FE. Cùng class FashionMLP.
+5. Thực nghiệm optimizer riêng trên MainMLP pixel: SGD/RMSprop/Adam cùng LR=0.001; tuning độc lập 10 trial/optimizer, tối đa 10 epoch. Tune LR, weight_decay và momentum SGD. Chọn bằng validation; test chỉ đánh giá sau lựa chọn. Với 10 startup trials, lượt hiện tại chưa vào pha TPE thích nghi. Không mặc định tuned tốt hơn baseline.
+6. Hình: learning curves, validation comparison, Accuracy/Macro F1, chi phí, confusion matrices, prediction grids; ROC+PR OvR một ảnh hai panel cho mỗi model. Không F1 heatmap hoặc biểu đồ cột TPR/FPR. Hiển thị chọn lọc nhưng lưu đủ artifact.
+7. Hỗ trợ local CPU/CUDA và Kaggle; cấu hình nguồn ở config/workflow.json, seed=42, epoch=10, batch=128 cho kết quả hiện hành. Mọi run lưu config, environment, log, status, manifest, bảng/hình/checkpoint/prediction; run mới không ghi đè cũ.
+8. Walkthrough ghi phương pháp, quyết định và kết quả có bằng chứng. Nhật ký chỉnh sửa và phân tích lỗi nội bộ tách khỏi nội dung dùng cho báo cáo. Chưa tạo PDF; mục tiêu bản xuất sau này >=25 trang bằng nội dung có bằng chứng.
 
-### 2.1. Đề bài gốc (Original Brief)
-Implement:
-- Load FashionMNIST dataset.
-- Apply transforms.
-- Build a neural network.
-- Create a training loop (forward, loss, backward, optimize).
-- Evaluate model accuracy.
-- Save and load the model.
+## Quy ước tài liệu và lịch sử
 
-Tasks:
-- Experiment with network/hyperparameters.
-- Visualize loss.
-- Display predicted vs actual images.
+README hướng dẫn chạy; description chứa yêu cầu và quyết định hiện hành; walkthrough trình bày bài làm/kết quả; internal_changes là nhật ký nội bộ. Bản trước hợp nhất, đề bài đã chú giải và các lựa chọn cũ được giữ nguyên trong archive/pre_cleanup_20261022. Không xóa outputs/runs. Danh mục run đang dùng nằm trong config/workflow.json, không tự chọn run mới nhất.
 
-### 2.2. Thống nhất thực hiện (Agreed Tasks Breakdown)
-- **Task 1 — 9-Step Core EDA, Feature Engineering & Pipeline Guard:**
-  - Thực hiện đầy đủ 9 bước Core EDA theo `docs/eda-image.md` & `docs/feature-image.md`, xuất 7 bảng thống kê CSV vào `outputs/eda/tables/` và 7 biểu đồ PNG vào `outputs/eda/figures/`.
-  - Nạp dữ liệu qua `src.datasets.classification.get_dataloaders()`, kết nối cấu hình `config/augmentations.yaml`, tuân thủ thứ tự transform: Augmentation -> ToTensor -> Normalize.
-  - Chốt chặn Guard (`verify_pipeline_handoff`) kiểm tra tính toàn vẹn của 4 tiêu chí bàn giao từ EDA và Feature Engineering trước khi cho phép huấn luyện.
-- **Task 2 — Huấn luyện & Đánh giá Kiến trúc (FashionMLP):**
-  - Kiến trúc: `Input(784) -> Linear(784, 256) -> ReLU -> Linear(256, 128) -> ReLU -> Linear(128, 10)` (`235,146` tham số). Thuần túy 3 loại layer cơ bản (`Flatten`, `Linear`, `ReLU`).
-  - Chốt chặn Sanity check 1-batch overfit kéo loss về sát 0 (`0.0005 < 0.15`) trước khi huấn luyện chính thức.
-  - Huấn luyện mô hình 10 epochs với `Adam` + `CosineAnnealingLR`, vẽ đường cong Loss & Accuracy, chẩn đoán Confusion Matrix đếm số nguyên 10x10 và hiển thị lưới dự đoán 16 ảnh thực tế.
-- **Task 3 — So sánh 3 Optimizer (Cùng LR 1e-3 vs. Dò tìm siêu tham số bằng Optuna):**
-  - *Bước 3.1 (Kịch bản 1 — Cùng Learning Rate `1e-3`):* So sánh trực diện SGD (`momentum=0.9`), RMSprop (`momentum=0.0`), và Adam ở cùng bước nhảy `1e-3` trong 10 epochs để quan sát tốc độ hội tụ tự nhiên.
-  - *Bước 3.2 (Kịch bản 2 — Tối ưu hóa bằng Optuna & Đua Peak-to-Peak):* Thiết lập hàm mục tiêu `objective(trial)` với `TPESampler(seed=42)` và `MedianPruner`, chạy 12 trials để tự động tìm Learning Rate (và Momentum cho SGD) tối ưu nhất cho từng thuật toán, sau đó huấn luyện đối đầu 10 epochs kèm `CosineAnnealingLR` để chọn ra `winner_model`.
-- **Task 4 — Khảo sát ROC-AUC Đa lớp (One-vs-Rest) & Kiểm chứng Model Roundtrip:**
-  - Đánh giá năng lực phân biệt của `winner_model` qua đường cong One-vs-Rest ROC và điểm AUC cho từng lớp (kèm Micro-average và Macro-average AUC).
-  - Lưu trữ checkpoint `outputs/checkpoints/fashion_mlp_final.pt`, khởi tạo mô hình sạch, nạp lại trọng số qua `load_checkpoint()`, đánh giá độc lập trên 10,000 ảnh tập Test (`Test Accuracy = 89.30%`), hiển thị lưới 16 ảnh dự đoán (`test_prediction_grid.png`) và đóng gói toàn bộ `outputs/` thành `all_outputs.zip`.
+## Rà soát tính nhất quán sau triển khai
 
----
+Confusion matrix phải ghi số ảnh ở mọi ô, màu biểu diễn tỷ lệ theo lớp thật và có colorbar. Roadmap phải liên kết file/hàm đang thực thi, phân biệt artifact sinh khi train và dữ liệu đọc khi view. Chỉ loại bỏ file không còn tác dụng sau khi kiểm tra tham chiếu; giữ module tương thích, notebook, bản lưu lịch sử và toàn bộ bằng chứng thí nghiệm.
 
-## 3. Ràng buộc kỹ thuật (Constraints)
+## Bổ sung trình bày sau tìm siêu tham số
 
-### 3.1. Đề bài gốc (Original Brief)
-Use: PyTorch docs/tutorials.
+Notebook modeling hiển thị loss và accuracy train/validation của lượt refit best study, cùng history theo epoch. Cuối notebook phải có bước save/load model: lưu state_dict và kiến trúc/config, tải vào instance mới ở eval mode và kiểm tra dự đoán trước/sau, lưu toàn bộ bằng chứng và log vào run riêng.
 
-### 3.2. Thống nhất thực hiện (Agreed Constraints)
-- **Tự động hóa với Optuna có kiểm soát:** Giới hạn 12 trials nhanh (3 epochs/trial) và kích hoạt cơ chế `MedianPruner` để tiết kiệm tối đa GPU/CPU quota.
-- **Kiến trúc Modular Clean Architecture:** Phân tách rõ ràng 4 phân hệ trong `src/` (`datasets/`, `models/`, `training/`, `utils/`), kết nối đồng bộ với `config/*.yaml` và `scripts/*.py`.
-- **Quy chuẩn Notebook tinh gọn (Zero Waste):** Notebook `notebooks/lab01.ipynb` gồm các cell súc tích gọi trực tiếp hàm từ `src/`, không chứa các khối định nghĩa hàm/class cồng kềnh và hoàn toàn không chứa emoji/icon.
-- **Tính tái lập nghiêm ngặt (Strict Reproducibility) & Không dùng số liệu giả:** Cố định seed (`seed=42`) cho Optuna sampler, PyTorch, NumPy, Python random; tuyệt đối không dùng hằng số chuẩn hóa giả lập (mọi thống kê phải đọc từ `preprocessing_config.json`).
+Bổ sung làm rõ: loss/accuracy sau search phải so sánh đủ SGD, RMSprop, Adam với best parameters riêng; dùng history best completed trial và ghi rõ nguồn, không chỉ winner. Model tải lại phải đánh giá toàn bộ test và hiển thị mẫu đúng/sai với nhãn thật, nhãn dự đoán, xác suất. Mọi hình/bảng/metric có artifact và log.
 
----
+Notebook EDA phải trình bày trực tiếp code trích xuất 10 feature và bảng giá trị từng ảnh; dùng source hiện hành, không duy trì bản sao công thức trong notebook.
 
-## 4. Sản phẩm cần nộp (Deliverables)
-
-### 4.1. Đề bài gốc (Original Brief)
-Deliver: Python code, brief report, loss graphs, image displays.
-
-### 4.2. Thống nhất thực hiện (Agreed Deliverables)
-- **Mã nguồn và Notebook:**
-  - File notebook tương tác hoàn chỉnh: `labs/lab01/notebooks/lab01.ipynb` có đầy đủ output thực thi và hình ảnh trực quan (bao gồm đủ 7 biểu đồ EDA, biểu đồ huấn luyện, so sánh optimizer, ROC-AUC, và lưới kiểm chứng tập Test).
-  - Gói thư viện chuẩn hóa trong `labs/lab01/src/` (`datasets/`, `models/`, `training/`, `utils/`), bộ CLI trong `labs/lab01/scripts/` (`train.py`, `eval.py`, `infer.py`) và 22 bài test trong `labs/lab01/tests/`.
-- **Bộ hình ảnh và biểu đồ chẩn đoán (thư mục `outputs/`):**
-  - 7 bảng CSV thống kê (`outputs/eda/tables/*.csv`) và 7 biểu đồ EDA (`outputs/eda/figures/*.png`).
-  - Đồ thị huấn luyện Loss & Accuracy (`outputs/predictions/learning_curves.png`).
-  - Ma trận nhầm lẫn (`outputs/predictions/confusion_matrix.png`) và lưới 16 ảnh dự đoán tập Validation (`outputs/predictions/prediction_grid.png`) + tập Test (`outputs/predictions/test_prediction_grid.png`).
-  - Đồ thị so sánh 3 Optimizer ở cùng LR `1e-3` (`optimizer_fixed_lr_comparison.png`) và sau khi tinh chỉnh bằng Optuna (`optimizer_comparison.png`).
-  - Đồ thị đường cong ROC-AUC đa lớp One-vs-Rest (`outputs/predictions/roc_curves.png`).
-- **Checkpoints & Báo cáo:**
-  - Checkpoint mô hình tốt nhất (`outputs/checkpoints/fashion_mlp_best.pt`, `outputs/checkpoints/fashion_mlp_final.pt`).
-  - Toàn bộ kết quả định lượng được ghi nhận và phân tích trong tài liệu sống `walkthrough_lab_01.md`.
+Notebook EDA phải trình bày từng mục 1–7 đúng roadmap, output nằm ngay sau bước tương ứng. Phải phân biệt backend prepare_data chạy gộp và cell trình bày/kiểm chứng; bước FE phải gọi extractor trên ảnh thật rồi đối chiếu CSV/scaler/NPZ, không chỉ in source.

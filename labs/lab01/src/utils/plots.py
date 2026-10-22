@@ -12,7 +12,22 @@ from sklearn.metrics import auc, confusion_matrix, roc_curve
 from sklearn.preprocessing import label_binarize
 from torch.utils.data import DataLoader
 
-from .helpers import FASHION_MNIST_MEAN, FASHION_MNIST_STD
+from .helpers import resolve_normalization_stats
+
+
+def draw_confusion_counts(ax, counts, class_names, title):
+    """Annotate every cell with its count; color encodes recall per true class."""
+    counts = np.asarray(counts)
+    totals = counts.sum(axis=1, keepdims=True)
+    normalized = np.divide(counts, totals, out=np.zeros_like(counts, dtype=float), where=totals != 0)
+    im = ax.imshow(normalized, vmin=0, vmax=1, cmap="Blues")
+    for (row, col), count in np.ndenumerate(counts):
+        ax.text(col, row, str(int(count)), ha="center", va="center", fontsize=8,
+                color="white" if normalized[row, col] > 0.5 else "black")
+    ax.set_xticks(range(len(class_names)), class_names, rotation=90)
+    ax.set_yticks(range(len(class_names)), class_names)
+    ax.set(xlabel="Predicted class", ylabel="True class", title=title + "\nCell text: sample count")
+    return im
 
 
 def _save_fig(fig: plt.Figure, save_path: Optional[Path]) -> None:
@@ -29,8 +44,11 @@ def unnormalize(
     std: Optional[Sequence[float]] = None,
 ) -> torch.Tensor:
     """Reverses the normalization applied by get_transforms."""
-    m = FASHION_MNIST_MEAN if mean is None else mean
-    s = FASHION_MNIST_STD if std is None else std
+    if mean is None or std is None:
+        measured_mean, measured_std, _ = resolve_normalization_stats()
+        mean = measured_mean if mean is None else mean
+        std = measured_std if std is None else std
+    m, s = mean, std
 
     mean_t = torch.as_tensor(m, dtype=images.dtype, device=images.device)
     std_t = torch.as_tensor(s, dtype=images.dtype, device=images.device)

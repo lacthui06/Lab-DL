@@ -109,19 +109,11 @@ def run_optuna_optimizer_study(
 
         return best_results, study.trials_dataframe()
 
-    except ImportError:
-        print("[INFO] Optuna chua duoc cai dat. Su dung bo sieu tham so toi uu chuan:")
-        best_results = {
-            "SGD": {"params": {"lr": 0.05, "momentum": 0.9}, "best_val_acc": 88.55},
-            "RMSprop": {"params": {"lr": 0.001}, "best_val_acc": 88.76},
-            "Adam": {"params": {"lr": 0.001}, "best_val_acc": 88.81},
-        }
-        fallback_trials = [
-            {"number": 1, "params_optimizer": "SGD", "params_lr": 0.05, "params_momentum": 0.9, "value": 88.55, "state": "COMPLETE"},
-            {"number": 2, "params_optimizer": "RMSprop", "params_lr": 0.001, "params_momentum": 0.0, "value": 88.76, "state": "COMPLETE"},
-            {"number": 3, "params_optimizer": "Adam", "params_lr": 0.001, "params_momentum": 0.0, "value": 88.81, "state": "COMPLETE"},
-        ]
-        return best_results, pd.DataFrame(fallback_trials)
+    except ImportError as exc:
+        raise ImportError(
+            "Optuna is required to run the optimizer study. Install optuna and rerun; "
+            "no trial results were generated."
+        ) from exc
 
 
 def compare_optimizers_wallclock(
@@ -165,6 +157,7 @@ def compare_optimizers_wallclock(
 
         epoch_times, val_accs, val_losses = [], [], []
         epoch_to_target = None
+        best_state, best_score = None, -float("inf")
 
         for epoch in range(1, epochs + 1):
             ep_start = time.perf_counter()
@@ -177,10 +170,15 @@ def compare_optimizers_wallclock(
             val_loss, val_acc, _, _ = evaluate(model, val_loader, criterion, device)
             val_accs.append(val_acc)
             val_losses.append(val_loss)
+            if val_acc > best_score:
+                best_score = val_acc
+                best_state = {k: v.detach().cpu().clone() for k, v in model.state_dict().items()}
 
             if epoch_to_target is None and val_acc >= target_acc:
                 epoch_to_target = epoch
 
+        if best_state is not None:
+            model.load_state_dict(best_state)
         trained_models[opt_name] = model
         run_histories[opt_name] = {
             "val_accs": val_accs,
@@ -206,6 +204,12 @@ def compare_optimizers_wallclock(
     winner_row = summary_df.sort_values(by=["Best Val Acc (%)", "Min Val Loss"], ascending=[False, True]).iloc[0]
     winner_name = str(winner_row["Optimizer"])
 
+    if save_fig_path is not None:
+        from ..utils.runs import write_json
+        destination = Path(save_fig_path).parent
+        destination.mkdir(parents=True, exist_ok=True)
+        write_json(destination / "optimizer_histories.json", run_histories)
+        summary_df.to_csv(destination / "optimizer_summary.csv", index=False)
     fig = plot_optimizer_comparison(run_histories, epochs, target_acc, save_fig_path)
     return summary_df, trained_models[winner_name], winner_name, fig
 

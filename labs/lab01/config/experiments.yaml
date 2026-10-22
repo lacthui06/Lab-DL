@@ -1,3 +1,4 @@
+# Legacy compatibility configuration. Current workflow: config/workflow.json
 # Experiment and hyperparameter optimization configurations for Lab 01
 
 optuna:

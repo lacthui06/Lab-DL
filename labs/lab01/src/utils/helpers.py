@@ -4,7 +4,6 @@ import json
 import os
 import platform
 import random
-import warnings
 from pathlib import Path
 from typing import Any, Dict, Optional, Tuple
 
@@ -15,10 +14,11 @@ import torch.nn as nn
 # ---------------------------------------------------------------------------
 # Project Base Directories & Device Configuration
 # ---------------------------------------------------------------------------
-if os.path.exists("/kaggle/working"):
-    BASE_DIR = Path("/kaggle/working")
-else:
-    BASE_DIR = Path(__file__).resolve().parent.parent.parent
+SOURCE_DIR = Path(__file__).resolve().parent.parent.parent
+BASE_DIR = Path(os.environ.get(
+    "LAB01_WORK_DIR",
+    "/kaggle/working" if os.path.exists("/kaggle/working") else str(SOURCE_DIR),
+)).resolve()
 
 DATA_DIR = BASE_DIR / "data"
 OUTPUTS_DIR = BASE_DIR / "outputs"
@@ -46,7 +46,7 @@ VAL_SPLIT = 0.1
 SPLIT_VERSION = "split_v2_stratified"
 PREPROC_VERSION = "preproc_v2_train_global_std"
 
-CONFIG_DIR = BASE_DIR / "config"
+CONFIG_DIR = SOURCE_DIR / "config"
 AUGMENTATIONS_CONFIG_PATH = CONFIG_DIR / "augmentations.yaml"
 PREPROCESSING_CONFIG_PATH = EDA_DIR / "preprocessing_config.json"
 
@@ -79,7 +79,7 @@ def resolve_normalization_stats(
 # Alias for backward compatibility in internal handoff verification
 _resolve_normalization = resolve_normalization_stats
 
-FASHION_MNIST_MEAN, FASHION_MNIST_STD, NORMALIZATION_SOURCE = resolve_normalization_stats()
+
 
 # Class Label Mapping
 CLASS_NAMES = [
