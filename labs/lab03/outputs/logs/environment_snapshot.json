@@ -1,0 +1,13 @@
+{
+  "python_version": "3.13.3 (tags/v3.13.3:6280bb5, Apr  8 2025, 14:47:33) [MSC v.1943 64 bit (AMD64)]",
+  "platform": "Windows-11-10.0.26200-SP0",
+  "torch_version": "2.6.0+cu124",
+  "cuda_available": true,
+  "cuda_device": "NVIDIA GeForce RTX 2050",
+  "libraries": {
+    "transformers": "5.20.2",
+    "datasets": "5.1.0",
+    "evaluate": "0.4.6",
+    "accelerate": "1.15.0"
+  }
+}

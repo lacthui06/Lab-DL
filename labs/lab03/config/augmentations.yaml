@@ -1,0 +1,10 @@
+tokenization:
+  max_length: 256
+  padding: "max_length"
+  truncation: true
+  return_tensors: "pt"
+
+dynamic_padding: true
+clean_text: true
+remove_html_tags: true
+lowercase: true

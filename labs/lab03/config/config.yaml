@@ -1,0 +1,29 @@
+seed: 42
+
+paths:
+  data_dir: "labs/lab03/data"
+  output_dir: "labs/lab03/outputs"
+  checkpoint_dir: "labs/lab03/outputs/checkpoints"
+  log_dir: "labs/lab03/outputs/logs"
+  predictions_dir: "labs/lab03/outputs/predictions"
+  eda_dir: "labs/lab03/outputs/eda"
+
+dataset:
+  name: "stanfordnlp/imdb"
+  text_column: "text"
+  label_column: "label"
+  num_labels: 2
+  id2label:
+    0: "NEGATIVE"
+    1: "POSITIVE"
+  label2id:
+    "NEGATIVE": 0
+    "POSITIVE": 1
+  # Subsampling for zero waste / rapid iteration if run locally
+  train_sample_size: 2000
+  eval_sample_size: 500
+  test_sample_size: 1000
+
+model:
+  pretrained_model_name: "distilbert-base-uncased"
+  exercise1_pipeline_model: "distilbert/distilbert-base-uncased-finetuned-sst-2-english"
