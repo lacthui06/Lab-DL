@@ -1,0 +1,21 @@
+.venv/
+data/
+__pycache__/
+.pytest_cache/
+.ipynb_checkpoints/
+.jupyter/
+outputs/cache/
+
+# Generated model weights, feature caches and runtime files
+*.pt
+*.pth
+*.ckpt
+*.onnx
+*.pkl
+*.npy
+*.npz
+*.pyc
+*.log
+events.out.tfevents.*
+.env
+.env.*
