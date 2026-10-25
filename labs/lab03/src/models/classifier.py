@@ -1,65 +1,67 @@
-"""Model creation and inference helpers for Lab 03."""
-from typing import Dict, Any, Tuple
+"""Pretrained inference and a freshly initialized classification head for tuning."""
 import torch
-from transformers import (
-    AutoTokenizer,
-    AutoModelForSequenceClassification,
-    pipeline,
-    Pipeline,
-    PreTrainedModel,
-    PreTrainedTokenizerBase
-)
+from transformers import AutoModelForSequenceClassification, AutoTokenizer, pipeline
 
+LABELS = {0: "NEGATIVE", 1: "POSITIVE"}
 
-def get_sentiment_pipeline(model_name: str) -> Pipeline:
-    """Create a high-level sentiment analysis pipeline."""
-    return pipeline("sentiment-analysis", model=model_name)
-
-
-def load_classification_model(
-    model_name: str,
-    num_labels: int = 2,
-    id2label: Dict[int, str] = None,
-    label2id: Dict[str, int] = None
-) -> Tuple[PreTrainedModel, PreTrainedTokenizerBase]:
-    """Load model and tokenizer for sequence classification."""
-    tokenizer = AutoTokenizer.from_pretrained(model_name)
-    model = AutoModelForSequenceClassification.from_pretrained(
-        model_name,
-        num_labels=num_labels,
-        id2label=id2label,
-        label2id=label2id
-    )
+def load_model(name, revision=None, finetuning=False):
+    kwargs = {"revision": revision} if revision else {}
+    tokenizer = AutoTokenizer.from_pretrained(name, **kwargs)
+    model_kwargs = dict(num_labels=2, id2label=LABELS,
+                        label2id={v: k for k, v in LABELS.items()}) if finetuning else {}
+    model = AutoModelForSequenceClassification.from_pretrained(name, **kwargs, **model_kwargs)
     return model, tokenizer
 
-
-def predict_sentiment_manual(
-    text: str,
-    model: PreTrainedModel,
-    tokenizer: PreTrainedTokenizerBase,
-    device: str = "cpu"
-) -> Dict[str, Any]:
-    """Tokenize and run manual forward pass to compute softmax probabilities."""
-    model.to(device)
+def manual_predict(model, tokenizer, texts, max_length=128):
     model.eval()
+    device = next(model.parameters()).device
+    encoded = tokenizer(texts, return_tensors="pt", padding=True,
+                        truncation=True, max_length=max_length).to(device)
+    with torch.inference_mode():
+        logits = model(**encoded).logits
+        probs = logits.softmax(-1).cpu().tolist()
+    rows = []
+    for text, scores in zip(texts, probs):
+        idx = max(range(len(scores)), key=scores.__getitem__)
+        rows.append(dict(text=text, label=model.config.id2label[idx],
+                         score=scores[idx], probabilities=scores))
+    return rows
 
-    inputs = tokenizer(text, return_tensors="pt", truncation=True, max_length=256)
-    inputs = {k: v.to(device) for k, v in inputs.items()}
+def compare_inference(model, tokenizer, texts, max_length=128):
+    device = next(model.parameters()).device
+    pipe = pipeline("sentiment-analysis", model=model, tokenizer=tokenizer, device=device)
+    high = pipe(texts, truncation=True, max_length=max_length)
+    low = manual_predict(model, tokenizer, texts, max_length)
+    for a, b in zip(high, low):
+        if a["label"] != b["label"] or abs(a["score"] - b["score"]) > 1e-5:
+            raise AssertionError(f"Pipeline/manual mismatch: {a}, {b}")
+    return high, low
 
-    with torch.no_grad():
-        outputs = model(**inputs)
-        logits = outputs.logits
-        probs = torch.softmax(logits, dim=-1).squeeze().tolist()
-        pred_idx = int(torch.argmax(logits, dim=-1).item())
 
-    label = model.config.id2label.get(pred_idx, str(pred_idx))
-    confidence = probs[pred_idx] if isinstance(probs, list) else probs
+def verify_saved_model(reference_model, model_path, texts, max_length=128):
+    """Check exact weights, then inference in a common CPU FP32 execution context.
 
-    return {
-        "text": text,
-        "predicted_label": label,
-        "predicted_index": pred_idx,
-        "confidence": confidence,
-        "probabilities": probs,
-        "tokens": tokenizer.convert_ids_to_tokens(inputs["input_ids"][0])
-    }
+    Trainer/Accelerate can wrap the live forward method with CUDA autocast.
+    Compare clean instances instead of comparing that wrapper to a CPU reload.
+    """
+    reloaded, tokenizer = load_model(str(model_path))
+    expected = reference_model.state_dict()
+    actual = reloaded.state_dict()
+    if expected.keys() != actual.keys():
+        raise AssertionError("Checkpoint parameter names differ")
+    for name in actual:
+        if not torch.equal(actual[name].cpu(), expected[name].cpu()):
+            raise AssertionError(f"Checkpoint weight differs: {name}")
+    clean_reference = type(reloaded)(reloaded.config)
+    clean_reference.load_state_dict(expected)
+    clean_reference.float().cpu()
+    reloaded.float().cpu()
+    original = manual_predict(clean_reference, tokenizer, texts, max_length)
+    checks = manual_predict(reloaded, tokenizer, texts, max_length)
+    for before, after in zip(original, checks):
+        if before["label"] != after["label"] or not torch.allclose(
+            torch.tensor(before["probabilities"]), torch.tensor(after["probabilities"]),
+            atol=1e-6, rtol=1e-5):
+            raise AssertionError("Checkpoint reload predictions differ in matched CPU FP32 context")
+    return {"weights_exact_match": True, "execution": "CPU FP32, clean forward methods",
+            "predictions": checks}

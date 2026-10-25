@@ -1,28 +1,71 @@
-"""Test training sanity check and metric calculation for Lab 03."""
 import pytest
 import torch
-from transformers import AutoTokenizer, AutoModelForSequenceClassification
-from labs.lab03.src.training.trainer import run_one_batch_sanity_check
-from labs.lab03.src.utils.metrics import get_compute_metrics_fn
+from datasets import Dataset, DatasetDict
+from labs.lab03.src.training.metrics import compute_metrics
+from labs.lab03.src.training.trainer import sanity_overfit, make_trainer
+from labs.lab03.src.workflow import read_config
+
+def test_one_batch_sanity_overfit(tiny):
+    model, tok = tiny
+    loss = sanity_overfit(model, tok, steps=80, lr=.005)
+    assert loss < .05, loss
+
+@pytest.mark.parametrize("fp16_requested", [False, True])
+def test_trainer_train_evaluate_and_best_checkpoint(tiny, tmp_path, fp16_requested):
+    model, tok = tiny
+    encoded = tok(["excellent movie", "terrible film"] * 4, truncation=True)
+    data = Dataset.from_dict({**encoded, "label": [1, 0] * 4})
+    ds = DatasetDict(train=data, validation=data, test=data)
+    cfg = dict(read_config()["exercise2"], seed=42, num_train_epochs=2, batch_size=4, eval_batch_size=4, fp16=fp16_requested)
+    trainer = make_trainer(model, tok, ds, cfg, tmp_path)
+    # Batch hiệu dụng phụ thuộc số GPU, bao gồm Kaggle T4 x2.
+    expected_steps = len(trainer.get_train_dataloader()) * 2
+    result = trainer.train()
+    assert result.global_step == expected_steps
+    assert trainer.state.best_model_checkpoint is not None
+    metrics = trainer.evaluate()
+    assert "eval_macro_f1" in metrics
+    assert trainer.args.fp16 == (fp16_requested and torch.cuda.is_available())
+    expected = compute_metrics(([[3, 0], [0, 3]], [0, 1]))
+    assert expected["accuracy"] == expected["macro_f1"] == 1
 
 
-def test_compute_metrics():
-    compute_fn = get_compute_metrics_fn()
-    dummy_logits = torch.tensor([[2.0, -1.0], [-1.5, 3.0]]).numpy()
-    dummy_labels = torch.tensor([0, 1]).numpy()
-
-    metrics = compute_fn((dummy_logits, dummy_labels))
-    assert metrics["accuracy"] == 1.0
-    assert metrics["macro_f1"] == 1.0
-
-
-def test_one_batch_sanity_overfit():
-    model_name = "distilbert-base-uncased"
-    tokenizer = AutoTokenizer.from_pretrained(model_name)
-    model = AutoModelForSequenceClassification.from_pretrained(model_name, num_labels=2)
-
-    device = "cuda" if torch.cuda.is_available() else "cpu"
-    final_loss = run_one_batch_sanity_check(model, tokenizer, device=device, steps=20, lr=1e-4)
-
-    # Sanity loss overfit should decrease significantly
-    assert final_loss < 0.25
+def test_complete_workflow_with_local_fixture(tiny, tmp_path, monkeypatch):
+    import json
+    from labs.lab03.src import workflow
+    from labs.lab03.src.utils.runs import run_context
+    model, tok = tiny
+    model_path = tmp_path / "initial_model"
+    model.save_pretrained(model_path); tok.save_pretrained(model_path)
+    raw = Dataset.from_dict({"text": ["excellent movie", "terrible film"] * 4, "label": [1, 0] * 4})
+    raw_ds = DatasetDict(train=raw, validation=raw, test=raw)
+    from labs.lab03.src.datasets.loader import tokenize_data
+    tokens = tokenize_data(raw_ds, tok, 16)
+    monkeypatch.setattr(workflow, "prepare_data", lambda config: (raw_ds, tok, tokens))
+    monkeypatch.setattr(workflow, "run_context", lambda kind, cfg: run_context(kind, cfg, root=tmp_path))
+    cfg = read_config()
+    cfg["exercise2"].update(model_name=str(model_path), model_revision=None,
+        num_train_epochs=1, batch_size=4, eval_batch_size=4)
+    out = workflow.finetune(cfg, allow_cpu=True)
+    assert json.loads((out / "status.json").read_text())["status"] == "completed"
+    assert len(list(out.glob("*.png"))) == 5
+    assert len(json.loads((out / "all_predictions.json").read_text())) == 8
+    assert (out / "best_model/model.safetensors").is_file()
+    assert (out / "reload_check.json").is_file()
+    assert (out / "report.md").is_file()
+    # Mô phỏng lỗi hậu xử lý cũ, giữ nguyên artifacts đã lưu.
+    from labs.lab03.src.utils.runs import save_json, hash_file
+    predictions = json.loads((out / "all_predictions.json").read_text())
+    save_json(out / "all_predictions.json", [predictions[0]] * 1066)
+    save_json(out / "status.json", {"status": "failed"})
+    with (out / "console.log").open("a") as stream:
+        stream.write("\nAssertionError: Checkpoint reload predictions differ\n")
+    save_json(out / "manifest.json", {str(p.relative_to(out)): hash_file(p)
+        for p in out.rglob("*") if p.is_file() and p.name != "manifest.json"})
+    workflow.recover_reload_failure(out)
+    status = json.loads((out / "status.json").read_text())
+    assert status["status"] == "completed" and status["recovered"]
+    assert json.loads((out / "recovery.json").read_text())["retrained"] is False
+    assert json.loads((tmp_path / "config/workflow.json").read_text())["active_runs"]["finetuning"] == out.name
+    for name, digest in json.loads((out / "manifest.json").read_text()).items():
+        assert hash_file(out / name) == digest

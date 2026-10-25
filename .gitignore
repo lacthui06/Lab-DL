@@ -88,3 +88,9 @@ runs/
 lightning_logs/
 .tensorboard/
 *.log
+
+# Lab03: trọng số Hugging Face và checkpoint theo từng run
+*.safetensors
+**/best_model/
+**/outputs/runs/*/checkpoints/
+.venv-lab03/

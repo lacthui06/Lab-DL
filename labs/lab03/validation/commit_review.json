@@ -1,0 +1,46 @@
+{
+  "branch": "lab03",
+  "commit_convention": "feat(lab03): <concrete summary>, matching existing Lab01 type(scope) history",
+  "scope": "Replace labs/lab03 only; root catalog, scoped attributes/ignore and Lab03 CI updated; Lab01 source/results untouched",
+  "included": [
+    "modular source and 14 tests",
+    "JSON configuration and selected-run registry",
+    "three executed view notebooks",
+    "assignment brief, single living walkthrough and internal changes",
+    "five figures and original small Kaggle JSON artifacts",
+    "two original console logs and one per-run report retained solely as immutable provenance for the existing SHA256 manifests",
+    "derived results/per-class rates and environment snapshot",
+    "verification reports"
+  ],
+  "excluded": [
+    "model weights and optimizer checkpoints",
+    "raw training datasets",
+    "ZIP archives",
+    "virtual environments",
+    "caches and temporary files"
+  ],
+  "pre_commit_checks": {
+    "no_secret_like_content_found": true,
+    "no_credentials_files": true,
+    "no_large_weight_or_dataset_files": true,
+    "new_source_and_notebook_cells_no_emoji_or_box_characters": true,
+    "relative_links_valid": true,
+    "original_kaggle_artifact_bytes_preserved": true,
+    "tests_passed": 14,
+    "notebooks_view_passed": 3,
+    "sha256_verified_original_files": 24,
+    "lab01_modified": false
+  },
+  "submission_limitations": [
+    "Test loss not logged by original evaluator; explicitly marked, not invented",
+    "Full-split duplicate/leakage audit not available in received artifacts",
+    "Kaggle reload checks exact weights and one example; full test reevaluation after reload not independently recorded",
+    "Weights remain in owner-held Kaggle ZIP; no public checkpoint URL asserted"
+  ],
+  "framework_references": [
+    ".agents/checklists/pre_commit.md",
+    ".agents/checklists/pre_submission.md",
+    ".agents/skills/version-control-and-artifacts/SKILL.md",
+    ".agents/templates/walkthrough_template.md"
+  ]
+}

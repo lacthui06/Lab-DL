@@ -20,11 +20,13 @@ Repository containing source code, engineering workflows, and practical lab exer
 
 ---
 
+Lab03 uses its own pinned dependencies in `labs/lab03/requirements.txt` and a separate Python 3.12 environment; do not replace the Lab01 environment with these pins.
+
 ## Lab Directory
 
 - **Lab 01**: FashionMNIST Classification with PyTorch (Completed)
 - **Lab 02**: Upcoming
-- **Lab 03**: Upcoming
+- **Lab 03**: [Hugging Face Sentiment Analysis & Fine-tuning](labs/lab03/README.md) — full Rotten Tomatoes, executed notebooks and verified Kaggle artifacts.
 - **Lab 04**: Upcoming
 
 ---
