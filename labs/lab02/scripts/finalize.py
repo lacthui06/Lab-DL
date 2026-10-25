@@ -218,7 +218,7 @@ html = """<!DOCTYPE html><html lang="vi"><meta charset="utf-8"><title>Lab 02 —
 <style>body{font:16px/1.65 system-ui,sans-serif;color:#172033;max-width:1120px;margin:40px auto;padding:0 24px}h1,h2,h3{line-height:1.3}h1{color:#174ea6}h2{border-bottom:1px solid #dbe2ef;padding-bottom:8px;margin-top:36px}table{border-collapse:collapse;width:100%;font-size:14px}th,td{border:1px solid #dbe2ef;text-align:left;padding:9px}th{background:#edf3fc}img{max-width:100%;height:auto}code{background:#edf2f7;padding:2px 4px}a{color:#174ea6}@media print{body{margin:0;font-size:11pt}h2{break-after:avoid}img,table{break-inside:avoid}}</style><body>""" + body + "</body></html>"
 (run / "report_vi.html").write_text(html, encoding="utf-8")
 lock = subprocess.check_output([sys.executable, "-m", "pip", "freeze"], text=True)
-(root / "requirements-lock-windows.txt").write_text(lock, encoding="utf-8")
+(run / "requirements-freeze.txt").write_text(lock, encoding="utf-8")
 snapshot = run / "source_snapshot"
 for section in ("src", "config", "scripts", "tests"):
     for source in (root / section).glob("*"):

@@ -26,7 +26,7 @@ with (root / "outputs" / "delivery_validation.log").open("w", encoding="utf-8") 
     (run / 'pytest_validation.log').write_text(test.stdout + test.stderr, encoding='utf-8')
     if test.returncode:
         raise RuntimeError(test.stdout + test.stderr)
-    for script, arguments in [('build_notebook.py', []), ('finalize.py', []),
+    for script, arguments in [('finalize.py', []),
                               ('execute_notebook.py', []),
                               ('execute_notebook.py', ['01_cifar10_eda_architecture.ipynb'])]:
         result = subprocess.run([sys.executable, '-X', 'utf8', str(root / "scripts" / script), *arguments], cwd=root,

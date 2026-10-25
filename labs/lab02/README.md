@@ -38,7 +38,6 @@ python -m venv .venv
 
 # Kiểm thử và đóng gói sau khi run hoàn thành
 .\.venv\Scripts\python.exe -m pytest tests -q
-.\.venv\Scripts\python.exe scripts/build_notebook.py
 .\.venv\Scripts\python.exe scripts/finalize.py
 .\.venv\Scripts\python.exe scripts/execute_notebook.py
 .\.venv\Scripts\python.exe scripts/execute_notebook.py 01_cifar10_eda_architecture.ipynb
@@ -76,7 +75,7 @@ Mỗi run có tên riêng: config, environment, console log, status, snapshot so
 
 Thời gian fit candidate không gồm feature extraction hoặc toàn bộ search. `head_selected/training_summary.json` tách các khoản chi phí. Fine-tune tiếp tục từ head; chi phí toàn pipeline phải cộng cả hai giai đoạn. Một seed không đủ kết luận ý nghĩa thống kê. Chưa có baseline train-from-scratch nên không kết luận định lượng lợi ích ImageNet pretraining so với khởi tạo ngẫu nhiên.
 
-`requirements-lock-windows.txt` ghi môi trường local; không dùng lock Windows để cài Linux. Trên Kaggle bật GPU/Internet, đưa source vào thư mục có thể ghi, cài requirements và chạy `run_suite('config/full.json', work_dir='/kaggle/working/lab2')`. Luồng Kaggle chưa được kiểm chứng end-to-end tại máy local.
+`requirements.txt` ghim phiên bản thư viện từ môi trường Windows đã chạy thí nghiệm; khả năng cài đặt trên Linux/Kaggle chưa được kiểm chứng. `finalize.py` lưu danh sách thư viện thực tế vào `requirements-freeze.txt` trong từng run, không ghi đè cấu hình cài đặt của dự án. Trên Kaggle bật GPU/Internet, đưa source vào thư mục có thể ghi, cài requirements và chạy `run_suite('config/full.json', work_dir='/kaggle/working/lab2')`. Luồng Kaggle chưa được kiểm chứng end-to-end tại máy local.
 
 ## Nguồn
 
