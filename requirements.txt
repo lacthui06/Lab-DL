@@ -1,40 +1,12 @@
-# Environment manifest for Lab DL (Deep Learning coursework)
-# Phiên bản ghi nhận từ môi trường cục bộ tại thời điểm hoàn thành Lab 01.
-# Dùng file này để tái lập môi trường và đối chiếu với Kaggle.
-
-# Python interpreter (ghi chú, KHÔNG phải dòng pip cài được; `python==x.y.z` là cú pháp pip không hợp lệ)
-# Yêu cầu thật (suy ra từ Requires-Python của các thư viện đã pin bên dưới):
-#   Requires Python >=3.12, !=3.14.1
-#   - >=3.12  : do numpy==2.5.3 yêu cầu >=3.12 (cao nhất trong các pin)
-#   - !=3.14.1: do torchvision==0.29.1 loại trừ 3.14.1
-# Bản đã kiểm chứng thực tế (local, Windows, CPython 64-bit): 3.13.15
-# Kaggle base image: dùng bản Python riêng của Kaggle; ghi lại chính xác tại thời điểm chạy,
-# không giả định trùng với local (xem skill environment-and-reproducibility, Bước 5).
-# Phiên bản thực tế của mỗi lần chạy được ghi vào outputs/logs/environment_snapshot.json.
-
-# Core deep learning framework (CPU build cho cục bộ; Kaggle dùng bản CUDA tương ứng)
-torch==2.14.0
-torchvision==0.29.1
-
-# Numerical, tabular, and scientific computing
-numpy==2.5.3
-pandas>=2.2.0
-
-# Classical machine learning utilities & Hyperparameter optimization
-scikit-learn==1.9.1
-optuna>=3.6.0
-
-# Visualization
-matplotlib==3.11.2
-seaborn==0.13.2
-
-# Image I/O (used by src/datasets/classification.py)
-Pillow==12.3.0
-
-# Testing
-pytest==9.1.1
-# Declared explicitly: used to evaluate the Requires-Python specifiers of pinned libraries.
-packaging==26.3
-
-# Configuration parsing
-pyyaml==6.0.3
+torch>=2.5,<3
+torchvision>=0.20,<1
+tensorboard>=2.18,<3
+numpy>=1.26,<3
+matplotlib>=3.9,<4
+scikit-learn>=1.5,<2
+pandas>=2.2,<4
+nbformat>=5.10,<6
+nbclient>=0.10,<1
+ipykernel>=6.29,<8
+pytest>=8,<10
+markdown>=3.7,<4
