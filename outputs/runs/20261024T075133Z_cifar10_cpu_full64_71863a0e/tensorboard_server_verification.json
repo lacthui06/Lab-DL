@@ -1,0 +1,138 @@
+{
+  "http_status": 200,
+  "url": "http://127.0.0.1:6006/",
+  "scalar_runs": {
+    "densenet121/finetune/tensorboard": [
+      "train_loss",
+      "train_accuracy",
+      "val_loss",
+      "val_accuracy",
+      "epoch_seconds",
+      "learning_rate/group_0",
+      "learning_rate/group_1"
+    ],
+    "densenet121/head_trial_00/tensorboard": [
+      "train_loss",
+      "train_accuracy",
+      "val_loss",
+      "val_accuracy",
+      "epoch_seconds",
+      "learning_rate/group_0"
+    ],
+    "densenet121/head_trial_00/tensorboard/1792830427.9812558": [
+      "best_val_accuracy"
+    ],
+    "densenet121/head_trial_01/tensorboard": [
+      "train_loss",
+      "train_accuracy",
+      "val_loss",
+      "val_accuracy",
+      "epoch_seconds",
+      "learning_rate/group_0"
+    ],
+    "densenet121/head_trial_01/tensorboard/1792830436.9925709": [
+      "best_val_accuracy"
+    ],
+    "densenet121/head_trial_02/tensorboard": [
+      "train_loss",
+      "train_accuracy",
+      "val_loss",
+      "val_accuracy",
+      "epoch_seconds",
+      "learning_rate/group_0"
+    ],
+    "densenet121/head_trial_02/tensorboard/1792830449.5684395": [
+      "best_val_accuracy"
+    ],
+    "densenet121/head_trial_03/tensorboard": [
+      "train_loss",
+      "train_accuracy",
+      "val_loss",
+      "val_accuracy",
+      "epoch_seconds",
+      "learning_rate/group_0"
+    ],
+    "densenet121/head_trial_03/tensorboard/1792830458.1265523": [
+      "best_val_accuracy"
+    ],
+    "resnet18/finetune/tensorboard": [
+      "train_loss",
+      "train_accuracy",
+      "val_loss",
+      "val_accuracy",
+      "epoch_seconds",
+      "learning_rate/group_0",
+      "learning_rate/group_1"
+    ],
+    "resnet18/finetune/tensorboard/1792829717.346837": [
+      "best_val_accuracy"
+    ],
+    "resnet18/head_trial_00/tensorboard": [
+      "train_loss",
+      "train_accuracy",
+      "val_loss",
+      "val_accuracy",
+      "epoch_seconds",
+      "learning_rate/group_0"
+    ],
+    "resnet18/head_trial_00/tensorboard/1792828596.2162573": [
+      "best_val_accuracy"
+    ],
+    "resnet18/head_trial_01/tensorboard": [
+      "train_loss",
+      "train_accuracy",
+      "val_loss",
+      "val_accuracy",
+      "epoch_seconds",
+      "learning_rate/group_0"
+    ],
+    "resnet18/head_trial_01/tensorboard/1792828605.1332521": [
+      "best_val_accuracy"
+    ],
+    "resnet18/head_trial_02/tensorboard": [
+      "train_loss",
+      "train_accuracy",
+      "val_loss",
+      "val_accuracy",
+      "epoch_seconds",
+      "learning_rate/group_0"
+    ],
+    "resnet18/head_trial_02/tensorboard/1792828620.7524638": [
+      "best_val_accuracy"
+    ],
+    "resnet18/head_trial_03/tensorboard": [
+      "train_loss",
+      "train_accuracy",
+      "val_loss",
+      "val_accuracy",
+      "epoch_seconds",
+      "learning_rate/group_0"
+    ],
+    "resnet18/head_trial_03/tensorboard/1792828631.2155142": [
+      "best_val_accuracy"
+    ],
+    "densenet121/finetune/tensorboard/1792830678.8757143": [
+      "best_val_accuracy"
+    ]
+  },
+  "fine_tune_runs": {
+    "densenet121/finetune/tensorboard": [
+      "train_loss",
+      "train_accuracy",
+      "val_loss",
+      "val_accuracy",
+      "epoch_seconds",
+      "learning_rate/group_0",
+      "learning_rate/group_1"
+    ],
+    "resnet18/finetune/tensorboard": [
+      "train_loss",
+      "train_accuracy",
+      "val_loss",
+      "val_accuracy",
+      "epoch_seconds",
+      "learning_rate/group_0",
+      "learning_rate/group_1"
+    ]
+  }
+}

@@ -1,3 +1,0 @@
-Tập dữ liệu,Số lượng ảnh,Kích thước (HxW),Kênh màu,Kiểu dữ liệu (dtype),Dải điểm ảnh,Dải nhãn (Labels),Số lớp,Dung lượng RAM (MB)
-train,60000,28x28,1,uint8,"[0, 255]","[0, 9]",10,44.86
-test,10000,28x28,1,uint8,"[0, 255]","[0, 9]",10,7.48

@@ -1,0 +1,11 @@
+{
+  "model": "densenet121",
+  "stage": "head",
+  "lr": 0.01,
+  "batch_size": 32,
+  "seed": 42,
+  "weights": "DenseNet121_Weights.IMAGENET1K_V1",
+  "dataset": "CIFAR10",
+  "image_size": 64,
+  "data_sha256": "dcfe29a6b8c5f308b77679d3ca6f33156aa8e76db22c9b4c74a93251afc686c8"
+}

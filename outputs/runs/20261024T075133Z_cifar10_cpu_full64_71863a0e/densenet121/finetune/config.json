@@ -1,0 +1,18 @@
+{
+  "model": "densenet121",
+  "stage": "finetune",
+  "lr": 0.0001,
+  "backbone_lr": 1e-05,
+  "batch_size": 64,
+  "seed": 42,
+  "weights": "DenseNet121_Weights.IMAGENET1K_V1",
+  "dataset": "CIFAR10",
+  "image_size": 64,
+  "initialization": "best head checkpoint",
+  "batchnorm": "running statistics frozen",
+  "parameter_counts": {
+    "total": 6964106,
+    "trainable": 2170378
+  },
+  "execution": "equivalent cached frozen prefix; train identical last block and head"
+}

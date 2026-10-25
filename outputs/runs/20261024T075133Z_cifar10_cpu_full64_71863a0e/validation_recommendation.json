@@ -1,0 +1,6 @@
+{
+  "model": "resnet18",
+  "stage": "finetune",
+  "criterion": "maximum validation accuracy; stable first row on tie; no test-based selection",
+  "validation_accuracy": 0.821
+}

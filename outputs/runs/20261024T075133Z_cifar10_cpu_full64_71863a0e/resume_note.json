@@ -1,0 +1,5 @@
+{
+  "reason": "Continue at completed architecture boundary; use verified equivalent frozen-prefix cache for remaining architecture",
+  "completed_architectures_preserved": true,
+  "hyperparameters_and_splits_unchanged": true
+}

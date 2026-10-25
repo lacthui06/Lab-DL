@@ -1,0 +1,12 @@
+{
+  "criterion": "max validation accuracy, earliest trial on tie",
+  "head": {
+    "trial": 1,
+    "lr": 0.001,
+    "batch_size": 64,
+    "best_val_accuracy": 0.7716,
+    "train_seconds": 8.888557799999035,
+    "best_epoch": 5
+  },
+  "finetune_policy": "last block + classifier, fixed config, best validation epoch"
+}

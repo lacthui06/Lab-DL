@@ -1,0 +1,8 @@
+{
+  "python": "3.13.3 (tags/v3.13.3:6280bb5, Apr  8 2025, 14:47:33) [MSC v.1943 64 bit (AMD64)]",
+  "torch": "2.14.1+cpu",
+  "torchvision": "0.29.1+cpu",
+  "device": "cpu",
+  "platform": "Windows-10-10.0.19041-SP0",
+  "cpu_count": 8
+}

@@ -1,0 +1,17 @@
+{
+  "scripts\\build_notebook.py": "e3b803a9e8c345e7c9629529c65bc80bc8e3fd980024e2df97b35103fd9f21ca",
+  "scripts\\complete_delivery.py": "d455d3aa70144d7e851c6a0851d09aad8af7f74390f8eb831f7b00d44ac1886c",
+  "scripts\\download_assets.py": "1dcf88b0d0f783ba067fd181702a85931e76fb52b2d5d1f316ab5d32b67329cb",
+  "scripts\\download_cifar10.py": "9655aa4649e893a5bae555845816659e1ba325adfaed95127e9476045fdff314",
+  "scripts\\execute_notebook.py": "5adc8f817cbefb3b10fa5cb895c0bee5ad70987c172c5f8f2f958e8d14bccef0",
+  "scripts\\finalize.py": "9088979e088d5bf3a83ecbb0bcb3b5b72cb3ff1d5552165541ca993145da70a4",
+  "scripts\\infer.py": "b5f7835c1e2537dcdff3e1e9913085894722e4a57d24f2ed485e742de0fbc5a5",
+  "scripts\\resume_interrupted.py": "e5bdafe3452c0618b5fda6dfdb289efb3bf0eb9a0097064f6d5813947ad84844",
+  "scripts\\run.py": "1c79f6892086b238dcb9e5651ea9a10b1af45b04dfb6952f97c4306a28f3be4f",
+  "src\\data.py": "c578b6bdd7c9af1596f7f1c6e5f5e0e4edf16ee114b5f472b36e9657b3e4a815",
+  "src\\experiment.py": "cf28d6624247b792a9d129bb10db1b77eb4b28f86979a8f5558c41009d14824a",
+  "src\\models.py": "78820e41ebbcccfccc7e51eb9afcba6a5796c2781231d9709a666c3060680036",
+  "src\\reporting.py": "634f6ac443b502946d9ced6505cd98b913913ddcf3426daa6b87f0ecb5dbdbae",
+  "src\\__init__.py": "88ae75dde3feeeea63363d123d8557c4aca4512f9402543833e01062db6ebdd8",
+  "tests\\test_contracts.py": "208741499f0a56af4724218562d6fd5397b344f899750afc0a0022b2cc7e53b0"
+}

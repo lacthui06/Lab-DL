@@ -1,0 +1,10 @@
+{
+  "trial": 1,
+  "lr": 0.001,
+  "batch_size": 64,
+  "best_val_accuracy": 0.7716,
+  "train_seconds": 8.888557799999035,
+  "best_epoch": 5,
+  "feature_extraction_train_val_seconds": 281.8564978000013,
+  "all_search_training_seconds": 47.59092899999996
+}

@@ -1,0 +1,17 @@
+{
+  "model": "resnet18",
+  "stage": "finetune",
+  "lr": 0.0001,
+  "backbone_lr": 1e-05,
+  "batch_size": 64,
+  "seed": 42,
+  "weights": "ResNet18_Weights.IMAGENET1K_V1",
+  "dataset": "CIFAR10",
+  "image_size": 64,
+  "initialization": "best head checkpoint",
+  "batchnorm": "running statistics frozen",
+  "parameter_counts": {
+    "total": 11181642,
+    "trainable": 8398858
+  }
+}

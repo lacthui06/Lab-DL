@@ -1,0 +1,21 @@
+{
+  "src\\data.py": "c578b6bdd7c9af1596f7f1c6e5f5e0e4edf16ee114b5f472b36e9657b3e4a815",
+  "src\\experiment.py": "e05ab179e7d887deeaa26d246666317667e9c136a9ea62fe65eb0ee9449fcbf9",
+  "src\\models.py": "ae3c493d51ff4e883431e5bd197b74889bb55976f8e75fb20db7a9cf670a67c6",
+  "src\\reporting.py": "634f6ac443b502946d9ced6505cd98b913913ddcf3426daa6b87f0ecb5dbdbae",
+  "src\\__init__.py": "89b6b9747c711ab11f12631bbf5b8ceecc90dfb0bfaff29647646220564e851f",
+  "scripts\\build_notebook.py": "1cebf35b1d188fa57c65f7fb6c37bdcc83128b6d81357467daebddbdaaaac17d",
+  "scripts\\complete_delivery.py": "59ea8e2f6428e05496fb000f5643acb7d18a7eda0db1d503114ce8a5fc353d6e",
+  "scripts\\download_assets.py": "1dcf88b0d0f783ba067fd181702a85931e76fb52b2d5d1f316ab5d32b67329cb",
+  "scripts\\download_cifar10.py": "9655aa4649e893a5bae555845816659e1ba325adfaed95127e9476045fdff314",
+  "scripts\\execute_notebook.py": "ea4cab6693bb4f71e129de21fdb50fefe11785116a807862203ab5097982d79d",
+  "scripts\\finalize.py": "52dfba9d7c02a33c33398efea67c73219ae19df8eca46a1dc0aa3264346e959e",
+  "scripts\\infer.py": "b5f7835c1e2537dcdff3e1e9913085894722e4a57d24f2ed485e742de0fbc5a5",
+  "scripts\\resume_interrupted.py": "a5cfa62253d4574dad012e84f0c27ff088ca975df0aa32d8129362e121364830",
+  "scripts\\run.py": "1c79f6892086b238dcb9e5651ea9a10b1af45b04dfb6952f97c4306a28f3be4f",
+  "tests\\test_cached_prefix.py": "8675dc73b92148dfa43e99856d41741f830e75ac05c1da62a1cdf79f9738ecd2",
+  "tests\\test_contracts.py": "208741499f0a56af4724218562d6fd5397b344f899750afc0a0022b2cc7e53b0",
+  "config\\cpu_full.json": "416431fc7b51047713cf96fec8a653ff154577a785025e42aca85a662b4698cf",
+  "config\\cpu_pilot.json": "061744a0578f764bc496b359ff024cca5d10c515231ca96758c780e274dd1835",
+  "config\\full.json": "2733e3b66144874bf2c214b9b9fd9c5ea9af4c695b53188e7ac78b1ed4aacdcb"
+}
