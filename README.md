@@ -24,23 +24,10 @@ Repository containing source code, engineering workflows, and practical lab exer
 
 - **Lab 01**: [FashionMNIST Classification with PyTorch](labs/lab01/README.md) — local experiments available; final PDF pending.
 - **Lab 02**: Upcoming
-- **Lab 03**: [Hugging Face Sentiment Analysis & Fine-tuning](https://github.com/lacthui06/Lab-DL/tree/lab03/labs/lab03) — source, executed notebooks and Kaggle artifacts on the `lab03` branch.
+- **Lab 03**: [Hugging Face Sentiment Analysis & Fine-tuning](https://github.com/lacthui06/Lab-DL/tree/lab03/labs/lab03) — notebooks and experiment results on the `lab03` branch.
 - **Lab 04**: Upcoming
 
 ---
-
-## Lab 03 — Hugging Face sentiment analysis
-
-Lab03 source, notebooks and experiment artifacts are maintained on the [`lab03` branch](https://github.com/lacthui06/Lab-DL/tree/lab03/labs/lab03). The `main` branch currently contains Lab01; use the branch-specific links below to open Lab03.
-
-- [Lab03 README](https://github.com/lacthui06/Lab-DL/blob/lab03/labs/lab03/README.md): setup, Kaggle GPU training, evaluation, inference and artifact recovery.
-- [Integrated notebook](https://github.com/lacthui06/Lab-DL/blob/lab03/labs/lab03/notebooks/lab03_huggingface_complete.ipynb): both exercises, phase roadmaps, module references and saved visual outputs.
-- [Walkthrough](https://github.com/lacthui06/Lab-DL/blob/lab03/labs/lab03/walkthrough_lab_03.md): method, actual results, threshold trade-offs and limitations.
-- [Assignment and decisions](https://github.com/lacthui06/Lab-DL/blob/lab03/labs/lab03/description_lab_03.md): original requirements and the scope decisions.
-
-The fine-tuning experiment uses the complete official Rotten Tomatoes splits: **8,530 train / 1,066 validation / 1,066 test**. Baseline argmax test accuracy is **83.96%**, with binary F1 **84.06%**. The threshold **0.8**, selected by validation Macro F1, gives test accuracy **84.05%** and binary F1 **83.50%**. It reduces false positives while increasing false negatives; it is not an improvement across every metric.
-
-Lab03 has a separate **Python 3.12** environment and [its own requirements](https://github.com/lacthui06/Lab-DL/blob/lab03/labs/lab03/requirements.txt). Its dependencies must not replace the Lab01 environment. Saved results can be reviewed without training again; reloading the fine-tuned model requires the owner-held checkpoint, which is kept outside Git.
 
 ## Lab Architecture (`labs/lab0X/`)
 
