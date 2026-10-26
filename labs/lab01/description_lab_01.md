@@ -34,3 +34,7 @@ Bổ sung làm rõ: loss/accuracy sau search phải so sánh đủ SGD, RMSprop,
 Notebook EDA phải trình bày trực tiếp code trích xuất 10 feature và bảng giá trị từng ảnh; dùng source hiện hành, không duy trì bản sao công thức trong notebook.
 
 Notebook EDA phải trình bày từng mục 1–7 đúng roadmap, output nằm ngay sau bước tương ứng. Phải phân biệt backend prepare_data chạy gộp và cell trình bày/kiểm chứng; bước FE phải gọi extractor trên ảnh thật rồi đối chiếu CSV/scaler/NPZ, không chỉ in source.
+
+## Viết lại báo cáo đầy đủ
+
+Walkthrough phải là báo cáo học thuật chi tiết, định hướng bản PDF khoảng 25 trang A4; phục hồi chiều sâu lý thuyết, phương pháp, giải thích code, EDA/FE, ba model, optimizer/tuning, metric theo lớp, hình và kết quả save/load từ artifact thật. Không đưa log sửa phần mềm, không phục hồi metric K-fold/sweep chưa xác minh. Lượt này soạn nguồn báo cáo, chưa xuất PDF; số trang chỉ xác nhận khi dàn trang thực tế.
