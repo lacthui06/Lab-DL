@@ -28,7 +28,7 @@
   "limitations": {
     "checkpoint_not_in_git": true,
     "checkpoint_verification_source": "original Kaggle reload check plus separate full-test reevaluation; reviewed offline from evidence, no local model execution",
-    "weights_recovery": "Owner-held Kaggle ZIP, see README",
+    "weights_recovery": "Saved Kaggle ZIP, see README",
     "gpu_retraining_performed_in_this_review": false,
     "dataset_commit_sha_not_recorded": "Original config uses main; provenance provides fingerprints and backbone commit"
   },

@@ -35,10 +35,9 @@ labs/lab03/
   validation/               kết quả audit và thực thi notebook tại máy rà soát
   description_lab_03.md     đề bài, thảo luận và quyết định
   walkthrough_lab_03.md     báo cáo thực nghiệm để nộp
-  internal_changes.md       lịch sử kỹ thuật; không thuộc báo cáo nộp
 ```
 
-Đã hợp nhất các thư mục `config/` và `outputs/` được upload ở gốc repo vào `labs/lab03/`. Không có hai registry độc lập. Các byte artifacts gốc không bị chỉnh sửa; 24 file hiện có khớp manifest.
+Cấu hình và kết quả nằm trong `labs/lab03/config/` và `labs/lab03/outputs/`, dùng chung một registry. Các byte artifacts gốc không bị chỉnh sửa; 24 file hiện có khớp manifest.
 
 ## 3. Cài đặt
 
@@ -101,7 +100,7 @@ Có thể thực thi ba notebook với MODE=train thay CLI. Không chạy notebo
 
 ### Chạy từ notebook Kaggle mới
 
-Bật GPU và Internet trước. Cell sau clone đúng nhánh `lab03`, tạo Python 3.12 riêng và dùng cùng interpreter cho kiểm tra/training. Cell không chứa token và không tự push kết quả lên GitHub.
+Bật GPU và Internet trước. Cell sau clone đúng nhánh `lab03`, tạo Python 3.12 riêng và dùng cùng interpreter cho kiểm tra/training.
 
 ```python
 import os

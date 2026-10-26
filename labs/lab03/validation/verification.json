@@ -99,7 +99,7 @@
   "checkpoint": {
     "available_in_git": false,
     "reload_evidence": "Kaggle reload_check.json records weights_exact_match=true and CPU FP32 comparison",
-    "restoration": "Restore best_model/ from the owner-held Kaggle ZIP; README contains expected SHA256",
+    "restoration": "Restore best_model/ from the saved Kaggle ZIP; README contains expected SHA256",
     "public_download_url": null
   },
   "port_validation": {

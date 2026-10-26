@@ -30,7 +30,7 @@ Nhật ký sửa phần mềm và xử lý môi trường nằm trong `internal_
 
 Đề gốc không chỉ định dataset, backbone, số epochs hoặc cấu trúc thư mục.
 Đề gốc không đặt ngưỡng Accuracy tối thiểu 85%.
-Roadmap, ba notebook, isolated runs, bộ hình mở rộng và quét threshold là yêu cầu bổ sung của người dùng.
+Phạm vi bài gồm roadmap, ba notebook, isolated runs, hình trực quan và quét threshold.
 Các phần bổ sung phải phục vụ giải thích bài và truy vết kết quả, không được dùng để gán ngược một tiêu chí chưa có cho đề giảng viên.
 
 ## 2. Phạm vi đã thống nhất
@@ -54,7 +54,7 @@ Các phần bổ sung phải phục vụ giải thích bài và truy vết kết
 
 ### D01 — Chọn dữ liệu nào và sử dụng bao nhiêu?
 
-**Thảo luận:** bản tham khảo dùng IMDB subset nên chưa đáp ứng yêu cầu mở rộng về dữ liệu đầy đủ.
+**Thảo luận:** dùng subset làm giảm quy mô và tính đại diện; thí nghiệm dùng đầy đủ official splits.
 **Quyết định:** dùng `cornell-movie-review-data/rotten_tomatoes`, đủ 8.530 train, 1.066 validation và 1.066 test.
 **Lý do:** corpus văn bản ngắn, nhị phân, có split chính thức và vừa ngân sách GPU lab.
 **Kiểm chứng:** loader từ chối kích thước khác hợp đồng; run lưu thống kê và fingerprints.
@@ -139,7 +139,7 @@ Các phần bổ sung phải phục vụ giải thích bài và truy vết kết
 ### D13 — Giữ mô hình và bằng chứng ở đâu?
 
 **Thảo luận:** weights lớn vượt giới hạn Git thông thường và làm repository tăng kích thước.
-**Quyết định:** Git giữ source, config, notebook có output và artifacts nhẹ; checkpoint được lưu riêng trong ZIP Kaggle của người thực hiện.
+**Quyết định:** Git giữ source, config, notebook có output và artifacts nhẹ; checkpoint được lưu riêng trong ZIP kết quả Kaggle.
 **Truy vết:** giữ SHA256 weights trong manifest và policy; không coi file không có mặt là đã kiểm tra tại máy rà soát.
 **Đã khôi phục:** run evaluation Kaggle `20261026T083612Z_evaluation_a724c16c` tải đúng `best_model/` và chạy lại toàn test; Git giữ predictions, measured loss và runtime để rà soát, không giữ weights.
 

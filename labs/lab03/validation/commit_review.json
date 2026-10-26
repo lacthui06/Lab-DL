@@ -35,7 +35,7 @@
     "Test loss not logged by original evaluator; explicitly marked, not invented",
     "Full-split duplicate/leakage audit not available in received artifacts",
     "Kaggle reload checks exact weights and one example; full test reevaluation after reload not independently recorded",
-    "Weights remain in owner-held Kaggle ZIP; no public checkpoint URL asserted"
+    "Weights remain in saved Kaggle ZIP; no public checkpoint URL asserted"
   ],
   "framework_references": [
     ".agents/checklists/pre_commit.md",

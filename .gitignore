@@ -96,3 +96,5 @@ lightning_logs/
 .venv-lab03/
 
 **/outputs/.registry.lock
+
+labs/lab03/internal_changes.md

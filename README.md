@@ -22,7 +22,7 @@ Repository containing source code, engineering workflows, and practical lab exer
 
 Lab03 uses its own pinned dependencies in `labs/lab03/requirements.txt` and a separate Python 3.12 environment; do not replace the Lab01 environment with these pins.
 
-Lab03 notebooks now include phase roadmaps, module references and persisted visual diagnostics; validation-only threshold selection has been executed on the restored checkpoint: threshold 0.8, test accuracy 84.05%, with precision/recall trade-offs documented. Historical test sensitivity plots do not choose a threshold from test.
+Lab03 notebooks now include phase roadmaps, module references and persisted visual diagnostics; threshold 0.8 was selected on validation and evaluated on test (accuracy 84.05%, binary F1 83.50%). Historical test sensitivity plots do not choose a threshold from test.
 
 ## Lab Directory
 

@@ -97,7 +97,7 @@
     "raw_run_bytes_preserved": true
   },
   "limitations": [
-    "weights are owner-held outside Git",
+    "weights are saved outside Git",
     "historical dataset main revision lacks exact dataset commit SHA",
     "test benchmark observed previously; supplemental evaluation is exploratory"
   ]
