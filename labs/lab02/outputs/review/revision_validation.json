@@ -1,0 +1,55 @@
+{
+  "status": "passed",
+  "notebook_execution": "passed",
+  "notebooks": {
+    "01_lab02_eda.ipynb": {
+      "code_cells": 8,
+      "inline_pngs": 9,
+      "executed_cells": 8,
+      "max_code_lines": 7,
+      "errors": 0
+    },
+    "02_lab02_modeling.ipynb": {
+      "code_cells": 10,
+      "inline_pngs": 9,
+      "executed_cells": 10,
+      "max_code_lines": 7,
+      "errors": 0
+    }
+  },
+  "training": "not rerun",
+  "raw_data": "official CIFAR-10 batches verified by MD5; 60000 images audited",
+  "split": "reconstructed SHA256 matches recorded training config",
+  "limitations": [
+    "no historical checkpoints or event files in checkout",
+    "no new GPU benchmark or full-test inference"
+  ],
+  "tests": {
+    "command": "python -X utf8 -m pytest tests -q --basetemp .pytest-tmp/check3",
+    "result": "20 passed in 41.78s",
+    "raw_dataset_test": "executed with LAB02_DATA pointing to verified local CIFAR-10"
+  },
+  "syntax": {
+    "current_python_files": 21,
+    "result": "passed"
+  },
+  "test_python": "3.12.7 (tags/v3.12.7:0b05ead, Oct  1 2024, 03:06:41) [MSC v.1941 64 bit (AMD64)]",
+  "test_packages": {
+    "numpy": "2.1.1",
+    "pandas": "2.2.3",
+    "matplotlib": "3.9.2",
+    "torch": "2.9.0",
+    "torchvision": "0.24.0",
+    "pytest": "9.0.1",
+    "scikit-learn": "1.9.0"
+  },
+  "notebook_python": "CPython 3.12.7; existing project virtual environment with nbclient",
+  "visual_review": [
+    "handcrafted_distributions.png",
+    "preprocessing_preview.png",
+    "spatial_statistics.png",
+    "class_metric_heatmaps.png",
+    "prediction_examples.png"
+  ],
+  "historical_run_artifacts": "preserved byte-for-byte; no training or historical evidence rewritten"
+}

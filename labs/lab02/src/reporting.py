@@ -1,6 +1,5 @@
 """Export metrics and figures from saved probabilities, without retraining."""
 import json
-from pathlib import Path
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
@@ -10,7 +9,8 @@ from sklearn.metrics import (accuracy_score, classification_report, confusion_ma
                              precision_recall_fscore_support, log_loss)
 from torchvision.datasets import CIFAR10
 
-CLASSES = ["airplane", "automobile", "bird", "cat", "deer", "dog", "frog", "horse", "ship", "truck"]
+from .eda import CLASSES
+
 
 
 def export_evaluation(folder, probabilities, labels, indices, data_dir):
@@ -66,6 +66,10 @@ def export_evaluation(folder, probabilities, labels, indices, data_dir):
 
 def summarize_suite(run, cfg, selected):
     comparison = pd.read_csv(run / "comparison.csv")
+    from .costs import cost_table, validation_recommendation
+    cost_table(run, comparison).to_csv(run/'cost_comparison.csv', index=False)
+    (run/'validation_recommendation.json').write_text(
+        json.dumps(validation_recommendation(run,comparison,cfg), indent=2), encoding='utf-8')
     fig, axes = plt.subplots(1, 2, figsize=(11, 4))
     names = comparison["model"] + "\n" + comparison["stage"]
     for ax, col, title in zip(axes, ["accuracy", "macro_f1"], ["Test accuracy", "Test Macro F1"]):
@@ -101,10 +105,16 @@ def summarize_suite(run, cfg, selected):
         results.append(f"- {name}: fine-tune thay đổi test accuracy {(b.accuracy-a.accuracy)*100:+.2f} điểm phần trăm và Macro F1 {b.macro_f1-a.macro_f1:+.4f} so với head-only.")
     full = all(cfg[f"{s}_limit"] == 0 for s in ("train", "val", "test"))
     scope = "Toàn bộ split CIFAR-10; ngân sách epoch và độ phân giải được ghi rõ bên dưới." if full else "Đây là thực nghiệm pilot trên tập con cân bằng của CIFAR10 thật; chưa phải benchmark toàn bộ dữ liệu."
+    policies=[]
+    for name in cfg['models']:
+        record=json.loads((run/name/'selection.json').read_text(encoding='utf-8'))
+        chosen=record.get('finetune',{})
+        policies.append(f"- {name}: {chosen.get('optimizer','adamw')}; depth={chosen.get('unfreeze','last_block')}; backbone_lr={chosen.get('backbone_lr',cfg['finetune_backbone_lr'])}; head_lr={chosen.get('head_lr',cfg['finetune_head_lr'])}; scheduler={chosen.get('scheduler','none')}")
+    fine_policy='\n'.join(policies)
     report = f"""# Lab 02 — Transfer Learning trên CIFAR10
 
 ## 1. Mục tiêu
-Khảo sát ResNet18 và DenseNet121 pre-trained ImageNet, thay classifier thành 10 lớp, so sánh đóng băng backbone và fine-tune block cuối. Điều chỉnh learning rate/batch size, theo dõi bằng TensorBoard, đánh giá và lưu/tải model.
+Khảo sát ResNet18 và DenseNet121 pre-trained ImageNet, thay classifier thành 10 lớp, so sánh đóng băng backbone và fine-tune một/hai block cuối. Điều chỉnh learning rate/batch size, theo dõi bằng TensorBoard, đánh giá và lưu/tải model.
 
 ## 2. Dữ liệu và phạm vi thực nghiệm
 {scope}
@@ -114,8 +124,11 @@ Split gốc 45.000/5.000 được tạo stratified; test giữ nguồn test chí
 
 ## 3. Phương pháp
 Mỗi mô hình thay classifier bằng Linear 10 đầu ra. Head-only đóng băng backbone và cache feature train/val ở eval mode. Cache tương đương forward backbone cho đầu vào cố định; thời gian trích xuất được ghi riêng.
-Tìm learning rate {cfg['learning_rates']} và batch size {cfg['batch_sizes']}, {cfg['head_epochs']} epoch/candidate với AdamW, weight_decay={cfg['weight_decay']}. Các candidate dùng cùng initial head và shuffle seed. Chọn bằng best validation accuracy; hòa chọn trial sớm nhất.
-Fine-tune bắt đầu từ head đã chọn; mở layer4 của ResNet18 hoặc denseblock4+norm5 của DenseNet121. Backbone LR={cfg['finetune_backbone_lr']}, head LR={cfg['finetune_head_lr']}, {cfg['finetune_epochs']} epoch. BatchNorm giữ running statistics; các affine weights trong block được mở vẫn có gradient.
+Tìm learning rate {cfg['learning_rates']} và batch size {cfg['batch_sizes']}, {cfg['head_epochs']} epoch/candidate với {cfg.get('head_optimizer','adamw')}, weight_decay={cfg['weight_decay']}. Các candidate dùng cùng initial head và shuffle seed. Policy chọn candidate: {cfg.get('selection_policy', {'accuracy_tolerance':0,'loss_tolerance':0})}; accuracy band → validation loss band → fit time. Checkpoint trong mỗi trial chọn accuracy cao nhất, hòa chọn loss thấp hơn rồi epoch sớm hơn.
+Fine-tune: mọi candidate khởi tạo lại từ cùng selected head; cấu hình optimizer/LR/depth/scheduler được chọn chỉ bằng validation. Các candidate dùng {cfg['finetune_epochs']} epoch, BatchNorm running statistics giữ cố định. Mở hai block DenseNet gồm denseblock3+transition3+denseblock4+norm5. Cache prefix chỉ hỗ trợ last block; cấu hình tuned tắt cache cho cả hai kiến trúc.
+{fine_policy}
+Toàn bộ fine-search: `finetune_search_results.csv`; xem `cost_comparison.csv` để phân biệt chi phí toàn search và selected recipe.
+
 CrossEntropyLoss nhận logits. Checkpoint chọn theo validation. Test không tham gia search hoặc lựa chọn checkpoint; hai điều kiện head/fine-tune được xác định trước và đánh giá sau khi khóa lựa chọn. Mỗi condition được tải vào model instance mới trước đánh giá.
 
 ## 4. Kết quả đo được
@@ -142,3 +155,38 @@ Lưới ảnh chọn tối đa 8 đúng/8 sai để minh họa; xác suất soft
 - [TensorBoard với PyTorch](https://docs.pytorch.org/tutorials/intermediate/tensorboard_tutorial)
 """
     (run / "report_vi.md").write_text(report, encoding="utf-8")
+
+
+def write_final_report(run, cfg, selected, diagnostic_notes):
+    """One report writer, called by delivery after validation; rebuild idempotently.
+
+    summarize_suite owns the base narrative and comparison figures. Delivery
+    supplies verified diagnostic notes; Markdown and HTML share this same content.
+    """
+    import base64
+    import re
+    import markdown
+
+    summarize_suite(run,cfg,selected)
+    diagnostic_notes=list(diagnostic_notes)
+    diagnostic_notes.extend(['### Diễn giải chỉ số và thiết kế',
+        'Accuracy là số ảnh dự đoán đúng chia tổng số ảnh. Macro F1 tính F1 riêng cho từng lớp rồi lấy trung bình không trọng số; vì vậy mỗi lớp đóng góp ngang nhau. Macro Precision/Recall và cross-entropy test được lưu trong metrics.json. ROC-AUC và average precision tính one-vs-rest từng lớp, không phải cùng một đại lượng.',
+        'ResNet dùng residual connections để cộng tín hiệu qua các block; DenseNet nối các feature maps từ nhiều lớp trong dense block. Thực nghiệm thay head và giữ cấu trúc backbone gốc, không thiết kế lại CNN từ đầu.',
+        f"Profile {cfg['profile']}: {cfg['finetune_epochs']} epoch fine-tune, ảnh {cfg['image_size']}x{cfg['image_size']}, seed {cfg['seed']}. Kết quả chỉ đại diện cấu hình và ngân sách này; một seed chưa chứng minh ưu thế thống kê."])
+    path=run/'report_vi.md'
+    text=path.read_text(encoding='utf-8')
+    text+='\n## 8. Khảo sát lỗi và hình bổ sung\n\n'+'\n\n'.join(diagnostic_notes)
+    path.write_text(text,encoding='utf-8')
+
+    def embed_image(match):
+        content=base64.b64encode((run/match.group(2)).read_bytes()).decode('ascii')
+        return f'<img alt="{match.group(1)}" src="data:image/png;base64,{content}">'
+
+    embedded=re.sub(r'!\[([^\]]*)\]\(([^)]+)\)',embed_image,text)
+    body=markdown.markdown(embedded,extensions=['tables','fenced_code'])
+    html='''<!doctype html><html lang="vi"><meta charset="utf-8"><title>Lab 02</title>
+<style>body{font:16px/1.65 system-ui;color:#172033;max-width:1120px;margin:40px auto;padding:0 24px}
+table{border-collapse:collapse;width:100%;font-size:14px}th,td{border:1px solid #dbe2ef;padding:8px;text-align:left}
+th{background:#edf3fc}img{max-width:100%;height:auto}h2{margin-top:32px;border-bottom:1px solid #dbe2ef}
+code{background:#edf2f7;padding:2px 4px}</style><body>'''+body+'</body></html>'
+    (run/'report_vi.html').write_text(html,encoding='utf-8')

@@ -1,10 +1,41 @@
-"""Delivery workflow shared by the thin finalize/complete_delivery CLIs.
+"""Artifact IO and delivery workflow, called by scripts/finalize.py [--all].
 
 Historical source snapshots stay immutable. Viewing notebooks only requires
 saved artifacts; complete_delivery additionally requires original data/checkpoints.
 """
 import hashlib
+import json
+import os
 from pathlib import Path
+
+
+def write_json(path, value) -> None:
+    """Write UTF-8 artifacts; shared by experiment, EDA and delivery workflows."""
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(value, indent=2, ensure_ascii=False), encoding='utf-8')
+
+
+def file_hash(path) -> str:
+    """Stream SHA256 without importing the training/data-loader stack."""
+    digest = hashlib.sha256()
+    with Path(path).open('rb') as stream:
+        for block in iter(lambda: stream.read(1024*1024), b''):
+            digest.update(block)
+    return digest.hexdigest()
+
+
+def resolve_data_dir(root: Path, explicit=None) -> Path:
+    """One path policy for every CLI: explicit argument, LAB02_DATA, root/data."""
+    return Path(explicit or os.getenv('LAB02_DATA') or root/'data').expanduser().resolve()
+
+
+def resolve_run(root: Path, run_path=None) -> Path:
+    """Resolve an explicit run or the registry independently of the caller's cwd."""
+    if run_path is None:
+        run_path = json.loads((root/'outputs/selected_run.json').read_text(encoding='utf-8'))['run']
+    run = Path(run_path)
+    return (run if run.is_absolute() else root/run).resolve()
 
 
 def audit_snapshot(snapshot: Path, hashes: dict[str, str]) -> dict:
@@ -29,15 +60,9 @@ def audit_snapshot(snapshot: Path, hashes: dict[str, str]) -> dict:
 
 def finalize_run(run_path: str | None = None) -> None:
     """Validate raw run evidence and write run-local report artifacts."""
-    from pathlib import Path
-    import base64
-    import hashlib
-    import json
-    import re
     import shutil
     import subprocess
     import sys
-    import markdown
     import numpy as np
     import pandas as pd
     import matplotlib
@@ -46,23 +71,21 @@ def finalize_run(run_path: str | None = None) -> None:
     from sklearn.metrics import (accuracy_score, f1_score, roc_curve, auc,
                                  precision_recall_curve, average_precision_score)
     from tensorboard.backend.event_processing.event_accumulator import EventAccumulator
-    from src.data import file_hash
-    from src.experiment import write_json
 
     root = Path(__file__).resolve().parents[1]
-    run = Path(run_path) if run_path else Path(json.loads((root / "outputs" / "selected_run.json").read_text(encoding="utf-8"))["run"])
-    if not run.is_absolute():
-        run = root / run
+    run = resolve_run(root,run_path)
+    work = run.parents[2]
+    data_dir = resolve_data_dir(work)
     assert json.loads((run / "status.json").read_text(encoding="utf-8"))["status"] == "completed"
     cfg = json.loads((run / "config.json").read_text(encoding="utf-8"))
     assert cfg.get('dataset') == 'CIFAR10', 'Refuse to postprocess a legacy dataset with CIFAR10 code'
     assets = {}
-    for weights_path in (root / 'data' / 'pretrained' / 'checkpoints').glob('*.pth'):
+    for weights_path in (work / 'data' / 'pretrained' / 'checkpoints').glob('*.pth'):
         digest = file_hash(weights_path)
         expected = weights_path.stem.rsplit('-', 1)[-1]
         assert digest.startswith(expected), f'Official pretrained hash prefix mismatch: {weights_path}'
         assets[weights_path.name] = {'sha256': digest, 'official_filename_prefix_verified': True}
-    archive = root / 'data' / 'cifar-10-python.tar.gz'
+    archive = data_dir / 'cifar-10-python.tar.gz'
     if archive.exists():
         with archive.open('rb') as stream:
             md5 = hashlib.file_digest(stream, 'md5').hexdigest()
@@ -84,7 +107,7 @@ def finalize_run(run_path: str | None = None) -> None:
         count_table.append(f"| {label} | {int(counts_row['train'])} | {int(counts_row['val'])} | {int(counts_row['test'])} |")
     notes.append('\n'.join(count_table))
     from torchvision.datasets import CIFAR10
-    official_labels = np.asarray(CIFAR10(str(root / 'data'), train=False).targets)
+    official_labels = np.asarray(CIFAR10(str(data_dir), train=False).targets)
     for name in cfg["models"]:
         for stage in ("head_selected", "finetune"):
             folder = run / name / stage
@@ -135,7 +158,11 @@ def finalize_run(run_path: str | None = None) -> None:
             pd.DataFrame(curve_metrics).to_csv(folder / 'roc_pr_metrics.csv', index=False)
         search = pd.read_csv(run / name / "search_results.csv")
         chosen = json.loads((run / name / "selection.json").read_text(encoding="utf-8"))["head"]
-        assert chosen["trial"] == int(search.loc[search.best_val_accuracy.idxmax(), "trial"])
+        if 'best_val_loss' in search:
+            from .tuning import select_trial
+            assert chosen['trial'] == select_trial(search.to_dict('records'),cfg.get('selection_policy'))['trial']
+        else:
+            assert chosen['trial'] == int(search.loc[search.best_val_accuracy.idxmax(),'trial'])
         pivot = search.pivot(index="lr", columns="batch_size", values="best_val_accuracy")
         fig, ax = plt.subplots(figsize=(6, 4))
         im = ax.imshow(pivot.to_numpy(), cmap="Blues", vmin=0, vmax=1, aspect="auto")
@@ -164,10 +191,13 @@ def finalize_run(run_path: str | None = None) -> None:
     # Reconstruct visible monitoring evidence from the actual TensorBoard event stream.
     fig, axes = plt.subplots(2, len(cfg['models']), figsize=(12, 7), squeeze=False)
     tensorboard_records = []
-    costs = []
     for column, name in enumerate(cfg['models']):
         chosen = json.loads((run / name / 'selection.json').read_text(encoding='utf-8'))['head']
-        for stage, directory in [('head', f"head_trial_{chosen['trial']:02d}"), ('finetune', 'finetune')]:
+        selected_fine = json.loads((run/name/'selection.json').read_text(encoding='utf-8')).get('finetune',{})
+        fine_dir = f"finetune_trial_{selected_fine.get('trial',0):02d}"
+        if not (run/name/fine_dir).exists():
+            fine_dir = 'finetune'
+        for stage, directory in [('head', f"head_trial_{chosen['trial']:02d}"), ('finetune', fine_dir)]:
             accumulator = EventAccumulator(str(run / name / directory / 'tensorboard')).Reload()
             for row, metric in enumerate(['loss', 'accuracy']):
                 for split in ['train', 'val']:
@@ -181,33 +211,20 @@ def finalize_run(run_path: str | None = None) -> None:
                 axes[row, column].set(title=f'{name}: {metric}', xlabel='Epoch within stage')
                 axes[row, column].legend(fontsize=8)
                 axes[row, column].grid(alpha=.2)
-        summary = json.loads((run / name / 'head_selected' / 'training_summary.json').read_text(encoding='utf-8'))
-        shared = summary['feature_extraction_train_val_seconds'] + summary['all_search_training_seconds']
-        for stage in ['head', 'finetune']:
-            record = comparison[(comparison.model == name) & (comparison.stage == stage)].iloc[0]
-            costs.append({'model': name, 'stage': stage,
-                          'execution': ('pooled_feature_cache' if stage == 'head' else
-                                        ('cached_frozen_prefix' if (run / name / 'prefix_equivalence.json').exists() else 'full_image_forward')),
-                          'feature_extraction_seconds': summary['feature_extraction_train_val_seconds'],
-                          'all_head_trials_fit_seconds': summary['all_search_training_seconds'],
-                          'selected_stage_fit_seconds': record.train_seconds,
-                          'pipeline_training_seconds': shared + (record.train_seconds if stage == 'finetune' else 0),
-                          'test_seconds': record.test_seconds, 'trainable_parameters': int(record.trainable)})
+    from .costs import cost_table, validation_recommendation
+    costs = cost_table(run,comparison).to_dict('records')
     fig.suptitle('Monitoring evidence reconstructed from TensorBoard events (not a UI screenshot)')
     fig.tight_layout()
     fig.savefig(run / 'tensorboard_evidence.png', dpi=150)
     plt.close(fig)
     pd.DataFrame(tensorboard_records).to_csv(run / 'tensorboard_scalars.csv', index=False)
-    pd.DataFrame(costs).to_csv(run / 'cost_comparison.csv', index=False)
-    winner = comparison.loc[comparison.best_val_accuracy.idxmax()]
-    write_json(run / 'validation_recommendation.json', {'model': winner.model, 'stage': winner.stage,
-        'criterion': 'maximum validation accuracy; stable first row on tie; no test-based selection',
-        'validation_accuracy': winner.best_val_accuracy})
+    recommendation = validation_recommendation(run,comparison,cfg)
+    winner = comparison[(comparison.model==recommendation['model']) & (comparison.stage==recommendation['stage'])].iloc[0]
     notes.extend(['### TensorBoard và chi phí', '![TensorBoard scalars](tensorboard_evidence.png)',
         'Hình này dựng từ TensorBoard events thật; không phải ảnh chụp giao diện. Mở TensorBoard theo README để xem tương tác.',
         f'Điều kiện được đề xuất bằng validation: **{winner.model}/{winner.stage}**, validation accuracy **{winner.best_val_accuracy:.2%}**.',
-        'Chi phí pipeline gồm feature extraction, toàn bộ head search và fine-tune nếu có; chưa gồm EDA, ghi báo cáo và inference test. Xem cost_comparison.csv.'])
-    cost_table = ['| Model | Stage | Feature extraction (s) | All head search (s) | Pipeline train (s) | Test (s) |',
+        'Chi phí pipeline gồm feature extraction, toàn bộ head search và toàn bộ fine-tune search nếu có; chưa gồm EDA, ghi báo cáo và inference test. Xem cost_comparison.csv.'])
+    cost_table = ['| Model | Stage | Feature extraction (s) | All head search (s) | Pipeline search train (s) | Test (s) |',
                   '|---|---|---:|---:|---:|---:|']
     for cost in costs:
         cost_table.append(f"| {cost['model']} | {cost['stage']} | {cost['feature_extraction_seconds']:.1f} | {cost['all_head_trials_fit_seconds']:.1f} | {cost['pipeline_training_seconds']:.1f} | {cost['test_seconds']:.1f} |")
@@ -226,26 +243,8 @@ def finalize_run(run_path: str | None = None) -> None:
             notes.append(f"{name} fine-tune sử dụng cache đầu ra của prefix đóng băng; đã kiểm chứng tương đương trên {proof['samples']} ảnh thật, max logit error={proof['max_logit_error']:.3g}. Test vẫn forward toàn bộ model trên ảnh RGB. Kiểm thử riêng đối chiếu cả logits, gradients và schema checkpoint.")
     if any((run / name / 'prefix_equivalence.json').exists() for name in cfg['models']):
         notes.append('Chi phí giữa các kiến trúc chịu ảnh hưởng của cách thực thi: xem cột execution trong cost_comparison.csv. Trong run này, nếu một model dùng cache prefix còn model khác forward ảnh khi fine-tune, không dùng thời gian thô để kết luận riêng về tốc độ kiến trúc. Cache giữ nguyên bài toán tối ưu và số ảnh/epoch; mã hiện hành hỗ trợ cache prefix cho cả hai model ở profile CPU.')
-    notes.extend(['### Diễn giải chỉ số và thiết kế',
-        'Accuracy là số ảnh dự đoán đúng chia tổng số ảnh. Macro F1 tính F1 riêng cho từng lớp rồi lấy trung bình không trọng số; vì vậy mỗi lớp đóng góp ngang nhau. Macro Precision/Recall và cross-entropy test được lưu trong metrics.json. ROC-AUC và average precision tính one-vs-rest từng lớp, không phải cùng một đại lượng.',
-        'ResNet dùng residual connections để cộng tín hiệu qua các block; DenseNet nối các feature maps từ nhiều lớp trong dense block. Thực nghiệm thay head và giữ cấu trúc backbone gốc, không thiết kế lại CNN từ đầu.',
-        'CPU profile chỉ có 2 epoch fine-tune sau head search: kết quả chứng minh pipeline và hành vi ở ngân sách đã chọn, không chứng minh đã hội tụ hoặc đạt chất lượng tối ưu. Chưa chạy nhiều seed, augmentation ablation hay baseline khởi tạo ngẫu nhiên.'])
-    report_path = run / "report_vi.md"
-    text = report_path.read_text(encoding="utf-8")
-    text = text.split("\n## 8. Khảo sát lỗi và hình bổ sung")[0]
-    text += "\n## 8. Khảo sát lỗi và hình bổ sung\n\n" + "\n\n".join(notes)
-    report_path.write_text(text, encoding="utf-8")
-
-    def embed_image(match):
-        relative = match.group(2)
-        encoded = base64.b64encode((run / relative).read_bytes()).decode("ascii")
-        return f'<img alt="{match.group(1)}" src="data:image/png;base64,{encoded}">'
-
-    embedded = re.sub(r"!\[([^\]]*)\]\(([^)]+)\)", embed_image, text)
-    body = markdown.markdown(embedded, extensions=["tables", "fenced_code"])
-    html = """<!DOCTYPE html><html lang="vi"><meta charset="utf-8"><title>Lab 02 — Báo cáo</title>
-    <style>body{font:16px/1.65 system-ui,sans-serif;color:#172033;max-width:1120px;margin:40px auto;padding:0 24px}h1,h2,h3{line-height:1.3}h1{color:#174ea6}h2{border-bottom:1px solid #dbe2ef;padding-bottom:8px;margin-top:36px}table{border-collapse:collapse;width:100%;font-size:14px}th,td{border:1px solid #dbe2ef;text-align:left;padding:9px}th{background:#edf3fc}img{max-width:100%;height:auto}code{background:#edf2f7;padding:2px 4px}a{color:#174ea6}@media print{body{margin:0;font-size:11pt}h2{break-after:avoid}img,table{break-inside:avoid}}</style><body>""" + body + "</body></html>"
-    (run / "report_vi.html").write_text(html, encoding="utf-8")
+    from .reporting import write_final_report
+    write_final_report(run,cfg,selected,notes)
     lock = subprocess.check_output([sys.executable, "-m", "pip", "freeze"], text=True)
     (run / "requirements-freeze.txt").write_text(lock, encoding="utf-8")
     snapshot = run / "source_snapshot"
@@ -285,7 +284,7 @@ def finalize_run(run_path: str | None = None) -> None:
         "# Lab 02 — Kết quả đã chạy\n\n"
         "[Tài liệu sống](../../../walkthrough_lab_02.md)\n\n"
         f"Run: `{run.name}`. Profile: **{cfg['profile']}**. Số mẫu xem trong data_summary.json và báo cáo.\n\n"
-        f"- [Notebook EDA và kiến trúc](../../../notebooks/01_lab02_eda.ipynb)\n"
+        f"- [Notebook EDA và tiền xử lý](../../../notebooks/01_lab02_eda.ipynb)\n"
         f"- [Notebook huấn luyện và đánh giá](../../../notebooks/02_lab02_modeling.ipynb)\n"
         f"- [Báo cáo có hình](report_vi.html)\n"
         f"- [Báo cáo Markdown](report_vi.md)\n"
@@ -299,18 +298,14 @@ def finalize_run(run_path: str | None = None) -> None:
 
 
 
-def complete_delivery(run_path: str) -> None:
+def complete_delivery(run_path: str | None = None) -> None:
     """Wait for completion, validate, execute both views and verify inference."""
-    from pathlib import Path
-    import json
     import subprocess
     import sys
     import time
     root = Path(__file__).resolve().parents[1]
-    from src.data import file_hash
-    from src.experiment import write_json
 
-    run = Path(run_path).resolve()
+    run = resolve_run(root,run_path)
     deadline = time.monotonic() + 14400
     while True:
         status = json.loads((run / "status.json").read_text(encoding="utf-8"))
@@ -321,6 +316,8 @@ def complete_delivery(run_path: str) -> None:
         if time.monotonic() > deadline:
             raise TimeoutError("Training not completed within four hours")
         time.sleep(5)
+    environment = os.environ.copy()
+    environment.update(LAB02_ROOT=str(root),LAB02_RUN=str(run),LAB02_DATA=str(resolve_data_dir(run.parents[2])))
     with (root / "outputs" / "delivery_validation.log").open("w", encoding="utf-8") as log:
         test = subprocess.run([sys.executable, '-X', 'utf8', '-m', 'pytest', 'tests', '-q'], cwd=root,
                               text=True, encoding='utf-8', capture_output=True)
@@ -331,16 +328,19 @@ def complete_delivery(run_path: str) -> None:
         for script, arguments in [('execute_notebook.py', []),
                                   ('execute_notebook.py', ['01_lab02_eda.ipynb'])]:
             result = subprocess.run([sys.executable, '-X', 'utf8', str(root / "scripts" / script), *arguments], cwd=root,
-                                    text=True, encoding="utf-8", capture_output=True)
+                                    text=True, encoding="utf-8", capture_output=True,env=environment)
             log.write(result.stdout + result.stderr)
             log.flush()
             print(result.stdout, flush=True)
             if result.returncode:
                 print(result.stderr, flush=True)
                 raise RuntimeError(f"{script} failed")
-        result = subprocess.run([sys.executable, str(root / "scripts" / "infer.py"),
-            "--checkpoint", str(run / "resnet18" / "finetune" / "best.pt"), "--sample-index", "0"],
-            cwd=root, text=True, encoding="utf-8", capture_output=True, check=True)
+        recommendation=json.loads((run/'validation_recommendation.json').read_text(encoding='utf-8'))
+        stage='head_selected' if recommendation['stage']=='head' else 'finetune'
+        checkpoint=run/recommendation['model']/stage/'best.pt'
+        result = subprocess.run([sys.executable,'-X','utf8',str(root/'scripts/infer.py'),
+            '--checkpoint',str(checkpoint),'--sample-index','0'],cwd=root,env=environment,
+            text=True,encoding='utf-8',capture_output=True,check=True)
         log.write(result.stdout + result.stderr)
         write_json(run / "cli_inference_example.json", json.loads(result.stdout))
     notebook = root / "notebooks" / "02_lab02_modeling.ipynb"

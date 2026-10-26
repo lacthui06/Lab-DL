@@ -1,0 +1,61 @@
+{
+  "status": "passed",
+  "expected_source_modules": 10,
+  "expected_scripts": 7,
+  "removed": [
+    "scripts/complete_delivery.py",
+    "scripts/download_cifar10.py",
+    "config/tuning_plan.json"
+  ],
+  "historical_run_artifacts": "preserved",
+  "training_benchmark": "not rerun",
+  "tests": {
+    "name": "pytest",
+    "errors": "0",
+    "failures": "0",
+    "skipped": "0",
+    "tests": "50",
+    "time": "143.660",
+    "timestamp": "2026-10-26T17:05:48.529419+07:00",
+    "hostname": "QuynhAnh"
+  },
+  "python": "3.12.7 (tags/v3.12.7:0b05ead, Oct  1 2024, 03:06:41) [MSC v.1941 64 bit (AMD64)]",
+  "packages": {
+    "torch": "2.9.1+cu128",
+    "torchvision": "0.24.1+cu128",
+    "numpy": "2.2.6",
+    "pandas": "2.3.3",
+    "pytest": "9.1.1",
+    "nbclient": "0.11.0"
+  },
+  "syntax_python_files": 23,
+  "source_modules": 10,
+  "scripts": 7,
+  "coverage": [
+    "production reference graph and README links",
+    "import-safe CLI/help",
+    "CSV old/new execution schema",
+    "shared locked split and RGB formula",
+    "chunked checksum/header verification",
+    "requested run and validation-selected inference checkpoint",
+    "synthetic finalizer including TensorBoard/HTML/config metadata"
+  ],
+  "limitations": [
+    "No full training benchmark",
+    "Historical checkpoint inference not rerun; original run artifacts preserved"
+  ],
+  "notebooks": {
+    "01_lab02_eda.ipynb": {
+      "code_cells": 8,
+      "executed": 8,
+      "inline_pngs": 9,
+      "errors": 0
+    },
+    "02_lab02_modeling.ipynb": {
+      "code_cells": 11,
+      "executed": 11,
+      "inline_pngs": 11,
+      "errors": 0
+    }
+  }
+}

@@ -19,3 +19,6 @@ outputs/cache/
 events.out.tfevents.*
 .env
 .env.*
+
+# Small locked index artifact, not image data or a learned feature cache.
+!labs/lab02/outputs/eda/split_indices.npz

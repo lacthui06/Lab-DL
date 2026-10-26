@@ -32,16 +32,27 @@ def features(model, name, images):
     return torch.flatten(nn.functional.adaptive_avg_pool2d(x, (1, 1)), 1)
 
 
-def configure_trainable(model, name, stage):
+def trainable_blocks(name, depth='last_block'):
+    """Include DenseNet transition3 when opening denseblock3 and later layers."""
+    if name not in SPECS or depth not in ('last_block', 'last_two_blocks'):
+        raise ValueError('Unsupported model or unfreeze depth')
+    if name == 'resnet18':
+        return ['layer4'] if depth == 'last_block' else ['layer3', 'layer4']
+    return (['features.denseblock4', 'features.norm5'] if depth == 'last_block' else
+            ['features.denseblock3', 'features.transition3', 'features.denseblock4', 'features.norm5'])
+
+
+def configure_trainable(model, name, stage, depth='last_block'):
+    if stage not in ('head', 'finetune'):
+        raise ValueError('stage must be head or finetune')
+    blocks = trainable_blocks(name, depth)
     for p in model.parameters():
         p.requires_grad = False
     for p in classifier(model, name).parameters():
         p.requires_grad = True
     if stage == "finetune":
-        blocks = [model.layer4] if name == "resnet18" else [
-            model.features.denseblock4, model.features.norm5]
         for block in blocks:
-            for p in block.parameters():
+            for p in model.get_submodule(block).parameters():
                 p.requires_grad = True
 
 

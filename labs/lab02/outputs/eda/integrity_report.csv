@@ -1,0 +1,10 @@
+split,check,count
+train,invalid_labels,0
+train,nonfinite_pixels,0
+train,constant_images,0
+val,invalid_labels,0
+val,nonfinite_pixels,0
+val,constant_images,0
+test,invalid_labels,0
+test,nonfinite_pixels,0
+test,constant_images,0

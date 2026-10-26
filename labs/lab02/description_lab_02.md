@@ -1,9 +1,30 @@
-# Lab 02 — Yêu cầu và thiết kế hiện hành
+# Lab 02 — Đề bài gốc và phạm vi triển khai
 
-Đề gốc, Chapter 3 trang 23: khảo sát nhiều pretrained architectures, thay classifier, freeze/fine-tune, chuẩn bị dữ liệu, train/evaluate; điều chỉnh LR/batch size và theo dõi TensorBoard. CIFAR-10 là ví dụ ở trang 24. VGG, DenseNet và ResNet là các ví dụ kiến trúc, không phải danh sách bắt buộc chạy tất cả.
+Nguồn đối chiếu: ảnh `Screenshot 2026-10-25 201146.png`, slide trang 23 do người dùng cung cấp ngày 26/10/2026. Nội dung đề là dữ liệu đầu vào của bài tập; các lựa chọn triển khai nằm trong walkthrough.
 
-Yêu cầu người dùng: hoàn thành Lab 02 bằng **CIFAR-10**. Dùng ResNet18 và DenseNet121 ImageNet weights, head-only và fine-tune block cuối; grid LR × batch chỉ chọn bằng validation. Không dùng kết quả FashionMNIST làm bằng chứng CIFAR-10.
+## Practice 2 - Hands-on practice with pre-trained neural network architectures
 
-Split stratified seed 42: 45.000 train / 5.000 validation / 10.000 test. Giữ RGB. Profile cpu_full chạy toàn bộ ảnh, resize 64×64, 5 head epoch/trial, 2 fine-tune epoch. Profile full dùng 224×224, 10 epoch/giai đoạn, dành cho GPU. Profile cpu_pilot chỉ kiểm tra tập con. Ghi đúng profile thực tế; không suy diễn số của cấu hình chưa chạy.
+### Exercises
 
-Sản phẩm: hai notebook có output, source/CLI, EDA, kiến trúc, search và learning curves, TensorBoard, báo cáo tiếng Việt Markdown/HTML, bảng/hình đánh giá, checkpoint kèm metadata, roundtrip và inference mẫu, manifest/log/snapshot, kiểm thử và README. Không yêu cầu PDF ở lượt này.
+1. Experiment with different pre-trained models (VGG, DenseNet, etc.).
+2. Adjust the hyperparameters (learning rate, batch size, etc.).
+3. Use TensorBoard to monitor the training process.
+
+### Objective
+
+- Become familiar with loading and using pre-trained models from torchvision.models.
+- Understand how to adapt and fine-tune pre-trained models for specific tasks.
+
+### Steps (chép lại và rút gọn từ ảnh)
+
+1. Environment Setup: ensure PyTorch and torchvision are installed; if not, install using `pip install torch torchvision`.
+2. Load a Pre-trained Model: torchvision.models provides models like ResNet, VGG, DenseNet; `pretrained=True` loads ImageNet weights.
+3. Explore the Model Architecture: print the model to examine its structure; identify layers and parameters.
+4. Adapt the Model for a Specific Task: replace the final classification layer to match the number of classes; freeze earlier layers for transfer learning or unfreeze final layers to fine-tune.
+5. Prepare the Data: load the dataset; preprocess with torchvision.transforms; create batches with torch.utils.data.DataLoader.
+6. Train the Model: define the loss and optimizer; write the training loop.
+7. Evaluate the Model: evaluate performance on a test dataset.
+
+## Phạm vi đã chọn trong source
+
+CIFAR-10, ResNet18 và DenseNet121 là lựa chọn của bài làm. Ảnh đề không bắt buộc CIFAR-10, độ phân giải 224 hay phải chạy đủ VGG/ResNet/DenseNet. Source dùng API `weights=...` để tải weights ImageNet thay cho cờ `pretrained=True` cũ. Đặc tả, kiểm tra đáp ứng đề và giới hạn bằng chứng nằm trong [walkthrough_lab_02.md](walkthrough_lab_02.md).

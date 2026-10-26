@@ -1,0 +1,20 @@
+{
+  "cuda_available": true,
+  "benchmark": false,
+  "dataset": "synthetic one-batch only",
+  "torch": "2.9.1+cu128",
+  "cuda_runtime": "12.8",
+  "models": [
+    {
+      "model": "resnet18",
+      "status": "passed",
+      "peak_cuda_memory_mib": 225.34521484375
+    },
+    {
+      "model": "densenet121",
+      "status": "passed",
+      "peak_cuda_memory_mib": 130.654296875
+    }
+  ],
+  "device": "NVIDIA GeForce GTX 1660 Ti"
+}

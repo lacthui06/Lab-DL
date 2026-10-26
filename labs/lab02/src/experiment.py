@@ -23,16 +23,15 @@ from torch.utils.data import DataLoader, TensorDataset
 from torch.utils.tensorboard import SummaryWriter
 from torchvision.utils import make_grid
 
-from .data import image_loader, image_transform, prepare_indices, export_eda, file_hash
+from .data import image_loader, image_transform, prepare_indices
+from .eda import export_summary
+from .delivery import write_json, file_hash, resolve_data_dir
 from .models import (SPECS, build_model, classifier, features, configure_trainable,
                      parameter_counts, training_mode, last_block, CachedTail)
+from .tuning import fine_candidates, select_trial, make_optimizer, make_scheduler
 from .reporting import export_evaluation, summarize_suite
 
 ROOT = Path(__file__).resolve().parents[1]
-
-
-def write_json(path, obj):
-    Path(path).write_text(json.dumps(obj, indent=2, ensure_ascii=False), encoding="utf-8")
 
 
 def seed_all(seed):
@@ -103,6 +102,8 @@ def pass_epoch(model, loader, device, optimizer=None, mode_fn=None):
                 optimizer.zero_grad(set_to_none=True)
             logits = model(inputs)
             loss = nn.functional.cross_entropy(logits, labels)
+            if not torch.isfinite(loss):
+                raise FloatingPointError('Non-finite loss; trial stopped before optimizer update')
             if training:
                 loss.backward()
                 optimizer.step()
@@ -114,22 +115,39 @@ def pass_epoch(model, loader, device, optimizer=None, mode_fn=None):
     return {"loss": total_loss / count, "accuracy": correct / count}
 
 
-def fit(model, train, val, optimizer, epochs, device, folder, metadata, mode_fn=None):
+def fit(model, train, val, optimizer, epochs, device, folder, metadata, mode_fn=None, scheduler=None):
+    if epochs < 1:
+        raise ValueError('epochs must be positive')
     folder.mkdir(parents=True, exist_ok=True)
     write_json(folder / "config.json", metadata)
     writer = SummaryWriter(str(folder / "tensorboard"))
     writer.add_text("configuration", json.dumps(metadata, indent=2))
-    history, best = [], -1.
+    history, best, best_loss = [], -1., float('inf')
+    train_pass_seconds, validation_seconds = 0., 0.
+    if device.type == 'cuda':
+        torch.cuda.reset_peak_memory_stats(device)
     sync(device)
     start = time.perf_counter()
     try:
         for epoch in range(1, epochs + 1):
             epoch_start = time.perf_counter()
+            rates = {f'lr_group_{i}': group['lr'] for i, group in enumerate(optimizer.param_groups)}
+            sync(device)
+            train_start = time.perf_counter()
             tr = pass_epoch(model, train, device, optimizer, mode_fn)
+            sync(device)
+            train_elapsed = time.perf_counter()-train_start
+            val_start = time.perf_counter()
             va = pass_epoch(model, val, device)
+            sync(device)
+            val_elapsed = time.perf_counter()-val_start
+            train_pass_seconds += train_elapsed
+            validation_seconds += val_elapsed
             row = {"epoch": epoch, "train_loss": tr["loss"], "train_accuracy": tr["accuracy"],
                    "val_loss": va["loss"], "val_accuracy": va["accuracy"],
-                   "epoch_seconds": time.perf_counter() - epoch_start}
+                   "epoch_seconds": time.perf_counter() - epoch_start,
+                   "train_pass_seconds": train_elapsed, "validation_seconds": val_elapsed,
+                   "train_images_per_second": len(train.dataset)/max(train_elapsed, 1e-12), **rates}
             history.append(row)
             pd.DataFrame(history).to_csv(folder / "history.csv", index=False)
             for key, value in row.items():
@@ -144,16 +162,24 @@ def fit(model, train, val, optimizer, epochs, device, folder, metadata, mode_fn=
                         writer.add_histogram(f"gradients/{param_name}", param.grad, epoch)
                     break
             writer.flush()
-            # Ties retain the earliest checkpoint; selection does not consult test.
-            if va["accuracy"] > best:
+            # On equal validation accuracy prefer lower validation loss, then earlier epoch.
+            if va['accuracy'] > best or (va['accuracy'] == best and va['loss'] < best_loss):
                 best = va["accuracy"]
+                best_loss = va['loss']
                 torch.save({"state_dict": model.state_dict(), "metadata": metadata,
-                            "best_epoch": epoch, "val_accuracy": best}, folder / "best.pt")
+                            "best_epoch": epoch, "val_accuracy": best, 'val_loss':best_loss}, folder / "best.pt")
+            if scheduler is not None:
+                scheduler.step()
             print(f"{folder.name} epoch {epoch}/{epochs}: train={tr['accuracy']:.4f}, val={va['accuracy']:.4f}", flush=True)
         sync(device)
-        result = {"best_val_accuracy": best, "train_seconds": time.perf_counter() - start,
+        result = {"best_val_accuracy": best, 'best_val_loss':best_loss,
+                  "train_seconds": time.perf_counter() - start,
+                  'train_pass_seconds':train_pass_seconds, 'validation_seconds':validation_seconds,
+                  'train_images_per_second':len(train.dataset)*epochs/max(train_pass_seconds,1e-12),
+                  'peak_cuda_memory_mib':torch.cuda.max_memory_allocated(device)/2**20 if device.type=='cuda' else None,
                   "best_epoch": torch.load(folder / "best.pt", weights_only=True, map_location="cpu")["best_epoch"]}
-        writer.add_hparams({k: metadata[k] for k in ("model", "stage", "batch_size", "lr")},
+        writer.add_hparams({k: metadata[k] for k in ('model','stage','batch_size','lr',
+                          'optimizer','backbone_lr','unfreeze','scheduler') if k in metadata},
                            {"best_val_accuracy": best})
         writer.flush()
         write_json(folder / "training_summary.json", result)
@@ -173,7 +199,83 @@ def predict(model, loader, device):
     return np.concatenate(probs), np.concatenate(labels), np.concatenate(indices)
 
 
+def search_finetune(model, name, cfg, selected, data_dir, run, device,
+                    train_features, val_features, batch_size):
+    """Start every candidate from the SAME selected head; evaluate validation only."""
+    folder = run / name
+    initial = {k: v.detach().cpu().clone() for k, v in model.state_dict().items()}
+    candidates = fine_candidates(cfg)
+    trials = []
+    prefix_data = {}
+    if cfg.get('cache_frozen_prefix'):
+        for split, data in [('train', train_features), ('val', val_features)]:
+            mapped = np.load(folder / f'{split}_prefix.npy', mmap_mode='c')
+            prefix_data[split] = (torch.from_numpy(mapped), data[1], data[2])
+    for number, candidate in enumerate(candidates):
+        seed_all(cfg['seed'])
+        model.load_state_dict(initial)
+        model.zero_grad(set_to_none=True)
+        configure_trainable(model, name, 'finetune', candidate['unfreeze'])
+        head_ids = {id(p) for p in classifier(model, name).parameters()}
+        backbone = [p for p in model.parameters() if p.requires_grad and id(p) not in head_ids]
+        groups = [dict(params=backbone, lr=candidate['backbone_lr']),
+                  dict(params=classifier(model, name).parameters(), lr=candidate['head_lr'])]
+        optimizer = make_optimizer(groups, candidate['optimizer'], cfg['weight_decay'], cfg.get('momentum', .9))
+        scheduler = make_scheduler(optimizer, candidate['scheduler'], cfg['finetune_epochs'])
+        meta = {'model':name, 'stage':'finetune', **candidate, 'lr':candidate['head_lr'],
+                'batch_size':batch_size, 'seed':cfg['seed'], 'weights':str(SPECS[name][1]),
+                'dataset':'CIFAR10', 'image_size':cfg['image_size'],
+                'initialization':'same selected head checkpoint for every fine-tune trial',
+                'batchnorm':'running statistics frozen', 'parameter_counts':parameter_counts(model),
+                'data_sha256':file_hash(run/'selected_indices.npz'),
+                'execution':'cached_frozen_prefix' if prefix_data else 'full_image_forward'}
+        if prefix_data:
+            fit_model = CachedTail(model, name).to(device)
+            model.eval()
+            sample = next(iter(image_loader(data_dir, 'train', selected['train'][:8], name, 8,
+                cfg['seed'], image_size=cfg['image_size'])))[0].to(device)
+            with torch.inference_mode():
+                direct = model(sample)
+                equivalent = fit_model(prefix_data['train'][0][:len(sample)].to(device))
+            torch.testing.assert_close(direct, equivalent, atol=1e-4, rtol=1e-5)
+            write_json(folder/'prefix_equivalence.json', {'passed':True, 'samples':len(sample),
+                'max_logit_error':(direct-equivalent).abs().max().item(),
+                'policy':'frozen deterministic prefix; last block only'})
+            train_loader = tensor_loader(prefix_data['train'], batch_size, cfg['seed'], True)
+            val_loader = tensor_loader(prefix_data['val'], batch_size, cfg['seed'])
+        else:
+            fit_model = model
+            train_loader = image_loader(data_dir, 'train', selected['train'], name, batch_size,
+                cfg['seed'], True, cfg['image_size'])
+            val_loader = image_loader(data_dir, 'val', selected['val'], name, batch_size,
+                cfg['seed'], image_size=cfg['image_size'])
+        trial_folder = folder / (f'finetune_trial_{number:02d}' if 'finetune_candidates' in cfg else 'finetune')
+        result = fit(fit_model, train_loader, val_loader, optimizer, cfg['finetune_epochs'], device,
+                     trial_folder, meta, training_mode, scheduler=scheduler)
+        trials.append({'trial':number, **candidate, **result, 'trainable':meta['parameter_counts']['trainable'],
+                       'execution':meta['execution']})
+        pd.DataFrame(trials).to_csv(folder/'finetune_search_results.csv', index=False)
+        del optimizer, scheduler, fit_model, train_loader, val_loader
+    winner = select_trial(trials, cfg.get('selection_policy'))
+    chosen = folder / (f"finetune_trial_{winner['trial']:02d}" if 'finetune_candidates' in cfg else 'finetune')
+    destination = folder/'finetune'
+    if chosen != destination:
+        destination.mkdir()
+        for filename in ['best.pt','history.csv','config.json','training_summary.json']:
+            shutil.copy2(chosen/filename, destination/filename)
+    checkpoint = torch.load(destination/'best.pt', map_location='cpu', weights_only=True)
+    model.load_state_dict(checkpoint['state_dict'])
+    selection = json.loads((folder/'selection.json').read_text(encoding='utf-8'))
+    selection.update(finetune=winner, finetune_policy=cfg.get('selection_policy', {}),
+                     criterion='validation accuracy band -> validation loss band -> fit time; no test input')
+    write_json(folder/'selection.json', selection)
+    return winner, checkpoint['metadata'], sum(t['train_seconds'] for t in trials)
+
+
 def run_model(name, cfg, selected, data_dir, run, device):
+    fine_candidates(cfg)  # Reject incompatible cache/depth before loading weights or extracting features.
+    sync(device)
+    model_start = time.perf_counter()
     seed_all(cfg["seed"])
     folder = run / name
     folder.mkdir(exist_ok=True)
@@ -206,15 +308,16 @@ def run_model(name, cfg, selected, data_dir, run, device):
         meta = {"model": name, "stage": "head", "lr": lr, "batch_size": bs,
                 "seed": cfg["seed"], "weights": str(SPECS[name][1]),
                 "dataset": "CIFAR10", "image_size": cfg["image_size"],
+                'optimizer':cfg.get('head_optimizer', 'adamw'),
                 "data_sha256": file_hash(run / "selected_indices.npz")}
         trial = folder / f"head_trial_{number:02d}"
         result = fit(head, tensor_loader(train_features, bs, cfg["seed"], True),
                      tensor_loader(val_features, bs, cfg["seed"]),
-                     torch.optim.AdamW(head.parameters(), lr=lr, weight_decay=cfg["weight_decay"]),
+                     make_optimizer([dict(params=head.parameters(), lr=lr)], cfg.get('head_optimizer', 'adamw'), cfg['weight_decay'], cfg.get('momentum', .9)),
                      cfg["head_epochs"], device, trial, meta)
         trials.append({"trial": number, "lr": lr, "batch_size": bs, **result})
         pd.DataFrame(trials).to_csv(folder / "search_results.csv", index=False)
-    winner = max(trials, key=lambda r: r["best_val_accuracy"])
+    winner = select_trial(trials, cfg.get('selection_policy'))
     chosen = folder / f"head_trial_{winner['trial']:02d}"
     checkpoint = torch.load(chosen / "best.pt", map_location=device, weights_only=True)
     classifier(model, name).load_state_dict(checkpoint["state_dict"])
@@ -229,51 +332,15 @@ def run_model(name, cfg, selected, data_dir, run, device):
                "feature_extraction_train_val_seconds": train_sec + val_sec,
                "all_search_training_seconds": sum(t["train_seconds"] for t in trials)})
     # Selection is persisted before ANY test images are loaded for this model.
-    write_json(folder / "selection.json", {"criterion": "max validation accuracy, earliest trial on tie",
+    write_json(folder / "selection.json", {"criterion": "validation accuracy/loss bands then fit time",
                "head": winner, "finetune_policy": "last block + classifier, fixed config, best validation epoch"})
-    configure_trainable(model, name, "finetune")
-    head_ids = {id(p) for p in classifier(model, name).parameters()}
-    backbone = [p for p in model.parameters() if p.requires_grad and id(p) not in head_ids]
-    optimizer = torch.optim.AdamW([
-        {"params": backbone, "lr": cfg["finetune_backbone_lr"]},
-        {"params": classifier(model, name).parameters(), "lr": cfg["finetune_head_lr"]}],
-        weight_decay=cfg["weight_decay"])
-    bs = winner["batch_size"]
-    meta = {"model": name, "stage": "finetune", "lr": cfg["finetune_head_lr"],
-            "backbone_lr": cfg["finetune_backbone_lr"], "batch_size": bs,
-            "seed": cfg["seed"], "weights": str(SPECS[name][1]),
-            "dataset": "CIFAR10", "image_size": cfg["image_size"],
-            "initialization": "best head checkpoint", "batchnorm": "running statistics frozen",
-            "parameter_counts": parameter_counts(model)}
-    fine_folder = folder / "finetune"
-    seed_all(cfg["seed"])
-    if cfg.get('cache_frozen_prefix'):
-        tail = CachedTail(model, name).to(device)
-        prefix_data = {}
-        for split, data in [('train', train_features), ('val', val_features)]:
-            mapped = np.load(folder / f'{split}_prefix.npy', mmap_mode='c')
-            prefix_data[split] = (torch.from_numpy(mapped), data[1], data[2])
-        model.eval()
-        tail.eval()
-        sample = next(iter(image_loader(data_dir, 'train', selected['train'][:8], name, 8,
-                                       cfg['seed'], image_size=cfg['image_size'])))[0].to(device)
-        with torch.inference_mode():
-            direct = model(sample)
-            equivalent = tail(prefix_data['train'][0][:8].to(device))
-        torch.testing.assert_close(direct, equivalent, atol=1e-4, rtol=1e-5)
-        write_json(folder / 'prefix_equivalence.json', {'passed': True, 'samples': 8,
-            'max_logit_error': (direct-equivalent).abs().max().item(),
-            'policy': 'Frozen deterministic prefix cached once; original full-model checkpoint schema'})
-        fit_model = tail
-        train_loader = tensor_loader(prefix_data['train'], bs, cfg['seed'], True)
-        val_loader = tensor_loader(prefix_data['val'], bs, cfg['seed'])
-        meta['execution'] = 'equivalent cached frozen prefix; train identical last block and head'
-    else:
-        fit_model = model
-        train_loader = image_loader(data_dir, 'train', selected['train'], name, bs, cfg['seed'], True, cfg['image_size'])
-        val_loader = image_loader(data_dir, 'val', selected['val'], name, bs, cfg['seed'], image_size=cfg['image_size'])
-    fine_result = fit(fit_model, train_loader, val_loader,
-        optimizer, cfg["finetune_epochs"], device, fine_folder, meta, training_mode)
+    fine_result, meta, all_fine_seconds = search_finetune(
+        model, name, cfg, selected, data_dir, run, device,
+        train_features, val_features, winner['batch_size'])
+    fine_folder = folder / 'finetune'
+    bs = winner['batch_size']
+    sync(device)
+    model_selection_wall_seconds = time.perf_counter()-model_start
     # Evaluate two predeclared conditions after their checkpoints are locked.
     rows = []
     for stage, stage_folder, result, metadata in [
@@ -301,7 +368,18 @@ def run_model(name, cfg, selected, data_dir, run, device):
         if error > 1e-6:
             raise AssertionError("Checkpoint roundtrip failed")
         rows.append({"model": name, "stage": stage, **metric,
-                     "best_val_accuracy": result["best_val_accuracy"],
+                     "best_val_accuracy": result["best_val_accuracy"], 'best_val_loss':result['best_val_loss'],
+                     'optimizer':metadata.get('optimizer', 'adamw'),
+                     'unfreeze':metadata.get('unfreeze', 'head'), 'scheduler':metadata.get('scheduler', 'none'),
+                     'execution':'pooled_feature_cache' if stage=='head' else metadata['execution'],
+                     'all_head_search_seconds':sum(t['train_seconds'] for t in trials),
+                     'all_finetune_search_seconds':all_fine_seconds if stage=='finetune' else 0.,
+                     'selected_head_fit_seconds':winner['train_seconds'],
+                     'model_selection_wall_seconds':model_selection_wall_seconds,
+                     'train_pass_seconds':result.get('train_pass_seconds'),
+                     'validation_seconds':result.get('validation_seconds'),
+                     'train_images_per_second':result.get('train_images_per_second'),
+                     'peak_cuda_memory_mib':result.get('peak_cuda_memory_mib'),
                      "train_seconds": result["train_seconds"], "test_seconds": elapsed,
                      "feature_extraction_train_val_seconds": train_sec + val_sec,
                      **metadata["parameter_counts"]})
@@ -323,22 +401,34 @@ class Tee:
         self.log.flush()
 
 
-def run_suite(config_path, work_dir=None, device_override="auto"):
+def run_suite(config_path, work_dir=None, device_override="auto", seed_override=None):
     cfg = json.loads(Path(config_path).read_text(encoding="utf-8"))
+    if seed_override is not None:
+        cfg['seed'] = seed_override
     if cfg.get("dataset") != "CIFAR10":
         raise ValueError("This pipeline requires a CIFAR10 config; legacy FashionMNIST runs are read-only.")
+    fine_candidates(cfg)
+    if cfg.get('head_optimizer', 'adamw') not in ('adamw', 'sgd'):
+        raise ValueError('head_optimizer must be adamw or sgd')
+    device = torch.device(('cuda' if torch.cuda.is_available() else 'cpu') if device_override=='auto' else device_override)
+    if cfg.get('require_cuda') and device.type != 'cuda':
+        raise ValueError('This tuning config requires CUDA; use --device cuda')
+    if device.type == 'cuda' and not torch.cuda.is_available():
+        raise RuntimeError('CUDA is not available in this interpreter')
     torch.set_num_threads(cfg["threads"])
     seed_all(cfg["seed"])
     work = Path(work_dir or ROOT).resolve()
     torch.hub.set_dir(str(work / "data" / "pretrained"))
-    data_dir = work / "data"
+    data_dir = resolve_data_dir(work)
     run = work / "outputs" / "runs" / (datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ") + "_" + cfg["profile"] + "_" + uuid.uuid4().hex[:8])
     run.mkdir(parents=True)
-    device = torch.device(("cuda" if torch.cuda.is_available() else "cpu") if device_override == "auto" else device_override)
     write_json(run / "config.json", cfg)
     write_json(run / "environment.json", {"python": sys.version, "torch": torch.__version__,
                "torchvision": __import__("torchvision").__version__, "device": str(device),
-               "platform": platform.platform(), "cpu_count": os.cpu_count()})
+               "platform": platform.platform(), "cpu_count": os.cpu_count(),
+               'device_name':torch.cuda.get_device_name(device) if device.type=='cuda' else platform.processor(),
+               'cuda':torch.version.cuda, 'cudnn':torch.backends.cudnn.version(),
+               'timing_policy':'synchronized train/validation passes; fit wall includes logging/checkpoint I/O' })
     source = {str(p.relative_to(ROOT)): file_hash(p) for p in ROOT.rglob("*.py")
               if ".venv" not in p.parts and "outputs" not in p.parts}
     write_json(run / "source_hashes.json", source)
@@ -355,9 +445,10 @@ def run_suite(config_path, work_dir=None, device_override="auto"):
         with (run / "console.log").open("w", encoding="utf-8") as log:
             with contextlib.redirect_stdout(Tee(sys.stdout, log)), contextlib.redirect_stderr(Tee(sys.stderr, log)):
                 print(f"Run: {run}\nDevice: {device}", flush=True)
-                selected = prepare_indices(data_dir, run, cfg)
-                export_eda(data_dir, run, selected)
+                selected = prepare_indices(data_dir, run, cfg, split_dir=work/'outputs/eda')
+                export_summary(data_dir, run, selected)
                 write_json(run / "data_summary.json", {"selected_counts": {k: len(v) for k, v in selected.items()},
+                    'split_seed':cfg.get('split_seed', cfg['seed']), 'training_seed':cfg['seed'],
                     "dataset": "CIFAR10", "image_size": cfg["image_size"],
                     "full_counts": {"train": 45000, "val": 5000, "test": 10000},
                     "split_origin": "stratified official CIFAR10 training pool; independent official test",
@@ -386,8 +477,19 @@ def main():
     parser.add_argument("--config", default=str(ROOT / "config" / "cpu_pilot.json"))
     parser.add_argument("--work-dir", default=None)
     parser.add_argument("--device", choices=["auto", "cpu", "cuda"], default="auto")
+    parser.add_argument('--seed', type=int, help='Override initialization/shuffle seed; tuning config keeps split_seed fixed')
+    parser.add_argument('--dry-run', action='store_true', help='Validate candidates and show budget without loading data/weights')
     args = parser.parse_args()
-    run_suite(args.config, args.work_dir, args.device)
+    if args.dry_run:
+        cfg = json.loads(Path(args.config).read_text(encoding='utf-8'))
+        candidates = fine_candidates(cfg)
+        print(json.dumps({'profile':cfg['profile'], 'models':cfg['models'],
+            'head_trials_per_model':len(cfg['learning_rates'])*len(cfg['batch_sizes']),
+            'fine_trials_per_model':len(candidates), 'fine_epochs_per_trial':cfg['finetune_epochs'],
+            'split_seed':cfg.get('split_seed',cfg['seed']), 'training_seed':args.seed if args.seed is not None else cfg['seed'],
+            'cache_frozen_prefix':cfg.get('cache_frozen_prefix',False), 'candidates':candidates}, indent=2))
+        return
+    run_suite(args.config, args.work_dir, args.device, args.seed)
 
 
 if __name__ == "__main__":

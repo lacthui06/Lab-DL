@@ -76,7 +76,8 @@ def test_cifar_split_and_labels(tmp_path):
     from src.reporting import CLASSES
     from torchvision.datasets import CIFAR10
     from pathlib import Path
-    data = Path(__file__).resolve().parents[1] / 'data'
+    import os
+    data = Path(os.getenv('LAB02_DATA', str(Path(__file__).resolve().parents[1] / 'data')))
     if not (data / 'cifar-10-batches-py').exists():
         pytest.skip('Official CIFAR10 not downloaded yet')
     cfg = dict(seed=42, train_limit=0, val_limit=0, test_limit=0)

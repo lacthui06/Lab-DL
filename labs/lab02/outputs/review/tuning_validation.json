@@ -1,0 +1,63 @@
+{
+  "status": "passed",
+  "full_gpu_tuning": "not run; no new CIFAR-10 accuracy or loss claimed",
+  "dataset": "CIFAR10 unchanged",
+  "config": "config/tuned.json",
+  "grid": {
+    "head_trials_per_model": 6,
+    "fine_trials_per_model": 13
+  },
+  "checks": {
+    "dry_run": "passed",
+    "modeling_notebook": "executed successfully",
+    "real_model_one_batch_overfit": "both passed at AdamW LR=0.001; 50 steps, synthetic 2-image batch"
+  },
+  "tests": {
+    "name": "pytest",
+    "errors": "0",
+    "failures": "0",
+    "skipped": "0",
+    "tests": "34",
+    "time": "69.125",
+    "timestamp": "2026-10-26T16:28:49.934679+07:00",
+    "hostname": "QuynhAnh"
+  },
+  "syntax_python_files": 24,
+  "python": "3.12.7 (tags/v3.12.7:0b05ead, Oct  1 2024, 03:06:41) [MSC v.1941 64 bit (AMD64)]",
+  "packages": {
+    "torch": "2.9.1+cu128",
+    "torchvision": "0.24.1+cu128",
+    "numpy": "2.2.6",
+    "pandas": "2.3.3",
+    "pytest": "9.1.1",
+    "nbclient": "0.11.0",
+    "tensorboard": "2.21.0"
+  },
+  "cuda_smoke": {
+    "cuda_available": true,
+    "benchmark": false,
+    "dataset": "synthetic one-batch only",
+    "torch": "2.9.1+cu128",
+    "cuda_runtime": "12.8",
+    "models": [
+      {
+        "model": "resnet18",
+        "status": "passed",
+        "peak_cuda_memory_mib": 225.34521484375
+      },
+      {
+        "model": "densenet121",
+        "status": "passed",
+        "peak_cuda_memory_mib": 130.654296875
+      }
+    ],
+    "device": "NVIDIA GeForce GTX 1660 Ti"
+  },
+  "historical_artifacts": "no files under outputs/runs changed; no historical metrics/checkpoints rewritten",
+  "modeling_notebook": {
+    "code_cells": 11,
+    "executed_cells": 11,
+    "inline_pngs": 11,
+    "errors": 0
+  }
+}

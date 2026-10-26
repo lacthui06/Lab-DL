@@ -1,0 +1,35 @@
+{
+  "dataset": "CIFAR10",
+  "seed": 42,
+  "image_size": 64,
+  "normalization_mean": [
+    0.485,
+    0.456,
+    0.406
+  ],
+  "normalization_std": [
+    0.229,
+    0.224,
+    0.225
+  ],
+  "normalization_source": "ImageNet pretrained input contract; not estimated from CIFAR-10",
+  "augmentation": "none: deterministic transforms in the recorded experiment",
+  "split_version": "cifar10-stratified-42-45000-5000-v1",
+  "preproc_version": "rgb-resize64-imagenet-v1",
+  "train_mean_rgb": [
+    0.49113735123910657,
+    0.4821111870234203,
+    0.44644898760893215
+  ],
+  "train_std_rgb": [
+    0.24686913619557865,
+    0.24343012612627343,
+    0.26160339391516846
+  ],
+  "statistics_images": 45000,
+  "statistics_pixels_per_channel": 46080000,
+  "foreground_bbox": "not applicable: natural RGB images have no foreground mask; zero pixel is not a background label",
+  "handcrafted_usage": "descriptive analysis only; not appended to input tensors",
+  "duplicate_records": 0,
+  "split_provenance": "New EDA split reconstructed from documented algorithm; original run indices unavailable"
+}
