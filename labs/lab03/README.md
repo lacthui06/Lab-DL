@@ -4,17 +4,18 @@ Bài thực hành Deep Learning — UTH: sentiment analysis bằng mô hình pre
 
 **Kết quả lịch sử 3 epoch đã kiểm chứng:** dùng toàn bộ Rotten Tomatoes, 8.530 train / 1.066 validation / 1.066 test. Test Accuracy **83,96%**, Binary F1 **84,06%**. Mã nguồn, notebook và báo cáo dùng chung run registry, có thể xem kết quả mà không train lại.
 
-**Quy trình chạy mới:** [Notebook Kaggle 10 epoch](notebooks/04_kaggle_10epoch_study.ipynb). Mỗi candidate chạy đủ **10 epoch**, không early stopping; thử ba learning rate trên validation, baseline TF-IDF, threshold validation, biểu đồ hiển thị ngay trong notebook và hai ZIP riêng. **Kết quả 10 epoch đang chờ chạy GPU**, không lấy số liệu 3 epoch bên dưới gán sang cấu hình mới.
+**Study 10 epoch đã chạy và kiểm chứng:** [Notebook kết quả, hình và thảo luận](notebooks/05_study_results_and_discussion.ipynb). Ba LR đều hoàn thành 10 epoch; winner LR **3e-5**, best checkpoint **step 1700 / epoch 3,184**, threshold validation **0,5**. Test Accuracy **83,40%**, Macro-F1 **83,40%**, đúng **889/1.066**. Hơn baseline TF-IDF nhưng thấp hơn argmax lịch sử 6 mẫu; không tuyên bố chạy nhiều epoch luôn tốt hơn. [Notebook 04](notebooks/04_kaggle_10epoch_study.ipynb) là template để chạy thí nghiệm GPU mới.
 
 ## 1. Xem bài và kết quả
 
+- [Notebook kết quả study 10 epoch](notebooks/05_study_results_and_discussion.ipynb): audit, đủ learning curves, threshold, baseline, test và thảo luận.
 - [Notebook Exercise 1](notebooks/01_sentiment_analysis_pipeline.ipynb): tokenization, pipeline và manual forward.
 - [Notebook Exercise 2](notebooks/02_finetuning_binary_classification.ipynb): dữ liệu, Trainer, metrics, threshold, biểu đồ và phân tích lỗi.
 - [Notebook tích hợp](notebooks/lab03_huggingface_complete.ipynb): cả hai Exercise, phù hợp xem toàn bộ bài.
 - [Báo cáo thực hành](walkthrough_lab_03.md): lý thuyết, phương pháp, kết quả và giới hạn có bằng chứng.
 - [Đề bài](description_lab_03.md).
 
-Các notebook đã lưu output của một lượt thực thi **`MODE="view"`** trên artifacts Kaggle. Có thể đọc trực tiếp trên GitHub. Khi chạy lại notebook, mặc định view đọc dữ liệu đã commit, không tải model/dataset, không huấn luyện và không cần GPU. Đổi `MODE="train"` ở cell setup để tạo thí nghiệm mới; phần fine-tuning yêu cầu GPU theo mặc định.
+Các notebook báo cáo đã lưu output của một lượt thực thi **`MODE="view"`** trên artifacts Kaggle. Notebook 04 là template GPU, được renderer offline bỏ qua để tránh vô tình train. Có thể đọc trực tiếp trên GitHub. Khi chạy lại notebook, mặc định view đọc dữ liệu đã commit, không tải model/dataset, không huấn luyện và không cần GPU. Đổi `MODE="train"` ở cell setup để tạo thí nghiệm mới; phần fine-tuning yêu cầu GPU theo mặc định.
 
 ## 2. Cấu trúc
 
@@ -79,7 +80,7 @@ cd ../..
 .venv-lab03/bin/python labs/lab03/scripts/audit_outputs.py
 ```
 
-- **72 tests đạt trên CPU** (bản 10 epoch, xem `validation/ten_epoch_readiness.json`): dataset contract, dynamic padding, pipeline/manual, checkpoint, sanity overfit, Trainer, run tracking, năm plots, recovery, metrics/artifact audit và phát hiện dữ liệu bị sửa.
+- **75 tests đạt trên CPU** (bản tích hợp kết quả, xem `validation/study_completion.json`; preflight trước training ở `validation/ten_epoch_readiness.json`): dataset contract, dynamic padding, pipeline/manual, checkpoint, sanity overfit, Trainer, run tracking, năm plots, recovery, metrics/artifact audit và phát hiện dữ liệu bị sửa.
 - Audit kiểm tra 51 file khoa học hiện hành, tính lại validation sweep, test metrics và confusion matrices. Selection dùng validation phase trong training run. Báo cáo audit đầy đủ được lưu trong một run `artifact_audit` dưới `outputs/`, kèm bản tiện tra cứu tại `validation/`.
 - 30 file checkpoint không có trong Git được liệt kê rõ là thiếu có chủ đích, không coi là đã kiểm tra tại môi trường kiểm chứng.
 - Ba notebook chạy hết ở view, Hugging Face offline, không có cell lỗi. Xem `validation/notebook_execution.json`.
@@ -164,7 +165,7 @@ run(PYTHON, "-m", "ipykernel", "install", "--user", "--name", "lab03")
 run(PYTHON, "labs/lab03/scripts/render_notebooks.py", "--kernel", "lab03")
 ```
 
-## 6. Kết quả hiện hành và truy vết
+## 6. Kết quả lịch sử 3 epoch và truy vết
 
 | Giai đoạn | Run được registry chọn |
 |---|---|
@@ -283,7 +284,7 @@ Test set cũ đã được quan sát trong phát triển; một vòng thử ngư
 Policy threshold được gắn SHA256 của checkpoint; không áp policy của model A vào model B. Inference lưu cả policy, hình và predictions. Dependency `ipywidgets` được pin để notebook có progress widget đúng môi trường.
 
 
-## 11. Kết quả threshold đã thực thi và hình so sánh
+## 11. Threshold của lịch sử 3 epoch và hình so sánh
 
 | Vai trò | Run Kaggle nguồn |
 |---|---|
@@ -353,3 +354,30 @@ Study tự xuất `study_report.md` với bảng và ảnh từ dữ liệu đã
 CI bootstrap 95% dùng 2.000 lần resample phân tầng test cho model/policy cố định. Nó không đo biến thiên giữa seed train. Test lịch sử đã từng được xem; kết quả mới không phải bằng chứng trên một blind test hoàn toàn mới. Ba learning rate là tìm kiếm có giới hạn, không có tuyên bố tối ưu toàn cục hoặc đảm bảo tăng accuracy.
 
 Khi thu hồi kết quả mới, cập nhật Section 2/3 của walkthrough từ đúng run study; các bảng/hình lịch sử vẫn giữ đúng nguồn và không bị đổi nhãn thành 10 epoch.
+
+
+## 14. Kết quả thật của study 10 epoch
+
+Study: `20261026T184219Z_study_94f2ba7b`. Review ZIP có 128 file khớp SHA256; source hashes khớp code revision `ca58b27`. Mỗi candidate có 5.340 Trainer steps, 63 validation milestones và 10 train-eval milestones. AMP skipped 5/4/5 updates được giữ rõ trong metadata; không đánh đồng Trainer steps với successful optimizer updates.
+
+| LR | Epoch hoàn tất | Best step | Best epoch | Validation Macro-F1 | Validation loss tại best |
+|---|---:|---:|---:|---:|---:|
+| 1e-5 | 10 | 3200 | 5,993 | 84,9906% | 0,755625 |
+| 2e-5 | 10 | 2100 | 3,933 | 84,8920% | 0,747378 |
+| 3e-5 | 10 | 1700 | 3,184 | 85,6473% | 0,702748 |
+
+Winner được chọn bằng validation Macro-F1 trước test. Threshold sweep đủ 19 điểm chọn **0,5** cho winner; không có yêu cầu ngưỡng đã quét phải khác 0,5. Không dùng test để đổi winner hoặc policy.
+
+| Model / policy | Test Accuracy | Macro-F1 | Binary-F1 |
+|---|---:|---:|---:|
+| TF-IDF + Logistic Regression, 0,5 | 78,2364% | 78,2352% | 78,0718% |
+| TF-IDF, validation threshold 0,4 | 78,7054% | 78,6158% | 80,0000% |
+| DistilBERT winner, threshold 0,5 | 83,3959% | 83,3952% | 83,2861% |
+
+Winner test: **TN=448, FP=85, FN=92, TP=441**; Precision Positive 83,8403%, Recall 82,7392%. Measured test loss **0,7980755568**; reconstructed NLL **0,7980772048** được giữ riêng. ROC-AUC 0,918416; AP 0,925989; Brier 0,150674; confidence ECE 0,146071.
+
+So với argmax lịch sử trên cùng 1.066 index/text/label, study sửa 42 lỗi nhưng tạo 48 lỗi mới: giảm 6 mẫu đúng. Paired bootstrap CI cho chênh accuracy chứa 0, không có kết luận vượt trội thống kê. Protocol còn khác LR/scheduler/criterion nên không phải ablation chỉ thay epoch.
+
+**Không cần train lại để hoàn thiện báo cáo.** Hình đã hiển thị ở notebook 05 và phần mở rộng của notebook tích hợp; `outputs/published/index.md` có bảng/ảnh cho report với `primary_result="study"`. Dữ liệu lịch sử giữ riêng theo role, không bị thay bằng số study.
+
+Raw logs của phiên này có đủ trong Git; checkpoint cố ý nằm ngoài Git. Review tại đây kiểm tra predictions/policy/manifest; không tải weights và không tuyên bố đã lặp lại GPU training. Giữ checkpoint ZIP để inference hoặc reload sau này.

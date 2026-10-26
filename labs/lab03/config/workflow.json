@@ -2,16 +2,20 @@
   "active_runs": {
     "exercise1": "20261026T155744Z_exercise1_65dfe784",
     "finetuning": "20261026T155822Z_finetuning_2c2f0401",
-    "exercise1_analysis": "20261026T161956Z_exercise1_analysis_46ca085f",
-    "analysis": "20261026T161957Z_analysis_b336c410",
-    "notebook_render": "20261026T163051Z_notebook_render_03fd373a",
-    "verification": "20261026T163347Z_verification_641a8f92",
+    "exercise1_analysis": "20261026T192053Z_exercise1_analysis_4323ef53",
+    "analysis": "20261026T192100Z_analysis_388b4fff",
+    "notebook_render": "20261026T192048Z_notebook_render_b2e1b712",
+    "verification": "20261026T192814Z_verification_912ee7b9",
     "threshold_selection": "20261026T083558Z_threshold_selection_b64cf564",
     "evaluation": "20261026T160058Z_evaluation_07c24854",
     "inference": "20261026T160111Z_inference_7f2b16f0",
-    "threshold_analysis": "20261026T162909Z_threshold_analysis_f8b3fdf7",
+    "threshold_analysis": "20261026T192102Z_threshold_analysis_40690c71",
     "artifact_audit": "20261026T162631Z_artifact_audit_c84d606c",
-    "training_readiness": "20261026T175728Z_training_readiness_597149cd"
+    "training_readiness": "20261026T175728Z_training_readiness_597149cd",
+    "study": "20261026T184219Z_study_94f2ba7b",
+    "candidate": "20261026T185804Z_candidate_8308037d",
+    "study_audit": "20261026T190634Z_study_audit_10e28bdf",
+    "study_review": "20261026T191751Z_study_review_d66d4edb"
   },
   "runs": [
     {
@@ -177,6 +181,71 @@
     {
       "id": "20261026T175728Z_training_readiness_597149cd",
       "kind": "training_readiness",
+      "status": "completed"
+    },
+    {
+      "id": "20261026T184202Z_exercise1_de76a80c",
+      "kind": "exercise1",
+      "status": "completed"
+    },
+    {
+      "id": "20261026T184207Z_exercise1_analysis_5406bc6c",
+      "kind": "exercise1_analysis",
+      "status": "completed"
+    },
+    {
+      "id": "20261026T184223Z_candidate_4b1da858",
+      "kind": "candidate",
+      "status": "completed"
+    },
+    {
+      "id": "20261026T185017Z_candidate_202c0434",
+      "kind": "candidate",
+      "status": "completed"
+    },
+    {
+      "id": "20261026T185804Z_candidate_8308037d",
+      "kind": "candidate",
+      "status": "completed"
+    },
+    {
+      "id": "20261026T184219Z_study_94f2ba7b",
+      "kind": "study",
+      "status": "completed"
+    },
+    {
+      "id": "20261026T190634Z_study_audit_10e28bdf",
+      "kind": "study_audit",
+      "status": "completed"
+    },
+    {
+      "id": "20261026T191751Z_study_review_d66d4edb",
+      "kind": "study_review",
+      "status": "completed"
+    },
+    {
+      "id": "20261026T192053Z_exercise1_analysis_4323ef53",
+      "kind": "exercise1_analysis",
+      "status": "completed"
+    },
+    {
+      "id": "20261026T192100Z_analysis_388b4fff",
+      "kind": "analysis",
+      "status": "completed"
+    },
+    {
+      "id": "20261026T192102Z_threshold_analysis_40690c71",
+      "kind": "threshold_analysis",
+      "status": "completed"
+    },
+    {
+      "id": "20261026T192048Z_notebook_render_b2e1b712",
+      "kind": "notebook_render",
+      "status": "completed"
+    },
+    {
+      "id": "20261026T192814Z_verification_912ee7b9",
+      "kind": "verification",
       "status": "completed"
     }
   ]

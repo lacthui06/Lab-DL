@@ -1,11 +1,12 @@
 {
-  "artifact_run": "20261026T163347Z_verification_641a8f92",
-  "review_file": "outputs/runs/20261026T163347Z_verification_641a8f92/review.json",
-  "tests_passed": 65,
-  "notebooks_executed": 3,
-  "published_figures": 35,
-  "walkthrough_lines": 1010,
-  "description_lines": 272,
-  "notebook_render_run": "20261026T163051Z_notebook_render_03fd373a",
-  "current_training_run": "20261026T155822Z_finetuning_2c2f0401"
+  "artifact_run": "20261026T192814Z_verification_912ee7b9",
+  "review_file": "outputs/runs/20261026T192814Z_verification_912ee7b9/review.json",
+  "tests_passed": 75,
+  "notebooks_executed": 4,
+  "gpu_template_notebook_executed_during_review": false,
+  "published_figures": 64,
+  "walkthrough_lines": 1432,
+  "description_lines": 310,
+  "notebook_render_run": "20261026T192048Z_notebook_render_b2e1b712",
+  "current_study_run": "20261026T184219Z_study_94f2ba7b"
 }

@@ -297,11 +297,14 @@ Learning curves lịch sử chỉ có ba mốc cuối epoch, chưa thể hiện 
 | Đo bất định gì? | Bootstrap test phân tầng cho accuracy/Macro-F1 | Chỉ bất định lấy mẫu, chưa đo biến thiên seed |
 | Đóng gói ra sao? | Review nhẹ + checkpoint riêng | Review có toàn bộ ảnh/số liệu/log; trọng số ngoài Git |
 
-### 10.3. Điều kiện hoàn tất phiên mở rộng
+### 10.3. Nghiệm thu phiên mở rộng đã chạy thật
 
-Phần mềm sẵn sàng và test fixture pass không đồng nghĩa đã có kết quả 10 epoch.
-Nghiệm thu thực nghiệm cần đủ ba candidate, mỗi candidate có completed_epochs=10, history theo step, validation predictions và manifest.
-`frozen_selection.json` phải được ghi trước predictions test.
-Review ZIP phải chứa console logs nguyên byte, source manifests, all predictions, các hình và study report.
-Notebook phải hiển thị hình thật trong output cell, được thu hồi sau khi chạy.
-Chỉ sau khi nhận kết quả thật mới điền số liệu so sánh và kết luận của study mới.
+Study `20261026T184219Z_study_94f2ba7b` đã hoàn tất cả ba LR, mỗi LR đủ 10 epoch. Review ZIP xác minh 128 file khớp SHA256, có đủ raw logs và preflight 72 tests pass trên Kaggle. Code hashes khớp revision `ca58b27` đã công bố trước khi chạy.
+
+LR 3e-5 thắng trên validation Macro-F1 85,6473%, checkpoint step 1700 / epoch 3,184. Threshold validation được chốt ở 0,5. Candidate không có test predictions; study chỉ đọc full test sau frozen selection.
+
+Test winner đúng 889/1.066, Accuracy 83,3959%, Macro-F1 83,3952%, Binary-F1 83,2861%. Kết quả hơn TF-IDF nhưng thấp hơn argmax lịch sử 6 mẫu; không thay đổi winner dựa trên so sánh test này.
+
+Notebook 05 và notebook tích hợp hiển thị hình thực; artifacts nhẹ, original manifests và logs được giữ để audit/report. Checkpoint không có trong review ZIP, vì vậy kiểm chứng local là kiểm toán records/hash, không phải chạy lại weights. Lượt chạy GPU có exact saved-weight verification ở mỗi candidate và study tải lại winner để đo test.
+
+Phiên này giải quyết yêu cầu đủ 10 epoch, step logging, baseline và threshold sweep. Nhiều seed, near-duplicate semantic audit, calibration fitting và đánh giá ngoài chưa quan sát vẫn chưa thực hiện. Không cần train lại chỉ để bổ sung trình bày/report.

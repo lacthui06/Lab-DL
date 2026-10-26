@@ -18,6 +18,9 @@ JSON_FILES = {
     "summary.json", "analysis_summary.json", "tables.json", "threshold_scan.json", "selected_threshold.json",
     "predictions.json", "sample_predictions.json", "all_predictions.json", "validation_predictions.json",
     "roc_pr_coordinates.json", "reliability_bins.json", "tokenizer_breakdown.json",
+    "study_summary.json", "candidate_comparison.json", "frozen_selection.json", "selection_summary.json",
+    "test_comparison.json", "probability_diagnostics.json", "threshold_errors.json", "split_overlap_audit.json",
+    "inference_predictions.json", "baseline_validation_candidates.json", "baseline_validation_policy.json", "checkpoint_reference.json",
 }
 
 
@@ -26,7 +29,8 @@ def publish_artifacts(settings=None, output_dir=None, source_root=ROOT):
     source_root = Path(source_root)
     settings = Path(settings or source_root / "config/report.json")
     output = Path(output_dir or source_root / "outputs/published")
-    selected = read_json(settings)["runs"]
+    configuration = read_json(settings)
+    selected = configuration["runs"]
     paths = {}
     for role, run_id in selected.items():
         if role in {".", ".."} or run_id in {".", ".."} or Path(role).name != role or Path(run_id).name != run_id:
@@ -38,7 +42,8 @@ def publish_artifacts(settings=None, output_dir=None, source_root=ROOT):
         if read_json(paths['threshold_selection']/'decision_threshold.json') != read_json(paths['evaluation']/'decision_threshold.json'):
             raise ValueError("Report selection and evaluation use different threshold policies")
     provenance = {"runs": selected, "source_manifests": {k: hash_file(p/'manifest.json') for k,p in paths.items()},
-                  "exporter_sha256": hash_file(Path(__file__)), "weights_included": False, "raw_logs_included": False}
+                  "exporter_sha256": hash_file(Path(__file__)), "primary_result": configuration.get("primary_result", "historical"),
+                  "weights_included": False, "raw_logs_included": False}
     if (output/'source_runs.json').is_file() and read_json(output/'source_runs.json') == provenance:
         manifest = read_json(output/'manifest.json')
         if all((output/name).is_file() and hash_file(output/name) == value for name,value in manifest.items()):
@@ -74,9 +79,23 @@ def publish_artifacts(settings=None, output_dir=None, source_root=ROOT):
                 rows.append({'policy':f"Validation threshold {selected_metrics['threshold']:g}",
                     **{k:selected_metrics[k] for k in ['accuracy','precision','recall','binary_f1','macro_f1']},'test_loss':loss})
                 policy=read_json(evaluation/'decision_threshold.json')
+        historical_rows = list(rows)
+        primary = configuration.get('primary_result', 'historical')
+        if primary == 'study':
+            if 'study' not in paths:
+                raise ValueError('Primary study is missing from selected report runs')
+            from labs.lab03.src.study_evidence import audit_study
+            audit_study(paths['study'], root=source_root)
+            study = paths['study']
+            loss = read_json(study/'test_runtime_metrics.json')['test_loss']
+            policy = read_json(study/'decision_threshold.json')
+            rows = [{'policy':r['model'], **{k:r[k] for k in ['accuracy','precision','recall','binary_f1','macro_f1']},
+                     'test_loss':loss if r['model'].startswith('DistilBERT') else None}
+                    for r in read_json(study/'test_comparison.json')]
         save_json(staged/'source_runs.json',provenance)
         save_json(staged/'artifact_catalog.json',catalog)
-        save_json(staged/'metrics_summary.json',{'test_comparison':rows,'measured_test_loss':loss,
+        save_json(staged/'metrics_summary.json',{'primary_result':primary, 'source_run':paths['study'].name if primary == 'study' else evaluation.name,
+            'test_comparison':rows, 'historical_three_epoch_test_comparison':historical_rows, 'measured_test_loss':loss,
             'selection_split':policy.get('split') if policy else None,
             'selected_threshold':policy.get('selected_threshold') if policy else None})
         lines=['# Lab03 — Artifacts cho report','','Nguồn run được chọn tường minh trong `config/report.json`. Không huấn luyện hoặc chọn lại threshold khi xuất.','',
@@ -84,8 +103,11 @@ def publish_artifacts(settings=None, output_dir=None, source_root=ROOT):
             '|---|---:|---:|---:|---:|---:|---:|']
         for row in rows:
             values=' | '.join(f"{row[k]:.4%}" for k in ['accuracy','precision','recall','binary_f1','macro_f1'])
-            loss_text=f"{loss:.6f}" if loss is not None else 'Not logged'
+            row_loss = row.get('test_loss')
+            loss_text=f"{row_loss:.6f}" if row_loss is not None else 'Not logged'
             lines.append(f"| {row['policy']} | {values} | {loss_text} |")
+        if primary == 'study':
+            lines += ['', 'Bảng chính thuộc study 10 epoch; các role finetuning/evaluation/analysis cũ giữ bằng chứng lịch sử 3 epoch. Không gán số liệu hai protocol cho cùng một run.']
         lines += ['','## Nguồn thí nghiệm','','| Vai trò | Run |','|---|---|']
         lines += [f'| {role} | `{run_id}` |' for role,run_id in selected.items()]
         lines += ['','## Hình và bảng','','Các PNG dưới đây là bản sao của hình đã lưu trong run nguồn. JSON giữ số liệu để tính lại.','']

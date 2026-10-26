@@ -1,0 +1,119 @@
+{
+  "status": "completed_with_recorded_limitations",
+  "primary_result": "study",
+  "study_run": "20261026T184219Z_study_94f2ba7b",
+  "source_commit": "ca58b27cfbda628ce2700c9e24476edc8eb997f9",
+  "bundle_files_sha256_verified": 128,
+  "original_source_revision_files_verified": 37,
+  "raw_logs_available": true,
+  "tests": {
+    "tests": 75,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "kaggle_preflight_tests": {
+    "tests": 72,
+    "failures": 0,
+    "errors": 0
+  },
+  "pip_check": "passed",
+  "gpu_training_completed_on_kaggle": true,
+  "local_full_gpu_training_repeated": false,
+  "candidate_count": 3,
+  "epochs_per_candidate": 10,
+  "selected_candidate": {
+    "run_id": "20261026T185804Z_candidate_8308037d",
+    "learning_rate": 3e-05,
+    "selection_split": "validation",
+    "macro_f1": 0.8564726691922859,
+    "loss": 0.7027483582496643,
+    "completed_epochs": 10.0,
+    "best_step": 1700
+  },
+  "test_metrics": {
+    "accuracy": 0.8339587242026266,
+    "binary_precision": 0.8384030418250951,
+    "binary_recall": 0.8273921200750469,
+    "binary_f1": 0.8328611898016998,
+    "macro_precision": 0.8340163357273623,
+    "macro_recall": 0.8339587242026267,
+    "macro_f1": 0.8339515641459571
+  },
+  "frozen_threshold": 0.5,
+  "test_used_for_selection": false,
+  "checkpoint_weights_loaded_locally": false,
+  "omitted_checkpoint_files": 72,
+  "notebook_execution": {
+    "artifact_run": "20261026T192048Z_notebook_render_b2e1b712",
+    "notebooks": [
+      {
+        "notebook": "01_sentiment_analysis_pipeline.ipynb",
+        "mode": "view",
+        "executed_code_cells": 5,
+        "errors": 0,
+        "training_executed": false,
+        "artifact": "01_sentiment_analysis_pipeline.ipynb",
+        "inline_pngs": 3
+      },
+      {
+        "notebook": "02_finetuning_binary_classification.ipynb",
+        "mode": "view",
+        "executed_code_cells": 16,
+        "errors": 0,
+        "training_executed": false,
+        "artifact": "02_finetuning_binary_classification.ipynb",
+        "inline_pngs": 22
+      },
+      {
+        "notebook": "05_study_results_and_discussion.ipynb",
+        "mode": "view",
+        "executed_code_cells": 12,
+        "errors": 0,
+        "training_executed": false,
+        "artifact": "05_study_results_and_discussion.ipynb",
+        "inline_pngs": 24
+      },
+      {
+        "notebook": "lab03_huggingface_complete.ipynb",
+        "mode": "view",
+        "executed_code_cells": 32,
+        "errors": 0,
+        "training_executed": false,
+        "artifact": "lab03_huggingface_complete.ipynb",
+        "inline_pngs": 49
+      }
+    ]
+  },
+  "published_figures": 64,
+  "relative_links_checked": 192,
+  "walkthrough_lines": 1432,
+  "root_readme_and_lab01_changed": false,
+  "limitations": [
+    "single training seed",
+    "historical test previously inspected",
+    "review ZIP excludes weights",
+    "no semantic-near-duplicate or pretraining contamination audit",
+    "no fitted probability calibration",
+    "no claim of global hyperparameter optimality or statistically significant improvement"
+  ],
+  "paired_historical_comparison": {
+    "same_test_cohort_verified": true,
+    "historical_correct": 895,
+    "study_correct": 889,
+    "both_correct": 847,
+    "both_wrong": 129,
+    "corrected_by_study": 42,
+    "new_errors_in_study": 48,
+    "accuracy_difference_study_minus_historical": -0.005628517823639775,
+    "paired_stratified_bootstrap_95_ci": [
+      -0.02345215759849906,
+      0.012195121951219513
+    ],
+    "bootstrap_repeats": 2000,
+    "bootstrap_seed": 42,
+    "selection_performed": false,
+    "scope": "descriptive comparison of two fixed predictions on previously inspected test; not a controlled epoch-only ablation"
+  },
+  "verification_run": "20261026T192814Z_verification_912ee7b9"
+}

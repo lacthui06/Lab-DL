@@ -12,9 +12,12 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--kernel", default="python3")
     args = parser.parse_args()
-    paths = sorted((ROOT / "notebooks").glob("*.ipynb"))
+    all_paths = sorted((ROOT / "notebooks").glob("*.ipynb"))
+    # Template GPU không được chạy vô tình khi render báo cáo offline.
+    paths = [p for p in all_paths if nbformat.read(p, as_version=4).metadata.get("lab03", {}).get("execution_mode") != "train"]
+    skipped = [p.name for p in all_paths if p not in paths]
     config = {"mode":"view", "kernel":args.kernel, "notebooks":[p.name for p in paths],
-              "purpose":"persist all executed notebook outputs; no GPU training"}
+              "purpose":"persist all executed notebook outputs; no GPU training", "skipped_gpu_templates":skipped}
     with run_context("notebook_render", config) as out:
         results = []
         for path in paths:
@@ -35,7 +38,8 @@ if __name__ == "__main__":
             nbformat.write(notebook,path)
             nbformat.write(notebook,out / path.name)
             result = {"notebook":path.name,"mode":"view","executed_code_cells":sum(c.cell_type == "code" for c in notebook.cells),
-                      "errors":errors,"training_executed":False,"artifact":path.name}
+                      "errors":errors,"training_executed":False,"artifact":path.name,
+                      "inline_pngs":sum("image/png" in o.get("data", {}) for c in notebook.cells if c.cell_type=="code" for o in c.outputs)}
             results.append(result); print("Executed and saved:",path.name,flush=True)
         save_json(out / "execution_summary.json", results)
         save_json(ROOT / "validation/notebook_execution.json", {"artifact_run":out.name,"notebooks":results})

@@ -1,0 +1,29 @@
+[
+  {
+    "run_id": "20261026T184223Z_candidate_4b1da858",
+    "learning_rate": 1e-05,
+    "selection_split": "validation",
+    "macro_f1": 0.849906191369606,
+    "loss": 0.7556254267692566,
+    "completed_epochs": 10.0,
+    "best_step": 3200
+  },
+  {
+    "run_id": "20261026T185017Z_candidate_202c0434",
+    "learning_rate": 2e-05,
+    "selection_split": "validation",
+    "macro_f1": 0.8489201096835813,
+    "loss": 0.7473776340484619,
+    "completed_epochs": 10.0,
+    "best_step": 2100
+  },
+  {
+    "run_id": "20261026T185804Z_candidate_8308037d",
+    "learning_rate": 3e-05,
+    "selection_split": "validation",
+    "macro_f1": 0.8564726691922859,
+    "loss": 0.7027483582496643,
+    "completed_epochs": 10.0,
+    "best_step": 1700
+  }
+]

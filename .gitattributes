@@ -8,3 +8,9 @@ labs/lab03/outputs/runs/*/console.log -whitespace
 labs/lab03/outputs/published/** -text
 
 labs/lab03/outputs/imports/** -text
+
+# Preflight gốc trong review ZIP cũng được kiểm tra checksum.
+labs/lab03/outputs/preflight/** -text
+
+# Giữ byte báo cáo tự xuất trong run gốc, kể cả dòng trắng cuối file.
+labs/lab03/outputs/runs/*/study_report.md -whitespace

@@ -1,0 +1,7 @@
+{
+  "study_run": "20261026T184219Z_study_94f2ba7b",
+  "source_manifest_sha256": "d303edfc5d1781d47c80d3d2cc5c79e12ea2e5b0da9b09b10e4283a284f27da7",
+  "historical_run": "20261026T155822Z_finetuning_2c2f0401",
+  "historical_manifest_sha256": "9e3f61347554cc018d3912ea6df2479d685671251fc893680292838811aa43d2",
+  "analysis_code_sha256": "37bed92ebc451922b6310c57cf1ac51b55cc4d5d3e75f5fe6b5da79986c66a2c"
+}

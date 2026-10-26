@@ -1,5 +1,45 @@
 {
+  "primary_result": "study",
+  "source_run": "20261026T184219Z_study_94f2ba7b",
   "test_comparison": [
+    {
+      "policy": "TF-IDF + logistic regression (0.5)",
+      "accuracy": 0.7823639774859287,
+      "precision": 0.7866666666666666,
+      "recall": 0.774859287054409,
+      "binary_f1": 0.780718336483932,
+      "macro_f1": 0.7823517194523943,
+      "test_loss": null
+    },
+    {
+      "policy": "TF-IDF + validation threshold",
+      "accuracy": 0.7870544090056285,
+      "precision": 0.7541528239202658,
+      "recall": 0.851782363977486,
+      "binary_f1": 0.8,
+      "macro_f1": 0.7861584754262789,
+      "test_loss": null
+    },
+    {
+      "policy": "DistilBERT (0.5)",
+      "accuracy": 0.8339587242026266,
+      "precision": 0.8384030418250951,
+      "recall": 0.8273921200750469,
+      "binary_f1": 0.8328611898016998,
+      "macro_f1": 0.8339515641459571,
+      "test_loss": 0.7980755567550659
+    },
+    {
+      "policy": "DistilBERT + validation threshold",
+      "accuracy": 0.8339587242026266,
+      "precision": 0.8384030418250951,
+      "recall": 0.8273921200750469,
+      "binary_f1": 0.8328611898016998,
+      "macro_f1": 0.8339515641459571,
+      "test_loss": 0.7980755567550659
+    }
+  ],
+  "historical_three_epoch_test_comparison": [
     {
       "policy": "Argmax",
       "accuracy": 0.8395872420262664,
@@ -19,7 +59,7 @@
       "test_loss": 0.5442677736282349
     }
   ],
-  "measured_test_loss": 0.5442677736282349,
+  "measured_test_loss": 0.7980755567550659,
   "selection_split": "validation",
-  "selected_threshold": 0.8
+  "selected_threshold": 0.5
 }

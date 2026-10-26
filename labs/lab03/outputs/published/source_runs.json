@@ -6,7 +6,14 @@
     "analysis": "20261026T161957Z_analysis_b336c410",
     "evaluation": "20261026T160058Z_evaluation_07c24854",
     "threshold_analysis": "20261026T162909Z_threshold_analysis_f8b3fdf7",
-    "inference": "20261026T160111Z_inference_7f2b16f0"
+    "inference": "20261026T160111Z_inference_7f2b16f0",
+    "study": "20261026T184219Z_study_94f2ba7b",
+    "candidate_lr_1e5": "20261026T184223Z_candidate_4b1da858",
+    "candidate_lr_2e5": "20261026T185017Z_candidate_202c0434",
+    "candidate_lr_3e5": "20261026T185804Z_candidate_8308037d",
+    "study_exercise1": "20261026T184202Z_exercise1_de76a80c",
+    "study_exercise1_analysis": "20261026T184207Z_exercise1_analysis_5406bc6c",
+    "study_review": "20261026T191751Z_study_review_d66d4edb"
   },
   "source_manifests": {
     "exercise1": "0df1428fafe25b5b1619baba8e82d6bab023aa87708832ad344f15dc04683ca8",
@@ -15,9 +22,17 @@
     "analysis": "c038ab042dc7da02fa28d7022e655d056fb7af30b45d17960f73a3223b38b325",
     "evaluation": "3acced8ed5199addd7db66ea5ff98827f2aa5763ea86cfab92bbd94c0c05a499",
     "threshold_analysis": "44e3a5e0f47f03fbf0b1ac32dd24549817a927f0831494676ac33133d92871f1",
-    "inference": "a79e63b3ebe9b65958a46eabc7124706a274d1aefe7b4c3e0a30da519c5558a8"
+    "inference": "a79e63b3ebe9b65958a46eabc7124706a274d1aefe7b4c3e0a30da519c5558a8",
+    "study": "d303edfc5d1781d47c80d3d2cc5c79e12ea2e5b0da9b09b10e4283a284f27da7",
+    "candidate_lr_1e5": "1c8aadb6cc4f33fd1180d132812bba5d45e0cdb7aedf9aa800962c140f6e4756",
+    "candidate_lr_2e5": "dddb8629cdc04fb27dfceddd51c963a59fd2e79fd222347c92451e657e5a929b",
+    "candidate_lr_3e5": "20b5707b2b344f8386f1e929460fd6824da7794ef575bb32ce6a94d093fff705",
+    "study_exercise1": "262ed846faf6c71d1b776a7f7dccf6e1314d8abe066aba06cc925fc00c1376f4",
+    "study_exercise1_analysis": "2bd5c6d0b8506e62bcb916dc311f2541c7f6d833c5a81a5f093419dee09db135",
+    "study_review": "9ea1be09736b64f3ec767e683fe2d237f0863526808361da84af7fb93ef7b069"
   },
-  "exporter_sha256": "c7639c7c94626adda21fe4e06ff0d413c1257571031b6797680d78abd4ca877a",
+  "exporter_sha256": "9fee3fcbe3a1972595263b1e1c37ead92631bf7650c80896fd30ea1d3a484809",
+  "primary_result": "study",
   "weights_included": false,
   "raw_logs_included": false
 }

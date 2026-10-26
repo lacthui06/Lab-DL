@@ -1,0 +1,11 @@
+{
+  "runs": {
+    "exercise1": "20261026T155744Z_exercise1_65dfe784",
+    "exercise1_analysis": "20261026T161956Z_exercise1_analysis_46ca085f",
+    "finetuning": "20261026T155822Z_finetuning_2c2f0401",
+    "analysis": "20261026T161957Z_analysis_b336c410",
+    "evaluation": "20261026T160058Z_evaluation_07c24854",
+    "threshold_analysis": "20261026T162909Z_threshold_analysis_f8b3fdf7",
+    "inference": "20261026T160111Z_inference_7f2b16f0"
+  }
+}

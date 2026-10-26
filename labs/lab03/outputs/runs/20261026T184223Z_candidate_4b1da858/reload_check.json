@@ -1,0 +1,15 @@
+{
+  "weights_exact_match": true,
+  "execution": "CPU FP32, clean forward methods",
+  "predictions": [
+    {
+      "text": "compassionately explores the seemingly irreconcilable situation between conservative christian parents and their estranged gay and lesbian children .",
+      "label": "POSITIVE",
+      "score": 0.9990543723106384,
+      "probabilities": [
+        0.0009456000989302993,
+        0.9990543723106384
+      ]
+    }
+  ]
+}

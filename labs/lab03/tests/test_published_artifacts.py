@@ -13,7 +13,12 @@ def _module():
 
 def test_report_export_uses_saved_visuals_and_preserves_scientific_sources(tmp_path):
     before={str(p):hash_file(p) for p in (ROOT/'outputs/runs').rglob('*') if p.is_file()}
-    module=_module();out=module.publish_artifacts(output_dir=tmp_path/'published')
+    configuration=json.loads((ROOT/'config/report.json').read_text())
+    configuration.pop('primary_result',None)
+    roles={'exercise1','exercise1_analysis','finetuning','analysis','evaluation','threshold_analysis','inference'}
+    configuration['runs']={k:v for k,v in configuration['runs'].items() if k in roles}
+    historical_settings=tmp_path/'historical.json';historical_settings.write_text(json.dumps(configuration))
+    module=_module();out=module.publish_artifacts(historical_settings, output_dir=tmp_path/'published')
     summary=json.loads((out/'metrics_summary.json').read_text())
     assert summary['selected_threshold']==.8
     assert summary['test_comparison'][1]['accuracy']==pytest.approx(896/1066)
@@ -23,7 +28,7 @@ def test_report_export_uses_saved_visuals_and_preserves_scientific_sources(tmp_p
     assert all(hash_file(out/name)==digest for name,digest in manifest.items())
     assert not any(p.suffix in {'.log','.safetensors','.bin','.pt','.zip'} for p in out.rglob('*') if p.is_file())
     original_index=hash_file(out/'index.md')
-    assert module.publish_artifacts(output_dir=out)==out
+    assert module.publish_artifacts(historical_settings, output_dir=out)==out
     assert hash_file(out/'index.md')==original_index
     assert not (tmp_path/'publication_history').exists()
     assert {str(p):hash_file(p) for p in (ROOT/'outputs/runs').rglob('*') if p.is_file()}==before
@@ -34,3 +39,17 @@ def test_report_export_rejects_unsafe_selection(tmp_path):
     with pytest.raises(ValueError,match='Invalid report'):
         _module().publish_artifacts(config,output_dir=tmp_path/'published')
     assert not (tmp_path/'published').exists()
+
+
+
+def test_report_primary_study_keeps_actual_metrics_and_historical_results_separate(tmp_path):
+    module=_module();out=module.publish_artifacts(output_dir=tmp_path/'published')
+    summary=json.loads((out/'metrics_summary.json').read_text())
+    assert summary['primary_result']=='study' and summary['selected_threshold']==.5
+    assert summary['test_comparison'][-1]['accuracy']==pytest.approx(889/1066)
+    assert summary['test_comparison'][0]['test_loss'] is None
+    assert summary['historical_three_epoch_test_comparison'][0]['accuracy']==pytest.approx(895/1066)
+    assert (out/'study/candidate_validation_comparison.png').is_file()
+    assert (out/'candidate_lr_3e5/step_learning_curves.png').is_file()
+    manifest=json.loads((out/'manifest.json').read_text())
+    assert all(hash_file(out/name)==digest for name,digest in manifest.items())

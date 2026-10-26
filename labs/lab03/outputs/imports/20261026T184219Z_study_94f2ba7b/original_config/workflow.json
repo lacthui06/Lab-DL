@@ -1,0 +1,221 @@
+{
+  "active_runs": {
+    "exercise1": "20261026T184202Z_exercise1_de76a80c",
+    "finetuning": "20261026T155822Z_finetuning_2c2f0401",
+    "exercise1_analysis": "20261026T184207Z_exercise1_analysis_5406bc6c",
+    "analysis": "20261026T161957Z_analysis_b336c410",
+    "notebook_render": "20261026T163051Z_notebook_render_03fd373a",
+    "verification": "20261026T163347Z_verification_641a8f92",
+    "threshold_selection": "20261026T083558Z_threshold_selection_b64cf564",
+    "evaluation": "20261026T160058Z_evaluation_07c24854",
+    "inference": "20261026T160111Z_inference_7f2b16f0",
+    "threshold_analysis": "20261026T162909Z_threshold_analysis_f8b3fdf7",
+    "artifact_audit": "20261026T162631Z_artifact_audit_c84d606c",
+    "training_readiness": "20261026T175728Z_training_readiness_597149cd",
+    "candidate": "20261026T185804Z_candidate_8308037d",
+    "study": "20261026T184219Z_study_94f2ba7b",
+    "study_audit": "20261026T190634Z_study_audit_10e28bdf"
+  },
+  "runs": [
+    {
+      "id": "20261025T181532Z_exercise1_71da6f40",
+      "kind": "exercise1",
+      "status": "completed"
+    },
+    {
+      "id": "20261025T181550Z_finetuning_e02bced7",
+      "kind": "finetuning",
+      "status": "completed"
+    },
+    {
+      "id": "20261026T080357Z_exercise1_analysis_a8b6bff3",
+      "kind": "exercise1_analysis",
+      "status": "completed"
+    },
+    {
+      "id": "20261026T080403Z_analysis_7b9e92eb",
+      "kind": "analysis",
+      "status": "completed"
+    },
+    {
+      "id": "20261026T080353Z_notebook_render_ad2be64a",
+      "kind": "notebook_render",
+      "status": "completed"
+    },
+    {
+      "id": "20261026T081129Z_verification_07d51602",
+      "kind": "verification",
+      "status": "completed"
+    },
+    {
+      "id": "20261026T083558Z_threshold_selection_b64cf564",
+      "kind": "threshold_selection",
+      "status": "completed"
+    },
+    {
+      "id": "20261026T083612Z_evaluation_a724c16c",
+      "kind": "evaluation",
+      "status": "completed"
+    },
+    {
+      "id": "20261026T083627Z_inference_0ed240e2",
+      "kind": "inference",
+      "status": "completed"
+    },
+    {
+      "id": "20261026T124315Z_threshold_analysis_8bc30b27",
+      "kind": "threshold_analysis",
+      "status": "completed"
+    },
+    {
+      "id": "20261026T124505Z_notebook_render_29bd8d4e",
+      "kind": "notebook_render",
+      "status": "completed"
+    },
+    {
+      "id": "20261026T124633Z_artifact_audit_d4d1e652",
+      "kind": "artifact_audit",
+      "status": "completed"
+    },
+    {
+      "id": "20261026T124745Z_verification_edded031",
+      "kind": "verification",
+      "status": "completed"
+    },
+    {
+      "id": "20261026T125627Z_exercise1_analysis_6a474f62",
+      "kind": "exercise1_analysis",
+      "status": "completed"
+    },
+    {
+      "id": "20261026T125634Z_analysis_73ee3c56",
+      "kind": "analysis",
+      "status": "completed"
+    },
+    {
+      "id": "20261026T125941Z_threshold_analysis_3124d66e",
+      "kind": "threshold_analysis",
+      "status": "completed"
+    },
+    {
+      "id": "20261026T125929Z_notebook_render_313034a2",
+      "kind": "notebook_render",
+      "status": "completed"
+    },
+    {
+      "id": "20261026T130002Z_artifact_audit_4fb5f597",
+      "kind": "artifact_audit",
+      "status": "completed"
+    },
+    {
+      "id": "20261026T130154Z_verification_f2147def",
+      "kind": "verification",
+      "status": "completed"
+    },
+    {
+      "id": "20261026T155744Z_exercise1_65dfe784",
+      "kind": "exercise1",
+      "status": "completed"
+    },
+    {
+      "id": "20261026T155746Z_exercise1_analysis_205bf966",
+      "kind": "exercise1_analysis",
+      "status": "completed"
+    },
+    {
+      "id": "20261026T155822Z_finetuning_2c2f0401",
+      "kind": "finetuning",
+      "status": "completed"
+    },
+    {
+      "id": "20261026T160023Z_analysis_163a53b0",
+      "kind": "analysis",
+      "status": "completed"
+    },
+    {
+      "id": "20261026T160058Z_evaluation_07c24854",
+      "kind": "evaluation",
+      "status": "completed"
+    },
+    {
+      "id": "20261026T160111Z_inference_7f2b16f0",
+      "kind": "inference",
+      "status": "completed"
+    },
+    {
+      "id": "20261026T160130Z_notebook_render_f8e70da2",
+      "kind": "notebook_render",
+      "status": "completed"
+    },
+    {
+      "id": "20261026T161956Z_exercise1_analysis_46ca085f",
+      "kind": "exercise1_analysis",
+      "status": "completed"
+    },
+    {
+      "id": "20261026T161957Z_analysis_b336c410",
+      "kind": "analysis",
+      "status": "completed"
+    },
+    {
+      "id": "20261026T162631Z_artifact_audit_c84d606c",
+      "kind": "artifact_audit",
+      "status": "completed"
+    },
+    {
+      "id": "20261026T162909Z_threshold_analysis_f8b3fdf7",
+      "kind": "threshold_analysis",
+      "status": "completed"
+    },
+    {
+      "id": "20261026T163051Z_notebook_render_03fd373a",
+      "kind": "notebook_render",
+      "status": "completed"
+    },
+    {
+      "id": "20261026T163347Z_verification_641a8f92",
+      "kind": "verification",
+      "status": "completed"
+    },
+    {
+      "id": "20261026T175728Z_training_readiness_597149cd",
+      "kind": "training_readiness",
+      "status": "completed"
+    },
+    {
+      "id": "20261026T184202Z_exercise1_de76a80c",
+      "kind": "exercise1",
+      "status": "completed"
+    },
+    {
+      "id": "20261026T184207Z_exercise1_analysis_5406bc6c",
+      "kind": "exercise1_analysis",
+      "status": "completed"
+    },
+    {
+      "id": "20261026T184223Z_candidate_4b1da858",
+      "kind": "candidate",
+      "status": "completed"
+    },
+    {
+      "id": "20261026T185017Z_candidate_202c0434",
+      "kind": "candidate",
+      "status": "completed"
+    },
+    {
+      "id": "20261026T185804Z_candidate_8308037d",
+      "kind": "candidate",
+      "status": "completed"
+    },
+    {
+      "id": "20261026T184219Z_study_94f2ba7b",
+      "kind": "study",
+      "status": "completed"
+    },
+    {
+      "id": "20261026T190634Z_study_audit_10e28bdf",
+      "kind": "study_audit",
+      "status": "completed"
+    }
+  ]
+}

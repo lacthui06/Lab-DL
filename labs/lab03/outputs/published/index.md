@@ -4,8 +4,12 @@ Nguồn run được chọn tường minh trong `config/report.json`. Không hu�
 
 | Policy | Accuracy | Precision | Recall | Binary F1 | Macro F1 | Test loss |
 |---|---:|---:|---:|---:|---:|---:|
-| Argmax | 83.9587% | 83.5185% | 84.6154% | 84.0634% | 83.9580% | 0.544268 |
-| Validation threshold 0.8 | 84.0525% | 86.5191% | 80.6754% | 83.4951% | 84.0343% | 0.544268 |
+| TF-IDF + logistic regression (0.5) | 78.2364% | 78.6667% | 77.4859% | 78.0718% | 78.2352% | Not logged |
+| TF-IDF + validation threshold | 78.7054% | 75.4153% | 85.1782% | 80.0000% | 78.6158% | Not logged |
+| DistilBERT (0.5) | 83.3959% | 83.8403% | 82.7392% | 83.2861% | 83.3952% | 0.798076 |
+| DistilBERT + validation threshold | 83.3959% | 83.8403% | 82.7392% | 83.2861% | 83.3952% | 0.798076 |
+
+Bảng chính thuộc study 10 epoch; các role finetuning/evaluation/analysis cũ giữ bằng chứng lịch sử 3 epoch. Không gán số liệu hai protocol cho cùng một run.
 
 ## Nguồn thí nghiệm
 
@@ -18,6 +22,13 @@ Nguồn run được chọn tường minh trong `config/report.json`. Không hu�
 | evaluation | `20261026T160058Z_evaluation_07c24854` |
 | threshold_analysis | `20261026T162909Z_threshold_analysis_f8b3fdf7` |
 | inference | `20261026T160111Z_inference_7f2b16f0` |
+| study | `20261026T184219Z_study_94f2ba7b` |
+| candidate_lr_1e5 | `20261026T184223Z_candidate_4b1da858` |
+| candidate_lr_2e5 | `20261026T185017Z_candidate_202c0434` |
+| candidate_lr_3e5 | `20261026T185804Z_candidate_8308037d` |
+| study_exercise1 | `20261026T184202Z_exercise1_de76a80c` |
+| study_exercise1_analysis | `20261026T184207Z_exercise1_analysis_5406bc6c` |
+| study_review | `20261026T191751Z_study_review_d66d4edb` |
 
 ## Hình và bảng
 
@@ -162,3 +173,119 @@ Các PNG dưới đây là bản sao của hình đã lưu trong run nguồn. JS
 ### inference/inference.png
 
 ![inference](inference/inference.png)
+
+### study/baseline_model_comparison.png
+
+![study](study/baseline_model_comparison.png)
+
+### study/calibration_confidence.png
+
+![study](study/calibration_confidence.png)
+
+### study/candidate_validation_comparison.png
+
+![study](study/candidate_validation_comparison.png)
+
+### study/class_distribution.png
+
+![study](study/class_distribution.png)
+
+### study/confusion_matrix.png
+
+![study](study/confusion_matrix.png)
+
+### study/inference_predictions.png
+
+![study](study/inference_predictions.png)
+
+### study/metrics_bar.png
+
+![study](study/metrics_bar.png)
+
+### study/roc_pr_curves.png
+
+![study](study/roc_pr_curves.png)
+
+### study/sample_predictions.png
+
+![study](study/sample_predictions.png)
+
+### study/test_threshold/confusion_matrix.png
+
+![study](study/test_threshold/confusion_matrix.png)
+
+### candidate_lr_1e5/learning_curves.png
+
+![candidate_lr_1e5](candidate_lr_1e5/learning_curves.png)
+
+### candidate_lr_1e5/step_learning_curves.png
+
+![candidate_lr_1e5](candidate_lr_1e5/step_learning_curves.png)
+
+### candidate_lr_1e5/token_length_distribution.png
+
+![candidate_lr_1e5](candidate_lr_1e5/token_length_distribution.png)
+
+### candidate_lr_1e5/validation_threshold/threshold_curves.png
+
+![candidate_lr_1e5](candidate_lr_1e5/validation_threshold/threshold_curves.png)
+
+### candidate_lr_2e5/learning_curves.png
+
+![candidate_lr_2e5](candidate_lr_2e5/learning_curves.png)
+
+### candidate_lr_2e5/step_learning_curves.png
+
+![candidate_lr_2e5](candidate_lr_2e5/step_learning_curves.png)
+
+### candidate_lr_2e5/token_length_distribution.png
+
+![candidate_lr_2e5](candidate_lr_2e5/token_length_distribution.png)
+
+### candidate_lr_2e5/validation_threshold/threshold_curves.png
+
+![candidate_lr_2e5](candidate_lr_2e5/validation_threshold/threshold_curves.png)
+
+### candidate_lr_3e5/learning_curves.png
+
+![candidate_lr_3e5](candidate_lr_3e5/learning_curves.png)
+
+### candidate_lr_3e5/step_learning_curves.png
+
+![candidate_lr_3e5](candidate_lr_3e5/step_learning_curves.png)
+
+### candidate_lr_3e5/token_length_distribution.png
+
+![candidate_lr_3e5](candidate_lr_3e5/token_length_distribution.png)
+
+### candidate_lr_3e5/validation_threshold/threshold_curves.png
+
+![candidate_lr_3e5](candidate_lr_3e5/validation_threshold/threshold_curves.png)
+
+### study_exercise1_analysis/pipeline_manual_comparison.png
+
+![study_exercise1_analysis](study_exercise1_analysis/pipeline_manual_comparison.png)
+
+### study_exercise1_analysis/sentiment_predictions.png
+
+![study_exercise1_analysis](study_exercise1_analysis/sentiment_predictions.png)
+
+### study_exercise1_analysis/tokenizer_table.png
+
+![study_exercise1_analysis](study_exercise1_analysis/tokenizer_table.png)
+
+### study_review/candidate_summary.png
+
+![study_review](study_review/candidate_summary.png)
+
+### study_review/historical_paired_comparison.png
+
+![study_review](study_review/historical_paired_comparison.png)
+
+### study_review/overfitting_diagnostics.png
+
+![study_review](study_review/overfitting_diagnostics.png)
+
+### study_review/per_class_metrics.png
+
+![study_review](study_review/per_class_metrics.png)

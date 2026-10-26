@@ -1,0 +1,49 @@
+{
+  "status": "passed",
+  "study_run": "20261026T184219Z_study_94f2ba7b",
+  "winner": {
+    "run_id": "20261026T185804Z_candidate_8308037d",
+    "learning_rate": 3e-05,
+    "selection_split": "validation",
+    "macro_f1": 0.8564726691922859,
+    "loss": 0.7027483582496643,
+    "completed_epochs": 10.0,
+    "best_step": 1700
+  },
+  "candidate_count": 3,
+  "epochs_per_candidate": 10,
+  "verified_manifests": {
+    "20261026T184219Z_study_94f2ba7b": {
+      "verified_files": 35,
+      "omitted_checkpoint_files": [],
+      "omitted_raw_logs": [],
+      "checkpoint_available_locally": false
+    },
+    "20261026T184223Z_candidate_4b1da858": {
+      "verified_files": 44,
+      "omitted_checkpoint_files": [],
+      "omitted_raw_logs": [],
+      "checkpoint_available_locally": true
+    },
+    "20261026T185017Z_candidate_202c0434": {
+      "verified_files": 44,
+      "omitted_checkpoint_files": [],
+      "omitted_raw_logs": [],
+      "checkpoint_available_locally": true
+    },
+    "20261026T185804Z_candidate_8308037d": {
+      "verified_files": 44,
+      "omitted_checkpoint_files": [],
+      "omitted_raw_logs": [],
+      "checkpoint_available_locally": true
+    }
+  },
+  "test_samples": 1066,
+  "test_used_for_selection": false,
+  "threshold": 0.5,
+  "training_seeds": [
+    42
+  ],
+  "weights_loaded_for_audit": false,
+  "historical_test_previously_inspected": true
+}

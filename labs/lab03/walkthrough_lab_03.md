@@ -12,7 +12,7 @@
 
 **Cấu trúc báo cáo:** một tài liệu gồm đặc tả, phương pháp thực nghiệm và kết quả/chẩn đoán, có truy vết tới cấu hình và bộ artifact.
 
-**Phạm vi số liệu:** các bảng đã đo bên dưới thuộc thí nghiệm lịch sử 3 epoch. Phiên 10 epoch được đặc tả ở Mục 1.17, vận hành ở Mục 2.21 và có tiêu chí báo cáo ở Mục 3.13; kết quả GPU mới đang chờ thực thi. Không đổi nhãn số liệu lịch sử thành kết quả 10 epoch.
+**Phạm vi số liệu:** các bảng đã đo bên dưới thuộc thí nghiệm lịch sử 3 epoch. Phiên 10 epoch được đặc tả ở Mục 1.17, vận hành ở Mục 2.21 và có tiêu chí báo cáo ở Mục 3.13; kết quả GPU mới đã được kiểm chứng từ review ZIP 128 file. Không đổi nhãn số liệu lịch sử thành kết quả 10 epoch.
 
 ### Tóm tắt
 
@@ -245,6 +245,8 @@ Tesla T4 là thiết bị ghi trong environment snapshot của run đã hoàn th
 Không dùng tốc độ inference trên train để mô tả tốc độ cập nhật gradient.
 
 ### 1.13. Chọn checkpoint và tách lựa chọn khỏi test
+
+Mục này mô tả criterion accuracy của lịch sử 3 epoch. Study mới dùng Macro-F1 theo đặc tả ở Mục 1.17; không đổi criterion của run cũ.
 
 Sau mỗi epoch, Trainer đánh giá trên validation và lưu checkpoint. `load_best_model_at_end=True` yêu cầu khôi phục checkpoint tốt nhất theo metric đã chốt. Trong run gốc, metric đó là validation accuracy với hướng lớn hơn tốt hơn.
 Việc lựa chọn không dựa trên test accuracy.
@@ -1168,46 +1170,222 @@ Mọi bảng hiển thị có nguồn `tables.json`; toàn bộ kết luận và
 ### 3.12. Kết luận
 
 Lab03 thực hiện đủ hai bài trong đề gốc bằng một pipeline có thể kiểm tra từ text đến quyết định và artifacts. Exercise 1 làm rõ tokenizer, tensor, pipeline và manual forward trên pretrained sentiment model. Exercise 2 fine-tune DistilBERT với full official Rotten Tomatoes, chọn checkpoint bằng validation và đánh giá 1.066 mẫu test độc lập với lựa chọn đó.
-Kết quả hiện hành Accuracy 83,9587%, Binary F1 84,0634%, Macro F1 83,9580% được truy vết đến đúng run và toàn bộ prediction records.
+Kết quả lịch sử 3 epoch Accuracy 83,9587%, Binary F1 84,0634%, Macro F1 83,9580% được truy vết đến đúng run và toàn bộ prediction records.
 
 Đóng góp của phần trình bày mở rộng là kết nối mỗi phase với source/module, tăng bảng/hình có giải thích và bảo toàn output dưới dạng artifacts. Phần binary threshold đã có kết quả thật: phục hồi đúng checkpoint, chọn 0,8 bằng Macro F1 của validation, rồi đánh giá full test với policy đã cố định. Test tại policy này đạt Accuracy 84,0525%, Macro F1 84,0343%, Binary F1 83,4951% và measured loss 0,5442678; tăng một mẫu đúng nhưng đánh đổi 22 FP giảm với 21 FN tăng.
 Các diagnostics test vẫn giữ vai trò mô tả; không dùng chúng để chọn lại ngưỡng nhằm nâng kết quả đã công bố.
 
 Kết quả cho thấy pretrained Transformer có thể học sentiment với ngân sách thực hành vừa phải, đồng thời vẫn sai ở các câu pha trộn sắc thái hoặc mỉa mai. Lần fine-tuning mới đã thực hiện đủ ba epochs; validation selection nằm trong cùng run, sau đó evaluation/inference dùng lại checkpoint và policy. Dấu hiệu overfitting, overconfidence và lợi ích test rất nhỏ của threshold cho thấy cần đọc nhiều loại bằng chứng cùng nhau.
-Nhiều seeds, kiểm toán leakage nội dung, calibration fitting trên tập riêng và xác nhận trên held-out chưa quan sát là các hướng tiếp theo; chúng chưa được suy ra là hoàn thành từ unit tests hoặc từ một run GPU.
+Nhiều seeds, kiểm toán near-duplicate semantic, calibration fitting trên tập riêng và xác nhận trên held-out chưa quan sát là các hướng tiếp theo; chúng chưa được suy ra là hoàn thành từ unit tests hoặc từ một run GPU.
 
 Policy threshold của phiên mở rộng gắn `checkpoint_identity` bằng SHA256 weights. Eval/infer từ chối policy của checkpoint khác; inference cũng lưu bản policy đầy đủ để giữ criterion, tie-break và nguồn validation khi tách artifacts khỏi máy train.
 
 
-### 3.13. Kết quả study 10 epoch: chờ evidence GPU
+### 3.13. Kết quả study 10 epoch đã đo và kiểm chứng
 
-Phiên mở rộng hiện có code, notebook và tests; chưa có measured result của ba candidate 10 epoch.
-Các kết quả 83.96%/84.06% trong Section 3 ở trên thuộc run lịch sử 3 epoch đã kiểm chứng.
-Không sao chép những số đó sang bảng 10 epoch để tạo cảm giác đã hoàn tất training.
-Sau khi thu hồi review ZIP, xác minh bundle manifest trước khi cập nhật báo cáo.
+#### 3.13.1. Nguồn dữ liệu và provenance
 
-Cần báo cáo mỗi candidate: learning rate, completed epoch, global step, best checkpoint step và validation Macro-F1/loss.
-Cần ghi best epoch có trùng epoch 10 không; nếu không, giải thích ngân sách training khác lựa chọn checkpoint.
-Cần đọc cả hình epoch và hình step để xác định dấu hiệu overfit/overconfidence.
-Không kết luận epoch 10 tốt hơn epoch 3 chỉ vì train accuracy cao hơn.
+Study ID: `20261026T184219Z_study_94f2ba7b`.
+Source code revision: `ca58b27cfbda628ce2700c9e24476edc8eb997f9`.
+Review ZIP chứa 128 member có checksum trong bundle_manifest.json; tất cả khớp SHA256.
+Source hashes trong bundle_info.json khớp nguyên phiên code đã dùng khi training.
+Các original run manifests, configs, predictions và raw console logs được giữ nguyên bytes.
+Config/workflow gốc trong ZIP được lưu dưới outputs/imports/<study>/original_config/.
+Registry hiện tại chỉ thêm run IDs; không ghi đè các raw runs lịch sử.
 
-Bảng test phải có TF-IDF, DistilBERT argmax và validation-selected policies.
-Giữ metric từng lớp, confusion matrix, FP/FN và số lượng mẫu.
-Accuracy cao hơn một vài mẫu chưa đủ khẳng định ý nghĩa thống kê hay tính ổn định.
-NLL/Brier/ECE và ROC-AUC/AP trả lời các câu hỏi khác nhau, không thay thế nhau.
-Confidence 0.99 không đồng nghĩa mô hình đúng 99% trên mọi dữ liệu mới.
+Kaggle preflight ghi nhận 72 tests pass trước khi chạy GPU.
+Mỗi candidate có full official train/validation/test contract trong statistics và fingerprints.
+Candidate chỉ tạo validation predictions, không tạo test predictions.
+Study có frozen_selection.json ghi winner/policy/source manifest hash trước test.
+Mỗi candidate lưu reload_check.json xác nhận exact weight match khi có weights trên Kaggle.
+Final study tải lại best_model của winner để dự đoán full test.
+Review ZIP không chứa weights; kiểm toán local không được gọi là inference replay.
 
-Bootstrap 95% dùng 2.000 resample phân tầng test, giữ số mẫu hai lớp.
-CI được tính cho accuracy và Macro-F1 của model/policy cố định.
-Đây không phải CI bao gồm việc huấn luyện lại hoặc chọn hyperparameter.
-Muốn đo biến thiên seed cần thí nghiệm nhiều seed riêng và ngân sách được công bố trước.
-Không gọi một seed là kết quả trung bình nhiều lần train.
+#### 3.13.2. Đủ 10 epoch và chọn checkpoint bằng validation
 
-Test lịch sử đã từng được xem khi thiết kế phiên mở rộng.
-Dù selection code mới chỉ dùng validation, không được gọi đây là một blind benchmark hoàn toàn mới.
-Muốn kết luận ngoài phân phối hoặc tránh ảnh hưởng của việc xem test cũ cần tập đánh giá khác chưa quan sát.
-Không giấu kết quả nếu study mới không cải thiện F1.
-Kết luận tốt là kết luận được evidence hỗ trợ, kể cả khi mô hình đơn giản hoặc checkpoint sớm thắng.
+| Learning rate | Completed epochs | Trainer steps | Validation milestones | Best step | Best epoch | Best validation Macro-F1 | Loss tại best |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| 1e-5 | 10 | 5340 | 63 | 3200 | 5,9925 | 84,9906% | 0,755625 |
+| 2e-5 | 10 | 5340 | 63 | 2100 | 3,9326 | 84,8920% | 0,747378 |
+| 3e-5 | 10 | 5340 | 63 | 1700 | 3,1835 | 85,6473% | 0,702748 |
+
+![Candidate trajectories](outputs/published/study/candidate_validation_comparison.png)
+
+![Candidate selection summary](outputs/published/study_review/candidate_summary.png)
+
+Winner là LR 3e-5 theo Macro-F1 validation cao nhất.
+Không chọn LR bằng test accuracy hoặc vì một đường loss trông đẹp hơn.
+Checkpoint step 1700 thuộc khoảng epoch 3,184; không phải checkpoint cuối epoch 10.
+Cả ba candidate vẫn hoàn thành đủ 10 epoch theo yêu cầu thực nghiệm.
+Ngân sách quan sát và checkpoint để đánh giá là hai thông tin riêng biệt.
+
+AMP bỏ qua lần lượt 5, 4 và 5 optimizer updates.
+Successful updates tương ứng 5335, 5336 và 5335; Trainer global steps vẫn là 5340.
+Không tuyên bố mọi Trainer step đều cập nhật thành công trọng số.
+Loss không hữu hạn sẽ làm run fail; gradient overflow của AMP được scaler xử lý và ghi metadata.
+Các run hoàn tất, không ghi nhận loss NaN trong evidence đã thu hồi.
+Peak allocated CUDA memory của mỗi candidate khoảng 1.422.001.664 bytes.
+Đây là memory_allocated peak, không phải toàn bộ bộ nhớ process mà nvidia-smi hiển thị.
+
+Runtime train ghi nhận 461,3409 / 457,4038 / 454,3989 giây.
+Toàn study ghi runtime 1414,3928 giây, khoảng 23 phút 34 giây.
+Chi phí này bao gồm validation/checkpoint trong training; không so trực tiếp với throughput của forward-only inference.
+Không suy ra AMP hoặc model-only saving tăng tốc bao nhiêu khi chưa có A/B runtime riêng.
+
+#### 3.13.3. Đọc loss và accuracy qua đủ 10 epoch
+
+![Selected LR epoch curves](outputs/published/candidate_lr_3e5/learning_curves.png)
+
+![Selected LR step dashboard](outputs/published/candidate_lr_3e5/step_learning_curves.png)
+
+Train-eval loss và validation loss đều đo ở chế độ eval, dropout tắt.
+Optimization loss nằm ở dashboard riêng vì là trung bình cửa sổ trong quá trình tối ưu.
+Không gộp log cuối train có trường train_loss thành một mốc train-eval giả ở epoch 10.
+Có 10 train-eval milestones và 63 validation milestones, không suy số epoch từ số lần evaluate.
+
+Với LR 3e-5, train accuracy tăng từ 90,3048% ở epoch 1 lên 100% ở epoch 10.
+Train-eval loss giảm từ khoảng 0,252050 xuống 0,00004410.
+Validation loss tại epoch 1 khoảng 0,368855, cuối epoch 10 khoảng 1,241744.
+Validation Macro-F1 cuối epoch 10 khoảng 84,2388%, thấp hơn best 85,6473%.
+Đây là dấu hiệu overfitting và overconfidence trên validation, không phải lỗi vẽ đường cong.
+
+Checkpoint có validation loss thấp nhất của winner là epoch 1.
+Checkpoint có validation Macro-F1 cao nhất lại ở epoch 3,184.
+Loss quan tâm xác suất nhãn thật và phạt mạnh lỗi tự tin; F1 quan tâm các quyết định nhãn.
+Hai tiêu chí vì vậy có thể chọn khác checkpoint.
+Protocol đã công bố Macro-F1, nên không đổi sang loss sau khi đã nhìn kết quả test.
+Không khẳng định criterion Macro-F1 chắc chắn tối ưu mọi mục tiêu ứng dụng.
+
+![Overfitting diagnostics](outputs/published/study_review/overfitting_diagnostics.png)
+
+100% train accuracy không chứng minh khả năng tổng quát hóa hoàn hảo.
+Kiểm toán exact và casefold-whitespace ghi 0 duplicate nội bộ và 0 cross-split overlap ở cả ba split.
+Code không fit preprocessing/model trên validation/test.
+Hai kiểm tra nội dung này không bao phủ semantic near-duplicates hoặc contamination từ pretraining.
+Không dùng kết quả train để khẳng định không còn leakage dưới mọi hình thức.
+
+#### 3.13.4. Baseline học thật và threshold của từng mô hình
+
+TF-IDF học word unigram/bigram từ train, với sublinear_tf, min_df=2, max_features=50000.
+Logistic Regression fit train; C chọn từ 0.1/1/10 bằng validation Macro-F1.
+C=10 thắng với validation Macro-F1 0,74856100798.
+C=1 có cùng validation accuracy nhưng Macro-F1 thấp hơn một chút; không chọn C bằng test.
+Không refit train+validation vì validation còn dùng để chọn operating threshold.
+
+| Mô hình / policy cố định | Accuracy | Precision (+) | Recall (+) | Macro-F1 | Binary-F1 |
+|---|---:|---:|---:|---:|---:|
+| TF-IDF, threshold 0,5 | 78,2364% | 78,6667% | 77,4859% | 78,2352% | 78,0718% |
+| TF-IDF, validation threshold 0,4 | 78,7054% | 75,4153% | 85,1782% | 78,6158% | 80,0000% |
+| DistilBERT winner, threshold 0,5 | 83,3959% | 83,8403% | 82,7392% | 83,3952% | 83,2861% |
+
+![Learned baseline comparison](outputs/published/study/baseline_model_comparison.png)
+
+Threshold 0,4 của baseline tăng recall nhưng giảm precision và tăng FP.
+DistilBERT hơn baseline khoảng 5,1595 điểm phần trăm accuracy nếu cùng threshold 0,5.
+Đây là so sánh trên một test và một seed train, chưa phải kết luận đa-seed hoặc ngoài phân phối.
+Không bỏ baseline để làm mô hình lớn trông tốt hơn, cũng không dùng baseline test để chọn lại cấu hình.
+
+Winner DistilBERT chọn threshold 0,5 sau khi quét đủ 19 điểm validation.
+Quét threshold không bắt buộc phải tạo ra ngưỡng khác mặc định.
+Policy selection tie-break vẫn là gần 0,5 rồi threshold nhỏ hơn.
+Threshold của LR=1e-5 là 0,6; candidate đó không được thử trên test để tìm model thắng khác.
+Candidate selection dùng Macro-F1 argmax trước, threshold selection là giai đoạn sau trên checkpoint đó.
+Không tuyên bố đây là tối ưu chung trên toàn bộ cặp checkpoint/threshold.
+
+![Validation scan for winner](outputs/published/candidate_lr_3e5/validation_threshold/threshold_curves.png)
+
+#### 3.13.5. Full-test metrics, confusion matrix và confidence
+
+Winner đúng 889/1066 mẫu test: Accuracy 0,8339587242.
+Macro-F1 0,8339515641; Binary-F1 0,8328611898.
+Confusion matrix theo hàng nhãn thật: [[448,85],[92,441]].
+Negative và Positive đều có support 533.
+Vì threshold 0,5 và không có probability tie ở ranh giới, argmax và policy của run này trùng nhau.
+
+![Study test confusion](outputs/published/study/confusion_matrix.png)
+
+![Study per-class metrics](outputs/published/study_review/per_class_metrics.png)
+
+Measured test loss từ Trainer là 0,7980755568.
+Reconstructed NLL từ saved probabilities là 0,7980772048.
+Hai số có measurement context khác nhau; không thay một số bằng số còn lại để bảng khớp hơn.
+Threshold không làm thay đổi loss của cùng probabilities.
+Inference runtime ghi 0,5678 giây, throughput 1877,531 mẫu/giây trong phiên này.
+Số liệu runtime phụ thuộc phần cứng, kernel warmup, batch size và pipeline, không phải một cam kết tốc độ mọi máy.
+
+ROC-AUC là 0,9184164118; average precision là 0,9259894498.
+Hai số đo ranking, không có nghĩa Accuracy đạt 91,84% hoặc 92,60%.
+Brier score là 0,1506736755, top-label confidence ECE là 0,1460709733.
+Các lỗi có confidence trên 0,999 cho thấy confidence cần được sử dụng thận trọng.
+Không fit calibration trên test và không tuyên bố probability đã calibrated tốt.
+
+![Study ROC and PR](outputs/published/study/roc_pr_curves.png)
+
+![Study confidence diagnostics](outputs/published/study/calibration_confidence.png)
+
+Bootstrap phân tầng test có 2000 repetitions, seed 42, cho model/policy cố định.
+95% percentile CI của Accuracy là [0,8095684803; 0,8564727955].
+95% percentile CI của Macro-F1 là [0,8095682122; 0,8564696378].
+Đây không phải CI bao gồm khởi tạo/train lại hoặc quá trình chọn learning rate/checkpoint.
+Một seed chưa đo được độ ổn định của thuật toán qua nhiều lần train.
+
+#### 3.13.6. So sánh ghép cặp với lịch sử và giới hạn suy luận
+
+Đã đối chiếu đầy đủ index, text và nhãn giữa hai bộ 1066 predictions.
+Argmax lịch sử đúng 895 mẫu; study đúng 889 mẫu.
+Study sửa 42 lỗi cũ nhưng tạo 48 lỗi mới, giảm ròng 6 mẫu đúng.
+Có 847 mẫu cả hai đúng và 129 mẫu cả hai sai.
+Chênh Accuracy study trừ lịch sử là -0,5628518 điểm phần trăm.
+
+![Paired historical comparison](outputs/published/study_review/historical_paired_comparison.png)
+
+Paired stratified bootstrap 95% CI cho chênh accuracy là [-2,3452; +1,2195] điểm phần trăm.
+Khoảng chứa 0 nên không kết luận chênh lệch có ý nghĩa thống kê từ phép mô tả này.
+Đây không phải ablation chỉ thay số epoch: LR, lịch warmup/decay và criterion checkpoint cũng khác.
+Không kết luận “10 epoch gây giảm accuracy” như một quan hệ nhân quả chỉ từ hai run.
+Kết quả thực tế chỉ cho thấy phiên search 10 epoch này không mặc nhiên tốt hơn phiên lịch sử trên test đã xem.
+
+Test lịch sử đã từng được quan sát khi thiết kế study mới.
+Dù code selection mới chỉ dùng validation, không gọi đây là blind benchmark hoàn toàn chưa đụng tới.
+Không đổi winner sang model lịch sử chỉ vì test của nó cao hơn.
+Giữ lineage và criterion công bố, báo cáo cả ưu/nhược điểm.
+Đánh giá ngoài chưa quan sát hoặc thiết kế nhiều seed là nghiên cứu tiếp theo, chưa hoàn thành ở đây.
+
+#### 3.13.7. Đọc lỗi định tính và inference
+
+![Study sample predictions](outputs/published/study/sample_predictions.png)
+
+Câu “a very familiar tale…” có nhãn Negative nhưng dự đoán Positive, confidence khoảng 0,999115.
+Cụm “very familiar / told by countless filmmakers” có thể mang ý chê sáo mòn; phần sau mô tả nội dung trung tính/nhân văn.
+Câu “entertains not so much… scrape the bottom…” cũng bị Positive, dù nhãn Negative.
+Sắc thái châm biếm và cấu trúc tương phản có thể làm tín hiệu bề mặt xung đột.
+
+Câu “however canned… unexpectedly giddy viewing” có nhãn Positive nhưng bị Negative với confidence khoảng 0,999331.
+Câu “almost puts the kibosh… otherwise a sumptuous work…” có nhãn Positive nhưng bị Negative.
+Phê bình một chi tiết không nhất thiết phủ định cảm nhận cuối cùng của người viết.
+Đây là diễn giải ngôn ngữ, không phải chứng minh causal attribution của model.
+Không đổi ngưỡng từ các ví dụ test để chữa lỗi sau khi thấy đáp án.
+
+Mẫu được chọn theo confidence cao, có cả đúng/sai và cả hai nhãn.
+Không gọi đó là mẫu ngẫu nhiên đại diện phân bố lỗi.
+threshold_errors.json giữ đầy đủ 177 lỗi theo frozen policy cùng text và probabilities.
+Inference ba câu minh họa dùng đúng winner, tokenizer và threshold 0,5.
+Câu tương phản acting excellent / story disappointing có P(Positive)=0,0045032725 và được dự đoán Negative.
+
+![Study inference](outputs/published/study/inference_predictions.png)
+
+#### 3.13.8. Trạng thái nghiệm thu
+
+Đã có đủ Exercise 1 và study Exercise 2 thật trên GPU, full official splits.
+Đã có ba candidate đủ 10 epoch, baseline học thật, step history, epoch history và threshold validation.
+Đã có notebook 05 và phần mở rộng của notebook tích hợp hiển thị hình trực tiếp.
+Ảnh/bảng/predictions/logs giữ dưới outputs; report export chọn study làm primary và giữ lịch sử riêng.
+Notebook render lưu output cells vào artifact run riêng, không ghi đè raw science records.
+Không cần train lại chỉ để hoàn thiện báo cáo và trình bày.
+
+Checkpoint weights không có trong Git/review ZIP; giữ checkpoint ZIP riêng để sử dụng lại.
+Nhiều seed, semantic overlap audit, calibration fitting và external blind evaluation chưa thực hiện.
+Đó là giới hạn rõ ràng của phạm vi hiện tại, không được ghi như kết quả đã đạt.
 
 ### 3.14. Câu hỏi bảo vệ cho thiết kế 10 epoch
 
