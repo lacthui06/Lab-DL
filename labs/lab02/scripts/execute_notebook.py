@@ -7,7 +7,7 @@ from jupyter_client import KernelManager
 from jupyter_client.kernelspec import KernelSpecManager
 import json
 root = Path(__file__).resolve().parents[1]
-path = root / "notebooks" / (sys.argv[1] if len(sys.argv) > 1 else "lab_02_transfer_learning.ipynb")
+path = root / "notebooks" / (sys.argv[1] if len(sys.argv) > 1 else "02_lab02_modeling.ipynb")
 notebook = nbformat.read(path, as_version=4)
 kernels = root / ".jupyter" / "kernels"
 spec = kernels / "lab02"

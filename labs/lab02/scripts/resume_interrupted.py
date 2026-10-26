@@ -8,7 +8,7 @@ import traceback
 import numpy as np
 import pandas as pd
 import torch
-from src.experiment import ROOT, run_model, seed_all, write_json, Tee
+from src.experiment import ROOT, run_model, write_json, Tee
 from src.data import file_hash
 from src.reporting import summarize_suite
 

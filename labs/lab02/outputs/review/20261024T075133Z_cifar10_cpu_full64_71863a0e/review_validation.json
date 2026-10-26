@@ -1,0 +1,30 @@
+{
+  "date": "2026-10-26",
+  "python": "3.13.3 (tags/v3.13.3:6280bb5, Apr  8 2025, 14:47:33) [MSC v.1943 64 bit (AMD64)]",
+  "platform": "Windows-10-10.0.19041-SP0",
+  "notebooks": [
+    {
+      "file": "notebooks\\01_lab02_eda.ipynb",
+      "sha256": "be3cc5131b12696584a3f406b2ce478891bb438cfcc776b832d4c9aa7e5090a7",
+      "code_cells": 5,
+      "max_code_lines": 7,
+      "png_outputs": 4,
+      "executed_without_errors": true
+    },
+    {
+      "file": "notebooks\\02_lab02_modeling.ipynb",
+      "sha256": "e80a9eb10040f1d67ec8ccb2147a9f3ad9252e404e99833f45b0a8fc0fca1443",
+      "code_cells": 11,
+      "max_code_lines": 7,
+      "png_outputs": 6,
+      "executed_without_errors": true
+    }
+  ],
+  "review_tests": {
+    "command": "python -X utf8 -m unittest discover -s labs/lab02/tests -p test_notebook_review.py -v",
+    "passed": 7
+  },
+  "training_tests": "not run: torch/pytest unavailable in current interpreter",
+  "new_training": "not run; tuning_plan.json is proposed only",
+  "historical_run_files_modified": false
+}
