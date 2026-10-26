@@ -1,8 +1,10 @@
 {
-  "artifact_run": "20261026T081129Z_verification_07d51602",
-  "review_file": "outputs/runs/20261026T081129Z_verification_07d51602/review.json",
-  "tests_passed": 43,
+  "artifact_run": "20261026T124745Z_verification_edded031",
+  "review_file": "outputs/runs/20261026T124745Z_verification_edded031/review.json",
+  "tests_passed": 53,
   "notebooks_executed": 3,
-  "walkthrough_lines": 855,
-  "description_lines": 244
+  "walkthrough_lines": 998,
+  "description_lines": 270,
+  "threshold_analysis_run": "20261026T124315Z_threshold_analysis_8bc30b27",
+  "notebook_render_run": "20261026T124505Z_notebook_render_29bd8d4e"
 }

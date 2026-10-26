@@ -77,8 +77,8 @@ cd ../..
 .venv-lab03/bin/python labs/lab03/scripts/audit_outputs.py
 ```
 
-- **43 tests đạt trên CPU**: dataset contract, dynamic padding, pipeline/manual, checkpoint, sanity overfit, Trainer, run tracking, năm plots, recovery, metrics/artifact audit và phát hiện dữ liệu bị sửa.
-- Audit kiểm tra 24 file SHA256, tính lại toàn bộ bảy metrics từ 1.066 predictions và xác nhận confusion matrix.
+- **53 tests đạt trên CPU**: dataset contract, dynamic padding, pipeline/manual, checkpoint, sanity overfit, Trainer, run tracking, năm plots, recovery, metrics/artifact audit và phát hiện dữ liệu bị sửa.
+- Audit kiểm tra 56 file SHA256 nguồn (24 file gốc và 32 file của selection/evaluation/inference mới), tính lại validation sweep, test metrics và confusion matrices. Báo cáo audit đầy đủ được lưu trong một run `artifact_audit` dưới `outputs/`, kèm bản tiện tra cứu tại `validation/`.
 - 29 file checkpoint không có trong Git được liệt kê rõ là thiếu có chủ đích, không coi là đã kiểm tra tại máy rà soát.
 - Ba notebook chạy hết ở view, Hugging Face offline, không có cell lỗi. Xem `validation/notebook_execution.json`.
 
@@ -189,7 +189,7 @@ Train mới thực hiện:
 
 Code `src/training/thresholds.py` chặn chọn ngưỡng khi `split != 'validation'`. `scripts/select_threshold.py` chỉ đọc validation để chọn, không đọc test predictions. Test suite kiểm tra cả quy tắc này và lưu artifacts. Việc gắn nhãn split trong API không tự chứng minh nguồn dữ liệu; notebook/CLI chịu trách nhiệm truyền đúng split.
 
-Run Kaggle lịch sử **không có validation probabilities và không có weights trong Git**, vì vậy chưa thể khẳng định đã chọn ngưỡng validation cho run đó. Đồ thị `threshold_test_diagnostic/threshold_curves.png` chỉ mô tả độ nhạy trên test đã quan sát; **không chọn ngưỡng tối ưu từ test** và không thay đổi kết quả 83,96% của run gốc.
+Training run lịch sử không lưu validation probabilities. Phiên Kaggle bổ sung đã phục hồi đúng checkpoint, predict đủ validation và chọn ngưỡng **0,8** theo validation Macro F1; weights tiếp tục nằm ngoài Git. Đồ thị `threshold_test_diagnostic/threshold_curves.png` chỉ mô tả độ nhạy trên test đã quan sát; **không chọn ngưỡng tối ưu từ test** và không thay đổi kết quả 83,96% của run gốc.
 
 Nếu còn ZIP checkpoint, khôi phục `best_model/` rồi chọn ngưỡng mà không train lại:
 
@@ -216,3 +216,32 @@ Checkpoint train mới mang policy cùng `best_model/`; eval/infer tự đọc n
 Test set cũ đã được quan sát trong phát triển; một vòng thử ngưỡng mới trên benchmark đó vẫn mang tính thăm dò, không được trình bày như kiểm định mù độc lập. Không dùng hình test diagnostic để điều chỉnh lựa chọn ngưỡng.
 
 Policy threshold được gắn SHA256 của checkpoint; không áp policy của model A vào model B. Inference lưu cả policy, hình và predictions. Dependency `ipywidgets` được pin để notebook có progress widget đúng môi trường.
+
+
+## 11. Kết quả threshold đã thực thi và hình so sánh
+
+| Vai trò | Run Kaggle nguồn |
+|---|---|
+| Chọn threshold trên validation | `20261026T083558Z_threshold_selection_b64cf564` |
+| Tải lại checkpoint, đánh giá full test | `20261026T083612Z_evaluation_a724c16c` |
+| Inference với policy đóng băng | `20261026T083627Z_inference_0ed240e2` |
+
+| Test metric | Argmax | Policy validation 0,8 |
+|---|---:|---:|
+| Accuracy | 83,9587% | 84,0525% |
+| Positive Precision | 83,5185% | 86,5191% |
+| Positive Recall | 84,6154% | 80,6754% |
+| Binary F1 | 84,0634% | 83,4951% |
+| Macro F1 | 83,9580% | 84,0343% |
+| TN / FP / FN / TP | 444 / 89 / 82 / 451 | 466 / 67 / 103 / 430 |
+
+Validation Macro F1: **0,843279 → 0,852663**. Test chỉ thêm một mẫu đúng, giảm 22 FP nhưng tăng 21 FN; không khẳng định 0,8 tốt hơn ở mọi mục tiêu. Measured test loss sau reload là **0,5442677736**, không đổi khi thay decision threshold. Giữ riêng loss này với NLL tái tính từ probabilities của run training lịch sử.
+
+[Walkthrough](walkthrough_lab_03.md) giải thích đầy đủ quyết định và đánh đổi. Module `src/threshold_evidence.py` đối chiếu policy giữa ba run, SHA256 checkpoint, validation fingerprint, 19 ngưỡng và toàn bộ predictions. Module `src/threshold_analysis.py` xuất chín hình so sánh cùng bảng có thể tính lại; notebook hiển thị trực tiếp các hình đó.
+
+```bash
+.venv-lab03/bin/python labs/lab03/scripts/analyze_outputs.py
+.venv-lab03/bin/python labs/lab03/scripts/audit_outputs.py
+```
+
+Hai lệnh này dùng evidence đã lưu, không tải weights và không train lại. Notebook `view` tự dùng kết quả bổ sung khi nó thuộc đúng training run; không gắn policy cũ vào một model mới. Bản notebook đã chạy được sao lưu đầy đủ trong run `notebook_render`, bao gồm cả bảng và hình hiển thị.

@@ -4,15 +4,15 @@
     "exercise2": "covered: full official dataset, pretrained backbone/tokenizer, preprocessing, TrainingArguments/Trainer, three epochs and test evaluation"
   },
   "checks": {
-    "pytest_passed": 43,
+    "pytest_passed": 53,
     "pytest_failed": 0,
     "pip_check": "passed",
     "notebooks_view_offline": 3,
     "notebook_errors": 0,
-    "view_preserves_artifacts_and_registry": true,
-    "sha256_verified_files": 24,
+    "view_preserves_artifacts_and_registry": "cached view preserves source bytes; a new analysis/render appends registry entries",
+    "sha256_verified_files": 56,
     "metrics_recomputed_predictions": 1066,
-    "png_files_decoded": 5,
+    "png_files_decoded": 9,
     "cli_help_from_unrelated_directory": 4,
     "missing_checkpoint_rejected": [
       "eval.py",
@@ -20,12 +20,14 @@
     ],
     "eval_infer_use_original_config": "passed local model CLI regression",
     "binary_threshold_selection": "validation only; checkpoint-bound policy; fixture and CLI regression tested",
-    "visual_artifact_exports": "analysis runs plus complete notebook_render snapshots"
+    "visual_artifact_exports": "analysis runs plus complete notebook_render snapshots",
+    "validation_threshold_measured": 0.8,
+    "full_test_reevaluation": "1066 predictions; test loss 0.5442677736; checkpoint SHA256 and policy verified"
   },
   "fix": "Eval/infer use run config snapshot when available; eval avoids downloading an unrelated base model tokenizer",
   "limitations": {
     "checkpoint_not_in_git": true,
-    "checkpoint_verification_source": "Kaggle reload_check.json, SHA256 verified; local rerun not performed",
+    "checkpoint_verification_source": "original Kaggle reload check plus separate full-test reevaluation; reviewed offline from evidence, no local model execution",
     "weights_recovery": "Owner-held Kaggle ZIP, see README",
     "gpu_retraining_performed_in_this_review": false,
     "dataset_commit_sha_not_recorded": "Original config uses main; provenance provides fingerprints and backbone commit"
@@ -38,5 +40,6 @@
     "original_artifact_hashes_preserved": 24,
     "lab01_changed": false
   },
-  "extended_review": "validation/enhancement_review.json"
+  "extended_review": "validation/enhancement_review.json",
+  "latest_verification_artifact": "outputs/runs/20261026T124745Z_verification_edded031/review.json"
 }

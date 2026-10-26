@@ -1,0 +1,14 @@
+{
+  "source_runs": {
+    "threshold_selection": "20261026T083558Z_threshold_selection_b64cf564",
+    "evaluation": "20261026T083612Z_evaluation_a724c16c",
+    "inference": "20261026T083627Z_inference_0ed240e2"
+  },
+  "source_manifests": {
+    "threshold_selection": "c0bd16d2b870985b78d8556acdcf76c605d3146119b35ed3be2ebf9e838d101e",
+    "evaluation": "5819cca9f5c10758b0ae2cf7e964b5698c9e1eb8d81ba5b52739c0fc0102c07e",
+    "inference": "ff8ec443507cc21465dc4c891f71c59d788575225cb63b8b7af7251b7135f4fa"
+  },
+  "analysis_code": "ebfacb5cc4349388940f33109af6c359f227bc79776d1022650ebd5bf3287b67",
+  "audit_code": "2a7ded6b8334278a38d934e05f6d0e6367796eb81caf693e85402393c0f9c806"
+}

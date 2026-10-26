@@ -8,7 +8,7 @@
 
 **Quy ước bằng chứng:** số liệu huấn luyện hiện hành được đọc từ run Kaggle `20261025T181550Z_finetuning_e02bced7`; các kết quả suy luận Exercise 1 thuộc run `20261025T181532Z_exercise1_71da6f40`.
 
-**Quy ước kết quả bổ sung:** hình hoặc bảng phân tích được tạo lại từ predictions đã lưu phải mang dấu vết nguồn; không trình bày chúng như một lần train GPU mới.
+**Quy ước kết quả bổ sung:** run `20261026T083558Z_threshold_selection_b64cf564` chọn threshold từ validation; run `20261026T083612Z_evaluation_a724c16c` đánh giá lại toàn test sau khi tải checkpoint; run `20261026T083627Z_inference_0ed240e2` minh họa inference cùng policy. Hình/bảng tính lại từ predictions được ghi rõ là diagnostics dẫn xuất; ba run bổ sung không huấn luyện lại weights.
 
 **Cấu trúc báo cáo:** một tài liệu sống gồm đặc tả, phương pháp/thí nghiệm và kết quả/chẩn đoán; nhật ký sửa phần mềm nằm trong `internal_changes.md`.
 
@@ -16,7 +16,7 @@
 
 Lab triển khai hai mức sử dụng hệ sinh thái Hugging Face: dùng ngay một mô hình đã fine-tune và tự fine-tune backbone cho bài toán đích. Exercise 1 mở quy trình `pipeline` thành tokenizer, tensor đầu vào, forward, logits, softmax và nhãn dự đoán. Exercise 2 giữ nguyên official train/validation/test của Rotten Tomatoes, dùng `Trainer` để tối ưu ba epochs và chọn checkpoint bằng validation accuracy.
 Run Kaggle đạt test Accuracy **83,9587%**, Binary F1 **84,0634%** và Macro F1 **83,9580%**, tương ứng 895 dự đoán đúng trên 1.066 mẫu. Confusion matrix có 444 Negative đúng, 451 Positive đúng, 89 Negative bị đoán Positive và 82 Positive bị đoán Negative. Đường học cho thấy train tiếp tục cải thiện nhưng validation loss tăng ở epoch cuối, nên kết quả phải đi kèm phân tích overfitting thay vì chỉ báo một con số accuracy.
-Phần mở rộng binary threshold phân biệt rõ việc chọn ngưỡng trên validation với việc mô tả độ nhạy trên test; không chọn lại ngưỡng bằng nhãn test. Artifacts hiện hành cho phép kiểm tra lại metrics và trực quan hóa offline, nhưng không có validation probabilities hoặc checkpoint trong Git để khẳng định đã hoàn tất một sweep validation của run cũ.
+Phần mở rộng đã khôi phục đúng checkpoint trong Kaggle, dự đoán toàn bộ validation và chọn threshold **0,8** theo Macro F1 trên lưới định trước. Validation Macro F1 tăng từ **84,3279%** tại 0,5 lên **85,2663%** tại 0,8. Sau khi cố định policy, đánh giá lại toàn test đạt Accuracy **84,0525%**, Macro F1 **84,0343%** và Binary F1 **83,4951%**: thêm một mẫu đúng, giảm 22 FP nhưng tăng 21 FN. Đây là đánh đổi operating point có bằng chứng thật, không phải cải thiện mọi metric. Checkpoint lớn vẫn nằm ngoài Git; việc tải lại toàn test được chứng minh bằng artifacts Kaggle của run evaluation mới.
 
 ### Roadmap phương pháp và module tham chiếu
 
@@ -29,7 +29,7 @@ Phần mở rộng binary threshold phân biệt rõ việc chọn ngưỡng tr�
 | P05 — Preprocessing | Padding/truncation ảnh hưởng dữ liệu ra sao? | `src/datasets/loader.py`, `src/training/trainer.py` | Token-length statistics, distribution |
 | P06 — Model/loss | Logits hai lớp và cross-entropy được tạo ở đâu? | `src/models/classifier.py`, `src/training/metrics.py` | Model configuration, tensor contract |
 | P07 — Training | Có học được và checkpoint được chọn thế nào? | `src/training/trainer.py`, `src/workflow.py` | Train/validation history, best checkpoint |
-| P08 — Binary threshold | Ngưỡng được chọn từ split nào? | `src/training/thresholds.py`, `src/decision.py`, `scripts/select_threshold.py` | Validation sweep/selection của run mới hoặc trạng thái chưa có |
+| P08 — Binary threshold | Ngưỡng được chọn từ split nào? | `src/training/thresholds.py`, `src/decision.py`, `scripts/select_threshold.py` | 1.066 validation scores, sweep 19 điểm, policy threshold 0,8 |
 | P09 — Evaluation | Kết quả test có nhất quán không? | `src/evidence.py`, `src/analysis.py`, `scripts/audit_outputs.py` | Metrics recomputed, confusion matrix, ROC/PR và calibration |
 | P10 — Error analysis | Mô hình sai ở những dạng câu nào? | `src/workflow.py`, notebook, walkthrough | Sample predictions và hình đúng/sai |
 | P11 — Reuse | Có thể xem lại và tải mô hình ra sao? | `scripts/eval.py`, `scripts/infer.py`, registry | View outputs, save/load evidence |
@@ -90,7 +90,7 @@ Dataset được tải từ `cornell-movie-review-data/rotten_tomatoes` qua thư
 | Split | Số mẫu | Vai trò trong protocol |
 |---|---:|---|
 | Train | 8.530 | Ước lượng gradient và cập nhật trọng số |
-| Validation | 1.066 | Chọn checkpoint, lựa chọn threshold cho run mới |
+| Validation | 1.066 | Chọn checkpoint; run bổ sung chọn threshold 0,8 |
 | Test | 1.066 | Đánh giá cuối sau khi các lựa chọn đã cố định |
 
 Loader kiểm tra đúng kích thước đã chốt và bảo đảm mỗi split có hai nhãn 0/1. Kiểm tra kích thước phát hiện tải nhầm dataset hoặc vô tình dùng subset, nhưng không thay thế kiểm toán nội dung từng mẫu. Việc giữ official splits hạn chế sai sót do chia lại sau khi đã quan sát test.
@@ -533,16 +533,30 @@ Các file/hàm thực thi protocol gồm:
 Run train mới lưu policy ở cả run root và `best_model/`, rồi truyền ngưỡng đã cố định vào test evaluation. Metrics argmax vẫn nằm trong `test_metrics.json`; metrics theo policy validation nằm riêng ở `test_threshold_metrics.json`. Cách lưu này giữ khả năng so sánh baseline và operating point mà không ghi đè hoặc đổi ý nghĩa trường metrics cũ.
 `eval.py` và `infer.py` nhận `--threshold-file` để dùng một policy validation cụ thể; checkpoint lịch sử thiếu policy vẫn giữ argmax. Một file policy tự khai báo split validation chưa phải chứng minh dữ liệu thật đúng split: phải truy vết cả validation predictions và source checkpoint.
 
-### 2.14. Giới hạn threshold của run lịch sử
+### 2.14. Hoàn tất validation sweep từ đúng checkpoint lịch sử
 
-Run Kaggle hiện hành giữ `all_predictions.json` cho test nhưng không có validation probability records. `trainer_history.json` chỉ có metrics tổng hợp validation theo epoch. Từ một điểm accuracy/F1 tổng hợp không thể phục dựng toàn bộ distribution scores của validation.
-Do đó, không thể tính thật một validation sweep cho run này chỉ bằng nội dung Git hiện có.
+Run train gốc giữ `all_predictions.json` cho test nhưng không lưu từng probability validation; history chỉ có metric tổng hợp theo epoch. Không thể phục dựng distribution scores từ một accuracy tổng hợp. Bước bổ sung vì thế tải lại đúng `best_model/` trên Kaggle và chạy inference validation thật, thay vì đổi tên test records hoặc tạo xác suất giả.
+Run selection riêng là **`20261026T083558Z_threshold_selection_b64cf564`**, loại `threshold_selection`; không có optimizer step hay gradient update trong bước này.
 
-Không lấy 1.066 test predictions rồi đổi tên trường thành validation để lấp phần thiếu. Không dùng seed cố định để tạo probability giả có cùng accuracy tổng hợp. Không tự bịa một threshold tốt hơn 0,5 hoặc một mức cải thiện F1 chưa được đo.
-Trạng thái đúng là: implementation sweep cho quy trình mới có thể hoàn thành, còn validation selection của run lịch sử chưa có bằng chứng.
+Nguồn model của selection trỏ về checkpoint đã fine-tune ngày 25/10. SHA256 `model.safetensors` là `5a63c9c2a6391132c86b0e6c08277cc23ccc692dd080b78ba2db074225bb5105`, trùng identity của run train gốc. Fingerprint validation `4d310508c191379e` và số mẫu 1.066 được lưu cùng selection.
+Nhờ vậy, policy gắn với đúng weights và đúng split chứ không chỉ một tên thư mục có thể bị thay nội dung.
 
-Có thể tạo ROC/PR, probability diagnostics và một threshold-sensitivity plot mô tả từ test scores đã lưu. Các hình đó giúp hiểu classifier hiện hành, nhưng không cung cấp quyền chọn một ngưỡng deployment từ test. Test đã được quan sát trong quá trình phát triển lab; một sweep mới trên cùng benchmark phải được xem là nghiên cứu tiếp mang tính exploratory, không phải một blind confirmatory test mới.
-Nếu cần chạy validation sweep cho chính checkpoint lịch sử, phải khôi phục `best_model/` từ ZIP và dự đoán validation thật. Sau đó lưu score records và selection vào artifacts mới, liên kết source run, trước khi báo cáo nhánh evaluation với threshold đã cố định.
+| Thành phần selection đã chạy | Giá trị hoặc bằng chứng |
+|---|---|
+| Dữ liệu dùng chọn | Validation chính thức, 1.066 mẫu; 533 Negative, 533 Positive |
+| Score | Softmax probability cột Positive sau checkpoint reload |
+| Grid định trước | 19 thresholds từ 0,05 đến 0,95, bước 0,05 |
+| Objective | Tối đa validation Macro F1 |
+| Tie-break | Gần 0,5 hơn; nếu vẫn hòa chọn threshold nhỏ hơn |
+| Kết quả | Threshold 0,8; validation Macro F1 0,8526632715 |
+| Policy | `decision_threshold.json`, `selection_split=validation` |
+| Dữ liệu kiểm tra lại | `validation_predictions.json`, `validation_threshold/threshold_scan.json` |
+
+Threshold 0,8 dự đoán Positive khi `p_positive >= 0.8`. Policy không thay loss, kiến trúc, trọng số hay thứ tự scores; nó chỉ chuyển probability thành nhãn. Việc gắn SHA256 giúp eval/infer từ chối dùng policy này với một checkpoint khác.
+Đây là hoàn tất khoảng trống bằng chứng của run lịch sử, không phải sửa lại raw metrics hoặc manifest của run train.
+
+Test đã được quan sát trước phiên mở rộng, nên phần bổ sung được mô tả là exploratory development trên benchmark hiện có. Trong phạm vi bước chọn threshold, labels test không được đưa vào hàm lựa chọn: threshold được lưu trước khi chạy evaluation riêng. Không chọn lại 0,8 hoặc một giá trị khác sau khi xem đường sensitivity test.
+Một kết luận confirmatory mạnh hơn vẫn cần thiết kế held-out chưa quan sát từ đầu hoặc nhiều seeds phù hợp câu hỏi nghiên cứu.
 
 ### 2.15. Đánh giá test và lưu dự đoán đầy đủ
 
@@ -553,7 +567,7 @@ Các records này là nguồn độc lập để tính lại classification metr
 Mỗi sample được audit đối chiếu text/nhãn/index/confidence với record đầy đủ.
 
 Metrics gốc gồm Accuracy và binary/macro Precision, Recall, F1. Test loss không được evaluator gốc ghi vào file metrics; nó được báo cáo **not logged**. Không thay test loss bằng validation loss epoch 3 hoặc train loss trung bình.
-Phân tích bổ sung tái tính NLL từ probability records sau chuẩn hóa tổng từng hàng để loại rounding drift; giá trị này được gọi đúng tên riêng, không giả vờ là scalar Trainer loss gốc. Với run train mới, evaluator lưu runtime metrics có `test_loss` trong `test_runtime_metrics.json`, còn historical artifacts vẫn giữ trạng thái not logged.
+Phân tích offline tái tính NLL từ probability records sau chuẩn hóa tổng từng hàng, được **0,5442964394**; đại lượng này mang tên riêng và không ghi ngược thành scalar Trainer loss gốc. Run evaluation bổ sung sau checkpoint reload đã đo `test_loss=0,5442677736` trong `test_runtime_metrics.json`, runtime **1,6827 giây** cho 1.066 mẫu. Hai giá trị gần nhau nhưng đến từ hai đường tính số khác nhau; artifacts lịch sử vẫn giữ trạng thái not logged, còn số đo mới được gắn đúng run evaluation.
 
 ### 2.16. Run tracking, logs và manifest
 
@@ -571,8 +585,8 @@ Trọng số và optimizer checkpoints không thuộc nhóm artifact nhẹ nên 
 `reload_check.json` của Kaggle ghi `weights_exact_match=true`. Quy trình kiểm tra so sánh tensor weights và suy luận trong cùng ngữ cảnh CPU FP32 với forward method sạch. Điều này tránh so một live model đang có wrapper CUDA autocast với một model mới tải trên CPU rồi coi mọi chênh lệch floating point là lỗi serialization.
 Không nới tolerance tùy ý hoặc sửa expected hash để làm kiểm tra vượt qua.
 
-Bằng chứng suy luận lưu lại có một câu: review về `Stuart Little 2` được dự đoán Positive với probability khoảng 0,971858. Đây là kiểm tra save/load cụ thể được ghi nhận, không phải một lần đánh giá lại toàn bộ test sau reload. Không có checkpoint trong Git để máy rà soát tự thực hiện full-test inference từ weights.
-Giới hạn này cần được giữ rõ cả trong notebook và hướng dẫn nộp bài.
+Bằng chứng save/load gốc có một câu: review về `Stuart Little 2` được dự đoán Positive với probability khoảng 0,971858. Bằng chứng đó tự nó chỉ xác nhận một ví dụ. Phiên bổ sung hiện đã có run **`20261026T083612Z_evaluation_a724c16c`** tải checkpoint từ `best_model/` và dự đoán lại toàn bộ 1.066 mẫu test trên Tesla T4.
+Kết quả argmax sau reload khớp đầy đủ metrics gốc; evaluation đồng thời xuất metrics theo policy validation 0,8 và test loss đo thật. Không có weights trong checkout Git, nên máy rà soát xác nhận nguồn, identity và predictions đã lưu; không tuyên bố đã tự thực thi full-model inference tại máy này.
 
 Để chạy lại, khôi phục đúng `best_model/` của run và dùng CLI eval/infer với config snapshot tương ứng. Không đưa một checkpoint khác có cùng tên folder vào rồi chỉ so nhãn vài câu. Hash trọng số kỳ vọng nằm trong manifest để xác nhận đúng file đã được chọn.
 Giữ model và tokenizer cùng nhau là cần thiết vì vocabulary/preprocessing phải phù hợp weights.
@@ -594,7 +608,7 @@ Các artifact mới nằm trong run riêng với `analysis_source.json`, config,
 Analysis run hiện hành là `20261026T080403Z_analysis_7b9e92eb`, lấy nguồn từ `20261025T181550Z_finetuning_e02bced7`. `analysis_summary.json` giữ AUC/AP/Brier/ECE và NLL tái tính; `roc_pr_coordinates.json` giữ các tọa độ để vẽ lại; `reliability_bins.json` giữ dữ liệu từng bin. `tables.json` giữ các bảng phase/config/environment/history/per-class; PNG tương ứng được notebook hiển thị trực tiếp.
 Thư mục `threshold_test_diagnostic/` có curve JSON/PNG và metadata `selection_performed=false`, `selected_threshold=null`. Các records này giúp phân biệt output nhìn thấy với metadata chứng minh output được tính ở đâu và dùng cho mục đích nào.
 
-Việc thực thi notebook cũng có artifact riêng: run `20261026T080353Z_notebook_render_ad2be64a` lưu bản executed của cả ba notebook và `execution_summary.json`. `scripts/render_notebooks.py --kernel lab03` thực hiện render view và lưu output dưới `outputs/`; không chỉ để hình tồn tại trong kernel tương tác. `scripts/analyze_outputs.py` cung cấp CLI tạo các run phân tích trực quan từ artifacts nguồn.
+Việc thực thi notebook cũng có artifact riêng: run `20261026T124505Z_notebook_render_29bd8d4e` lưu bản executed của cả ba notebook và `execution_summary.json`. `scripts/render_notebooks.py --kernel lab03` thực hiện render view và lưu output dưới `outputs/`; không chỉ để hình tồn tại trong kernel tương tác. `scripts/analyze_outputs.py` cung cấp CLI tạo các run phân tích trực quan từ artifacts nguồn.
 Bản source notebook trong `notebooks/` giữ output để đọc trực tiếp trên GitHub, còn bản render trong outputs giữ gói bằng chứng của lần thực thi.
 
 ### 2.19. Kiểm thử phần mềm và audit kết quả
@@ -602,7 +616,7 @@ Bản source notebook trong `notebooks/` giữ output để đọc trực tiếp
 Test suite bao phủ tokenization, collator, pipeline/manual, checkpoint, Trainer, run tracking, plots, CLI và audit. Các tests mô hình nhỏ/fixture nhằm xác nhận chức năng có thể chạy, không đo chất lượng của DistilBERT thật trên Rotten Tomatoes. Kiểm tra artifacts thật bổ sung xác nhận metrics được tính lại từ 1.066 prediction records.
 Hai lớp bằng chứng này trả lời hai câu hỏi khác nhau và cần báo cáo tách biệt.
 
-Bộ kiểm thử sau mở rộng đạt **43 passed trên CPU**, gồm kiểm tra threshold grid/validation-only, boundary/tie, policy và các luồng CLI trên fixture. Ba notebook render thành công ở view offline: Exercise 1 có 5 code cells, Exercise 2 có 13 code cells, bản tích hợp có 17 code cells. Số cell là quy mô thực thi được ghi nhận, không phải thước đo độc lập chất lượng học thuật của notebook.
+Bộ kiểm thử sau mở rộng đạt **53 passed trên CPU**, gồm kiểm tra threshold grid/validation-only, boundary/tie, policy và các luồng CLI trên fixture. Ba notebook render thành công ở view offline: Exercise 1 có 5 code cells, Exercise 2 có 15 code cells, bản tích hợp có 19 code cells. Số cell là quy mô thực thi được ghi nhận, không phải thước đo độc lập chất lượng học thuật của notebook.
 Source run Kaggle không bị đổi metrics trong quá trình tạo các phân tích và bản render này.
 
 | Lớp kiểm tra | Có thể phát hiện | Không chứng minh |
@@ -611,7 +625,7 @@ Source run Kaggle không bị đổi metrics trong quá trình tạo các phân 
 | Manifest audit | File thiếu hoặc bị đổi bytes | Dữ liệu không leakage về ngữ nghĩa |
 | Prediction audit | Metrics không khớp records, index lỗi | Checkpoint đã được chạy lại tại máy audit |
 | Notebook execution | Cell lỗi, path sai, thiếu artifacts | Một lần GPU training mới |
-| Save/load evidence | Sai weights hoặc execution mismatch được kiểm tra | Full-test reload nếu chỉ lưu một câu |
+| Save/load evidence | Weights identity, kết quả một câu gốc và toàn test trong run evaluation mới | Máy audit đã tự chạy weights khi weights không có trong checkout |
 
 Các test threshold cần kiểm tra split selection, boundary/tie và sự tách biệt validation/test. Một test chỉ chứng minh hàm trả về một dictionary là chưa đủ cho nguy cơ test-set tuning. Các kiểm tra hiển thị phải bảo đảm ảnh/bảng thật sự được ghi vào nơi lấy artifacts, không chỉ có object trong memory.
 Giữ nguyên assertions thay vì bỏ qua test lỗi để đạt một con số passed đẹp.
@@ -625,7 +639,9 @@ Giữ nguyên assertions thay vì bỏ qua test lỗi để đạt một con s�
 | Baseline hằng Negative | Test Rotten Tomatoes | Không dùng text | Không train | Luôn dự đoán Negative | Accuracy 50%, Macro F1 33,33% |
 | Exercise 1 `20261025T181532Z_exercise1_71da6f40` | Ba câu cấu hình | WordPiece | Sentiment pretrained, inference | Pipeline/manual comparison | Ba trường hợp khớp, không tính benchmark accuracy |
 | Fine-tuning `20261025T181550Z_finetuning_e02bced7` | Full official Rotten Tomatoes | WordPiece, 128, dynamic padding | DistilBERT, AdamW, ba epochs | Best validation accuracy; test argmax | Accuracy 83,9587%, Macro F1 83,9580% |
-| Threshold validation mở rộng | Cần validation scores thật | Giữ cùng preprocessing | Không đổi weights chỉ để sweep | Chọn bằng validation, cố định trước test | Không có kết quả selection lịch sử để điền số |
+| Threshold selection `20261026T083558Z_threshold_selection_b64cf564` | 1.066 validation scores thật | Giữ tokenizer/128/dynamic padding | Tải đúng weights, không train lại | 19 điểm, tối đa validation Macro F1 | Chọn 0,8; validation Macro F1 85,2663% |
+| Evaluation `20261026T083612Z_evaluation_a724c16c` | 1.066 test sau checkpoint reload | Cùng preprocessing | SHA256 trùng run train | Argmax gốc và policy 0,8 cố định | Threshold Accuracy 84,0525%, Macro F1 84,0343%; test loss 0,5442678 |
+| Inference `20261026T083627Z_inference_0ed240e2` | Một câu review cấu hình | Cùng tokenizer | Checkpoint cùng identity | Policy validation 0,8 | Negative, confidence 0,9933324 |
 | Diagnostic từ test scores đã lưu | 1.066 test probabilities | Không tokenize lại | Không train | Mô tả, không chọn threshold | Có thể tái tính ROC/PR/calibration và sensitivity |
 
 Bản IMDB subset trước đây không được coi là một baseline cùng điều kiện của bảng Rotten Tomatoes. Thay đổi chính của bản hiện hành là dùng full official splits, thống nhất luồng notebook/CLI và lưu bằng chứng theo run. Tác động accuracy có thể lượng hóa so với baseline hằng trên cùng test là **+33,9587 điểm phần trăm**.
@@ -642,7 +658,8 @@ Không diễn giải delta giữa hai dataset khác nhau là mức cải thiện
 | Macro Precision | 83,9646% | Trung bình đều Precision hai lớp |
 | Macro Recall | 83,9587% | Trung bình đều Recall hai lớp |
 | Macro F1 | **83,9580%** | Trung bình đều F1 hai lớp |
-| Test loss | **Not logged** | Không thay bằng train/validation loss |
+| Test loss của run train gốc | **Not logged** | Evaluator gốc chưa lưu; giữ nguyên raw artifacts |
+| Test loss sau checkpoint reload | **0,5442678** | Đo trong run evaluation `20261026T083612Z_evaluation_a724c16c` |
 
 Với Positive là lớp dương:
 
@@ -698,7 +715,7 @@ Không lấy mức cao nhất của đường test sensitivity làm một cột 
 Đó là bằng chứng cần thảo luận overfitting, không thể kết luận “không overfit” chỉ vì test accuracy trên 80%.
 
 Accuracy chỉ quan tâm argmax đúng hay sai; cross-entropy còn xét mức xác suất gán cho lớp đúng. Một prediction sai có probability sai rất cao có thể tăng loss mạnh hơn nhiều prediction sai nhưng do dự. Các ví dụ test sai confidence cao phù hợp với nhu cầu khảo sát calibration, nhưng không trực tiếp giải thích từng đóng góp loss validation.
-Validation per-example probabilities chưa có trong run cũ nên không xác định chính xác mẫu nào làm loss tăng ở epoch 3.
+Selection mới đã bổ sung validation probabilities của checkpoint được chọn ở epoch 3. Tuy nhiên, không có probability/loss từng mẫu của cả epoch 2 và epoch 3 trong cùng điều kiện để phân rã chính xác mẫu nào làm validation loss tăng giữa hai epoch; không suy ra kết luận đó từ một snapshot cuối.
 
 Một phương án nghiên cứu tiếp là thay số epochs, weight decay hoặc checkpoint criterion theo một protocol validation định trước. Không chạy nhiều cấu hình rồi dùng test để chọn cấu hình tốt nhất mà vẫn gọi test là độc lập. Một seed chưa đủ đo độ ổn định của điểm accuracy hoặc kết luận lợi ích nhỏ có ý nghĩa thống kê.
 Các kết luận hiện hành chỉ áp dụng trực tiếp cho run và điều kiện được mô tả.
@@ -713,9 +730,9 @@ Tên hình, metadata split và văn bản xung quanh phải làm sự khác bi�
 
 | Câu hỏi | Nguồn dữ liệu hợp lệ | Trạng thái với run lịch sử |
 |---|---|---|
-| Threshold nào được chọn để deploy? | Validation scores/labels | Chưa có records validation để xác nhận |
+| Threshold nào được chọn để vận hành? | Validation scores/labels | 0,8 theo validation Macro F1; có scores/policy và weights SHA256 |
 | Model trade-off FP/FN ra sao trên test? | Test scores, descriptive only | Có thể khảo sát từ records đã lưu |
-| Threshold validation có cải thiện test không? | Ngưỡng cố định từ validation rồi test | Chưa có kết quả mới để khẳng định |
+| Threshold validation thay test thế nào? | Ngưỡng cố định từ validation rồi test | Accuracy +1 mẫu; Macro F1 +0,0763 điểm %, Binary F1 giảm |
 | Vì sao lỗi test confidence cao? | Score diagnostics và đọc câu | Có ví dụ; nguyên nhân nội tại chưa được chứng minh |
 
 Mục tiêu bổ sung sweep là làm rõ decision rule, không bảo đảm luôn tăng F1 hoặc accuracy. Một threshold validation khác 0,5 có thể kém hơn trên test do biến thiên hữu hạn mẫu. Khi đó vẫn giữ kết quả và protocol thay vì quay lại chọn threshold tốt hơn trên test.
@@ -737,7 +754,7 @@ AP khoảng 0,9269 cho thấy xếp hạng Positive hữu ích so với mốc pr
 | NLL tái tính từ scores | 0,5442964 | NLL sau normalize probability rows, không phải Trainer test loss gốc |
 
 Brier của dự đoán probability hằng 0,5 là 0,25; model có Brier thấp hơn mốc đó trên test quan sát được. Không dùng riêng Brier/ECE để kết luận model sẽ được hiệu chuẩn giống vậy ở mọi phân bố triển khai. NLL tái tính dùng xác suất float32 đã export, có chuẩn hóa tổng từng hàng để loại sai số làm tròn; tên và preprocessing được ghi trong JSON.
-Cột “Test loss” của run GPU gốc vẫn là not logged, tránh ghép một metric hậu nghiệm vào log nguyên thủy.
+Cột “Test loss” của run GPU gốc vẫn là not logged. Scalar loss **0,5442678** của lần checkpoint reevaluation được lưu ở run evaluation mới; không ghép nó vào log nguyên thủy. Loss mới và NLL tái tính **0,5442964** dùng hai đường tính số gần tương đương về ý nghĩa, nhưng không được đồng nhất nguồn hoặc precision.
 
 ### 3.7.2. Đọc probability distribution và reliability diagram
 
@@ -761,8 +778,83 @@ Phương án calibration trong tương lai cần một tập fitting khác test,
 Panel trái mô tả Accuracy, Macro F1 và Binary F1 trên grid; panel phải thể hiện Precision, Recall, Specificity và FPR. Recall giảm khi threshold tăng vì Positive decision trở nên khắt khe hơn; Specificity tăng, FPR giảm. Các đường Accuracy/F1 gần nhau ở vùng giữa nhưng có biến thiên theo từng điểm dữ liệu, không xác định một threshold tối ưu phổ quát.
 Không có vạch selected threshold vì `selection_performed=false`; chỉ có đường reference 0,5.
 
-Hình cung cấp trực quan hóa quét ngưỡng theo yêu cầu binary, đồng thời công khai rằng nguồn là test descriptive. Một threshold tốt nhất trên hình này không được đưa vào `decision_threshold.json` để nâng score test đã công bố. Để chọn ngưỡng thật, chạy `scripts/select_threshold.py` sau khi khôi phục model, tạo run validation selection riêng rồi dùng policy qua `--threshold-file`.
+Hình cung cấp trực quan hóa độ nhạy ngưỡng, đồng thời công khai nguồn là test descriptive. Không lấy điểm tốt nhất trên hình này để ghi vào `decision_threshold.json`. Threshold thực tế 0,8 đến từ run selection validation riêng trình bày tiếp theo; eval/infer nhận đúng policy qua `--threshold-file`.
 Do benchmark test đã được quan sát, một nhánh mới trên cùng dữ liệu vẫn phải được mô tả là exploratory development; confirmatory evaluation cần thiết kế held-out phù hợp từ trước.
+
+### 3.7.4. Kết quả validation sweep đã thực thi và policy đóng băng
+
+![Validation threshold sweep and selected operating point](outputs/runs/20261026T083558Z_threshold_selection_b64cf564/validation_threshold/threshold_curves.png)
+
+Khác với hình test descriptive ở trên, hình này dùng scores của **validation** sau khi tải lại checkpoint. Vạch 0,8 là ngưỡng thực sự được chọn theo objective đã chốt. Hai panel cho thấy vì sao phải đọc đồng thời F1 và Recall: dịch ngưỡng sang phải khiến việc gọi một review là Positive khắt khe hơn.
+Các điểm cùng nằm trên một đường là những quyết định khác nhau của cùng model; chúng không đại diện 19 mô hình được train riêng.
+
+| Metric validation | Reference threshold 0,5 | Selected threshold 0,8 |
+|---|---:|---:|
+| Accuracy | 84,3340% | 85,2720% |
+| Macro F1 — objective chọn | 84,3279% | **85,2663%** |
+| Binary Precision | 83,0325% | 86,7188% |
+| Binary Recall | 86,3039% | 83,3021% |
+| Binary F1 | 84,6366% | 84,9761% |
+| Specificity | 82,3640% | 87,2420% |
+| FPR | 17,6360% | 12,7580% |
+| TN / FP | 439 / 94 | 465 / 68 |
+| FN / TP | 73 / 460 | 89 / 444 |
+| Số mẫu đúng / tổng | 899 / 1.066 | 909 / 1.066 |
+
+Validation có thêm **10 dự đoán đúng**, Accuracy tăng khoảng **0,9381 điểm phần trăm** và Macro F1 tăng **0,9385 điểm phần trăm**. Giảm 26 FP đi kèm tăng 16 FN; objective Macro F1 của hai lớp tăng trong mẫu validation này. Điều đó giải thích quyết định chọn 0,8 mà không cần đọc test để chọn lại.
+Không gọi 0,8 là một hằng số phù hợp mọi sentiment model hoặc mọi dataset; nó thuộc checkpoint và validation cụ thể.
+
+`decision_threshold.json` lưu selection metric, split, grid, tie-break, validation sample count và identity của checkpoint. Khi eval/infer đọc policy, chúng áp quy tắc `p_positive >= threshold` và bảo toàn metadata lựa chọn. Chỉ chép một con số 0,8 vào notebook sẽ làm mất bằng chứng vì sao và từ đâu con số đó được chọn.
+Các bảng trong phần này có thể tính lại từ `validation_predictions.json`; không suy ngược từ metrics tổng hợp cũ.
+
+### 3.7.5. Đánh giá test sau khi tải checkpoint và cố định threshold
+
+![Test confusion matrix at validation-selected threshold 0.8](outputs/runs/20261026T083612Z_evaluation_a724c16c/test_threshold/confusion_matrix.png)
+
+Run evaluation diễn ra sau selection và nhận policy 0,8 đã đóng băng. Nó tải `best_model/`, tokenize full official data và predict 1.066 mẫu test, lưu cả baseline argmax lẫn nhãn theo policy. Argmax tái đánh giá khớp metrics training run gốc, giúp kiểm tra checkpoint phục hồi không bị đổi thành model khác.
+Không có bước huấn luyện bổ sung trong run này.
+
+| Test metric | Argmax baseline | Validation-selected 0,8 | Chênh lệch theo điểm phần trăm |
+|---|---:|---:|---:|
+| Accuracy | 83,9587% | **84,0525%** | +0,0938 |
+| Macro F1 | 83,9580% | **84,0343%** | +0,0763 |
+| Binary Precision | 83,5185% | **86,5191%** | +3,0006 |
+| Binary Recall | **84,6154%** | 80,6754% | -3,9400 |
+| Binary F1 | **84,0634%** | 83,4951% | -0,5682 |
+| Specificity | 83,3021% | **87,4296%** | +4,1276 |
+| FPR | 16,6979% | **12,5704%** | -4,1276 |
+| Đúng / sai | 895 / 171 | 896 / 170 | Thêm 1 mẫu đúng |
+
+| Nhãn thật / dự đoán tại 0,8 | Negative | Positive | Tổng hàng |
+|---|---:|---:|---:|
+| Negative | 466 | 67 | 533 |
+| Positive | 103 | 430 | 533 |
+| Tổng cột | 569 | 497 | 1.066 |
+
+Ở threshold 0,8, **22 Negative** từng bị gọi Positive đã chuyển thành đúng, trong khi **21 Positive** từng đúng bị chuyển thành Negative sai. Tổng 43 quyết định thay đổi nhưng chỉ tăng một mẫu đúng. Vì threshold tăng, các thay đổi đều theo hướng Positive→Negative; kết quả là đánh đổi giữa hai loại lỗi chứ không có thêm thông tin từ weights.
+Không mô tả chênh lệch một mẫu là cải thiện lớn hoặc có ý nghĩa thống kê đã được chứng minh.
+
+Precision Positive tăng vì tập được dự đoán Positive còn 497 mẫu và ít FP hơn. Recall Positive giảm vì 103 trong 533 Positive bị bỏ sót. Binary F1 giảm dù Macro F1 tăng nhẹ, bởi Macro F1 còn tính F1 của lớp Negative; hai objective trả lời hai câu hỏi khác nhau.
+Nếu ứng dụng cần tìm đủ review tích cực, mất gần 3,94 điểm Recall có thể không phù hợp; đó là lý do phải thống nhất objective và chi phí lỗi trước khi triển khai.
+
+### 3.7.6. Loss, runtime và suy luận cùng policy
+
+| Đo lường sau checkpoint reload | Giá trị | Nguồn |
+|---|---:|---|
+| Test loss đo bằng Trainer | **0,5442677736** | Evaluation `test_runtime_metrics.json` |
+| Test runtime | **1,6827 giây** | Cùng run, Tesla T4 |
+| Test samples/s | 633,519 | 1.066 mẫu trong lượt predict này |
+| Test steps/s | 20,206 | 34 batches ở cấu hình evaluation |
+| NLL từ saved test probabilities | 0,5442964394 | Analysis offline, normalized saved probabilities |
+| Test loss của run train 25/10 | Not logged | Không sửa raw file để thêm loss mới |
+
+Cross-entropy/NLL sử dụng probability của lớp thật, không sử dụng threshold biến score thành nhãn. Vì vậy test loss trong evaluation không phải một loss mới được tối ưu riêng cho ngưỡng 0,8. Runtime là thời gian predict trong lượt này; không cộng nhầm nó thành train runtime 95,9321 giây hoặc cam kết tốc độ mọi GPU đều giống nhau.
+Chênh lệch nhỏ giữa measured loss và reconstructed NLL được giữ nguyên theo nguồn; không làm tròn rồi tuyên bố hai phép thực thi có cùng bytes hoặc cùng precision.
+
+![Inference with the frozen validation-selected policy](outputs/runs/20261026T083627Z_inference_0ed240e2/inference.png)
+
+Run inference dùng câu “The acting was excellent, but the story was disappointing.” và policy 0,8. Model gán `P(Positive)=0,0066675888`, nên cả argmax lẫn policy đều trả Negative, confidence predicted class khoảng **0,9933324**. Output ghi `argmax_label`, `decision_threshold` và `threshold_selection_split=validation` để phân biệt model score với rule quyết định.
+Một câu inference minh họa việc sử dụng policy; chất lượng tổng thể vẫn dựa vào toàn bộ test evaluation phía trên.
 
 ### 3.8. Phân tích định tính: mẫu đúng và mẫu sai
 
@@ -794,8 +886,8 @@ Giữ mức chắc chắn phù hợp giúp báo cáo có thể bảo vệ khi đ
 Bốn lỗi confidence cao riêng lẻ không đủ kết luận toàn model không được hiệu chuẩn. Phân tích bổ sung trên toàn bộ test đã tính top-label ECE 10 bins và Brier score, cung cấp bằng chứng tổng hợp về overconfidence ở chính tập quan sát này. Ngay cả khi có diagnostic trên test, việc học calibration transformation vẫn phải dùng tập khác để tránh leakage.
 Không dùng nhãn test để fit một mapping calibration rồi báo lại cùng test như kết quả khách quan.
 
-Test loss gốc chưa được log và full-test evaluation sau checkpoint reload chưa được ghi nhận. Không có dữ liệu peak VRAM hay energy consumption để định lượng hiệu quả tài nguyên sâu hơn runtime đã ghi. Chưa có nhiều seeds hoặc confidence interval để đánh giá biến thiên sampling/training.
-Các giới hạn này được đưa vào báo cáo để không biến phần chưa làm thành tuyên bố hoàn thành.
+Test loss của lần training gốc vẫn chưa được log; khoảng trống full-test reload đã được giải quyết bằng run evaluation mới, có measured test loss 0,5442678 và policy validation 0,8. Weights không nằm trong Git nên việc rà soát checkout không đồng nghĩa đã tự chạy checkpoint tại máy rà soát. Không có peak VRAM hay energy consumption, nhiều seeds hoặc confidence interval để lượng hóa độ ổn định và ý nghĩa thống kê của mức tăng một mẫu đúng.
+Những giới hạn còn lại được nêu đúng phạm vi; không giữ một trạng thái pending đã được artifacts mới giải quyết, cũng không biến audit predictions thành thực thi model mới.
 
 ### 3.10. Decision Traceability về Mục 1.0
 
@@ -806,10 +898,10 @@ Các giới hạn này được đưa vào báo cáo để không biến phần 
 | Trainer API (D05) | Tự viết loop hay dùng hệ sinh thái đề bài? | Trainer/TrainingArguments chung CLI/notebook | Source và history |
 | Dynamic padding (D04) | Giảm padding thừa mà giữ labels ra sao? | DataCollatorWithPadding | Tests và token distribution |
 | Best checkpoint (D05) | Chọn ở đâu, theo metric nào? | Validation accuracy mỗi epoch | Epoch 3 là best accuracy |
-| Threshold sweep (D08–D10) | Binary decision được lựa chọn thế nào? | Chọn trên validation, freeze trước test | Run lịch sử thiếu validation scores |
+| Threshold sweep (D08–D10) | Binary decision được lựa chọn thế nào? | 19 điểm validation, freeze 0,8 trước evaluation | Selection run có 1.066 scores, policy và weights identity |
 | Notebook trực quan (D07) | Làm sao đọc được toàn flow? | Roadmap, module refs, bảng/hình hiển thị | Notebook output và artifacts |
 | Artifact persistence (D11–D12) | Kết quả có sống ngoài kernel không? | Lưu bảng/hình/metadata dưới outputs | Manifest và source run ID |
-| Weights ngoài Git (D13) | Giữ repo nhẹ thế nào? | ZIP riêng, Git giữ bằng chứng nhẹ | Hash weights; không có public URL được xác minh |
+| Weights ngoài Git (D13) | Giữ repo nhẹ thế nào? | ZIP riêng, Git giữ bằng chứng nhẹ | Hash weights; full-test reload có artifacts Kaggle, máy audit không có weights |
 
 Các quyết định này thống nhất cách hiểu đề và các yêu cầu bổ sung. Không phát sinh một bảng benchmark mới từ dữ liệu không có trong artifacts. Khi thay một quyết định trong tương lai, config và report cần ghi rõ thay đổi qua data/preprocess/model/training/evaluation.
 Điều đó giúp lịch sử thí nghiệm giữ được khả năng diễn giải thay vì chỉ thêm các folder output.
@@ -836,20 +928,71 @@ Các bước thu hồi ZIP từ Kaggle là thao tác lưu trữ, không phải t
   --model-path labs/lab03/outputs/runs/20261025T181550Z_finetuning_e02bced7/best_model
 ```
 
-Run `threshold_selection` mới giữ validation predictions, sweep và `decision_threshold.json` của riêng nó. Sau đó truyền đường dẫn policy này cho `eval.py` hoặc `infer.py` bằng `--threshold-file`; không chép một test diagnostic JSON vào vị trí policy. Nếu weights không tồn tại hoặc policy không hợp lệ, chương trình phải báo lỗi thay vì tự thay bằng model chưa fine-tune.
+Run `threshold_selection` giữ validation predictions, sweep và `decision_threshold.json` riêng. Policy đã thực thi trong bài là file của selection `20261026T083558Z_threshold_selection_b64cf564`. Truyền đúng policy này khi đánh giá hoặc suy luận checkpoint đã khôi phục:
+
+```bash
+.venv-lab03/bin/python labs/lab03/scripts/eval.py \
+  --model-path labs/lab03/outputs/runs/20261025T181550Z_finetuning_e02bced7/best_model \
+  --threshold-file labs/lab03/outputs/runs/20261026T083558Z_threshold_selection_b64cf564/decision_threshold.json
+
+.venv-lab03/bin/python labs/lab03/scripts/infer.py \
+  --model-path labs/lab03/outputs/runs/20261025T181550Z_finetuning_e02bced7/best_model \
+  --threshold-file labs/lab03/outputs/runs/20261026T083558Z_threshold_selection_b64cf564/decision_threshold.json \
+  --text "The acting was excellent, but the story was disappointing."
+```
+
+Không chép test diagnostic JSON vào vị trí policy. Nếu weights thiếu, SHA256 khác hoặc policy không hợp lệ, chương trình báo lỗi; không tự thay bằng backbone chưa fine-tune. Chạy lại các lệnh này tạo run mới và có thể có sai khác floating point nhỏ theo thiết bị/runtime, dù giữ nguyên weights và protocol.
 
 Muốn inference/eval lại checkpoint lịch sử, khôi phục `best_model/` đúng run từ ZIP Kaggle đã giữ riêng. SHA256 `model.safetensors` kỳ vọng là `5a63c9c2a6391132c86b0e6c08277cc23ccc692dd080b78ba2db074225bb5105`. Git hiện không có URL checkpoint công khai đã được xác minh; không thể cam kết clone repo là đủ để chạy inference từ model đã fine-tune.
 Model sentiment SST-2 của Exercise 1 vẫn có thể tải từ Hub theo cấu hình công khai khi cần minh họa inference mới.
+
+### 3.11.1. Bản trình bày bổ sung từ bằng chứng đã kiểm toán
+
+Run phân tích `20261026T124315Z_threshold_analysis_8bc30b27` không thực thi lại model. Nó đọc ba run Kaggle bổ sung, kiểm tra 32 SHA256 và tính lại grid validation, test metrics, confusion matrices và loss từ probabilities. Các hình so sánh được xuất từ chính những bản ghi đã kiểm chứng; không tạo dự đoán tổng hợp.
+
+![Validation metrics before and after selection](outputs/runs/20261026T124315Z_threshold_analysis_8bc30b27/validation_comparison.png)
+
+Validation được dùng để chọn; hình này giải thích vì sao policy ưu tiên 0,8 theo Macro F1. Nó không phải đồ thị test và không cần nhìn test để xác định điểm chọn.
+
+![Test metrics under fixed policies](outputs/runs/20261026T124315Z_threshold_analysis_8bc30b27/test_comparison.png)
+
+Trên test, Precision tăng nhưng Recall và Binary F1 giảm. Chênh lệch rất nhỏ về Accuracy/Macro F1 cần được đọc cùng số lỗi thay đổi; không dùng trục biểu đồ cắt sát metric để thổi phồng lợi ích.
+
+![Confusion matrices under the same scale](outputs/runs/20261026T124315Z_threshold_analysis_8bc30b27/confusion_comparison.png)
+
+Hai confusion matrices có cùng thang màu 0–1 và cùng support 533 mỗi lớp. Độ đậm của ô TN tăng và ô TP giảm biểu hiện chính xác hướng đánh đổi do nâng threshold.
+
+![Counts of correct decisions and errors](outputs/runs/20261026T124315Z_threshold_analysis_8bc30b27/error_tradeoff.png)
+
+Từ 895 lên 896 mẫu đúng là kết quả ròng của 22 lỗi FP được sửa và 21 FN mới phát sinh. Không được chỉ chọn các mẫu được sửa để trình bày như threshold luôn có lợi.
+
+![Per-class operating metrics](outputs/runs/20261026T124315Z_threshold_analysis_8bc30b27/per_class_comparison.png)
+
+Bảng lưu đủ Precision, Recall/TPR, F1, FPR và support cho từng lớp ở cả hai quyết định. TPR Negative tăng đồng thời TPR Positive giảm; chọn policy thực tế phải dựa trên chi phí lỗi của ứng dụng.
+
+![Examples changed by the policy](outputs/runs/20261026T124315Z_threshold_analysis_8bc30b27/changed_predictions.png)
+
+Ví dụ “a handsome but unfulfilling suspense drama…” có nhãn Negative nhưng argmax Positive với P(Positive) khoảng 0,59158; threshold 0,8 sửa thành Negative. Trái lại, “red dragon never cuts corners” có nhãn Positive và P(Positive) khoảng 0,75294, bị policy mới chuyển thành Negative sai. Hai trường hợp minh họa cùng vùng quyết định có cả lợi và hại.
+
+![Operating points on ranking curves](outputs/runs/20261026T124315Z_threshold_analysis_8bc30b27/operating_points.png)
+
+ROC và PR dùng probabilities của evaluation sau reload. Hai điểm chỉ là hai policy cố định trên cùng scores; không fit thêm weights, không chọn lại ngưỡng trên test. Ranking của model không thay đổi khi chỉ thay threshold.
+
+![Recorded inference result](outputs/runs/20261026T124315Z_threshold_analysis_8bc30b27/inference_result.png)
+
+Inference dùng policy có checkpoint identity trùng nguồn selection. Câu tương phản có P(Positive) thấp hơn nhiều cả hai ngưỡng nên kết quả không đổi. Cần phân biệt khả năng tái lập quyết định của một câu với khả năng tổng quát hóa trên một tập mới.
+
+Mọi bảng hiển thị có nguồn `tables.json`; toàn bộ kết luận và nguồn run ở `summary.json`, chi tiết kiểm toán ở `threshold_audit.json`. Các notebook đã thực thi có bản sao trong run `notebook_render`, vì output cell cũng là artifact cần thu hồi. Chạy lại phân tích tạo/cache run theo manifest và code hash, giữ nguyên bytes evidence Kaggle ban đầu.
 
 ### 3.12. Kết luận
 
 Lab03 thực hiện đủ hai bài trong đề gốc bằng một pipeline có thể kiểm tra từ text đến quyết định và artifacts. Exercise 1 làm rõ tokenizer, tensor, pipeline và manual forward trên pretrained sentiment model. Exercise 2 fine-tune DistilBERT với full official Rotten Tomatoes, chọn checkpoint bằng validation và đánh giá 1.066 mẫu test độc lập với lựa chọn đó.
 Kết quả hiện hành Accuracy 83,9587%, Binary F1 84,0634%, Macro F1 83,9580% được truy vết đến đúng run và toàn bộ prediction records.
 
-Đóng góp của phần trình bày mở rộng là kết nối mỗi phase với source/module, tăng bảng/hình có giải thích và bảo toàn output dưới dạng artifacts. Phần binary threshold được đặt trong protocol lựa chọn hợp lệ: validation chọn operating point, test chỉ đánh giá sau khi threshold đã cố định. Với run lịch sử chưa có validation probabilities, giới hạn đó được ghi rõ thay vì suy ra một selected threshold từ test.
-Các diagnostics đã tính lại từ test scores là bằng chứng mô tả của model hiện hành, không phải một benchmark threshold-optimized mới.
+Đóng góp của phần trình bày mở rộng là kết nối mỗi phase với source/module, tăng bảng/hình có giải thích và bảo toàn output dưới dạng artifacts. Phần binary threshold đã có kết quả thật: phục hồi đúng checkpoint, chọn 0,8 bằng Macro F1 của validation, rồi đánh giá full test với policy đã cố định. Test tại policy này đạt Accuracy 84,0525%, Macro F1 84,0343%, Binary F1 83,4951% và measured loss 0,5442678; tăng một mẫu đúng nhưng đánh đổi 22 FP giảm với 21 FN tăng.
+Các diagnostics test vẫn giữ vai trò mô tả; không dùng chúng để chọn lại ngưỡng nhằm nâng kết quả đã công bố.
 
-Kết quả cho thấy pretrained Transformer có thể học bài phân loại sentiment với ngân sách thực hành vừa phải, đồng thời vẫn sai ở các câu pha trộn sắc thái hoặc mỉa mai. Dấu hiệu overfitting cuối training và các lỗi tự tin cao nhấn mạnh việc đọc learning curves, confusion matrix và probability diagnostics cùng nhau. Nhiều seeds, validation-score recovery, full-test reload và calibration fitting trên tập riêng là các bước tiếp theo có thể bổ sung bằng thực nghiệm thật.
-Báo cáo giữ nguyên giới hạn bằng chứng để phần triển khai, phần kiểm thử và phần kết luận khoa học không bị đánh đồng.
+Kết quả cho thấy pretrained Transformer có thể học sentiment với ngân sách thực hành vừa phải, đồng thời vẫn sai ở các câu pha trộn sắc thái hoặc mỉa mai. Validation-score recovery và full-test reload hiện đã hoàn tất trên Kaggle mà không train lại; ba run mới bổ sung lựa chọn, đánh giá và sử dụng policy. Dấu hiệu overfitting, overconfidence và lợi ích test rất nhỏ của threshold cho thấy cần đọc nhiều loại bằng chứng cùng nhau.
+Nhiều seeds, kiểm toán leakage nội dung, calibration fitting trên tập riêng và xác nhận trên held-out chưa quan sát là các hướng tiếp theo; chúng chưa được suy ra là hoàn thành từ unit tests hoặc từ một run GPU.
 
 Policy threshold của phiên mở rộng gắn `checkpoint_identity` bằng SHA256 weights. Eval/infer từ chối policy của checkpoint khác; inference cũng lưu bản policy đầy đủ để giữ criterion, tie-break và nguồn validation khi tách artifacts khỏi máy train.

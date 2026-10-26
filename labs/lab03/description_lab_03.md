@@ -113,14 +113,14 @@ Các phần bổ sung phải phục vụ giải thích bài và truy vết kết
 **Thảo luận:** dùng test để chọn threshold làm test trở thành tập tuning.
 **Quyết định:** lưu threshold đã chọn trong `decision_threshold.json`, cố định quyết định, rồi đánh giá test tại ngưỡng đó.
 **So sánh:** giữ metrics argmax gốc và metrics tại threshold validation chọn thành hai nhóm riêng; mốc sweep 0,5 dùng quy tắc >= được lưu riêng khi cần đối chiếu boundary.
-**Báo cáo:** không gọi threshold mới tốt hơn trước khi có kết quả đo; không đổi checkpoint theo test sau bước threshold.
+**Báo cáo:** giữ cả lợi ích và đánh đổi khi đã đo: threshold 0,8 thêm một mẫu test đúng, giảm FP nhưng giảm Recall/Binary F1; không đổi checkpoint hay chọn lại threshold theo test.
 
-### D10 — Run Kaggle cũ có đủ dữ liệu để chọn threshold không?
+### D10 — Hoàn tất khoảng trống validation của run lịch sử thế nào?
 
-**Thảo luận:** run đã nhập có `all_predictions.json` của test nhưng không có xác suất validation đầy đủ.
-**Quyết định:** không bịa kết quả validation sweep và không chọn threshold từ test để điền chỗ thiếu.
-**Đường hoàn tất:** khôi phục checkpoint và tính validation scores, hoặc thực hiện run mới có lưu validation predictions.
-**Phân tích được phép:** ROC/PR, calibration, phân bố xác suất và test threshold sensitivity dùng để mô tả run cũ; test sensitivity không trả về một ngưỡng được chọn.
+**Thảo luận:** run train gốc chỉ lưu xác suất test và metrics validation tổng hợp, không đủ để phục dựng validation sweep.
+**Quyết định:** khôi phục đúng checkpoint trên Kaggle, dự đoán toàn bộ validation thật rồi tạo selection run riêng; không bịa scores hoặc dùng test để chọn threshold.
+**Đã thực thi:** `20261026T083558Z_threshold_selection_b64cf564` lưu 1.066 validation records, chọn 0,8 theo Macro F1 0,8526632715 và gắn SHA256 weights trùng run train gốc.
+**Ranh giới:** test sensitivity vẫn là descriptive; test đã quan sát trong phát triển nên phiên mở rộng không được gọi là một blind confirmatory experiment mới.
 
 ### D11 — Những output nào phải thành artifact?
 
@@ -132,7 +132,7 @@ Các phần bổ sung phải phục vụ giải thích bài và truy vết kết
 ### D12 — Các hình mở rộng cần giải thích điều gì?
 
 **Thảo luận:** năm hình ban đầu chưa đủ cho vai trò threshold và phân tích nhị phân.
-**Quyết định:** bổ sung ROC/PR, reliability/calibration, phân bố xác suất theo nhãn, phân bố lớp và độ dài review, panel metrics theo lớp và đường sensitivity theo threshold.
+**Quyết định:** bổ sung ROC/PR, reliability/calibration, phân bố xác suất theo nhãn, phân bố lớp/độ dài review, metrics theo lớp, validation sweep và hình so sánh operating point test 0,5/0,8.
 **Lý do:** mỗi hình trả lời một câu hỏi cụ thể về khả năng phân biệt, confidence, lỗi lớp và chi phí operating point.
 **Giới hạn:** review length có thể được đo bằng số từ hoặc ký tự từ text đã lưu; không gọi đó là token length nếu chưa chạy tokenizer.
 
@@ -140,8 +140,8 @@ Các phần bổ sung phải phục vụ giải thích bài và truy vết kết
 
 **Thảo luận:** weights lớn vượt giới hạn Git thông thường và làm repository tăng kích thước.
 **Quyết định:** Git giữ source, config, notebook có output và artifacts nhẹ; checkpoint được lưu riêng trong ZIP Kaggle của người thực hiện.
-**Truy vết:** giữ SHA256 weights trong manifest; không coi file không có mặt là đã kiểm tra tại máy rà soát.
-**Khôi phục:** cần `best_model/` đúng run khi chạy inference hoặc đánh giá lại checkpoint.
+**Truy vết:** giữ SHA256 weights trong manifest và policy; không coi file không có mặt là đã kiểm tra tại máy rà soát.
+**Đã khôi phục:** run evaluation Kaggle `20261026T083612Z_evaluation_a724c16c` tải đúng `best_model/` và chạy lại toàn test; Git giữ predictions, measured loss và runtime để rà soát, không giữ weights.
 
 ### D14 — Độ đầy đủ của báo cáo được xác nhận bằng gì?
 
@@ -202,18 +202,43 @@ Không ghi đè predictions, metrics hoặc manifest của run lịch sử khi t
 Manifest gốc có thể liệt kê weights không commit; audit phải báo rõ thiếu có chủ đích.
 File ZIP tải kết quả chỉ là tiện ích lưu trữ, không phải nội dung thuật toán bắt buộc của bài nộp.
 
-## 7. Bằng chứng hiện có và phần mở rộng cần thực thi
+## 7. Bằng chứng thực nghiệm và trạng thái hoàn tất
 
-Run Kaggle hiện hành: `20261025T181550Z_finetuning_e02bced7`.
-Run này dùng đủ official splits, ba epochs và 1.602 optimizer steps.
-Accuracy test được ghi là **83,9587%**, Binary F1 **84,0634%**, Macro F1 **83,9580%**.
-Các kết quả này thuộc operating point gốc; không tự đổi nhãn thành kết quả threshold tuning mới.
-Test loss chưa được evaluator gốc ghi lại; train loss và validation loss không được dùng thay thế.
+Run fine-tuning gốc là `20261025T181550Z_finetuning_e02bced7`.
+Run dùng đủ official splits, ba epochs và 1.602 optimizer steps; không train thêm trong phiên threshold.
+Test argmax gốc đạt **83,9587% Accuracy**, **84,0634% Binary F1**, **83,9580% Macro F1**, đúng 895/1.066 mẫu.
+Test loss không được evaluator của run train gốc ghi lại; không sửa file lịch sử để điền một số đo của phiên khác.
 
-Run cũ có test probabilities nên có thể tạo các diagnostics mô tả và kiểm tra lại metrics.
-Run cũ thiếu đầy đủ validation probabilities, nên không đủ bằng chứng để công bố validation threshold tối ưu.
-Tính năng sweep mới phải được kiểm thử và tích hợp vào luồng train/eval, nhưng kết quả thực nghiệm chỉ được khẳng định sau khi có score validation thật.
-Bằng chứng reload Kaggle hiện có xác nhận exact weights và một ví dụ inference; không tương đương full-test reevaluation sau reload.
+| Bước đã chạy | Run / nguồn | Bằng chứng chính |
+|---|---|---|
+| Validation selection | `20261026T083558Z_threshold_selection_b64cf564` | 1.066 validation predictions, grid 19 điểm, policy 0,8, checkpoint identity |
+| Full-test checkpoint reevaluation | `20261026T083612Z_evaluation_a724c16c` | 1.066 test predictions, metrics argmax/policy, measured loss và runtime |
+| Inference có policy | `20261026T083627Z_inference_0ed240e2` | Probability, nhãn, threshold và metadata nguồn validation |
+| Diagnostics dẫn xuất | `20261026T080403Z_analysis_7b9e92eb` | ROC/PR, calibration, probability distribution, test sensitivity descriptive |
+
+Validation Macro F1 tại 0,5 là **0,8432787665**; tại ngưỡng được chọn 0,8 là **0,8526632715**.
+Validation Accuracy tăng từ **0,8433395872** lên **0,8527204503**, thêm 10 mẫu đúng.
+Cách chọn đã chốt trước evaluation: tối đa validation Macro F1, hòa thì gần 0,5, tiếp tục hòa thì threshold nhỏ hơn.
+Policy ghi split, objective, grid, sample count và weights SHA256; eval/infer kiểm tra identity trước khi áp dụng.
+
+| Test operating point | Accuracy | Binary Precision | Binary Recall | Binary F1 | Macro F1 |
+|---|---:|---:|---:|---:|---:|
+| Argmax gốc | 83,9587% | 83,5185% | 84,6154% | 84,0634% | 83,9580% |
+| Validation-selected 0,8 | 84,0525% | 86,5191% | 80,6754% | 83,4951% | 84,0343% |
+
+Test tại 0,8 có **TN 466, FP 67, FN 103, TP 430**: đúng 896/1.066 mẫu.
+So với argmax, FP giảm 22 nhưng FN tăng 21; Accuracy tăng một mẫu, Macro F1 tăng khoảng 0,0763 điểm phần trăm, Binary F1 giảm khoảng 0,5682 điểm phần trăm.
+Không kết luận đây là cải thiện lớn, có ý nghĩa thống kê hoặc phù hợp mọi chi phí ứng dụng.
+Threshold 0,8 được giữ vì protocol validation, không chọn lại từ đường test sensitivity.
+
+Checkpoint reevaluation ghi **test loss 0,5442677736**, runtime **1,6827 giây**, throughput **633,519 mẫu/giây** trên Tesla T4.
+Đây là loss đo thật sau reload, tách với **NLL 0,5442964394** tái tính offline từ saved probabilities và trạng thái **not logged** của run train gốc.
+Threshold chỉ đổi quyết định thành nhãn; nó không thay cross-entropy của cùng probability records.
+Kết quả argmax sau reload khớp metrics gốc, còn weights SHA256 trong policy khớp manifest training run.
+
+Inference cùng policy trả Negative cho “The acting was excellent, but the story was disappointing.”, confidence **0,9933324**, `P(Positive)=0,0066675888`.
+Bằng chứng full-test reload đã có trong artifacts Kaggle; checkpoint vẫn không nằm trong Git nên không tuyên bố máy rà soát đã tự chạy lại full model tại chỗ.
+Bản báo cáo giữ test diagnostics descriptive và không gọi phiên mở rộng là blind test mới sau khi benchmark đã được quan sát.
 
 ## 8. Điều kiện nghiệm thu
 
@@ -224,15 +249,16 @@ Bằng chứng reload Kaggle hiện có xác nhận exact weights và một ví 
 | Notebook | Roadmap đầu bài, module tham chiếu, giải thích và hình | Thực thi toàn bộ notebook ở view; kiểm tra links |
 | Artifact | Mọi output tính toán có file trong `outputs/` | Đối chiếu bảng/hình với thư mục dẫn xuất |
 | Training | Cùng workflow giữa notebook và CLI | Tests, history và config snapshot |
-| Threshold | Chọn trên validation, tie-break xác định | Unit tests và decision metadata |
-| Test isolation | Test không được truyền vào hàm chọn threshold | Guard split, code review và tests |
+| Threshold | Chọn trên validation, tie-break xác định | Đã có 1.066 validation scores, policy 0,8 và selection metadata |
+| Test isolation | Test không được truyền vào hàm chọn threshold | Guard split, code review, tests; selection trước evaluation riêng |
+| Checkpoint reload | Toàn test được đo sau khi tải weights đúng identity | Đã có evaluation run, predictions, test loss và runtime; weights ngoài Git |
 | Trình bày | Walkthrough đủ chiều sâu, khoảng 700 dòng trở lên | Rà soát nội dung, số dòng và nguồn số liệu |
 | Tính trung thực | Phân biệt measured, derived, pending và not logged | Báo cáo/metadata không mâu thuẫn |
 | Git | Source, notebook có output, artifacts nhẹ; không weights/cache | Checklist pre-commit và staged diff |
 
 Hoàn tất phần mềm và hoàn tất bằng chứng thực nghiệm là hai trạng thái cần ghi riêng.
 Không đánh dấu threshold validation đã đo chỉ vì unit test trên dữ liệu giả lập đã pass.
-Không đánh dấu checkpoint đã được tái đánh giá toàn test chỉ vì đã kiểm tra một câu.
+Không đánh dấu checkpoint đã được tái đánh giá toàn test chỉ vì đã kiểm tra một câu; trạng thái hoàn tất hiện dựa trên evaluation run 1.066 mẫu riêng, không dựa vào one-example reload check gốc.
 
 ## 9. Tài liệu tham chiếu
 
