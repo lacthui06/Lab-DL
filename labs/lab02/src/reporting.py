@@ -1,19 +1,32 @@
 """Export metrics and figures from saved probabilities, without retraining."""
 import json
-import matplotlib
-matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from sklearn.metrics import (accuracy_score, classification_report, confusion_matrix,
                              precision_recall_fscore_support, log_loss)
-from torchvision.datasets import CIFAR10
 
 from .eda import CLASSES
 
 
+def save_figure(fig, path, **kwargs):
+    """Replace a PNG atomically, keeping open previews away from partial writes."""
+    from io import BytesIO
+    from pathlib import Path
+    from uuid import uuid4
+    path = Path(path)
+    temporary = path.with_name(f'{path.stem}.{uuid4().hex}.tmp')
+    buffer = BytesIO()
+    fig.savefig(buffer, format='png', **kwargs)
+    try:
+        temporary.write_bytes(buffer.getvalue())
+        temporary.replace(path)
+    finally:
+        temporary.unlink(missing_ok=True)
+
 
 def export_evaluation(folder, probabilities, labels, indices, data_dir):
+    from torchvision.datasets import CIFAR10
     predictions = probabilities.argmax(1)
     precision, recall, f1, _ = precision_recall_fscore_support(
         labels, predictions, labels=np.arange(10), average="macro", zero_division=0)
@@ -64,6 +77,56 @@ def export_evaluation(folder, probabilities, labels, indices, data_dir):
     return metrics
 
 
+def plot_learning_curves(run, output=None, show=False, per_model_folders=False, cfg=None):
+    """Separate head/fine rows; show measured epochs, checkpoint and actual stop evidence."""
+    from pathlib import Path
+    from matplotlib.ticker import MaxNLocator, PercentFormatter
+    run = Path(run)
+    output = Path(output or run)
+    output.mkdir(parents=True, exist_ok=True)
+    cfg = cfg if cfg is not None else json.loads((run/'config.json').read_text(encoding='utf-8'))
+    paths = []
+    for name in pd.read_csv(run/'comparison.csv').model.unique():
+        fig, axes = plt.subplots(2, 2, figsize=(11, 7.2))
+        notes = []
+        for row, (stage, folder, key) in enumerate([
+                ('HEAD ONLY', 'head_selected', 'head_epochs'),
+                ('FINE-TUNE', 'finetune', 'finetune_epochs')]):
+            history = pd.read_csv(run/name/folder/'history.csv')
+            summary_path = run/name/folder/'training_summary.json'
+            summary = json.loads(summary_path.read_text(encoding='utf-8')) if summary_path.exists() else {}
+            planned = cfg.get(key, 'not logged')
+            reason = summary.get('stop_reason', 'configured budget completed' if len(history)==planned else 'not logged')
+            notes.append(f'{stage}: {len(history)}/{planned} epochs; stop: {reason}')
+            best_epoch = summary.get('best_epoch')
+            for ax, metric in zip(axes[row], ['loss', 'accuracy']):
+                ax.plot(history.epoch, history[f'train_{metric}'], '-o', color='#2563eb', label='Train')
+                ax.plot(history.epoch, history[f'val_{metric}'], '--s', color='#d97706', label='Validation')
+                if best_epoch in history.epoch.values:
+                    value = history.loc[history.epoch==best_epoch, f'val_{metric}'].iloc[0]
+                    ax.scatter([best_epoch], [value], marker='*', s=140, color='#111827',
+                               zorder=5, label='Selected checkpoint')
+                ax.set(title=f'{stage} | {metric.upper()} | {len(history)}/{planned} epochs',
+                       xlabel='Epoch within this stage')
+                ax.set_facecolor('#eff6ff' if row==0 else '#ecfdf5')
+                ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+                ax.set_xlim(.8, max(history.epoch)+.2)
+                if metric=='accuracy': ax.yaxis.set_major_formatter(PercentFormatter(1))
+                ax.legend(fontsize=8)
+                ax.grid(alpha=.2)
+        fig.suptitle(f'{name}: HEAD and FINE-TUNE are separate stages', fontsize=13)
+        fig.text(.02,.015, '\n'.join(notes)+'\nConvergence is not established by the epoch count alone.', fontsize=8)
+        fig.tight_layout(rect=(0,.09,1,.96))
+        destination = run/name/'learning_curves.png' if per_model_folders else output/f'learning_curves_{name}.png'
+        save_figure(fig, destination, dpi=130, bbox_inches='tight')
+        if show:
+            from IPython.display import display
+            display(fig)
+        plt.close(fig)
+        paths.append(destination)
+    return paths
+
+
 def summarize_suite(run, cfg, selected):
     comparison = pd.read_csv(run / "comparison.csv")
     from .costs import cost_table, validation_recommendation
@@ -81,19 +144,7 @@ def summarize_suite(run, cfg, selected):
     fig.tight_layout()
     fig.savefig(run / "comparison.png", dpi=150)
     plt.close(fig)
-    for name in cfg["models"]:
-        fig, axes = plt.subplots(2, 2, figsize=(11, 7))
-        for stage, sub in [("head", "head_selected"), ("finetune", "finetune")]:
-            frame = pd.read_csv(run / name / sub / "history.csv")
-            for ax, metric in zip(axes.flat, ["train_loss", "val_loss", "train_accuracy", "val_accuracy"]):
-                ax.plot(frame.epoch, frame[metric], marker="o", label=stage)
-                ax.set(title=metric, xlabel="Epoch")
-                ax.grid(alpha=.2)
-                ax.legend()
-        fig.suptitle(f"{name}: fine-tune starts from selected head checkpoint")
-        fig.tight_layout()
-        fig.savefig(run / name / "learning_curves.png", dpi=150)
-        plt.close(fig)
+    plot_learning_curves(run, per_model_folders=True, cfg=cfg)
     table = ["| Model | Stage | Val acc | Test acc | Macro F1 | Trainable | Train (s) |",
              "|---|---|---:|---:|---:|---:|---:|"]
     for _, row in comparison.iterrows():
@@ -125,7 +176,7 @@ Split gốc 45.000/5.000 được tạo stratified; test giữ nguồn test chí
 ## 3. Phương pháp
 Mỗi mô hình thay classifier bằng Linear 10 đầu ra. Head-only đóng băng backbone và cache feature train/val ở eval mode. Cache tương đương forward backbone cho đầu vào cố định; thời gian trích xuất được ghi riêng.
 Tìm learning rate {cfg['learning_rates']} và batch size {cfg['batch_sizes']}, {cfg['head_epochs']} epoch/candidate với {cfg.get('head_optimizer','adamw')}, weight_decay={cfg['weight_decay']}. Các candidate dùng cùng initial head và shuffle seed. Policy chọn candidate: {cfg.get('selection_policy', {'accuracy_tolerance':0,'loss_tolerance':0})}; accuracy band → validation loss band → fit time. Checkpoint trong mỗi trial chọn accuracy cao nhất, hòa chọn loss thấp hơn rồi epoch sớm hơn.
-Fine-tune: mọi candidate khởi tạo lại từ cùng selected head; cấu hình optimizer/LR/depth/scheduler được chọn chỉ bằng validation. Các candidate dùng {cfg['finetune_epochs']} epoch, BatchNorm running statistics giữ cố định. Mở hai block DenseNet gồm denseblock3+transition3+denseblock4+norm5. Cache prefix chỉ hỗ trợ last block; cấu hình tuned tắt cache cho cả hai kiến trúc.
+Fine-tune: mọi candidate khởi tạo lại từ cùng selected head; cấu hình optimizer/LR/depth/scheduler được chọn chỉ bằng validation. Ngân sách tối đa {cfg['finetune_epochs']} epoch; stopping policy={cfg.get('early_stopping', 'fixed epoch budget')}. Số epoch thực chạy và stop_reason nằm trong training_summary.json; không suy ra hội tụ từ ngân sách. Trong mỗi trial, BatchNorm running statistics giữ cố định. Mở hai block DenseNet gồm denseblock3+transition3+denseblock4+norm5. Cache prefix chỉ hỗ trợ last block; cấu hình tuned tắt cache cho cả hai kiến trúc.
 {fine_policy}
 Toàn bộ fine-search: `finetune_search_results.csv`; xem `cost_comparison.csv` để phân biệt chi phí toàn search và selected recipe.
 
@@ -172,7 +223,7 @@ def write_final_report(run, cfg, selected, diagnostic_notes):
     diagnostic_notes.extend(['### Diễn giải chỉ số và thiết kế',
         'Accuracy là số ảnh dự đoán đúng chia tổng số ảnh. Macro F1 tính F1 riêng cho từng lớp rồi lấy trung bình không trọng số; vì vậy mỗi lớp đóng góp ngang nhau. Macro Precision/Recall và cross-entropy test được lưu trong metrics.json. ROC-AUC và average precision tính one-vs-rest từng lớp, không phải cùng một đại lượng.',
         'ResNet dùng residual connections để cộng tín hiệu qua các block; DenseNet nối các feature maps từ nhiều lớp trong dense block. Thực nghiệm thay head và giữ cấu trúc backbone gốc, không thiết kế lại CNN từ đầu.',
-        f"Profile {cfg['profile']}: {cfg['finetune_epochs']} epoch fine-tune, ảnh {cfg['image_size']}x{cfg['image_size']}, seed {cfg['seed']}. Kết quả chỉ đại diện cấu hình và ngân sách này; một seed chưa chứng minh ưu thế thống kê."])
+        f"Profile {cfg['profile']}: ngân sách tối đa {cfg['finetune_epochs']} epoch fine-tune, ảnh {cfg['image_size']}x{cfg['image_size']}, seed {cfg['seed']}. Kết quả chỉ đại diện cấu hình và ngân sách này; một seed chưa chứng minh ưu thế thống kê."])
     path=run/'report_vi.md'
     text=path.read_text(encoding='utf-8')
     text+='\n## 8. Khảo sát lỗi và hình bổ sung\n\n'+'\n\n'.join(diagnostic_notes)

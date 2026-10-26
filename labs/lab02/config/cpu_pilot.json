@@ -14,8 +14,8 @@
     0.01
   ],
   "batch_sizes": [
-    32,
-    64
+    64,
+    128
   ],
   "head_epochs": 5,
   "finetune_epochs": 2,
@@ -26,5 +26,5 @@
   "image_size": 64,
   "cache_frozen_prefix": true,
   "profile": "cifar10_cpu_pilot",
-  "notes": "Smoke/pilot only; not full benchmark."
+  "notes": "Smoke/pilot only; batch grid 64/128. Two fine epochs are a pipeline check, never evidence of convergence."
 }

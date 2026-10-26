@@ -15,18 +15,18 @@
     0.01
   ],
   "batch_sizes": [
-    16,
-    32
+    64,
+    128
   ],
-  "head_epochs": 5,
-  "finetune_epochs": 10,
+  "head_epochs": 10,
+  "finetune_epochs": 30,
   "finetune_backbone_lr": 1e-05,
   "finetune_head_lr": 0.0001,
   "weight_decay": 0.0001,
-  "feature_batch_size": 32,
+  "feature_batch_size": 64,
   "image_size": 224,
   "profile": "cifar10_gpu_tuned224",
-  "notes": "Executable tuning grid; 6 head trials and 13 fine trials per architecture. Equal fine epoch budgets, same initial selected head, full image forward for both. No measured improvement claimed.",
+  "notes": "Executable tuning grid; 6 head trials and 13 fine trials per architecture. Same maximum epoch budget and stopping policy; actual completed epochs may differ, same initial selected head, full image forward for both. No measured improvement claimed. Active batch grid 64/128; head 10 epochs; fine max 30, minimum 10 with validation-loss patience 7. New budget not executed.",
   "split_seed": 42,
   "require_cuda": true,
   "cache_frozen_prefix": false,
@@ -141,5 +141,10 @@
       "unfreeze": "last_two_blocks",
       "scheduler": "cosine"
     }
-  ]
+  ],
+  "early_stopping": {
+    "min_epochs": 10,
+    "patience": 7,
+    "min_delta": 0.0001
+  }
 }
