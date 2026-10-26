@@ -1,0 +1,6 @@
+
+# Giữ nguyên bytes artifacts Kaggle để kiểm tra SHA256 trên Windows/Linux.
+labs/lab03/outputs/runs/** -text
+labs/lab03/notebooks/*.ipynb text eol=lf
+# Log tqdm là bằng chứng gốc: giữ nguyên CR/ANSI và khoảng trắng đã băm SHA256.
+labs/lab03/outputs/runs/*/console.log -whitespace

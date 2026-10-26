@@ -1,0 +1,10 @@
+{
+  "01_sentiment_analysis_pipeline.ipynb": "a808643d02308405d08d018a847e0925bf026de70eef189515f5241e8ceeffe0",
+  "02_finetuning_binary_classification.ipynb": "5f7e2640b06b1131c5cf7372a16453595f9c3fc794d4d95de9a710c7a2d01cc1",
+  "config.json": "27a433f0df07110a4c2242ddf10f6e114e14aef041a487810db1971befd17a99",
+  "console.log": "40364137b6404001cf80a31fd3279e4cf5b360c934c43efded8324ec99530dc5",
+  "environment_snapshot.json": "731beae2f346b64c7735cb20e83c932980dd5f8516a0196f570de0fc62323946",
+  "execution_summary.json": "9747ba190ee7a220e77457af1d3636be79daf8e1b5e9a222cb0015544b074395",
+  "lab03_huggingface_complete.ipynb": "ebd96c919b314f32ecb2483a9a962c584d219db96ea2b87182b1262493c66398",
+  "status.json": "7ccc76c79702d3036f1f73acdf5cc4c333fa7d9721df7437015a74558db32533"
+}
