@@ -14,8 +14,8 @@
     0.01
   ],
   "batch_sizes": [
-    64,
-    128
+    32,
+    64
   ],
   "head_epochs": 5,
   "finetune_epochs": 2,
@@ -26,5 +26,5 @@
   "image_size": 64,
   "cache_frozen_prefix": true,
   "profile": "cifar10_cpu_full64",
-  "notes": "Historical profile reference only: recorded run used batch 32/64, head 5 and fine 2 epochs. Current batch grid is 64/128; do not infer new metrics. Use GPU full/tuned for new training."
+  "notes": "All 45000/5000/10000 samples. CPU budget: 64x64 RGB, fixed transforms; 5 head + 2 fine-tune epochs."
 }

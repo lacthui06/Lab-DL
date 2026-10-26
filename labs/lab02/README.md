@@ -106,7 +106,7 @@ python scripts/run.py --config config/tuned.json --device cuda --seed 43
 python scripts/run.py --config config/tuned.json --device cuda --seed 44
 ```
 
-Mỗi seed có 6 head trials và 13 fine-tune trials **mỗi model**, fine-tune min 10/max 30 epoch/trial (validation-loss patience 7, min_delta=1e-4): đây là grid đầy đủ, cần dự trù thời gian GPU. `split_seed=42` giữ tập dữ liệu cố định khi đổi seed khởi tạo/shuffle. `LAB02_DATA` có thể trỏ tới raw CIFAR-10 đã tải. Không thay sang flower_photos trong lượt này.
+Mỗi seed có 6 head trials và 13 fine-tune trials **mỗi model**, 10 epoch/fine trial: đây là grid đầy đủ, cần dự trù thời gian GPU. `split_seed=42` giữ tập dữ liệu cố định khi đổi seed khởi tạo/shuffle. `LAB02_DATA` có thể trỏ tới raw CIFAR-10 đã tải. Không thay sang flower_photos trong lượt này.
 
 - AdamW: backbone LR `{3e-6,1e-5,3e-5}`; SGD momentum 0,9: `{1e-4,3e-4,1e-3}`. Head LR = 10× backbone LR.
 - ResNet mở `layer4` hoặc `layer3+layer4`; DenseNet mở `denseblock4+norm5` hoặc `denseblock3+transition3+denseblock4+norm5`; luôn học classifier. BatchNorm running statistics giữ cố định.
@@ -116,5 +116,3 @@ Mỗi seed có 6 head trials và 13 fine-tune trials **mỗi model**, fine-tune 
 `finetune_search_results.csv` lưu toàn bộ grid; `selection.json` ghi winner; `finetune/` chứa checkpoint/history được chọn, không train lại thêm lần nữa. TensorBoard lưu LR từng nhóm, optimizer/depth/scheduler, train/val loss/accuracy. `cost_comparison.csv` tách tổng search với selected recipe, không cộng lặp selected trial. Full wall time của quá trình chọn model, throughput và peak CUDA memory cũng được ghi.
 
 Khi chất lượng gần nhau, xem thêm thời gian của selected recipe và test pass. Run cũ khác cache policy nên chưa xếp hạng tốc độ kiến trúc bằng train time. Xem [walkthrough](walkthrough_lab_02.md#15-loss-function-and-optimization-design) để biết giới hạn và kiểm thử.
-
-Batch active: **64/128**; head 10 epoch; fine-tune min 10/max 30, patience 7 theo val loss. Run lịch sử vẫn là head 5/fine 2. Notebook hiển thị hai giai đoạn ở hai hàng riêng, checkpoint và số epoch thực chạy; bảng NOT RUN không phải kết quả tuning.

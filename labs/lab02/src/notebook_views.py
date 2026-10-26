@@ -28,10 +28,9 @@ def context() -> tuple[Path, Path, Path]:
 
 def _save(fig, output: Path, name: str) -> None:
     """Persist and display the same figure, then release its memory."""
-    from .reporting import save_figure
     fig.tight_layout()
-    save_figure(fig, output / f'{name}.png', dpi=130, bbox_inches='tight')
-    display(fig)
+    fig.savefig(output / f'{name}.png', dpi=130, bbox_inches='tight')
+    plt.show()
     plt.close(fig)
 
 
@@ -59,24 +58,20 @@ def quality_cost(run: Path, output: Path) -> None:
 
 
 def learning_curves(run: Path, output: Path) -> None:
-    """Display the exact per-stage plotting implementation used by training reports."""
-    from .reporting import plot_learning_curves
-    plot_learning_curves(run, output, show=True)
-
-
-def epoch_budget(run: Path, root: Path) -> None:
-    """Contrast measured run history with the not-yet-executed active config."""
-    recorded = json.loads((run/'config.json').read_text(encoding='utf-8'))
-    active = json.loads((root/'config/tuned.json').read_text(encoding='utf-8'))
-    rows = []
-    for name in pd.read_csv(run/'comparison.csv').model.unique():
-        for stage, folder, key in [('Head', 'head_selected', 'head_epochs'), ('Fine-tune', 'finetune', 'finetune_epochs')]:
-            history = pd.read_csv(run/name/folder/'history.csv')
-            rows.append({'Model':name, 'Stage':stage, 'Recorded epochs':len(history),
-                'Original configured budget':recorded[key],
-                'New budget (NOT RUN)':str(active[key]) if stage=='Head' else
-                    f"min {active['early_stopping']['min_epochs']}, max {active[key]}"})
-    display(pd.DataFrame(rows))
+    """Plot training/validation history without printing model architecture."""
+    models = pd.read_csv(run / 'comparison.csv').model.unique()
+    fig, axes = plt.subplots(len(models), 2, figsize=(11, 6), squeeze=False)
+    for row, name in enumerate(models):
+        for stage, folder, style in [('head', 'head_selected', '--'), ('finetune', 'finetune', '-')]:
+            frame = pd.read_csv(run / name / folder / 'history.csv')
+            for ax, metric in zip(axes[row], ['loss', 'accuracy']):
+                for split, color in [('train', '#2563eb'), ('val', '#d97706')]:
+                    ax.plot(frame.epoch, frame[f'{split}_{metric}'], style, marker='o',
+                            color=color, label=f'{stage}/{split}')
+                ax.set(title=f'{name}: {metric}', xlabel='Epoch within stage')
+                ax.legend(fontsize=7)
+                ax.grid(alpha=.2)
+    _save(fig, output, 'learning_curves')
 
 
 def lr_search(run: Path, output: Path) -> None:
@@ -169,7 +164,7 @@ def errors(run: Path, output: Path) -> None:
     fig, axes = plt.subplots(1, 4, figsize=(14, 4.8))
     for ax, column in zip(axes, ['precision', 'recall_tpr', 'f1', 'fpr']):
         matrix = fine.pivot(index='class', columns='model', values=column)
-        ax.imshow(matrix.to_numpy()*100, vmin=0, vmax=100 if column != 'fpr' else 5, cmap='Blues')
+        im = ax.imshow(matrix.to_numpy()*100, vmin=0, vmax=100 if column != 'fpr' else 5, cmap='Blues')
         ax.set(xticks=range(2), xticklabels=matrix.columns, yticks=range(10),
                yticklabels=matrix.index, title=f'{column} (%)')
         ax.tick_params(axis='x', rotation=35, labelsize=8)
@@ -190,7 +185,7 @@ def evidence(run: Path, kind: str) -> None:
         ax.axis('off')
         ax.set_title(name)
     plt.tight_layout()
-    display(fig)
+    plt.show()
     plt.close(fig)
 
 
@@ -240,16 +235,11 @@ def fine_search(run: Path, output: Path, root: Path) -> None:
     else:
         cfg=json.loads((root/'config/tuned.json').read_text(encoding='utf-8'))
         table=pd.DataFrame(cfg['finetune_candidates'])
-        rows=[]
-        for (optimizer, scheduler, depth), part in table.groupby(['optimizer','scheduler','unfreeze'],sort=False):
-            rows.append({'Optimizer':optimizer, 'Backbone LR':', '.join(f'{v:g}' for v in sorted(part.backbone_lr.unique())),
-                'Head LR': '10 x backbone LR',
-                'Opened blocks':'last block' if depth=='last_block' else 'last two blocks',
-                'Scheduler':scheduler, 'Candidates':len(part), 'Status':'NOT RUN'})
-        display(pd.DataFrame(rows))
-        display(pd.DataFrame([{'Head search batches':str(cfg['batch_sizes']),
-            'Head epochs':cfg['head_epochs'], 'Fine-tune max epochs':cfg['finetune_epochs'],
-            'Fine-tune minimum':cfg['early_stopping']['min_epochs'],
-            'Stop rule':'validation loss: patience 7, min_delta 0.0001'}]))
-        return
+        fig,ax=plt.subplots(figsize=(10,3.5))
+        for name, rows in table.groupby('optimizer'):
+            for scheduler, part in rows.groupby('scheduler'):
+                ax.scatter(part.backbone_lr, part.unfreeze, label=f'{name}/{scheduler}',
+                    marker='o' if scheduler=='none' else 'x',s=90)
+        ax.set(xscale='log',xlabel='Backbone LR (head LR = 10 x)',title='Planned candidate grid: NOT EXECUTED')
+        ax.legend(fontsize=8); ax.grid(alpha=.2)
     _save(fig,output,'finetune_search')

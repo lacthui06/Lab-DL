@@ -119,38 +119,3 @@ class NotebookReviewTests(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
-
-
-def test_unexecuted_fine_grid_is_explanatory_table_not_results(tmp_path, monkeypatch):
-    from src import notebook_views as view
-    tables = []
-    monkeypatch.setattr(view, 'display', tables.append)
-    monkeypatch.setattr(view, '_save', lambda *a: (_ for _ in ()).throw(AssertionError('No measured plot without results')))
-    view.fine_search(tmp_path, tmp_path, ROOT)
-    assert len(tables) == 2
-    assert set(tables[0]['Status']) == {'NOT RUN'}
-    assert not {'accuracy', 'loss', 'train_seconds'} & set(tables[0].columns)
-    assert tables[1]['Head search batches'].iloc[0] == '[64, 128]'
-
-
-def test_learning_plot_separates_stages_and_preserves_original_histories(tmp_path, monkeypatch):
-    from matplotlib.figure import Figure
-    from src.reporting import plot_learning_curves
-    run = ROOT/json.loads((ROOT/'outputs/selected_run.json').read_text())['run']
-    histories = {p: hashlib.sha256(p.read_bytes()).hexdigest() for p in run.glob('*/*/history.csv')}
-    inspected = []
-    original_save = Figure.savefig
-
-    def save(fig, *args, **kwargs):
-        inspected.append([(ax.get_title(), [line.get_label() for line in ax.lines]) for ax in fig.axes])
-        return original_save(fig, *args, **kwargs)
-
-    monkeypatch.setattr(Figure, 'savefig', save)
-    paths = plot_learning_curves(run, tmp_path)
-    assert len(paths) == 2 and all(p.exists() for p in paths)
-    for axes in inspected:
-        assert len(axes) == 4
-        assert all('HEAD ONLY' in title and '5/5 epochs' in title for title, _ in axes[:2])
-        assert all('FINE-TUNE' in title and '2/2 epochs' in title for title, _ in axes[2:])
-        assert all(labels == ['Train', 'Validation'] for _, labels in axes)
-    assert all(hashlib.sha256(p.read_bytes()).hexdigest() == h for p, h in histories.items())

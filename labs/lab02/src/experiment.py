@@ -28,7 +28,7 @@ from .eda import export_summary
 from .delivery import write_json, file_hash, resolve_data_dir
 from .models import (SPECS, build_model, classifier, features, configure_trainable,
                      parameter_counts, training_mode, last_block, CachedTail)
-from .tuning import fine_candidates, select_trial, make_optimizer, make_scheduler, stopping_policy
+from .tuning import fine_candidates, select_trial, make_optimizer, make_scheduler
 from .reporting import export_evaluation, summarize_suite
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -115,8 +115,7 @@ def pass_epoch(model, loader, device, optimizer=None, mode_fn=None):
     return {"loss": total_loss / count, "accuracy": correct / count}
 
 
-def fit(model, train, val, optimizer, epochs, device, folder, metadata, mode_fn=None, scheduler=None,
-        stopping=None):
+def fit(model, train, val, optimizer, epochs, device, folder, metadata, mode_fn=None, scheduler=None):
     if epochs < 1:
         raise ValueError('epochs must be positive')
     folder.mkdir(parents=True, exist_ok=True)
@@ -124,11 +123,6 @@ def fit(model, train, val, optimizer, epochs, device, folder, metadata, mode_fn=
     writer = SummaryWriter(str(folder / "tensorboard"))
     writer.add_text("configuration", json.dumps(metadata, indent=2))
     history, best, best_loss = [], -1., float('inf')
-    stopping = stopping or {}
-    minimum = stopping.get('min_epochs', epochs)
-    patience = stopping.get('patience', epochs+1)
-    delta = stopping.get('min_delta', 0.)
-    monitor_best, stale, stop_reason = float('inf'), 0, 'epoch_budget_exhausted'
     train_pass_seconds, validation_seconds = 0., 0.
     if device.type == 'cuda':
         torch.cuda.reset_peak_memory_stats(device)
@@ -177,23 +171,11 @@ def fit(model, train, val, optimizer, epochs, device, folder, metadata, mode_fn=
             if scheduler is not None:
                 scheduler.step()
             print(f"{folder.name} epoch {epoch}/{epochs}: train={tr['accuracy']:.4f}, val={va['accuracy']:.4f}", flush=True)
-            if va['loss'] < monitor_best-delta:
-                monitor_best, stale = va['loss'], 0
-            else:
-                stale += 1
-            if epoch >= minimum and stale >= patience:
-                stop_reason = 'validation_loss_patience'
-                break
         sync(device)
         result = {"best_val_accuracy": best, 'best_val_loss':best_loss,
-                  'epochs_planned': epochs, 'epochs_completed': len(history),
-                  'stop_reason': stop_reason, 'early_stopping': stopping,
-                  'minimum_observed_val_loss': min(r['val_loss'] for r in history),
-                  'last_val_loss': history[-1]['val_loss'],
-                  'convergence_claim': 'not established; inspect validation trend and stopping evidence',
                   "train_seconds": time.perf_counter() - start,
                   'train_pass_seconds':train_pass_seconds, 'validation_seconds':validation_seconds,
-                  'train_images_per_second':len(train.dataset)*len(history)/max(train_pass_seconds,1e-12),
+                  'train_images_per_second':len(train.dataset)*epochs/max(train_pass_seconds,1e-12),
                   'peak_cuda_memory_mib':torch.cuda.max_memory_allocated(device)/2**20 if device.type=='cuda' else None,
                   "best_epoch": torch.load(folder / "best.pt", weights_only=True, map_location="cpu")["best_epoch"]}
         writer.add_hparams({k: metadata[k] for k in ('model','stage','batch_size','lr',
@@ -269,7 +251,7 @@ def search_finetune(model, name, cfg, selected, data_dir, run, device,
                 cfg['seed'], image_size=cfg['image_size'])
         trial_folder = folder / (f'finetune_trial_{number:02d}' if 'finetune_candidates' in cfg else 'finetune')
         result = fit(fit_model, train_loader, val_loader, optimizer, cfg['finetune_epochs'], device,
-                     trial_folder, meta, training_mode, scheduler=scheduler, stopping=stopping_policy(cfg))
+                     trial_folder, meta, training_mode, scheduler=scheduler)
         trials.append({'trial':number, **candidate, **result, 'trainable':meta['parameter_counts']['trainable'],
                        'execution':meta['execution']})
         pd.DataFrame(trials).to_csv(folder/'finetune_search_results.csv', index=False)
@@ -502,10 +484,8 @@ def main():
         cfg = json.loads(Path(args.config).read_text(encoding='utf-8'))
         candidates = fine_candidates(cfg)
         print(json.dumps({'profile':cfg['profile'], 'models':cfg['models'],
-            'head_batch_sizes':cfg['batch_sizes'], 'head_epochs_per_trial':cfg['head_epochs'],
             'head_trials_per_model':len(cfg['learning_rates'])*len(cfg['batch_sizes']),
             'fine_trials_per_model':len(candidates), 'fine_epochs_per_trial':cfg['finetune_epochs'],
-            'early_stopping':stopping_policy(cfg),
             'split_seed':cfg.get('split_seed',cfg['seed']), 'training_seed':args.seed if args.seed is not None else cfg['seed'],
             'cache_frozen_prefix':cfg.get('cache_frozen_prefix',False), 'candidates':candidates}, indent=2))
         return

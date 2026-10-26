@@ -11,46 +11,6 @@ from src.models import build_model, configure_trainable, parameter_counts, train
 from src.tuning import fine_candidates, select_trial, make_optimizer, make_scheduler
 
 
-@pytest.mark.parametrize('improves,expected,reason', [
-    (False, 10, 'validation_loss_patience'),
-    (True, 12, 'epoch_budget_exhausted'),
-])
-def test_stopping_respects_minimum_and_reports_actual_epochs(tmp_path, monkeypatch, improves, expected, reason):
-    from src import experiment
-    model = nn.Linear(2, 2)
-    loader = DataLoader(TensorDataset(torch.ones(2, 2), torch.tensor([0, 1])), batch_size=2)
-    state = {'epoch': 0}
-
-    def epoch(model, loader, device, optimizer=None, mode_fn=None):
-        if optimizer is not None:
-            return {'loss': .8, 'accuracy': .5}
-        state['epoch'] += 1
-        return {'loss': 1/state['epoch'] if improves else .9, 'accuracy': .6}
-
-    monkeypatch.setattr(experiment, 'pass_epoch', epoch)
-    opt = torch.optim.SGD(model.parameters(), lr=.01)
-    result = experiment.fit(model, loader, loader, opt, 12, torch.device('cpu'), tmp_path,
-        {'model': 'tiny', 'stage': 'finetune', 'batch_size': 2, 'lr': .01},
-        stopping={'min_epochs': 10, 'patience': 3, 'min_delta': .0001})
-    assert result['epochs_completed'] == expected
-    assert result['epochs_planned'] == 12
-    assert result['stop_reason'] == reason
-    assert 'not established' in result['convergence_claim']
-
-
-def test_active_batch_grid_and_invalid_stopping_policy():
-    from pathlib import Path
-    root = Path(__file__).resolve().parents[1]
-    for name in ['full.json', 'tuned.json', 'cpu_full.json', 'cpu_pilot.json']:
-        cfg = json.loads((root/'config'/name).read_text())
-        assert cfg['batch_sizes'] == [64, 128]
-    cfg = json.loads((root/'config/tuned.json').read_text())
-    assert cfg['head_epochs'] == 10 and cfg['finetune_epochs'] == 30
-    cfg['early_stopping']['min_epochs'] = 31
-    with pytest.raises(ValueError, match='min_epochs'):
-        fine_candidates(cfg)
-
-
 def test_selection_uses_time_only_inside_both_quality_bands():
     rows = [dict(id='accurate', best_val_accuracy=.85, best_val_loss=.51, train_seconds=100, accuracy=.1),
             dict(id='efficient', best_val_accuracy=.8495, best_val_loss=.508, train_seconds=50, accuracy=.2),

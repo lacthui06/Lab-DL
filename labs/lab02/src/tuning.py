@@ -5,24 +5,8 @@ DEPTHS = ('last_block', 'last_two_blocks')
 OPTIMIZERS = ('adamw', 'sgd')
 
 
-def stopping_policy(cfg: dict) -> dict:
-    """Validate a shared validation-loss stopping rule; old configs keep fixed epochs."""
-    policy = dict(cfg.get('early_stopping', {}))
-    if not policy:
-        return policy
-    if not 1 <= policy.get('min_epochs', 1) <= cfg['finetune_epochs']:
-        raise ValueError('early_stopping min_epochs must fit within finetune_epochs')
-    if policy.get('patience', 1) < 1:
-        raise ValueError('early_stopping patience must be positive')
-    delta = policy.get('min_delta', 0.)
-    if not math.isfinite(delta) or delta < 0:
-        raise ValueError('early_stopping min_delta must be finite and nonnegative')
-    return policy
-
-
 def fine_candidates(cfg: dict) -> list[dict]:
     """Keep legacy configs runnable; explicit candidates replace the fixed fine stage."""
-    stopping_policy(cfg)
     candidates = cfg.get('finetune_candidates')
     if candidates is None:
         candidates = [dict(id='default', optimizer=cfg.get('optimizer', 'adamw'),

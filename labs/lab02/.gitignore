@@ -22,6 +22,3 @@ events.out.tfevents.*
 
 # Small locked index artifact, not image data or a learned feature cache.
 !outputs/eda/split_indices.npz
-
-# Local descriptors from the earlier raw audit; not input data or submission evidence.
-outputs/eda/spatial_features.csv
