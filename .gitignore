@@ -88,3 +88,6 @@ runs/
 lightning_logs/
 .tensorboard/
 *.log
+
+# Local-only technical change journals
+**/internal_changes.md
