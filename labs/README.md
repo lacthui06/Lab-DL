@@ -8,7 +8,7 @@ labs/
 |   |-- README.md               <-- Detailed guide: objective, structure, reproduce, results
 |   |-- description_lab_0X.md   <-- Original assignment brief from instructor (input, verbatim)
 |   |-- walkthrough_lab_01.md   <-- Unified 3-Rule living document (Spec -> Experimental evidence -> Report)
-|   |-- config/                 <-- workflow.json for current Lab01; legacy YAML kept
+|   |-- config/                 <-- workflow.json and publication.json for current Lab01
 |   |-- notebooks/              <-- EDA/preprocessing/FE and modeling/optimizer notebooks
 |   |-- src/                    <-- Modular Python subpackages (datasets, models, training, utils)
 |   |-- scripts/                <-- CLI entry points (train.py, eval.py, infer.py)
@@ -27,4 +27,4 @@ labs/
 - **Section 2 (Experiment Methods & Evidence):** Governed by the `walkthrough-and-experiment-tracking` rule — Records each experimental iteration (for example, Run #1 Baseline then later tuned runs), tracking changes across all 5 pipeline stages, rationale for hyperparameter adjustments, and quantitative metric impact.
 - **Section 3 (Results & Final Technical Report):** Governed by the `documentation-and-adrs` rule — Provides comparative evaluation matrices, confusion matrix interpretation, decision traceability back to Mục 1.0, and conclusions ready for submission.
 
-For Lab01, software change logs and technical troubleshooting stay in `lab01/internal_changes.md`, outside the report content. Historical snapshots in `lab01/archive/` preserve previous work and are not current entry points.
+For Lab01, software change journals and troubleshooting logs stay local, outside Git and the report. Current report evidence is in `lab01/outputs/published/`; original runs are retained locally.

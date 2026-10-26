@@ -1,5 +1,17 @@
 # Lab 01: FashionMNIST Image Classification with PyTorch
 
+## Published report evidence
+
+Open [the walkthrough](walkthrough_lab_01.md) or [the artifact guide](outputs/published/README.md) after cloning. This evidence includes every output image from the explicitly selected completed experiment runs, summary tables, training/trial histories, test predictions, configuration and checksums. Reading the report does not require training or downloading checkpoints.
+
+To refresh the evidence after selecting runs in `config/workflow.json` and additional report runs in `config/publication.json`:
+
+```powershell
+python labs/lab01/scripts/publish_artifacts.py
+```
+
+Run the command from the repository root. It preserves original runs, backs up the previous publication in a local audit run, checks report links and redacts user paths in exported text. It does not commit or push. Review exported files before publishing: automated text checks cannot guarantee the absence of private information in images or arbitrary binary content. Raw console logs, internal change journals, checkpoints, prepared data and study databases are excluded. Original notebooks retain embedded outputs; executing their view/training cells still requires the full run artifacts, which are not included in this report bundle.
+
 Dự án phân loại 10 lớp trang phục FashionMNIST bằng PyTorch, triển khai đầy đủ từ EDA, preprocessing và feature engineering đến huấn luyện, đánh giá, so sánh kiến trúc, optimizer và hyperparameter. Mã nguồn được phân tách theo chức năng để notebook tập trung trình bày phương pháp và output thực nghiệm.
 
 Hai notebook hiện hành dùng chung cấu hình và artifact: notebook 01 chuẩn bị dữ liệu; notebook 02 so sánh ba cấu hình MLP và thực nghiệm optimizer. Có thể chạy trên local CPU/CUDA hoặc Kaggle. Mỗi lần thực thi tạo run riêng, lưu log và kết quả để truy vết.
@@ -11,9 +23,11 @@ Hai notebook hiện hành dùng chung cấu hình và artifact: notebook 01 chu�
 ```text
 labs/lab01/
 ├── config/
-│   └── workflow.json                  # Cấu hình hiện hành, kiến trúc và danh mục run được chọn
+│   ├── workflow.json                  # Cấu hình hiện hành, kiến trúc và danh mục run được chọn
+│   └── publication.json               # Run bổ sung được chọn để publish
 ├── data/                              # FashionMNIST thô, tải bằng torchvision khi cần
 ├── outputs/
+│   ├── published/                     # Ảnh, bảng, metrics, histories và provenance để đọc báo cáo sau clone
 │   ├── runs/                          # Artifact hiện hành, mỗi lần chạy có thư mục riêng
 │   │   ├── <preparation-run>/
 │   │   │   ├── eda/
@@ -84,7 +98,6 @@ labs/lab01/
 │   └── 02_modeling_comparison.ipynb
 ├── description_lab_01.md              # Đề bài gốc và phạm vi đã thống nhất
 ├── walkthrough_lab_01.md              # Phương pháp và kết quả có bằng chứng
-├── internal_changes.md                # Nhật ký nội bộ, không đưa vào báo cáo PDF
 ├── requirements.txt                   # Dependencies cho lab
 └── README.md                          # Hướng dẫn tổng quan và sử dụng
 ```
@@ -271,7 +284,7 @@ Bản refit **best trong study** dùng Adam, LR=0.0015930522616241021 và weight
 
 - [Description](description_lab_01.md): đề bài gốc, phạm vi và các quyết định hiện hành.
 - [Walkthrough](walkthrough_lab_01.md): giải thích phương pháp, triển khai và kết quả có artifact; nguồn để phát triển báo cáo lab.
-- [Internal changes](internal_changes.md): nhật ký chỉnh sửa/kiểm tra nội bộ, không đưa vào báo cáo PDF.
+- Nhật ký chỉnh sửa/kiểm tra kỹ thuật được giữ local và Git ignore, không nằm trong bộ bàn giao hoặc báo cáo PDF.
 - Bản tài liệu, notebook/config và CLI trước hợp nhất đã được gỡ khỏi cây thư mục; khôi phục khi cần bằng `git checkout e0fd041 -- labs/lab01/archive`.
 
 Không xóa run bất lợi hoặc run lỗi để làm đẹp kết quả. `outputs/runs/` được gitignore vì chứa dữ liệu và weights; `git pull` không tải các artifact này. Khi chuyển máy/Kaggle phải đồng bộ run directory riêng và cập nhật đường dẫn trong workflow.json.

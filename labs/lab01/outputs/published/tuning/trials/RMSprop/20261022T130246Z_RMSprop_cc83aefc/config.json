@@ -1,0 +1,21 @@
+{
+  "optimizer": "RMSprop",
+  "params": {
+    "lr": 0.0029106359131330704,
+    "weight_decay": 9.846738873614567e-05
+  },
+  "epochs": 10,
+  "seed": 42,
+  "batch_size": 128,
+  "model": "MainMLP",
+  "architecture": [
+    784,
+    256,
+    128,
+    10
+  ],
+  "device": "cpu",
+  "scheduler": "CosineAnnealingLR",
+  "selection": "best val accuracy",
+  "data_sha256": "5e494e2c2d2188ede476a9803f16dd30598fcc92282a73118de4920aaf17de82"
+}

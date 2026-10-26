@@ -43,4 +43,4 @@ Each practical lab is organized into modular directories and a single living doc
 - `description_lab_0X.md`: Original assignment brief from instructor (input, kept verbatim).
 - `walkthrough_lab_0X.md`: Single Living Walkthrough unifying 3 Core Rules (Section 1: Spec with brief interpretation (Mục 1.0) from `spec-driven-development`, Section 2: experiment methods and artifact-backed evidence from `walkthrough-and-experiment-tracking`, Section 3: Final Report with decision traceability from `documentation-and-adrs`).
 
-Lab01 keeps implementation changes and technical troubleshooting in `internal_changes.md`. These internal logs are excluded from the planned report; see the detailed Lab01 README for the current two-notebook workflow.
+Lab01 keeps software change journals and troubleshooting logs local, outside Git and the report. See the Lab01 README for the two-notebook workflow and published report evidence.

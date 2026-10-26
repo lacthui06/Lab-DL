@@ -15,19 +15,28 @@ Skill này chịu sự điều phối của Rule 3 trong Kiến trúc 3 Rule và
 
 Nguyên lý then chốt: tài liệu phải trả lời được ba câu hỏi - kết quả là gì, vì sao đạt được, và còn hạn chế nào.
 
+## Phạm vi báo cáo và lựa chọn biểu đồ
+
+- Walkthrough là nguồn báo cáo duy nhất; Section 2 trình bày phương pháp/thiết kế thí nghiệm, Section 3 trình bày kết quả và so sánh. Không lặp toàn bộ bảng kết quả ở cả hai phần.
+- Giữ Accuracy, Macro F1, Precision/Recall/F1 theo lớp và confusion matrix có số đếm. Recall là TPR; FPR có thể giữ trong bảng số liệu, không bắt buộc vẽ biểu đồ TPR/FPR.
+- Chọn biểu đồ theo bài toán và lựa chọn đã chốt. Lab01 dùng một hình hai panel ROC và Precision–Recall One-vs-Rest cho mỗi model; phân biệt Average Precision với diện tích PR tính bằng hình thang. Không tự thêm lại histogram TPR/FPR đã bị loại.
+- Đọc hình thực tế và đối chiếu bảng/predictions; nêu bằng chứng, không suy luận nhân quả chỉ từ tương quan hoặc một seed.
+- Trong search, chọn hyperparameter bằng validation; không bắt buộc đánh giá test cho mọi trial. Trial chỉ có validation thì ghi đúng split, không bịa test metrics.
+- Sửa code, lỗi môi trường và console log giữ local, ngoài báo cáo. Phân tích mô hình nhầm lớp vẫn thuộc kết quả thực nghiệm.
+
 ## 2. Khi nào kích hoạt (Triggers)
 
 **Dấu hiệu kích hoạt:**
 - Kết thúc các lần chạy thí nghiệm và tạo báo cáo môn học hoặc dự án cuối cùng.
 - Cần ghi lại lý do chọn một kiến trúc, hàm loss, hoặc lịch hyperparameter cụ thể.
 - Cần tổng hợp confusion matrix và các chế độ thất bại thành phân tích lỗi.
-- Cần đọc và diễn giải ảnh output (confusion matrix, lưới dự đoán, TPR/FPR) để viết phần chẩn đoán.
+- Cần đọc và diễn giải ảnh output (confusion matrix, lưới dự đoán, ROC/PR OvR) để viết phần chẩn đoán.
 - Chuẩn bị nộp bài hoặc bàn giao dự án.
 
 **Điều kiện tiên quyết:**
-- Đã có Section 1 (đặc tả) và Section 2 (changelog) hoàn tất.
+- Đã có Section 1 (đặc tả) và Section 2 (phương pháp và thiết kế thí nghiệm) hoàn tất.
 - Đã có đầy đủ artifact và số liệu đã xác thực, gồm bộ metric phân loại theo từng lớp.
-- Đã chạy kiểm toán `doubt-driven-development` không phát hiện rò rỉ.
+- Đã kiểm tra leakage/split/fit-on-train và ghi phạm vi thực hiện; chỉ tăng mức kiểm toán `doubt-driven-development` khi có căn cứ, không mặc định đã chạy permutation test.
 
 ## 3. Hợp đồng Input / Output
 
@@ -35,7 +44,7 @@ Nguyên lý then chốt: tài liệu phải trả lời được ba câu hỏi -
 |---|---|
 | Section 1 và Section 2 đã hoàn tất | Section 3 đầy đủ trong `walkthrough_lab_0X.md` |
 | Artifact và số liệu đã xác thực (Accuracy, Macro F1, Precision, Recall, TPR, FPR theo lớp) | Ma trận so sánh đầy đủ metric và phần chẩn đoán |
-| Ảnh output đã đọc (confusion matrix, lưới dự đoán, đường cong, TPR/FPR) | Nhận xét định tính có dẫn chứng từ ảnh |
+| Ảnh output đã đọc (confusion matrix, lưới dự đoán, đường cong, ROC/PR OvR) | Nhận xét định tính có dẫn chứng từ ảnh |
 | Phán quyết kiểm toán từ doubt-driven | Phân tích lỗi và kết luận cuối |
 | | ADR cho các quyết định kiến trúc quan trọng |
 
@@ -61,7 +70,7 @@ Với bài toán phân loại, ma trận định lượng phải phủ đủ b�
 Phân tích sâu các cặp lớp nhầm lẫn cao (ví dụ Shirt so với T-shirt/Pullover) và giải thích nguyên nhân trực quan. Chẩn đoán này giải thích mô hình yếu ở đâu và vì sao.
 
 - Phải **mở ảnh confusion matrix** và đọc giá trị từng ô; nêu tên cặp lớp cụ thể và tỷ lệ nhầm (ví dụ "hàng Shirt có 18% bị dự đoán thành Pullover"), không mô tả chung chung.
-- Kết hợp với biểu đồ TPR/FPR theo lớp để chỉ ra lớp có TPR thấp nhất và lớp có FPR cao nhất; hai chỉ số này thường chỉ về cùng một nhóm lớp gây nhiễu.
+- Dùng bảng metric theo lớp để xác định recall/TPR thấp và FPR cao khi đã tính; không bắt buộc vẽ TPR/FPR. Đọc thêm ROC/PR OvR khi có, không giả định hai metric yếu nhất thuộc cùng một lớp.
 - Giải thích nguyên nhân: đối chiếu với đặc điểm thị giác của cặp lớp (tương đồng hình dáng, độ phân giải thấp, ảnh xám).
 
 ### Bước 3: Phân tích lát cắt lỗi
@@ -78,7 +87,7 @@ Giải thích các đột phá về hiệu năng, đánh giá tác động của
 Với mỗi quyết định kỹ thuật quan trọng (kiến trúc, hàm loss, metric, chiến lược chia tập), ghi rõ điểm thảo luận tương ứng ở Mục 1.0 của `walkthrough_lab_0X.md` và hướng giải quyết đã chốt, thường dưới dạng bảng Decision Traceability. Dùng văn phong kỹ thuật trung tính, ngôi thứ ba; không dùng lối kể chuyện hay từ chỉ người như "bạn", "tôi", "chúng ta". Ví dụ đúng: "Chiến lược chia tập đã được thảo luận và chốt dùng StratifiedKFold do phân bố lớp cân bằng."
 
 ### Bước 6: Xác thực checkpoint (Save/Load)
-Xác nhận rằng việc nạp lại checkpoint tốt nhất tái lập 100% metric inference giống hệt. Đây là bằng chứng cuối cùng về tính tái lập của kết quả.
+Xác nhận dự đoán và metric sau load trên cùng tập đánh giá, ghi tolerance số thực và thiết bị; chỉ tuyên bố khớp tuyệt đối khi đã đo. Đây là bằng chứng cuối cùng về tính tái lập của kết quả.
 
 ### Bước 7: Ghi Architecture Decision Record
 Với các dự án kỹ thuật lâu dài, ghi lại các lựa chọn kiến trúc quan trọng dưới `docs/adr/`. Ví dụ: vì sao chọn Focal Loss thay vì Binary Cross-Entropy; vì sao chọn ResNet thay vì Vision Transformer cho dataset nhỏ. ADR lưu lại lý do đằng sau các quyết định để không phải suy đoán lại về sau.
@@ -96,13 +105,13 @@ Xác nhận mọi metric được ghi tài liệu khớp 100% với log thực n
 - Phần chẩn đoán confusion matrix và phân tích lỗi có dẫn chứng cụ thể đọc từ ảnh output.
 - Architecture Decision Record cho các quyết định kiến trúc quan trọng.
 - Báo cáo bàn giao phiên với hướng dẫn tái lập.
-- Xác nhận checkpoint tái lập 100% metric.
+- Xác nhận checkpoint tái lập metric trong tolerance đã kiểm chứng.
 
 ## 6. Bàn giao (Handoff)
 
 | Skill trước (upstream) | Skill sau (downstream) |
 |---|---|
-| `walkthrough-and-experiment-tracking` (cung cấp số liệu và changelog) | `version-control-and-artifacts` (commit tài liệu cuối) |
+| `walkthrough-and-experiment-tracking` (cung cấp số liệu và diễn tiến thí nghiệm) | `version-control-and-artifacts` (commit tài liệu cuối) |
 | `doubt-driven-development` (cung cấp phán quyết kiểm toán) | Checklist `pre_submission.md` (cổng nộp bài) |
 | `api-and-interface-design` (cung cấp thông tin dịch vụ nếu có) | |
 
@@ -122,9 +131,9 @@ Xác nhận mọi metric được ghi tài liệu khớp 100% với log thực n
 - [ ] Ma trận đánh giá định lượng đã hoàn tất với đầy đủ các run.
 - [ ] Ma trận định lượng đã phủ đủ bộ metric phân loại (Accuracy, Macro F1, Precision, Recall, TPR, FPR theo lớp).
 - [ ] Chẩn đoán confusion matrix đã phân tích các cặp lớp nhầm lẫn cao.
-- [ ] Phân tích lát cắt lỗi đã xác định nguyên nhân gốc.
+- [ ] Phân tích lát cắt lỗi có bằng chứng; nguyên nhân chưa kiểm chứng được ghi là giả thuyết.
 - [ ] Phát hiện kỹ thuật chính đã được tổng hợp.
-- [ ] Checkpoint đã được xác thực tái lập 100% metric.
+- [ ] Checkpoint đã được xác thực tái lập metric trong tolerance đã kiểm chứng.
 - [ ] ADR đã được ghi cho các quyết định kiến trúc quan trọng.
 - [ ] Mọi metric khớp 100% với log thực nghiệm.
 - [ ] Section 3 hoàn tất, không có file REPORT.md riêng.

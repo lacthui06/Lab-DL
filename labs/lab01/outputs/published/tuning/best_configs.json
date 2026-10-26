@@ -1,0 +1,27 @@
+[
+  {
+    "optimizer": "SGD",
+    "best_val_acc": 90.8,
+    "trial_number": 3,
+    "run_path": "<LAB>/outputs/runs/20261022T130101Z_optimizer_tuning_d8986ca8/trials/SGD/20261022T130138Z_SGD_62bea1b4",
+    "lr": 0.02607024758370768,
+    "weight_decay": 1.2674255898937207e-07,
+    "momentum": 0.9454864778242991
+  },
+  {
+    "optimizer": "RMSprop",
+    "best_val_acc": 90.56666666666666,
+    "trial_number": 4,
+    "run_path": "<LAB>/outputs/runs/20261022T130101Z_optimizer_tuning_d8986ca8/trials/RMSprop/20261022T130320Z_RMSprop_acaf324a",
+    "lr": 0.0015930522616241021,
+    "weight_decay": 0.0003470266988650413
+  },
+  {
+    "optimizer": "Adam",
+    "best_val_acc": 90.85,
+    "trial_number": 4,
+    "run_path": "<LAB>/outputs/runs/20261022T130101Z_optimizer_tuning_d8986ca8/trials/Adam/20261022T130511Z_Adam_aa4a183a",
+    "lr": 0.0015930522616241021,
+    "weight_decay": 0.0003470266988650413
+  }
+]

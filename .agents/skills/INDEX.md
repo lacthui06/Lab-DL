@@ -37,7 +37,7 @@ File này là manifest định tuyến. Agent đọc file này trước để ch
 | Skill | Kích hoạt khi | Nằm ở giai đoạn |
 |---|---|---|
 | `debugging-and-error-recovery` | CUDA OOM, loss NaN, lỗi môi trường Kaggle, gradient tiêu biến | Gỡ lỗi |
-| `doubt-driven-development` | Độ chính xác cao bất thường (> 95%), nghi ngờ rò rỉ dữ liệu | Kiểm toán |
+| `doubt-driven-development` | Metric cao bất thường so với dataset/baseline, nghi ngờ rò rỉ; không dùng một ngưỡng chung cho Accuracy và ROC-AUC | Kiểm toán |
 
 ## 6. Tối ưu và Triển khai (Optimize & Serve)
 

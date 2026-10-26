@@ -1,0 +1,8 @@
+{
+  "phase": "fixed_lr",
+  "epochs": 10,
+  "seed": 42,
+  "batch_size": 128,
+  "lr": 0.001,
+  "data_sha256": "5e494e2c2d2188ede476a9803f16dd30598fcc92282a73118de4920aaf17de82"
+}

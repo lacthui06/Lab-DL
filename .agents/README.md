@@ -117,10 +117,10 @@ Một điểm đặc trưng của framework này là **tuyệt đối không ph�
 | Rule | Tên rule | Vị trí trong `walkthrough_lab_0X.md` | Nội dung |
 |---|---|---|---|
 | Rule 1 | `spec-driven-development` | **Section 1: Spec & Baseline Setup** | Mục 1.0 tóm tắt cách hiểu đề bài; problem statement, data contract, baseline model, ngưỡng chấp nhận |
-| Rule 2 | `walkthrough-and-experiment-tracking` | **Section 2: Full-Flow Experiment Changelog** | Dòng chảy vòng lặp, chênh lệch qua 5 giai đoạn pipeline, lý do điều chỉnh hyperparameter |
+| Rule 2 | `walkthrough-and-experiment-tracking` | **Section 2: Methods & Experiment Design** | EDA, preprocessing, feature engineering, thiết kế thí nghiệm; kết quả chi tiết ở Section 3 |
 | Rule 3 | `documentation-and-adrs` | **Section 3: Results & Final Technical Report** | Ma trận so sánh, chẩn đoán confusion matrix, phân tích lỗi, truy vết quyết định về Mục 1.0, kết luận |
 
-Nghiêm cấm tạo file `SPEC.md` hoặc `REPORT.md` riêng biệt. Cả 3 thành phần phải được hợp nhất vào đúng tài liệu sống.
+Không tạo bản sao `SPEC.md` hoặc `REPORT.md`. Walkthrough là nguồn duy nhất để biên tập PDF; log sửa code giữ local, ngoài báo cáo. Run gốc nằm trong `outputs/runs/`; bộ bằng chứng công bố nằm trong `outputs/published/`, có provenance và không kèm console log thô.
 
 ---
 

@@ -2,8 +2,6 @@
 
 **Chủ đề:** EDA, preprocessing, feature engineering, kiến trúc MLP và tối ưu hóa.
 
-**Phiên bản:** 23/10/2026; kết quả thực nghiệm được đọc từ các run ngày 22/10/2026.
-
 **Phạm vi:** SmallMLP, MainMLP, MainMLP_FE; SGD có momentum, RMSprop, Adam; tìm siêu tham số; lưu/tải và đánh giá lại toàn bộ test.
 
 **Quy ước bằng chứng:** số liệu được đọc từ artifact của từng run. Kết quả kiến trúc cũ, K-fold và sweep chưa được xác minh cho pipeline hiện hành không được dùng để chứng minh kết luận. Nhật ký sửa phần mềm nằm trong internal_changes.md, ngoài báo cáo.
@@ -164,9 +162,9 @@ Bảng lấy từ preparation run đang dùng, không trộn bảng lịch sử 
 | Trùng lặp nội bộ tập Test | 0 mẫu trùng | 0 mẫu trùng | PASSED |
 | Rò rỉ trùng lặp Train vs Test | 0 mẫu trùng | 0 mẫu trùng | PASSED |
 
-![Ảnh mẫu đại diện mười lớp](outputs/runs/20261022T122157Z_preparation_dcaece7b/eda/figures/sample_images.png)
+![Ảnh mẫu đại diện mười lớp](outputs/published/preparation/eda/figures/sample_images.png)
 
-*Hình: Ảnh mẫu đại diện mười lớp. Nguồn: `outputs/runs/20261022T122157Z_preparation_dcaece7b/eda/figures`.*
+*Hình: Ảnh mẫu đại diện mười lớp. Nguồn: `outputs/published/preparation/eda/figures`.*
 
 Ảnh mẫu kiểm tra nền, vị trí, hướng và nhãn theo trực giác. Một nhóm ảnh hợp lý không chứng minh mọi nhãn đúng; nó giúp nhận diện bất thường rõ ràng và thiết lập cách đọc các biểu đồ tiếp theo. Lấy ảnh đại diện mỗi lớp tránh một tập minh họa vô tình chỉ chứa vài nhóm phổ biến.
 
@@ -176,15 +174,15 @@ Không loại ảnh khó chỉ vì model dự đoán sai. Nếu dùng kết qu�
 
 ### 2.2. Phân bố lớp và ảnh trung bình
 
-![Phân bố train/validation](outputs/runs/20261022T122157Z_preparation_dcaece7b/eda/figures/class_distribution.png)
+![Phân bố train/validation](outputs/published/preparation/eda/figures/class_distribution.png)
 
-*Hình: Phân bố train/validation. Nguồn: `outputs/runs/20261022T122157Z_preparation_dcaece7b/eda/figures`.*
+*Hình: Phân bố train/validation. Nguồn: `outputs/published/preparation/eda/figures`.*
 
 Số mẫu mỗi lớp được giữ cân bằng trong train/validation. Điều này giảm nguy cơ accuracy cao chủ yếu nhờ đoán lớp đông. Cân bằng số lượng không làm các lớp dễ như nhau: Shirt, Coat, Pullover vẫn gần nhau hơn nhiều so với Trouser và Sandal về cấu trúc hình dáng.
 
-![Ảnh trung bình theo lớp](outputs/runs/20261022T122157Z_preparation_dcaece7b/eda/figures/class_mean_images.png)
+![Ảnh trung bình theo lớp](outputs/published/preparation/eda/figures/class_mean_images.png)
 
-*Hình: Ảnh trung bình theo lớp. Nguồn: `outputs/runs/20261022T122157Z_preparation_dcaece7b/eda/figures`.*
+*Hình: Ảnh trung bình theo lớp. Nguồn: `outputs/published/preparation/eda/figures`.*
 
 Ảnh trung bình lấy mean tại từng tọa độ của các ảnh cùng lớp trong train. Nó là silhouette tổng hợp, không phải một sản phẩm thật hay một mẫu test bổ sung. Các lớp áo có vùng thân/tay tương tự; quần thể hiện hai ống dọc; giày có dáng thấp và ngang.
 
@@ -196,9 +194,9 @@ Quan sát gợi ý sử dụng bbox width/height, aspect ratio và centroid. Tuy
 
 ### 2.3. Phân bố pixel và chuẩn hóa cường độ
 
-![Phân bố cường độ pixel train](outputs/runs/20261022T122157Z_preparation_dcaece7b/eda/figures/pixel_histogram.png)
+![Phân bố cường độ pixel train](outputs/published/preparation/eda/figures/pixel_histogram.png)
 
-*Hình: Phân bố cường độ pixel train. Nguồn: `outputs/runs/20261022T122157Z_preparation_dcaece7b/eda/figures`.*
+*Hình: Phân bố cường độ pixel train. Nguồn: `outputs/published/preparation/eda/figures`.*
 
 Histogram lấy pixel từ phần train dùng để vẽ theo source; các đường mean/median mô tả train. Cột lớn gần 0 phản ánh nền đen. Median bằng 0 không có nghĩa các vật thể hoặc phần lớn ảnh đều rỗng. Trục mật độ không phải số lượng ảnh; diện tích histogram mới phản ánh tỷ lệ tương đối.
 
@@ -229,21 +227,21 @@ Rescaling đưa [0,255] về [0,1] và tạo miền nhất quán cho ngưỡng c
 
 ### 2.4. Không gian pixel và tương đồng giữa lớp
 
-![Bản đồ mean pixel](outputs/runs/20261022T122157Z_preparation_dcaece7b/eda/figures/mean_pixel_heatmap.png)
+![Bản đồ mean pixel](outputs/published/preparation/eda/figures/mean_pixel_heatmap.png)
 
-*Hình: Bản đồ mean pixel. Nguồn: `outputs/runs/20261022T122157Z_preparation_dcaece7b/eda/figures`.*
+*Hình: Bản đồ mean pixel. Nguồn: `outputs/published/preparation/eda/figures`.*
 
 Mean map trả lời vị trí nào thường chứa vùng sáng. Trung tâm cao hơn góc vì vật thể thường nằm giữa. Nó không phải attention map của model: đây là thống kê trước modeling, không có gradient hoặc phân tích quyết định mạng tham gia.
 
-![Bản đồ variance pixel](outputs/runs/20261022T122157Z_preparation_dcaece7b/eda/figures/pixel_variance_heatmap.png)
+![Bản đồ variance pixel](outputs/published/preparation/eda/figures/pixel_variance_heatmap.png)
 
-*Hình: Bản đồ variance pixel. Nguồn: `outputs/runs/20261022T122157Z_preparation_dcaece7b/eda/figures`.*
+*Hình: Bản đồ variance pixel. Nguồn: `outputs/published/preparation/eda/figures`.*
 
 Variance map mô tả mức thay đổi giữa các ảnh tại từng vị trí. Biên và vùng có khác biệt dáng có thể có variance cao, nhưng nhiễu hoặc biến thiên trong cùng lớp cũng góp phần. Không đồng nhất pixel biến thiên mạnh với pixel chắc chắn quan trọng nhất cho phân loại.
 
-![Cosine similarity giữa ảnh trung bình](outputs/runs/20261022T122157Z_preparation_dcaece7b/eda/figures/class_similarity_heatmap.png)
+![Cosine similarity giữa ảnh trung bình](outputs/published/preparation/eda/figures/class_similarity_heatmap.png)
 
-*Hình: Cosine similarity giữa ảnh trung bình. Nguồn: `outputs/runs/20261022T122157Z_preparation_dcaece7b/eda/figures`.*
+*Hình: Cosine similarity giữa ảnh trung bình. Nguồn: `outputs/published/preparation/eda/figures`.*
 
 Cosine similarity so vector ảnh trung bình từng lớp. Coat–Shirt khoảng 0,99, Pullover–Coat khoảng 0,98 trong hình đang dẫn. Đây là mức giống silhouette trung bình, không phải xác suất nhầm hay tỷ lệ ảnh đúng. Confusion matrix ở phần kết quả mới đo hành vi model thực sự.
 
@@ -308,9 +306,9 @@ test_z = scaler.transform(test_features)
 
 Đây là đoạn mô tả phương pháp. Implementation fit trong nhánh train rồi transform từng split ở vòng lặp. File feature_scaler.json giữ thứ tự tên cột, mean, scale, fit_split. Việc lưu thứ tự cũng quan trọng như giá trị scaler: tráo centroid_x và symmetry sẽ tạo input khác dù cả hai là số thực hợp lệ.
 
-![Phân bố mười feature theo lớp](outputs/runs/20261022T122157Z_preparation_dcaece7b/feature_distributions.png)
+![Phân bố mười feature theo lớp](outputs/published/preparation/feature_distributions.png)
 
-*Hình: Phân bố mười feature theo lớp. Nguồn: `outputs/runs/20261022T122157Z_preparation_dcaece7b`.*
+*Hình: Phân bố mười feature theo lớp. Nguồn: `outputs/published/preparation`.*
 
 Boxplot biểu diễn phân bố theo lớp. Vạch trong hộp là median; hộp là vùng phân vị 25%–75%; các outlier bị ẩn theo cấu hình vẽ, không có nghĩa dữ liệu không có giá trị xa. Các hộp chồng lấn cho thấy một cột riêng lẻ không tách hoàn toàn nhãn. Trouser có bbox width nhỏ; các lớp giày có aspect ratio cao hơn, phù hợp ảnh mẫu.
 
@@ -320,15 +318,15 @@ Trong hình lịch sử, vị trí 1–10 tương ứng class 0–9. Dataset kh�
 
 ### 2.8. Hình học, tương quan và đóng gói dữ liệu
 
-![Bounding box và centroid](outputs/runs/20261022T122157Z_preparation_dcaece7b/feature_geometry.png)
+![Bounding box và centroid](outputs/published/preparation/feature_geometry.png)
 
-*Hình: Bounding box và centroid. Nguồn: `outputs/runs/20261022T122157Z_preparation_dcaece7b`.*
+*Hình: Bounding box và centroid. Nguồn: `outputs/published/preparation`.*
 
 Khung đỏ bao foreground; chấm cam là centroid cường độ. Ví dụ Trouser cao/hẹp, Sandal và Sneaker thấp/ngang. Hình kiểm tra công thức và tọa độ, chưa phải bằng chứng định lượng về khả năng phân loại toàn bộ dataset. Bbox gần full width không chứng minh ảnh chứa vật thể ngoài khung; cần đọc pixel/ngưỡng cụ thể.
 
-![Correlation của feature train](outputs/runs/20261022T122157Z_preparation_dcaece7b/feature_correlations.png)
+![Correlation của feature train](outputs/published/preparation/feature_correlations.png)
 
-*Hình: Correlation của feature train. Nguồn: `outputs/runs/20261022T122157Z_preparation_dcaece7b`.*
+*Hình: Correlation của feature train. Nguồn: `outputs/published/preparation`.*
 
 Correlation tính trên feature train. Mean và foreground ratio có quan hệ dương; bbox height và aspect ratio có quan hệ âm mạnh. Điều đó phù hợp tỷ số width/height phụ thuộc kích thước. Correlation không phải feature importance; muốn kết luận bỏ một cột không giảm kết quả cần ablation.
 
@@ -455,15 +453,15 @@ Mỗi model có một hình hai panel, mỗi panel mười đường. Thiết k�
 
 SmallMLP đạt 88,52% với 101.770 tham số. MainMLP đạt 89,41%, tăng 0,89 điểm phần trăm, thêm 133.376 tham số. MainMLP_FE đạt 89,60%, tăng thêm 0,19 điểm phần trăm, tương ứng 19 dự đoán đúng ròng trên 10.000 test. Đúng ròng không có nghĩa chỉ có 19 ảnh đổi kết quả giữa hai model.
 
-![So sánh test accuracy và Macro F1](outputs/runs/20261022T145033Z_comparison_c83937e3/test_scores.png)
+![So sánh test accuracy và Macro F1](outputs/published/comparison/test_scores.png)
 
-*Hình: So sánh test accuracy và Macro F1. Nguồn: `outputs/runs/20261022T145033Z_comparison_c83937e3`.*
+*Hình: So sánh test accuracy và Macro F1. Nguồn: `outputs/published/comparison`.*
 
 Loss giảm từ 0,32135 xuống 0,30788 khi tăng model, rồi xuống 0,30021 khi thêm feature; macro F1 cũng tăng. Nhiều metric cùng chiều làm kết luận mô tả nhất quán hơn việc chỉ chọn một chỉ số có lợi, nhưng không thay thế kiểm định hoặc nhiều seed.
 
-![Số tham số và thời gian ghi trong run](outputs/runs/20261022T145033Z_comparison_c83937e3/cost.png)
+![Số tham số và thời gian ghi trong run](outputs/published/comparison/cost.png)
 
-*Hình: Số tham số và thời gian ghi trong run. Nguồn: `outputs/runs/20261022T145033Z_comparison_c83937e3`.*
+*Hình: Số tham số và thời gian ghi trong run. Nguồn: `outputs/published/comparison`.*
 
 Thời gian ghi trong các run khoảng 8,27 s, 15,80 s và 78,01 s cho vòng training. Đây là wall-clock của thời điểm/môi trường cụ thể, không phải benchmark phần cứng lặp có kiểm soát hoặc tổng chi phí EDA/FE. Không quy toàn bộ chênh thời gian FE chỉ cho mười chiều bổ sung khi chưa profile và lặp đo.
 
@@ -473,9 +471,9 @@ SmallMLP là mốc tiết kiệm tham số; MainMLP tăng hiệu năng; FE có m
 
 ### 3.2. Đường học và lựa chọn epoch
 
-![Validation curves của ba cấu hình](outputs/runs/20261022T145033Z_comparison_c83937e3/validation_comparison.png)
+![Validation curves của ba cấu hình](outputs/published/comparison/validation_comparison.png)
 
-*Hình: Validation curves của ba cấu hình. Nguồn: `outputs/runs/20261022T145033Z_comparison_c83937e3`.*
+*Hình: Validation curves của ba cấu hình. Nguồn: `outputs/published/comparison`.*
 
 Validation curve chung cho phép so tiến trình trong cùng ngân sách epoch. Accuracy chỉ quan tâm argmax, loss nhạy với xác suất của nhãn thật. Accuracy gần giữ nguyên nhưng loss giảm có thể phản ánh độ tin cậy thay đổi thay vì thêm nhiều mẫu đúng. Cần đọc hai panel cùng nhau.
 
@@ -522,9 +520,9 @@ Không đánh giá test ở mọi epoch rồi chọn epoch có test tốt nhất
 
 ### 3.3. Metric theo lớp và confusion matrix
 
-![Confusion matrix ba model: counts và màu tỷ lệ](outputs/runs/20261022T145033Z_comparison_c83937e3/confusion_comparison.png)
+![Confusion matrix ba model: counts và màu tỷ lệ](outputs/published/comparison/confusion_comparison.png)
 
-*Hình: Confusion matrix ba model: counts và màu tỷ lệ. Nguồn: `outputs/runs/20261022T145033Z_comparison_c83937e3`.*
+*Hình: Confusion matrix ba model: counts và màu tỷ lệ. Nguồn: `outputs/published/comparison`.*
 
 Số trong ô là count nguyên; màu là tỷ lệ theo hàng trong cùng miền [0,1]. Trục dọc lớp thật, trục ngang dự đoán. Mỗi hàng test có 1.000 mẫu nên count/1.000 là tỷ lệ trong lớp thật đó. Biểu diễn giữ giá trị cụ thể và cho phép so pattern giữa model.
 
@@ -587,17 +585,17 @@ Các nhận xét là mô tả hiệu năng theo lớp, không quy chắc chắn 
 
 ### 3.4. ROC và Precision–Recall của ba model
 
-![SmallMLP — ROC và PR OvR](outputs/runs/20261022T145033Z_comparison_c83937e3/SmallMLP_ovr_curves.png)
+![SmallMLP — ROC và PR OvR](outputs/published/comparison/SmallMLP_ovr_curves.png)
 
-*Hình: SmallMLP — ROC và PR OvR. Nguồn: `outputs/runs/20261022T145033Z_comparison_c83937e3`.*
+*Hình: SmallMLP — ROC và PR OvR. Nguồn: `outputs/published/comparison`.*
 
-![MainMLP — ROC và PR OvR](outputs/runs/20261022T145033Z_comparison_c83937e3/MainMLP_ovr_curves.png)
+![MainMLP — ROC và PR OvR](outputs/published/comparison/MainMLP_ovr_curves.png)
 
-*Hình: MainMLP — ROC và PR OvR. Nguồn: `outputs/runs/20261022T145033Z_comparison_c83937e3`.*
+*Hình: MainMLP — ROC và PR OvR. Nguồn: `outputs/published/comparison`.*
 
-![MainMLP_FE — ROC và PR OvR](outputs/runs/20261022T145033Z_comparison_c83937e3/MainMLP_FE_ovr_curves.png)
+![MainMLP_FE — ROC và PR OvR](outputs/published/comparison/MainMLP_FE_ovr_curves.png)
 
-*Hình: MainMLP_FE — ROC và PR OvR. Nguồn: `outputs/runs/20261022T145033Z_comparison_c83937e3`.*
+*Hình: MainMLP_FE — ROC và PR OvR. Nguồn: `outputs/published/comparison`.*
 
 Ba hình dùng cùng test và lớp nhãn. Mỗi màu là một OvR; tách theo model tránh chồng 30 đường vào một panel. ROC mô tả phát hiện dương và false positive; PR mô tả chất lượng dự đoán dương khi tăng độ bao phủ. Các curve không phải kết quả training trên test.
 
@@ -650,9 +648,9 @@ PR hữu ích vì OvR có 10% dương, 90% âm. Tập âm lớn khiến một FP
 
 ### 3.5. Optimizer trong điều kiện cùng learning rate
 
-![Validation của optimizer cùng LR](outputs/runs/20261022T130020Z_optimizer_fixed_lr_dbe789e0/fixed_lr_curves.png)
+![Validation của optimizer cùng LR](outputs/published/fixed/fixed_lr_curves.png)
 
-*Hình: Validation của optimizer cùng LR. Nguồn: `outputs/runs/20261022T130020Z_optimizer_fixed_lr_dbe789e0`.*
+*Hình: Validation của optimizer cùng LR. Nguồn: `outputs/published/fixed`.*
 
 | optimizer | best_val_acc | best_epoch | epochs_completed | seconds |
 | --- | --- | --- | --- | --- |
@@ -672,9 +670,9 @@ Cùng LR là điều kiện kiểm soát đơn giản và có giá trị sư ph�
 
 ### 3.6. Search, pruning và best trial
 
-![Tiến trình search và LR–score](outputs/runs/20261022T130101Z_optimizer_tuning_d8986ca8/tuning_progress.png)
+![Tiến trình search và LR–score](outputs/published/tuning/tuning_progress.png)
 
-*Hình: Tiến trình search và LR–score. Nguồn: `outputs/runs/20261022T130101Z_optimizer_tuning_d8986ca8`.*
+*Hình: Tiến trình search và LR–score. Nguồn: `outputs/published/tuning`.*
 
 | optimizer | best_val_acc | trial_number | lr | weight_decay | momentum | trials | completed | pruned |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -698,9 +696,9 @@ Adam được refit vì cao nhất trong ba best trial. Tuy vậy, Adam fixed đ
 
 ### 3.7. Loss/accuracy với best parameters của đủ ba optimizer
 
-![Train/validation loss và accuracy của best trial từng optimizer](outputs/runs/20261022T151640Z_best_optimizer_learning_curves_cbe88b2e/best_optimizer_learning_curves.png)
+![Train/validation loss và accuracy của best trial từng optimizer](outputs/published/best_optimizer_curves/best_optimizer_learning_curves.png)
 
-*Hình: Train/validation loss và accuracy của best trial từng optimizer. Nguồn: `outputs/runs/20261022T151640Z_best_optimizer_learning_curves_cbe88b2e`.*
+*Hình: Train/validation loss và accuracy của best trial từng optimizer. Nguồn: `outputs/published/best_optimizer_curves`.*
 
 Bốn panel là train loss, validation loss, train accuracy và validation accuracy. Mỗi panel có SGD, RMSprop và Adam. Nguồn là history best completed trial của từng optimizer, không phải ba bản sao của một winner; mỗi trial có tham số riêng, được chọn theo cùng objective.
 
@@ -716,9 +714,9 @@ best_parameters.csv và best_optimizer_history.csv giữ optimizer, trial number
 
 Refit dùng Adam LR 0,0015930522616241021, weight_decay 0,0003470266988650413, seed 42, batch 128, 10 epoch. Validation best 90,85% tại epoch 10. Candidate search không được đánh giá test; refit được test sau lựa chọn bằng validation.
 
-![Đường học của refit Adam](outputs/runs/20261022T130609Z_MainMLP_0f179a92/learning_curves.png)
+![Đường học của refit Adam](outputs/published/final/learning_curves.png)
 
-*Hình: Đường học của refit Adam. Nguồn: `outputs/runs/20261022T130609Z_MainMLP_0f179a92`.*
+*Hình: Đường học của refit Adam. Nguồn: `outputs/published/final`.*
 
 Save/load giữ state_dict và kiến trúc, tạo instance FashionMLP mới, nạp checkpoint, chuyển eval. Roundtrip 16 mẫu ghi max_probability_error=0 và nhãn không đổi. Mười sáu mẫu chỉ là kiểm tra bảo toàn; chất lượng sau load được đánh giá riêng trên đủ 10.000 test.
 
@@ -726,9 +724,9 @@ Save/load giữ state_dict và kiến trúc, tạo instance FashionMLP mới, n�
 | --- | --- | --- | --- | --- | --- |
 | 10000 | 89.140000 | 0.891219 | 0.303679 | 16 | 0.000000 |
 
-![Mẫu test của model được load lại](outputs/runs/20261022T151641Z_model_save_load_2f8d78d9/loaded_model_test_samples.png)
+![Mẫu test của model được load lại](outputs/published/loaded_model_test/loaded_model_test_samples.png)
 
-*Hình: Mẫu test của model được load lại. Nguồn: `outputs/runs/20261022T151641Z_model_save_load_2f8d78d9`.*
+*Hình: Mẫu test của model được load lại. Nguồn: `outputs/published/loaded_model_test`.*
 
 Lưới chọn tám mẫu đúng đầu tiên và tám mẫu sai đầu tiên theo index, có true/predicted/probability. Vì chọn cân bằng để minh họa, không lấy tỷ lệ đúng của lưới làm accuracy test. Xanh/đỏ là kết quả mẫu; softmax confidence chưa được calibration trong nghiên cứu này và không đảm bảo dự đoán đúng.
 
@@ -766,24 +764,24 @@ SmallMLP phù hợp minh họa mạng gọn; MainMLP là mốc năng lực cao h
 
 **Danh mục bằng chứng thực nghiệm**
 
-- **preparation:** [thư mục artifact](outputs/runs/20261022T122157Z_preparation_dcaece7b) — `outputs/runs/20261022T122157Z_preparation_dcaece7b`.
+- **preparation:** [thư mục artifact](outputs/published/preparation) — `outputs/published/preparation`.
 
-- **comparison:** [thư mục artifact](outputs/runs/20261022T145033Z_comparison_c83937e3) — `outputs/runs/20261022T145033Z_comparison_c83937e3`.
+- **comparison:** [thư mục artifact](outputs/published/comparison) — `outputs/published/comparison`.
 
-- **fixed:** [thư mục artifact](outputs/runs/20261022T130020Z_optimizer_fixed_lr_dbe789e0) — `outputs/runs/20261022T130020Z_optimizer_fixed_lr_dbe789e0`.
+- **fixed:** [thư mục artifact](outputs/published/fixed) — `outputs/published/fixed`.
 
-- **tuning:** [thư mục artifact](outputs/runs/20261022T130101Z_optimizer_tuning_d8986ca8) — `outputs/runs/20261022T130101Z_optimizer_tuning_d8986ca8`.
+- **tuning:** [thư mục artifact](outputs/published/tuning) — `outputs/published/tuning`.
 
-- **final:** [thư mục artifact](outputs/runs/20261022T130609Z_MainMLP_0f179a92) — `outputs/runs/20261022T130609Z_MainMLP_0f179a92`.
+- **final:** [thư mục artifact](outputs/published/final) — `outputs/published/final`.
 
-- **optimizer_results:** [thư mục artifact](outputs/runs/20261022T145040Z_optimizer_results_da3a081a) — `outputs/runs/20261022T145040Z_optimizer_results_da3a081a`.
+- **optimizer_results:** [thư mục artifact](outputs/published/optimizer_results) — `outputs/published/optimizer_results`.
 
-- **SmallMLP:** [metric JSON](outputs/runs/20261022T133355Z_SmallMLP_cdad89a5/metrics.json); [history CSV](outputs/runs/20261022T133355Z_SmallMLP_cdad89a5/history.csv).
+- **SmallMLP:** [metric JSON](outputs/published/models/SmallMLP/metrics.json); [history CSV](outputs/published/models/SmallMLP/history.csv).
 
-- **MainMLP:** [metric JSON](outputs/runs/20261022T133406Z_MainMLP_8f90f1a2/metrics.json); [history CSV](outputs/runs/20261022T133406Z_MainMLP_8f90f1a2/history.csv).
+- **MainMLP:** [metric JSON](outputs/published/models/MainMLP/metrics.json); [history CSV](outputs/published/models/MainMLP/history.csv).
 
-- **MainMLP_FE:** [metric JSON](outputs/runs/20261022T133425Z_MainMLP_FE_d8323126/metrics.json); [history CSV](outputs/runs/20261022T133425Z_MainMLP_FE_d8323126/history.csv).
+- **MainMLP_FE:** [metric JSON](outputs/published/models/MainMLP_FE/metrics.json); [history CSV](outputs/published/models/MainMLP_FE/history.csv).
 
-- **Best optimizer curves:** [history của đủ ba optimizer](outputs/runs/20261022T151640Z_best_optimizer_learning_curves_cbe88b2e/best_optimizer_history.csv).
+- **Best optimizer curves:** [history của đủ ba optimizer](outputs/published/best_optimizer_curves/best_optimizer_history.csv).
 
-- **Full-test sau load:** [metric](outputs/runs/20261022T151641Z_model_save_load_2f8d78d9/test_metrics.json); [index/nhãn/xác suất mẫu](outputs/runs/20261022T151641Z_model_save_load_2f8d78d9/loaded_model_test_samples.csv).
+- **Full-test sau load:** [metric](outputs/published/loaded_model_test/test_metrics.json); [index/nhãn/xác suất mẫu](outputs/published/loaded_model_test/loaded_model_test_samples.csv).

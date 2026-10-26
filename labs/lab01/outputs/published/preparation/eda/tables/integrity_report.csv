@@ -1,0 +1,7 @@
+Hạng mục kiểm tra,Kết quả mong đợi,Thực tế,Trạng thái
+Giá trị thiếu (NaN / Null),Không có,Không có,PASSED
+"Dải giá trị điểm ảnh [0, 255]","[0, 255] uint8","Train [0, 255], Test [0, 255]",PASSED
+"Dải nhãn phân loại [0, 9]","10 lớp [0, 9]","Train [0, 9], Test [0, 9]",PASSED
+Trùng lặp nội bộ tập Train,0 mẫu trùng,0 mẫu trùng,PASSED
+Trùng lặp nội bộ tập Test,0 mẫu trùng,0 mẫu trùng,PASSED
+Rò rỉ trùng lặp Train vs Test,0 mẫu trùng,0 mẫu trùng,PASSED

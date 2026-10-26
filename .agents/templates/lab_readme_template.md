@@ -1,40 +1,42 @@
 # Lab 0X — <tên bài lab>
 
-Một đoạn ngắn mô tả bài lab: mục tiêu, dataset, và mô hình chính.
+Mô tả mục tiêu, dataset và thiết kế thực nghiệm của lab.
 
----
+## Cấu trúc thực tế
 
-## Structure
+- description_lab_0X.md: đề gốc và phần yêu cầu mở rộng đã chốt.
+- walkthrough_lab_0X.md: nguồn duy nhất cho báo cáo/PDF.
+- config/: cấu hình thực tế bằng JSON hoặc YAML; liệt kê đúng file đang dùng.
+- notebooks/: notebook chuẩn bị dữ liệu/EDA/FE và notebook modeling khi phù hợp; liệt kê tên thật.
+- src/: thư viện tái sử dụng; roadmap tham chiếu module/hàm tồn tại.
+- scripts/: CLI thực tế của lab, gồm publish nếu đã triển khai.
+- tests/: kiểm thử dữ liệu, mô hình, training và artifact theo phạm vi.
+- data/: dữ liệu local không đưa lên Git.
+- outputs/runs/<run_id>/: artifact, config, môi trường và log gốc từng lần chạy, giữ local.
+- outputs/published/: tất cả ảnh và evidence báo cáo của các run được chọn tường minh; không chứa bản sao báo cáo hay log sửa code.
 
-- `description_lab_0X.md`: đề bài gốc do giảng viên giao (đầu vào, giữ nguyên văn).
-- `walkthrough_lab_0X.md`: tài liệu sống duy nhất hợp nhất 3 Rule (Spec -> Changelog -> Report) — bài làm và kết quả (đầu ra).
-- `config/`: cấu hình YAML tách biệt (`config.yaml`, `augmentations.yaml`, `experiments.yaml`).
-- `notebooks/`: notebook Jupyter tương tác cho phân tích và trực quan hóa (`lab0X.ipynb`).
-- `src/`: các phân hệ Python tái sử dụng (`datasets/`, `models/`, `training/`, `utils/`).
-- `scripts/`: điểm vào thực thi dòng lệnh (`train.py`, `eval.py`, `infer.py`).
-- `tests/`: các bài test TDD bắt buộc (`test_datasets.py`, `test_models.py`, `test_training.py`).
-- `data/`: dataset đầu vào cục bộ (được git ignore).
-- `outputs/`: checkpoint (`checkpoints/`), log đánh giá (`logs/`), bảng/hình EDA (`eda/`) và hình dự đoán (`predictions/`).
+Không liệt kê module/tệp chưa triển khai chỉ để lấp cấu trúc.
 
----
+## Xem kết quả sau khi clone
 
-## Reproduce
+Dẫn link walkthrough, notebook đã chạy có output và hướng dẫn bộ published. Người đọc không cần train lại để phân tích báo cáo. Nêu rõ notebook view cần run gốc/prepared data nếu chưa hỗ trợ đọc published.
 
-**Phiên bản môi trường:** ghi phiên bản trình thông dịch Python dạng comment trong `requirements.txt` (không dùng dòng `python==x.y.z` vì không phải cú pháp pip hợp lệ), và để mỗi lần chạy ghi lại phiên bản thực tế vào `outputs/logs/environment_snapshot.json`.
+## Cài đặt và tái lập
 
-1. Cài đặt môi trường theo `requirements.txt` ở thư mục gốc repository.
-2. Chạy test TDD cục bộ để xác thực pipeline (`pytest tests/ -v`).
-3. Chạy huấn luyện đầy đủ trên Kaggle GPU hoặc qua notebook/CLI.
-4. Tải artifact trở về `outputs/` (bao gồm `outputs/logs/environment_snapshot.json`) và cập nhật `walkthrough_lab_0X.md`.
+Ghi interpreter đã kiểm chứng và yêu cầu Python suy ra từ dependencies thực tế; không dùng python==... trong requirements.txt. Mỗi run lưu environment_snapshot.json riêng.
 
----
+Liệt kê lệnh cài đặt, tests, train, eval, infer và publish đã kiểm chứng. Cho phép local CPU/GPU hoặc Kaggle theo workload; chỉ nhận đã xác thực môi trường thực sự chạy.
 
-## Results Summary
+## Artifacts đầy đủ
 
-| Run | Model | Test Accuracy | Macro F1 |
-|---|---|---|---|
-| Run #1 Baseline | | | |
-| Run #2 Tuned | | | |
-| Run #3 Final | | | |
+Ghi nơi tải và checksum khi gói đầy đủ đã tồn tại; cách giải nén để lấy checkpoint/prepared data/predictions hoặc tiếp tục study. Nếu chưa có Release thì ghi chưa cung cấp, không tạo link giả.
 
-Chi tiết đầy đủ xem tại `walkthrough_lab_0X.md`.
+Bộ published cần có ảnh, bảng, histories, metrics, cấu hình và provenance. Checkpoint/prepared data/database tải riêng khi cần thực thi. Console log, nhật ký kỹ thuật và secret không nằm trong bộ Git.
+
+## Kết quả chính
+
+Tóm tắt ngắn từ artifact thật và dẫn walkthrough cho bảng đầy đủ; không hard-code kết quả chưa kiểm chứng hoặc yêu cầu số test cố định.
+
+## Giới hạn
+
+Nêu seed, ngân sách tuning, môi trường chưa thử và điều kiện tái lập. Không đưa nhật ký sửa phần mềm vào báo cáo.

@@ -5,13 +5,13 @@ Danh sách kiểm tra bắt buộc trước khi chuyển thực thi từ máy c�
 ---
 
 ## 1. Xác thực cục bộ (Local Verification)
-- [ ] Toàn bộ 5 bài test TDD đã pass cục bộ (`pytest` xanh 100%).
+- [ ] Các bài test liên quan đã pass cục bộ (`pytest` xanh 100%).
 - [ ] Bài test 1-batch sanity overfit đã pass: loss giảm về sát 0 và accuracy đạt 100% trên batch nhỏ.
-- [ ] Không còn chạy full nhiều epoch trên CPU cục bộ.
+- [ ] Đã chọn compute phù hợp workload; local CPU/GPU và Kaggle đều được phép, checklist này chỉ áp dụng khi thực sự dùng Kaggle.
 
 ## 2. Tái lập (Reproducibility)
 - [ ] Random seed đã được cố định cho `random`, `numpy`, `torch`, và CUDA.
-- [ ] Đã xác nhận chạy lại hai lần cho ra cùng kết quả.
+- [ ] Đã ghi mức tái lập thực sự kiểm chứng và tolerance; không khẳng định bitwise giống nhau giữa CPU/GPU khi chưa đo.
 - [ ] Phiên bản thư viện (PyTorch, Torchvision) đã được ghi nhận và khớp giữa local và Kaggle.
 - [ ] Yêu cầu Python thật (`Requires-Python` suy ra từ các pin) đã được ghi, không chỉ phiên bản đã chạy.
 - [ ] Phiên bản trình thông dịch Python đã được ghi nhận (comment trong `requirements.txt`), kèm chênh lệch giữa local và Kaggle nếu có.
@@ -29,7 +29,7 @@ Danh sách kiểm tra bắt buộc trước khi chuyển thực thi từ máy c�
 - [ ] Batch size và AMP FP16 đã được cân nhắc để nằm trong ngân sách VRAM 15GB.
 
 ## 5. Đồng bộ kết quả (Artifact Harvesting)
-- [ ] Đã có kế hoạch đồng bộ artifact: qua GitHub Secret token hoặc tự động nén `all_outputs.zip`.
+- [ ] Đã có kế hoạch tải gói artifacts về local, giữ nguyên run/config/environment; chỉ publish evidence đã rà riêng tư. Không đẩy raw console log hoặc secret lên Git.
 - [ ] Đã kiểm tra kỹ các biến ở Cell cuối cùng (tránh `NameError` khi đóng gói zip làm hỏng phiên chạy ngầm).
 - [ ] Các hàm vẽ biểu đồ trong `src/` trả về đối tượng `fig` và Notebook gọi `plt.show()` để kết quả trực quan hiển thị đầy đủ.
 - [ ] Đã hiểu rằng file `.ipynb` tương tác không nằm trên đĩa container; phải tải qua File -> Download Notebook hoặc Save Version.

@@ -91,3 +91,9 @@ lightning_logs/
 
 # Local-only technical change journals
 **/internal_changes.md
+
+# Curated report evidence (raw runs remain ignored).
+!labs/lab01/outputs/published/
+!labs/lab01/outputs/published/**/
+!labs/lab01/outputs/published/**/*.csv
+!labs/lab01/outputs/published/**/*.npz

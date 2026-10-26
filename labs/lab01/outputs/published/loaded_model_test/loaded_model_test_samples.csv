@@ -1,0 +1,17 @@
+test_index,true_label,true_class,predicted_label,predicted_class,probability,correct
+0,9,Ankle boot,9,Ankle boot,0.9930548071861267,True
+1,2,Pullover,2,Pullover,0.9984639883041382,True
+2,1,Trouser,1,Trouser,0.9999998807907104,True
+3,1,Trouser,1,Trouser,0.9999990463256836,True
+4,6,Shirt,6,Shirt,0.9518020153045654,True
+5,1,Trouser,1,Trouser,0.9999932050704956,True
+6,4,Coat,4,Coat,0.99688321352005,True
+7,6,Shirt,6,Shirt,0.9926651120185852,True
+12,7,Sneaker,5,Sandal,0.757215142250061,False
+17,4,Coat,2,Pullover,0.9447181820869446,False
+23,9,Ankle boot,5,Sandal,0.9993591904640198,False
+25,4,Coat,2,Pullover,0.7278273105621338,False
+40,6,Shirt,0,T-shirt/top,0.8318031430244446,False
+42,3,Dress,6,Shirt,0.7917267680168152,False
+49,2,Pullover,6,Shirt,0.8216519355773926,False
+51,4,Coat,2,Pullover,0.765679657459259,False

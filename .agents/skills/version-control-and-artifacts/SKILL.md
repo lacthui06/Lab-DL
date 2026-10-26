@@ -44,7 +44,17 @@ Nguyên lý then chốt: Git theo dõi những gì nhỏ, có thể đọc đư�
 ## 4. Quy trình chi tiết
 
 ### Bước 1: Phân loại file thành hai nhóm
-Trước khi commit, phân loại mọi thay đổi vào hai nhóm. **Nhóm thuộc Git:** source code, module cấu hình, test, tài liệu, notebook đã chạy có output, figure kết quả (`.png`), báo cáo kết quả (`.txt`, `.json`), và file cấu hình môi trường. **Nhóm không thuộc Git:** checkpoint mô hình (`*.pt`, `*.pth`, `*.onnx`, `*.pkl`), dataset thô (`*.csv`, `*.zip`, `*.parquet`, `*.h5`), và mọi file tạm. Việc phân loại rõ ràng ngay từ đầu ngăn chặn việc vô tình commit file nặng.
+Trước khi commit, phân loại mọi thay đổi vào hai nhóm. **Nhóm thuộc Git:** source code, module cấu hình, test, tài liệu, notebook đã chạy có output, figure kết quả (`.png`), báo cáo kết quả (`.txt`, `.json`), và file cấu hình môi trường. **Nhóm không thuộc Git:** checkpoint mô hình (`*.pt`, `*.pth`, `*.onnx`, `*.pkl`), dataset thô (`*.csv`, `*.zip`, `*.parquet`, `*.h5`), và mọi file tạm. CSV thống kê/metrics và NPZ prediction/split nhỏ đã kiểm tra thuộc bộ published là ngoại lệ có chủ đích. Việc phân loại rõ ràng ngay từ đầu ngăn chặn việc vô tình commit file nặng.
+
+### Bước 1b: Công bố evidence và bảo vệ riêng tư
+
+- Run gốc nằm trong `outputs/runs/<run_id>/`, có config, environment snapshot, status, console log và manifest. Không xóa log trên máy chỉ vì không publish.
+- Bộ `outputs/published/` được tạo bằng script từ run ID được chọn trong cấu hình; không chọn run mới nhất ngầm. Với Lab01 dùng `scripts/publish_artifacts.py`, `config/workflow.json` và `config/publication.json`.
+- Publish toàn bộ ảnh của các run thực nghiệm chính đã chọn, bảng tổng hợp/metrics, histories và trials, best parameters, config/scaler, predictions/split indices nhỏ, provenance và checksum. CSV kết quả không đồng nghĩa dataset thô; whitelist theo thư mục và nội dung. Có thể giữ predictions NPZ nhỏ nếu không chứa dữ liệu riêng tư.
+- Không đưa console log thô, internal_changes.md và log sửa kỹ thuật vào Git. Checkpoint, prepared data, bảng dữ liệu từng ảnh lớn, study database và raw data để local hoặc gói tải riêng; chỉ dẫn Release khi đã tạo thật.
+- Rà token/password, username và đường dẫn nội bộ trước khi public. Chỉ khử thông tin trong bản xuất, giữ bản gốc local. .gitignore không tác động tệp đã tracked và không xóa lịch sử; không hứa tuyệt mật hoặc tự force-push lịch sử.
+- Xác minh mọi ảnh/link walkthrough từ clone hoạt động; không tạo REPORT.md trong published. Tách đọc báo cáo khỏi khả năng thực thi notebook: ghi rõ cần full artifact nào để chạy.
+- Mỗi lần publish lưu log local và inventory; bảo toàn run gốc và có bản sao bộ publish cũ để phục hồi. Không tự commit/push khi chỉ được yêu cầu xuất để kiểm tra.
 
 ### Bước 2: Duy trì `.gitignore` chặt chẽ
 Đảm bảo `.gitignore` bao phủ toàn bộ các loại file nặng: checkpoint, dataset, archive, log, và thư mục cache. Khi phát sinh loại file nặng mới trong quá trình làm việc, cập nhật `.gitignore` ngay. Nguyên tắc là giữ cấu trúc thư mục (qua `.gitkeep`) nhưng không đẩy nội dung nặng lên.
@@ -53,7 +63,7 @@ Trước khi commit, phân loại mọi thay đổi vào hai nhóm. **Nhóm thu�
 Trước mỗi commit, kiểm tra chắc chắn không có token, API key, mật khẩu, hay file cấu hình bí mật nào bị đưa vào staging. Secret phải được đọc qua biến môi trường hoặc Kaggle Secret, không bao giờ nằm trong source. Nếu nghi ngờ, rà soát diff của staging trước khi commit.
 
 ### Bước 4: Đưa notebook đã chạy lên Git đúng cách
-Notebook đã chạy có output là bằng chứng quan trọng và nên được đưa lên Git. Tuy nhiên, notebook tương tác không nằm trên đĩa container của môi trường thực thi, nên phải thu hồi qua giao diện (tải notebook về máy hoặc lưu phiên bản), sau đó chép vào `labs/lab0X/notebooks/` rồi commit. Không kỳ vọng script chạy trong container tự đẩy được notebook.
+Notebook đã chạy có output là bằng chứng quan trọng và nên được đưa lên Git. Với local, kiểm tra file đã lưu; với Kaggle, tải notebook của phiên bản đã chạy bằng phương thức được hỗ trợ rồi kiểm tra output. Không giả định một script container luôn truy cập được notebook tương tác.
 
 ### Bước 5: Viết thông điệp commit mô tả rõ
 Mỗi thông điệp commit phải nêu rõ loại thay đổi (docs, feat, fix, refactor, test, chore) và nội dung ngắn gọn. Thông điệp rõ ràng giúp lịch sử Git có thể đọc được và truy nguyên khi cần. Tránh các thông điệp chung chung như "update" hoặc "fix bug".

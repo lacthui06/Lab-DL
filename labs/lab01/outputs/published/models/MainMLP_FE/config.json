@@ -1,0 +1,13 @@
+{
+  "name": "MainMLP_FE",
+  "epochs": 10,
+  "seed": 42,
+  "batch_size": 128,
+  "learning_rate": 0.001,
+  "data_path": "<LAB>/outputs/runs/20261022T122157Z_preparation_dcaece7b/prepared.npz",
+  "optimizer": "Adam",
+  "weight_decay": 0.0,
+  "momentum": 0.9,
+  "device": "cpu",
+  "data_sha256": "5e494e2c2d2188ede476a9803f16dd30598fcc92282a73118de4920aaf17de82"
+}

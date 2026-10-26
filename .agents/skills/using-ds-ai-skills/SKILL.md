@@ -11,7 +11,7 @@ Skill này đóng vai trò **nhạc trưởng tổng thể (master conductor)** 
 
 Đây là điểm vào (entry point) của framework. Khi một phiên làm việc mới bắt đầu mà chưa rõ cần dùng skill nào, skill này chịu trách nhiệm phân loại bài toán, xác định giai đoạn hiện tại, và điều phối chuỗi skill phù hợp.
 
-Skill này cũng là nơi thực thi Giao thức Zero Waste: nó quyết định khi nào dừng thực thi cục bộ và khi nào chuyển sang Kaggle GPU.
+Skill chọn local CPU/GPU hoặc Kaggle theo workload, ngân sách và yêu cầu đã thống nhất; không bắt buộc chuyển môi trường chỉ vì thiếu CUDA.
 
 Nguyên lý then chốt: phân loại đúng ngay từ đầu quyết định toàn bộ chuỗi hành động phía sau; định tuyến sai sẽ khiến mọi bước tiếp theo lệch chuẩn.
 
@@ -51,8 +51,8 @@ Kích hoạt `planning-and-task-breakdown` để phân rã pipeline thành các 
 ### Bước 4: Triển khai và Kiểm thử
 Kích hoạt `test-driven-development` để xác thực schema dữ liệu và chạy test 1-batch sanity overfit. Kích hoạt `source-driven-development` để xác thực API thư viện. Kích hoạt `environment-and-reproducibility` để cố định seed và ghi nhận phiên bản môi trường.
 
-### Bước 5: Thực thi và Thu hoạch (Zero Waste Protocol)
-Nghiêm cấm chạy full nhiều epoch trên CPU cục bộ. Dừng lại khi module và test 1-batch đã pass. Kích hoạt `kaggle-remote-execution` để chuyển sang Kaggle GPU, lưu artifact vào `/kaggle/working/outputs/`, và đồng bộ về cục bộ.
+### Bước 5: Thực thi và thu hoạch theo môi trường đã chọn
+Sau sanity/smoke test, cho phép full training trên local CPU/GPU hoặc Kaggle theo cấu hình và ngân sách đã chốt. Chỉ kích hoạt `kaggle-remote-execution` khi dùng Kaggle. Mỗi lần chạy lưu config, môi trường, output và console log tại outputs/runs/<run_id>; publish evidence có chọn lọc sang outputs/published, giữ log thô local.
 
 ### Bước 6: Chẩn đoán và Kiểm toán
 Nếu gặp lỗi kỹ thuật, kích hoạt `debugging-and-error-recovery`. Nếu kết quả cao bất thường, kích hoạt `doubt-driven-development` để kiểm toán rò rỉ dữ liệu.
@@ -81,7 +81,7 @@ Kích hoạt `code-simplification` để dọn code. Kích hoạt `version-contr
 
 - **Phân loại sai modality:** Chọn sai playbook cho modality thực tế (ví dụ áp kiến trúc chuỗi cho dữ liệu ảnh). Dấu hiệu: tiền xử lý và backbone không khớp với dạng dữ liệu đầu vào. Phòng tránh: xác định modality trước tiên ở Bước 1.
 - **Bỏ qua bước đặc tả:** Nhảy thẳng vào code khi chưa có spec. Dấu hiệu: không có baseline và metric rõ ràng. Phòng tránh: luôn chạy `spec-driven-development` trước.
-- **Chạy full training cục bộ:** Vi phạm Giao thức Zero Waste. Dấu hiệu: CPU chạy hàng giờ. Phòng tránh: dừng ở test 1-batch và chuyển sang Kaggle.
+- **Chọn compute không phù hợp:** Dự kiến thời gian vượt ngân sách hoặc tự ép Kaggle khi người dùng chọn local. Phòng tránh: đánh giá workload và giữ lựa chọn đã chốt.
 - **Bỏ sót ghi vết:** Không cập nhật walkthrough sau mỗi run. Phòng tránh: kích hoạt `walkthrough-and-experiment-tracking` ngay sau mỗi lần chạy.
 
 ## 8. Definition of Done
@@ -89,7 +89,7 @@ Kích hoạt `code-simplification` để dọn code. Kích hoạt `version-contr
 - [ ] Bài toán đã được phân loại đúng modality.
 - [ ] Playbook workflow tương ứng đã được chỉ định.
 - [ ] Chuỗi skill đã được kích hoạt theo đúng thứ tự.
-- [ ] Giao thức Zero Waste đã được tuân thủ.
+- [ ] Compute và ngân sách thực thi đã được chọn phù hợp; thiết bị thực tế được ghi vào run.
 - [ ] `walkthrough_lab_0X.md` đã được cập nhật qua cả 3 Section.
 - [ ] Trạng thái dự án và bước tiếp theo đã được xác định rõ.
 
@@ -97,5 +97,5 @@ Kích hoạt `code-simplification` để dọn code. Kích hoạt `version-contr
 
 - [X] *"Cứ code trước, phân loại sau"* -> **Bác bỏ:** Định tuyến sai khiến toàn bộ quy trình lệch chuẩn và phải làm lại. Phân loại đúng tốn vài giây, tiết kiệm hàng giờ.
 - [X] *"Bài này nhỏ, bỏ qua đặc tả và kế hoạch"* -> **Bác bỏ:** Không có spec và kế hoạch thì không có baseline để so sánh và không có tiêu chí nghiệm thu. Mọi kết quả sau đó thiếu căn cứ.
-- [X] *"Chạy thử full training trên CPU xem sao"* -> **Bác bỏ:** Vi phạm Giao thức Zero Waste, tốn thời gian và token quota. Dừng ở test 1-batch.
+- [X] *"Không có GPU thì không train được"* -> **Bác bỏ:** CPU được phép nếu workload và ngân sách phù hợp; chạy sanity trước và ghi thiết bị thực tế.
 - [X] *"Ghi vết để sau, giờ tập trung chạy thí nghiệm"* -> **Bác bỏ:** Ghi vết ngay sau mỗi run rẻ hơn nhiều so với truy ngược về sau. Ký ức về lý do thay đổi sẽ phai nhạt nhanh chóng.

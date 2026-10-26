@@ -1,6 +1,6 @@
 ---
 name: doubt-driven-development
-description: Cơ chế kiểm toán đối kháng được kích hoạt khi mô hình đạt hiệu năng cao bất thường (Accuracy > 95%), nhằm phát hiện rò rỉ nhãn, nhiễm bẩn tập train-test, và overfitting tiềm ẩn.
+description: Cơ chế kiểm toán đối kháng được kích hoạt khi mô hình đạt hiệu năng cao bất thường (metric vượt kỳ vọng của dataset/baseline), nhằm phát hiện rò rỉ nhãn, nhiễm bẩn tập train-test, và overfitting tiềm ẩn.
 ---
 
 # doubt-driven-development (Bản DS & AI)
@@ -18,7 +18,7 @@ Nguyên lý then chốt: kết quả chỉ được chấp nhận sau khi vượ
 ## 2. Khi nào kích hoạt (Triggers)
 
 **Dấu hiệu kích hoạt:**
-- Mô hình đạt Accuracy, F1-Score, hoặc ROC-AUC cao bất thường (> 95%) trong các vòng lặp đầu tiên.
+- Metric tăng bất thường so với baseline, độ khó dataset, phân bố lớp hoặc giai đoạn huấn luyện. Không dùng ngưỡng 95%/98% chung cho Accuracy, F1 và ROC-AUC; ROC-AUC cao không đồng nghĩa Accuracy cao.
 - Trước khi hoàn thiện bài nộp môn học hoặc triển khai production.
 - Metric validation có vẻ tối ưu phi thực tế bất chấp miền dữ liệu nhiễu.
 - Kết quả tốt hơn kỳ vọng đáng kể so với baseline lý thuyết.
@@ -51,10 +51,10 @@ Kiểm tra confusion matrix. Trong dataset có 99 mẫu âm và 1 mẫu dương,
 So sánh learning curves giữa train và validation. Nếu train loss rất thấp trong khi validation loss cao (ví dụ train 0.02 so với val 1.20), mạng đang ghi nhớ mẫu train và thất bại trong việc tổng quát hóa. Khoảng cách càng lớn thì overfitting càng nghiêm trọng.
 
 ### Bước 5: Test hoán vị nhãn (Label Permutation Test)
-Xáo trộn ngẫu nhiên cột mục tiêu rồi huấn luyện lại mô hình. Kết quả kỳ vọng là hiệu năng giảm xuống mức ngẫu nhiên (khoảng 50% cho phân loại nhị phân, khoảng 10% cho bài toán 10 lớp). Nếu mô hình vẫn đạt độ chính xác cao trên nhãn bị xáo trộn ngẫu nhiên, pipeline chứa lỗi rò rỉ dữ liệu đã được xác nhận.
+Khi kiểm tra chia tập/fit-on-train và metric vẫn để lại nghi ngờ, chạy permutation test trong ngân sách đã chốt: hoán vị nhãn train, giữ tập đánh giá độc lập, huấn luyện lại và so với baseline ngẫu nhiên phù hợp phân bố lớp. Không dùng accuracy train để kết luận vì mạng có thể ghi nhớ nhãn ngẫu nhiên. Kết quả cao là dấu hiệu cần điều tra, không tự động chứng minh nguyên nhân rò rỉ.
 
 ### Bước 6: Tổng hợp phán quyết
-Tổng hợp kết quả cả 5 kiểm toán. Chỉ chấp nhận kết quả là hợp lệ khi tất cả kiểm toán đều không phát hiện rò rỉ hay artifact. Nếu phát hiện vấn đề, ghi rõ nguyên nhân và chuyển sang `debugging-and-error-recovery` để sửa.
+Tổng hợp kiểm tra đã thực hiện, bằng chứng và giới hạn; ghi rõ test chưa chạy và lý do. Không tuyên bố đã hoàn thành permutation test nếu chưa có artifact. Nếu phát hiện vấn đề, ghi rõ nguyên nhân và chuyển sang `debugging-and-error-recovery` để sửa.
 
 ## 5. Deliverables
 
@@ -74,10 +74,10 @@ Tổng hợp kết quả cả 5 kiểm toán. Chỉ chấp nhận kết quả l�
 
 ## 7. Chế độ thất bại thường gặp (Failure Modes)
 
-- **Bỏ qua kiểm toán vì kết quả đẹp:** Chấp nhận metric cao mà không kiểm tra rò rỉ. Dấu hiệu: mô hình thất bại trong thực tế. Phòng tránh: luôn chạy đủ 5 kiểm toán.
+- **Bỏ qua kiểm toán vì kết quả đẹp:** Chấp nhận metric cao mà không kiểm tra rò rỉ. Dấu hiệu: mô hình thất bại trong thực tế. Phòng tránh: kiểm tra dữ liệu và split trước, bổ sung permutation test khi cần.
 - **Không kiểm tra tập chia:** Bỏ qua kiểm tra trùng lặp mẫu giữa train và test. Phòng tránh: kiểm tra ở Bước 2.
 - **Bỏ qua lớp thiểu số:** Chỉ nhìn Accuracy tổng thể. Phòng tránh: kiểm tra Macro F1 và PR-AUC ở Bước 3.
-- **Bỏ qua test hoán vị:** Không chạy test hoán vị nhãn vì tốn thời gian. Đây là kiểm tra quyết định nhất để xác nhận rò rỉ. Phòng tránh: luôn chạy ở Bước 5.
+- **Bỏ qua test hoán vị:** Không chạy test hoán vị nhãn vì tốn thời gian. Đây là kiểm tra quyết định nhất để xác nhận rò rỉ. Phòng tránh: ghi rõ căn cứ cần chạy hoặc chưa chạy Bước 5.
 
 ## 8. Definition of Done
 
@@ -85,13 +85,13 @@ Tổng hợp kết quả cả 5 kiểm toán. Chỉ chấp nhận kết quả l�
 - [ ] Đã kiểm toán nhiễm bẩn tập chia và mẫu trùng lặp.
 - [ ] Đã kiểm tra confusion matrix và metric lớp thiểu số.
 - [ ] Đã so sánh learning curves và khoảng cách tổng quát hóa.
-- [ ] Đã chạy test hoán vị nhãn và xác nhận hiệu năng giảm về mức ngẫu nhiên.
+- [ ] Đã ghi kết quả permutation test nếu thực hiện, hoặc lý do không thực hiện và giới hạn kết luận.
 - [ ] Đã tổng hợp phán quyết cuối về tính hợp lệ của kết quả.
 - [ ] Phán quyết đã được ghi vào `walkthrough_lab_0X.md`.
 
 ## 9. Chống biện minh (Anti-Rationalization)
 
-- [X] *"Accuracy 99% là tốt rồi, không cần kiểm tra gì thêm"* -> **Bác bỏ:** Trong ML, kết quả tốt bất thường gần như luôn là dấu hiệu của lỗi pipeline. Kiểm toán là bắt buộc trước khi chấp nhận.
-- [X] *"Test hoán vị nhãn tốn thời gian, bỏ qua"* -> **Bác bỏ:** Đây là kiểm tra quyết định nhất để xác nhận rò rỉ dữ liệu. Bỏ qua nó nghĩa là chấp nhận rủi ro công bố kết quả sai.
+- [X] *"Accuracy 99% là tốt rồi, không cần kiểm tra gì thêm"* -> **Bác bỏ:** Kết quả cao cần được đối chiếu độ khó dataset/baseline và kiểm tra pipeline, không mặc định là lỗi. Kiểm toán là bắt buộc trước khi chấp nhận.
+- [X] *"Test hoán vị nhãn tốn thời gian, bỏ qua"* -> **Bác bỏ:** Cân nhắc theo mức nghi ngờ và ngân sách; ghi rõ phạm vi kiểm tra, không biến việc chưa chạy thành một kết quả đã xác thực.
 - [X] *"Accuracy cao là đủ, không cần xem lớp thiểu số"* -> **Bác bỏ:** Trên dataset mất cân bằng, Accuracy cao có thể che giấu việc mô hình bỏ qua hoàn toàn lớp thiểu số. Phải xem Macro F1 và PR-AUC.
 - [X] *"Chắc là mô hình mình giỏi thật"* -> **Bác bỏ:** Trách nhiệm kiểm toán là tìm cách bác bỏ giả thuyết này. Chỉ khi mọi kiểm toán đều sạch mới tin vào kết quả.

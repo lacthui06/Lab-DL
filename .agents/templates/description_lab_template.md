@@ -1,40 +1,28 @@
 # Description — Lab 0X: <tên bài lab>
 
-> **Lab:** Lab 0X
-> **Nguồn đề bài:** <giảng viên / môn học / đường dẫn gốc>
-> **Trạng thái:** [ ] Chưa điền | [ ] Đã điền nguyên văn
+## 1. Đề bài gốc
 
----
+Ghi nguồn đề bài và dán nguyên văn nội dung giảng viên giao. Không sửa hay diễn giải thay phần gốc.
 
-## Ghi chú về file này
+### 1.1. Bối cảnh và mục tiêu
+<nguyên văn>
 
-Đây là bản ghi **đề bài gốc** (đầu vào) do giảng viên giao. Nội dung phải giữ **nguyên văn**, không chỉnh sửa, không diễn giải lại.
+### 1.2. Yêu cầu và ràng buộc
+<nguyên văn>
 
-Bài làm và toàn bộ kết quả thực nghiệm của sinh viên nằm ở `walkthrough_lab_0X.md` (đầu ra). Hai file bổ sung cho nhau:
+### 1.3. Sản phẩm cần nộp
+<nguyên văn>
 
-- `description_lab_0X.md`: đề bài nhận vào.
-- `walkthrough_lab_0X.md`: bài làm trả ra.
+## 2. Yêu cầu mở rộng đã thống nhất
 
----
+Ghi riêng các quyết định trước khi triển khai: phạm vi, dữ liệu, preprocessing/feature engineering, model, thí nghiệm, visualization, artifacts và hình thức báo cáo. Phân biệt yêu cầu đã chốt với đề xuất chưa được chấp nhận. Không ghi số liệu kết quả ở đây.
 
-## 1. Bối cảnh và Mục tiêu
+## 3. Tiêu chí nghiệm thu
 
-<dán nguyên văn phần bối cảnh và mục tiêu của đề bài>
+<tiêu chí kiểm chứng phương pháp, đầu ra và môi trường đã thống nhất>
 
----
+## 4. Quan hệ tài liệu
 
-## 2. Yêu cầu (Requirements)
-
-<dán nguyên văn các yêu cầu của đề bài>
-
----
-
-## 3. Ràng buộc kỹ thuật (Constraints)
-
-<dán nguyên văn các ràng buộc: framework, dataset, môi trường chạy, định dạng nộp>
-
----
-
-## 4. Sản phẩm cần nộp (Deliverables)
-
-<dán nguyên văn danh sách sản phẩm cần nộp>
+- walkthrough_lab_0X.md là nguồn báo cáo duy nhất, trình bày phương pháp và kết quả thực nghiệm.
+- README.md hướng dẫn xem evidence, cài đặt và chạy.
+- Nhật ký sửa phần mềm giữ local, ngoài Git và nội dung PDF.

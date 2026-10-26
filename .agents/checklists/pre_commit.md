@@ -12,9 +12,14 @@ Danh sách kiểm tra bắt buộc phải tick đủ trước mỗi lần commit
 
 ## 2. Kỷ luật file nặng (Artifact Hygiene)
 - [ ] Không có checkpoint mô hình (`*.pt`, `*.pth`, `*.ckpt`, `*.onnx`, `*.pkl`) bị commit.
-- [ ] Không có dataset thô hoặc bảng dữ liệu nặng (`*.csv`, `*.zip`, `*.parquet`, `*.h5`) bị commit (ngoại trừ các bảng thống kê tổng hợp EDA nhỏ trong `outputs/eda/tables/*.csv` đã được whitelist trong `.gitignore`).
-- [ ] Các file trong `outputs/` được commit chỉ là figure (`.png`), báo cáo (`.txt`), bảng kết quả (`.json`), và bảng tổng hợp EDA nhỏ (`outputs/eda/tables/*.csv`) — không phải trọng số.
+- [ ] Không có dataset thô hoặc bảng dữ liệu nặng (`*.csv`, `*.zip`, `*.parquet`, `*.h5`) bị commit (ngoại trừ bảng thống kê/kết quả, histories/trials và prediction/split NPZ nhỏ trong bộ `outputs/published/` đã whitelist và rà nội dung).
+- [ ] Các file trong `outputs/published/` là toàn bộ ảnh của các run đã chọn, CSV/JSON kết quả, histories/trials, prediction/split nhỏ, config và provenance/checksums; không có trọng số, prepared data, study database hay console log thô.
 - [ ] `.gitignore` đã bao phủ đúng các loại file nặng mới phát sinh.
+
+- [ ] `internal_changes.md`, log sửa kỹ thuật và console log không nằm trong staging; `.gitignore` không được coi là đã xóa lịch sử cũ.
+- [ ] Đã rà đường dẫn người dùng, token/password trong bản xuất; file gốc local được bảo toàn.
+- [ ] Script publish đọc run ID tường minh, kiểm tra status/link và ghi log local; không tự lấy newest run.
+- [ ] Walkthrough chỉ tham chiếu evidence có trong Git; người clone đọc được mà không train lại.
 
 ## 3. Toàn vẹn nội dung (Content Integrity)
 - [ ] Không có emoji, icon, hay ký tự vẽ khung trong bất kỳ file văn bản nào.
