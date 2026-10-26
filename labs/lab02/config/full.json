@@ -15,16 +15,22 @@
     0.01
   ],
   "batch_sizes": [
-    32,
-    64
+    64,
+    128
   ],
   "head_epochs": 10,
-  "finetune_epochs": 10,
+  "finetune_epochs": 30,
   "finetune_backbone_lr": 1e-05,
   "finetune_head_lr": 0.0001,
   "weight_decay": 0.0001,
   "feature_batch_size": 64,
   "image_size": 224,
   "profile": "cifar10_gpu_full224",
-  "notes": "45000/5000/10000; official weights spatial preprocessing; GPU recommended."
+  "notes": "45000/5000/10000; official weights spatial preprocessing; GPU recommended. Active batch grid 64/128; head 10 epochs; fine max 30, minimum 10 with validation-loss patience 7. New budget not executed.",
+  "early_stopping": {
+    "min_epochs": 10,
+    "patience": 7,
+    "min_delta": 0.0001
+  },
+  "require_cuda": true
 }
