@@ -1,0 +1,26 @@
+[
+  {
+    "notebook": "01_sentiment_analysis_pipeline.ipynb",
+    "mode": "view",
+    "executed_code_cells": 5,
+    "errors": 0,
+    "training_executed": false,
+    "artifact": "01_sentiment_analysis_pipeline.ipynb"
+  },
+  {
+    "notebook": "02_finetuning_binary_classification.ipynb",
+    "mode": "view",
+    "executed_code_cells": 13,
+    "errors": 0,
+    "training_executed": false,
+    "artifact": "02_finetuning_binary_classification.ipynb"
+  },
+  {
+    "notebook": "lab03_huggingface_complete.ipynb",
+    "mode": "view",
+    "executed_code_cells": 17,
+    "errors": 0,
+    "training_executed": false,
+    "artifact": "lab03_huggingface_complete.ipynb"
+  }
+]

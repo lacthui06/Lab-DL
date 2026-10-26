@@ -42,5 +42,6 @@
     ".agents/checklists/pre_submission.md",
     ".agents/skills/version-control-and-artifacts/SKILL.md",
     ".agents/templates/walkthrough_template.md"
-  ]
+  ],
+  "review_scope": "Initial Lab03 port review; latest extension is recorded in validation/enhancement_review.json"
 }

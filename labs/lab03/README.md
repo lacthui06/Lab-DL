@@ -77,7 +77,7 @@ cd ../..
 .venv-lab03/bin/python labs/lab03/scripts/audit_outputs.py
 ```
 
-- **14 tests đạt trên CPU**: dataset contract, dynamic padding, pipeline/manual, checkpoint, sanity overfit, Trainer, run tracking, năm plots, recovery, metrics/artifact audit và phát hiện dữ liệu bị sửa.
+- **43 tests đạt trên CPU**: dataset contract, dynamic padding, pipeline/manual, checkpoint, sanity overfit, Trainer, run tracking, năm plots, recovery, metrics/artifact audit và phát hiện dữ liệu bị sửa.
 - Audit kiểm tra 24 file SHA256, tính lại toàn bộ bảy metrics từ 1.066 predictions và xác nhận confusion matrix.
 - 29 file checkpoint không có trong Git được liệt kê rõ là thiếu có chủ đích, không coi là đã kiểm tra tại máy rà soát.
 - Ba notebook chạy hết ở view, Hugging Face offline, không có cell lỗi. Xem `validation/notebook_execution.json`.
@@ -153,3 +153,66 @@ git diff --cached --stat
 ```
 
 Giữ manifest gốc kể cả khi weights không đi cùng. Không chỉnh sửa artifacts lịch sử để làm số liệu đẹp hơn; kết quả rà soát bổ sung ghi ở `validation/`. Run registry cần đi cùng run directory khi chuyển máy.
+
+## 9. Notebook mở rộng, roadmap và artifact trực quan
+
+Bản mở rộng đặt roadmap ngay đầu notebook, gồm phase, mục tiêu, module/file tham chiếu và đường dẫn artifact. Notebook không chỉ in JSON: bảng token, so sánh pipeline/manual, ROC–PR, phân bố xác suất, reliability/calibration, metric theo lớp và phân tích threshold đều có PNG đã lưu.
+
+Chạy lại phần phân tích của run cũ **không cần checkpoint/GPU/Internet**:
+
+```bash
+.venv-lab03/bin/python labs/lab03/scripts/analyze_outputs.py
+```
+
+`src/analysis.py` tạo các run `exercise1_analysis` và `analysis` độc lập, lưu hình cùng JSON nguồn. Cache chỉ dùng khi manifest nguồn và code SHA256 còn khớp. Không sửa file hoặc manifest của run Kaggle cũ.
+
+Để thực thi toàn bộ notebook view và lưu **mọi cell output** dưới `outputs/`:
+
+```bash
+.venv-lab03/bin/python -m ipykernel install --user --name lab03
+.venv-lab03/bin/python labs/lab03/scripts/render_notebooks.py --kernel lab03
+```
+
+Run `notebook_render` chứa bản notebook đã thực thi và `execution_summary.json`; các notebook ở thư mục `notebooks/` cũng được cập nhật output. Quy trình chỉ chạy `MODE="view"`. Thực thi interactively vẫn đọc các PNG/bảng từ run phân tích đã lưu; mọi biểu đồ trình bày có file tương ứng trong `outputs/runs/`.
+
+## 10. Quét threshold binary đúng quy trình
+
+Quy tắc dự đoán mở rộng: Positive khi `P(Positive) >= threshold`. Với xác suất đúng bằng 0.5, quy tắc `>=` có thể khác argmax cũ ở trường hợp hòa điểm; không giả định hai cách luôn giống nhau.
+
+Train mới thực hiện:
+
+1. Chọn checkpoint tốt nhất theo **validation accuracy**.
+2. Predict lại **validation** bằng checkpoint đó và lưu `validation_predictions.json`.
+3. Quét 19 ngưỡng từ 0.05 tới 0.95, bước 0.05; chọn **validation Macro F1** lớn nhất. Khi hòa: gần 0.5 nhất, sau đó ngưỡng nhỏ hơn.
+4. Lưu và cố định `decision_threshold.json`; lưu scan, hình và selected policy trong `validation_threshold/`.
+5. Sau đó mới predict test. Giữ `test_metrics.json` theo argmax để so sánh; lưu riêng `test_threshold_metrics.json` cho ngưỡng validation đã cố định.
+
+Code `src/training/thresholds.py` chặn chọn ngưỡng khi `split != 'validation'`. `scripts/select_threshold.py` chỉ đọc validation để chọn, không đọc test predictions. Test suite kiểm tra cả quy tắc này và lưu artifacts. Việc gắn nhãn split trong API không tự chứng minh nguồn dữ liệu; notebook/CLI chịu trách nhiệm truyền đúng split.
+
+Run Kaggle lịch sử **không có validation probabilities và không có weights trong Git**, vì vậy chưa thể khẳng định đã chọn ngưỡng validation cho run đó. Đồ thị `threshold_test_diagnostic/threshold_curves.png` chỉ mô tả độ nhạy trên test đã quan sát; **không chọn ngưỡng tối ưu từ test** và không thay đổi kết quả 83,96% của run gốc.
+
+Nếu còn ZIP checkpoint, khôi phục `best_model/` rồi chọn ngưỡng mà không train lại:
+
+```bash
+.venv-lab03/bin/python labs/lab03/scripts/select_threshold.py \
+  --model-path labs/lab03/outputs/runs/20261025T181550Z_finetuning_e02bced7/best_model
+```
+
+Lệnh in đường dẫn policy trong run `threshold_selection` mới. Dùng policy đó khi đánh giá/suy luận:
+
+```bash
+.venv-lab03/bin/python labs/lab03/scripts/eval.py \
+  --model-path <best_model_directory> \
+  --threshold-file <threshold_selection_run>/decision_threshold.json
+
+.venv-lab03/bin/python labs/lab03/scripts/infer.py \
+  --model-path <best_model_directory> \
+  --threshold-file <threshold_selection_run>/decision_threshold.json \
+  --text "The film was enjoyable."
+```
+
+Checkpoint train mới mang policy cùng `best_model/`; eval/infer tự đọc nếu có. Checkpoint cũ không policy giữ argmax. Mọi inference CLI giờ được lưu trong run riêng gồm predictions JSON, hình và log, không chỉ in ra terminal.
+
+Test set cũ đã được quan sát trong phát triển; một vòng thử ngưỡng mới trên benchmark đó vẫn mang tính thăm dò, không được trình bày như kiểm định mù độc lập. Không dùng hình test diagnostic để điều chỉnh lựa chọn ngưỡng.
+
+Policy threshold được gắn SHA256 của checkpoint; không áp policy của model A vào model B. Inference lưu cả policy, hình và predictions. Dependency `ipywidgets` được pin để notebook có progress widget đúng môi trường.

@@ -4,7 +4,7 @@
     "exercise2": "covered: full official dataset, pretrained backbone/tokenizer, preprocessing, TrainingArguments/Trainer, three epochs and test evaluation"
   },
   "checks": {
-    "pytest_passed": 14,
+    "pytest_passed": 43,
     "pytest_failed": 0,
     "pip_check": "passed",
     "notebooks_view_offline": 3,
@@ -18,7 +18,9 @@
       "eval.py",
       "infer.py"
     ],
-    "eval_infer_use_original_config": "passed local model CLI regression"
+    "eval_infer_use_original_config": "passed local model CLI regression",
+    "binary_threshold_selection": "validation only; checkpoint-bound policy; fixture and CLI regression tested",
+    "visual_artifact_exports": "analysis runs plus complete notebook_render snapshots"
   },
   "fix": "Eval/infer use run config snapshot when available; eval avoids downloading an unrelated base model tokenizer",
   "limitations": {
@@ -35,5 +37,6 @@
     "executed_notebooks": 3,
     "original_artifact_hashes_preserved": 24,
     "lab01_changed": false
-  }
+  },
+  "extended_review": "validation/enhancement_review.json"
 }

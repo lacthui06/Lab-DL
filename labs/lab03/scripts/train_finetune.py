@@ -7,4 +7,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--allow-cpu", action="store_true")
     args = parser.parse_args()
-    print(finetune(allow_cpu=args.allow_cpu))
+    out = finetune(allow_cpu=args.allow_cpu)
+    from labs.lab03.src.analysis import ensure_analysis
+    print("Training run:", out)
+    print("Visual analysis:", ensure_analysis(out))

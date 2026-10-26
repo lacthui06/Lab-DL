@@ -109,3 +109,12 @@ Chạy lại ba notebook view offline, xác nhận registry/artifacts không tha
 Thay bản IMDB subset bằng bản full Rotten Tomatoes đã kiểm chứng ở repo phucthanh2210/Lab-Deep-Learning (8fd3ce9). Giữ artifacts Kaggle nguyên bytes và manifest gốc; không đưa weights/cache/venv/dataset thô vào Git. Chuẩn hóa đường dẫn labs/lab03 và namespace labs.lab03.src để không xung đột src của Lab01; thêm train.py làm entrypoint tương thích chuẩn Lab01. Bộ test riêng Lab03 đạt 14 passed; ba notebook thực thi view offline không lỗi. Lệnh pytest cần chỉ rõ labs/lab03/tests hoặc chạy từ thư mục lab, tránh vô tình thu thập suite Lab01 với môi trường NLP riêng. Không đổi file Lab01, không merge main vào nhánh và không huấn luyện lại GPU.
 
 Mẫu README/description/walkthrough trong .agents/templates được tham chiếu; báo cáo dùng ba phần Rule 1/2/3, bảng flow, per-class TPR/FPR và decision traceability. Các giới hạn (test loss not logged, weights ngoài Git, chưa có kiểm toán duplicate toàn bộ splits và full-test reload) được giữ rõ, không tick đạt khi thiếu bằng chứng.
+
+
+## Mở rộng trình bày và binary threshold theo phản hồi
+
+Tham chiếu Lab01 main commit 35bfddc (walkthrough 789 dòng). Notebook mở rộng có roadmap phase/module/file, giải thích lựa chọn, nhiều ảnh đã lưu thay vì chỉ dump JSON. Description giữ đề gốc và thêm discuss/decision. Walkthrough được viết lại hơn 850 dòng nội dung, nhúng hình thật và giải thích giới hạn. Mọi hình/bảng/cell output được lưu qua analysis run và notebook_render run riêng trong outputs/; raw Kaggle runs giữ nguyên.
+
+Thêm validation-only threshold grid 19 điểm, chọn Macro F1 và tie-break định trước. Trainer lưu validation predictions trước khi chốt ngưỡng; test argmax và test theo ngưỡng nằm ở file riêng. Policy gắn SHA256 checkpoint và được lưu cùng inference. Run lịch sử không có validation probabilities/weights trong Git nên không bịa selected validation threshold. Test sensitivity curve chỉ là diagnostic. Các cache/bản render nháp chưa công bố vẫn giữ cục bộ, chỉ phiên trình bày cuối được đưa vào registry chia sẻ và Git; không xóa run train bất lợi.
+
+Không khôi phục .github/workflows đã được người dùng xóa. Lab01, docs chung và .agents không thay đổi. 42 tests đạt, cả ba notebook được render offline và lưu bản đã thực thi dưới outputs/. Bổ sung ipywidgets để loại cảnh báo IProgress bằng dependency đúng thay vì che warning.

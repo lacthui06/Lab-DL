@@ -9,6 +9,8 @@ from .datasets.loader import load_data, tokenize_data
 from .models.classifier import load_model, manual_predict, compare_inference, verify_saved_model
 from .training.trainer import make_trainer
 from .training.metrics import compute_metrics
+from .training.thresholds import export_threshold_analysis, binary_metrics_at_threshold
+from .decision import checkpoint_identity
 from .utils.runs import ROOT, run_context, save_json
 from .utils.plots import plot_lengths, plot_learning, plot_confusion, plot_metrics, plot_samples
 
@@ -59,20 +61,48 @@ def choose_samples(texts, labels, probs):
                                  "predicted_label": int(preds[i]), "confidence": float(probs[i].max())})
     return selected
 
-def evaluate_model(trainer, tokenized_test, raw_test, out):
-    prediction = trainer.predict(tokenized_test, metric_key_prefix="test")
-    logits = prediction.predictions
-    labels = np.array(prediction.label_ids)
-    metrics = compute_metrics((logits, labels))
+def predict_split(trainer, tokenized_split, raw_split, out, split):
+    """Lưu mọi xác suất/nhãn và metrics runtime để tái lập sau khi chạy."""
+    prediction = trainer.predict(tokenized_split, metric_key_prefix=split)
+    logits = prediction.predictions[0] if isinstance(prediction.predictions, tuple) else prediction.predictions
+    labels = np.asarray(prediction.label_ids)
     probs = torch.tensor(logits).softmax(-1).numpy()
+    filename = "all_predictions.json" if split == "test" else f"{split}_predictions.json"
+    save_json(out / filename, [dict(index=i, text=t, true_label=int(y), predicted_label=int(p.argmax()),
+        probabilities=p.tolist()) for i, (t, y, p) in enumerate(zip(raw_split["text"], labels, probs))])
+    save_json(out / f"{split}_runtime_metrics.json", prediction.metrics)
+    return logits, probs, labels
+
+
+def select_threshold_for_validation(trainer, tokenized_validation, raw_validation, out, thresholds=None, checkpoint_path=None):
+    """Chỉ hàm này được chọn ngưỡng; đầu vào luôn là split validation."""
+    logits, probs, labels = predict_split(trainer, tokenized_validation, raw_validation, out, "validation")
+    save_json(out / "validation_metrics.json", compute_metrics((logits, labels)))
+    policy = export_threshold_analysis(labels, probs[:, 1], out / "validation_threshold",
+                                      split="validation", thresholds=thresholds, select=True)
+    policy["validation_prediction_file"] = "validation_predictions.json"
+    policy["validation_dataset_fingerprint"] = getattr(raw_validation, "_fingerprint", None)
+    if checkpoint_path is not None:
+        policy["checkpoint_identity"] = checkpoint_identity(checkpoint_path)
+    save_json(out / "decision_threshold.json", policy)
+    return policy
+
+
+def evaluate_model(trainer, tokenized_test, raw_test, out, decision_threshold=None):
+    logits, probs, labels = predict_split(trainer, tokenized_test, raw_test, out, "test")
+    metrics = compute_metrics((logits, labels))
     rows = choose_samples(raw_test["text"], labels, probs)
     save_json(out / "test_metrics.json", metrics)
     save_json(out / "sample_predictions.json", rows)
-    save_json(out / "all_predictions.json", [dict(index=i, text=t, true_label=int(y), predicted_label=int(p.argmax()),
-              probabilities=p.tolist()) for i, (t, y, p) in enumerate(zip(raw_test["text"], labels, probs))])
     plot_confusion(labels, probs.argmax(-1), out / "confusion_matrix.png")
     plot_metrics(metrics, out / "metrics_bar.png")
     plot_samples(rows, out / "sample_predictions.png")
+    if decision_threshold is not None:
+        threshold_metrics = binary_metrics_at_threshold(labels, probs[:, 1], decision_threshold)
+        threshold_metrics.update(selection_split="validation", selection_performed_on_test=False)
+        save_json(out / "test_threshold_metrics.json", threshold_metrics)
+        folder = out / "test_threshold"; folder.mkdir(exist_ok=True)
+        plot_confusion(labels, (probs[:, 1] >= decision_threshold).astype(int), folder / "confusion_matrix.png")
     print(json.dumps(metrics, indent=2))
     return metrics, rows
 
@@ -114,6 +144,7 @@ def finetune(config=None, allow_cpu=False):
         raw, tokenizer, tokenized = prepare_data(config)
         lengths = [len(ids) for ids in tokenizer(raw["train"]["text"], truncation=False)["input_ids"]]
         save_json(out / "data_statistics.json", {"split_sizes": {k: len(raw[k]) for k in ("train", "validation", "test")},
+                  "label_counts": {k: {str(label): int(sum(int(v) == label for v in raw[k]["label"])) for label in (0, 1)} for k in ("train", "validation", "test")},
                   "train_token_lengths": {"mean": float(np.mean(lengths)), "max": max(lengths),
                   "truncated_fraction": float(np.mean(np.array(lengths) > cfg["max_length"]))}})
         plot_lengths(lengths, cfg["max_length"], out / "token_length_distribution.png")
@@ -127,7 +158,14 @@ def finetune(config=None, allow_cpu=False):
         plot_learning(trainer.state.log_history, out / "learning_curves.png")
         trainer.save_model(str(out / "best_model"))
         tokenizer.save_pretrained(str(out / "best_model"))
-        metrics, rows = evaluate_model(trainer, tokenized["test"], raw["test"], out)
+        policy = None
+        if cfg.get("threshold_selection", {}).get("enabled", True):
+            # Cố định ngưỡng từ validation trước khi đọc kết quả test.
+            policy = select_threshold_for_validation(trainer, tokenized["validation"], raw["validation"], out,
+                                                     checkpoint_path=out / "best_model")
+            save_json(out / "best_model/decision_threshold.json", policy)
+        metrics, rows = evaluate_model(trainer, tokenized["test"], raw["test"], out,
+                                      decision_threshold=policy["selected_threshold"] if policy else None)
         checks = verify_saved_model(trainer.model, out / "best_model",
                                     [raw["test"][0]["text"]], cfg["max_length"])
         save_json(out / "reload_check.json", checks)

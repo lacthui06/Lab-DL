@@ -22,6 +22,8 @@ Repository containing source code, engineering workflows, and practical lab exer
 
 Lab03 uses its own pinned dependencies in `labs/lab03/requirements.txt` and a separate Python 3.12 environment; do not replace the Lab01 environment with these pins.
 
+Lab03 notebooks now include phase roadmaps, module references and persisted visual diagnostics; validation-only threshold selection is implemented for new runs. Historical test sensitivity plots do not choose a threshold from test.
+
 ## Lab Directory
 
 - **Lab 01**: FashionMNIST Classification with PyTorch (Completed)

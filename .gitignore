@@ -94,3 +94,5 @@ lightning_logs/
 **/best_model/
 **/outputs/runs/*/checkpoints/
 .venv-lab03/
+
+**/outputs/.registry.lock

@@ -1,0 +1,8 @@
+{
+  "artifact_run": "20261026T081129Z_verification_07d51602",
+  "review_file": "outputs/runs/20261026T081129Z_verification_07d51602/review.json",
+  "tests_passed": 43,
+  "notebooks_executed": 3,
+  "walkthrough_lines": 855,
+  "description_lines": 244
+}

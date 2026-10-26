@@ -53,6 +53,16 @@ def test_complete_workflow_with_local_fixture(tiny, tmp_path, monkeypatch):
     assert (out / "best_model/model.safetensors").is_file()
     assert (out / "reload_check.json").is_file()
     assert (out / "report.md").is_file()
+    frozen = json.loads((out / "decision_threshold.json").read_text())
+    assert frozen["split"] == "validation" and frozen["selection_performed"] is True
+    assert frozen["sample_count"] == 8
+    assert json.loads((out / "best_model/decision_threshold.json").read_text()) == frozen
+    threshold_metrics = json.loads((out / "test_threshold_metrics.json").read_text())
+    assert threshold_metrics["threshold"] == frozen["selected_threshold"]
+    assert threshold_metrics["selection_performed_on_test"] is False
+    assert (out / "validation_threshold/threshold_curves.png").is_file()
+    assert (out / "validation_predictions.json").is_file()
+    assert "test_loss" in json.loads((out / "test_runtime_metrics.json").read_text())
     # Mô phỏng lỗi hậu xử lý cũ, giữ nguyên artifacts đã lưu.
     from labs.lab03.src.utils.runs import save_json, hash_file
     predictions = json.loads((out / "all_predictions.json").read_text())

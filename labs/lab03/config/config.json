@@ -21,6 +21,13 @@
     "num_train_epochs": 3,
     "weight_decay": 0.01,
     "warmup_ratio": 0.1,
-    "fp16": true
+    "fp16": true,
+    "threshold_selection": {
+      "enabled": true,
+      "selection_metric": "macro_f1",
+      "split": "validation",
+      "grid": "0.05 to 0.95, step 0.05",
+      "tie_break": "closest to 0.5, then smaller threshold"
+    }
   }
 }
