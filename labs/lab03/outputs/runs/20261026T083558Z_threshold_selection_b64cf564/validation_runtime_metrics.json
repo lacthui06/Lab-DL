@@ -1,0 +1,7 @@
+{
+  "validation_loss": 0.4897061884403229,
+  "validation_model_preparation_time": 0.0016,
+  "validation_runtime": 1.6775,
+  "validation_samples_per_second": 635.474,
+  "validation_steps_per_second": 20.268
+}

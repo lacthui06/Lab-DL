@@ -5,7 +5,10 @@
     "exercise1_analysis": "20261026T080357Z_exercise1_analysis_a8b6bff3",
     "analysis": "20261026T080403Z_analysis_7b9e92eb",
     "notebook_render": "20261026T080353Z_notebook_render_ad2be64a",
-    "verification": "20261026T081129Z_verification_07d51602"
+    "verification": "20261026T081129Z_verification_07d51602",
+    "threshold_selection": "20261026T083558Z_threshold_selection_b64cf564",
+    "evaluation": "20261026T083612Z_evaluation_a724c16c",
+    "inference": "20261026T083627Z_inference_0ed240e2"
   },
   "runs": [
     {
@@ -36,6 +39,21 @@
     {
       "id": "20261026T081129Z_verification_07d51602",
       "kind": "verification",
+      "status": "completed"
+    },
+    {
+      "id": "20261026T083558Z_threshold_selection_b64cf564",
+      "kind": "threshold_selection",
+      "status": "completed"
+    },
+    {
+      "id": "20261026T083612Z_evaluation_a724c16c",
+      "kind": "evaluation",
+      "status": "completed"
+    },
+    {
+      "id": "20261026T083627Z_inference_0ed240e2",
+      "kind": "inference",
       "status": "completed"
     }
   ]
