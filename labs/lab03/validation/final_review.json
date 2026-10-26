@@ -4,7 +4,7 @@
     "exercise2": "covered: full official dataset, pretrained backbone/tokenizer, preprocessing, TrainingArguments/Trainer, three epochs and test evaluation"
   },
   "checks": {
-    "pytest_passed": 53,
+    "pytest_passed": 55,
     "pytest_failed": 0,
     "pip_check": "passed",
     "notebooks_view_offline": 3,
@@ -41,5 +41,5 @@
     "lab01_changed": false
   },
   "extended_review": "validation/enhancement_review.json",
-  "latest_verification_artifact": "outputs/runs/20261026T124745Z_verification_edded031/review.json"
+  "latest_verification_artifact": "outputs/runs/20261026T130154Z_verification_f2147def/review.json"
 }

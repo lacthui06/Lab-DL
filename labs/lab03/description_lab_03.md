@@ -214,7 +214,7 @@ Test loss không được evaluator của run train gốc ghi lại; không sử
 | Validation selection | `20261026T083558Z_threshold_selection_b64cf564` | 1.066 validation predictions, grid 19 điểm, policy 0,8, checkpoint identity |
 | Full-test checkpoint reevaluation | `20261026T083612Z_evaluation_a724c16c` | 1.066 test predictions, metrics argmax/policy, measured loss và runtime |
 | Inference có policy | `20261026T083627Z_inference_0ed240e2` | Probability, nhãn, threshold và metadata nguồn validation |
-| Diagnostics dẫn xuất | `20261026T080403Z_analysis_7b9e92eb` | ROC/PR, calibration, probability distribution, test sensitivity descriptive |
+| Diagnostics dẫn xuất | `20261026T125634Z_analysis_73ee3c56` | ROC/PR, calibration, probability distribution, test sensitivity descriptive |
 
 Validation Macro F1 tại 0,5 là **0,8432787665**; tại ngưỡng được chọn 0,8 là **0,8526632715**.
 Validation Accuracy tăng từ **0,8433395872** lên **0,8527204503**, thêm 10 mẫu đúng.
@@ -268,3 +268,5 @@ Không đánh dấu checkpoint đã được tái đánh giá toàn test chỉ v
 - https://huggingface.co/docs/transformers/en/training
 - https://huggingface.co/blog/sentiment-analysis-python
 - https://huggingface.co/datasets/cornell-movie-review-data/rotten_tomatoes
+
+Quy trình đọc kết quả phải hỗ trợ cả bộ run phục hồi checkpoint và một run train mới có policy riêng. Run mới lưu loss đo thật, bảng/hình so sánh threshold và metric theo lớp; inference không liên quan không được làm sai ghép nguồn. Kiểm thử notebook trên fixture chỉ chứng minh nhánh trình bày hoạt động, không thay cho bằng chứng GPU.

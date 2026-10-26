@@ -2,6 +2,7 @@
 from pathlib import Path
 import json
 import textwrap
+import shutil
 import numpy as np
 import matplotlib
 matplotlib.use("Agg")
@@ -10,9 +11,10 @@ import seaborn as sns
 from sklearn.metrics import (roc_curve, precision_recall_curve, roc_auc_score,
     average_precision_score, brier_score_loss, log_loss)
 from .evidence import (read_json, audit_finetuning, audit_exercise1, verify_manifest)
-from .training.thresholds import export_threshold_analysis
+from .training.thresholds import export_threshold_analysis, select_validation_threshold, binary_metrics_at_threshold
 from .utils.runs import ROOT, hash_file, run_context, save_json
 from .utils.plots import finish
+from .training.metrics import compute_metrics
 
 
 def _table_image(rows, columns, path, title, widths=None):
@@ -111,6 +113,68 @@ def _reliability(labels, probs):
     return bins, ece
 
 
+def _training_threshold_evidence(source, labels, probs, out):
+    """Xuất so sánh cho run train mới có policy riêng, không cần ba run bổ sung."""
+    policy_path = source / "decision_threshold.json"
+    if not policy_path.is_file():
+        return None
+    policy = read_json(policy_path)
+    if policy.get("split") != "validation" or policy.get("selection_performed") is not True:
+        raise ValueError("Training threshold must be selected on validation")
+    validation = read_json(source / "validation_predictions.json")
+    expected_count = read_json(source / "data_statistics.json")["split_sizes"]["validation"]
+    if len(validation) != expected_count or [r["index"] for r in validation] != list(range(expected_count)):
+        raise ValueError("Missing, reordered or duplicate validation predictions")
+    validation_labels = np.asarray([r["true_label"] for r in validation])
+    validation_probs = np.asarray([r["probabilities"] for r in validation], dtype=float)
+    if validation_probs.shape != (len(validation), 2) or not np.allclose(validation_probs.sum(1), 1, atol=1e-6, rtol=0):
+        raise ValueError("Invalid saved validation probabilities")
+    recomputed = select_validation_threshold(validation_labels, validation_probs[:, 1], split="validation")
+    for key, value in recomputed.items():
+        if policy.get(key) != value:
+            raise ValueError(f"Training threshold evidence differs: {key}")
+    threshold = policy["selected_threshold"]
+    selected = binary_metrics_at_threshold(labels, probs[:, 1], threshold)
+    expected = dict(selected, selection_split="validation", selection_performed_on_test=False)
+    if read_json(source / "test_threshold_metrics.json") != expected:
+        raise ValueError("Training test threshold metrics differ from saved predictions")
+    manifest = read_json(source / "manifest.json")
+    identity = policy.get("checkpoint_identity", {})
+    if not identity.get("weights_sha256") or manifest.get("best_model/" + identity.get("weights_filename", "")) != identity["weights_sha256"]:
+        raise ValueError("Training threshold checkpoint identity differs from manifest")
+    checkpoint_policy = source / "best_model/decision_threshold.json"
+    if checkpoint_policy.is_file() and read_json(checkpoint_policy) != policy:
+        raise ValueError("Training checkpoint policy differs from run policy")
+    from sklearn.metrics import confusion_matrix
+    base = compute_metrics((probs, labels))
+    rows = [{"method": "Argmax", "accuracy": base["accuracy"], "precision": base["binary_precision"],
+             "recall": base["binary_recall"], "binary_f1": base["binary_f1"], "macro_f1": base["macro_f1"]},
+            {"method": f"Validation threshold {threshold:g}", **expected}]
+    per_class = []
+    for name, predictions in [("Argmax", probs.argmax(1)), (f"Threshold {threshold:g}", (probs[:, 1] >= threshold).astype(int))]:
+        cm = confusion_matrix(labels, predictions, labels=[0, 1])
+        for i, label in enumerate(["NEGATIVE", "POSITIVE"]):
+            tp = int(cm[i, i]); fn = int(cm[i].sum() - tp); fp = int(cm[:, i].sum() - tp)
+            tn = int(cm.sum() - tp - fn - fp)
+            ratio = lambda a, b: a / b if b else 0.
+            per_class.append(dict(method=name, label=label, precision=ratio(tp, tp+fp),
+                recall_TPR=ratio(tp, tp+fn), F1=ratio(2*tp, 2*tp+fp+fn), FPR=ratio(fp, fp+tn), support=tp+fn))
+    keys = ["accuracy", "precision", "recall", "binary_f1", "macro_f1"]
+    x = np.arange(len(keys)); fig, ax = plt.subplots(figsize=(11, 4))
+    for i, row in enumerate(rows):
+        bars = ax.bar(x + (i-.5)*.36, [row[k] for k in keys], .36, label=row["method"])
+        ax.bar_label(bars, fmt="%.4f", fontsize=8)
+    ax.set(xticks=x, xticklabels=keys, ylim=(0, 1.12), ylabel="Test metric")
+    ax.legend(fontsize=8, loc="lower left")
+    finish(fig, out / "training_threshold_metrics.png")
+    _table_image(per_class, ["method", "label", "precision", "recall_TPR", "F1", "FPR", "support"],
+        out / "training_threshold_per_class.png", "New training run: per-class decision metrics")
+    shutil.copyfile(source / "test_threshold/confusion_matrix.png", out / "training_threshold_confusion.png")
+    return {"policy": policy, "test_comparison": rows, "per_class_comparison": per_class,
+            "validation_selection_recomputed": True, "selection_performed_on_test": False,
+            "checkpoint_policy_available_locally": checkpoint_policy.is_file()}
+
+
 def analyze_run(source_run, root=ROOT):
     """Tạo phân tích mô tả test; tuyệt đối không chọn threshold từ test."""
     source = Path(source_run)
@@ -124,12 +188,19 @@ def analyze_run(source_run, root=ROOT):
         bins, ece = _reliability(labels, probs)
         fpr, tpr, roc_thresholds = roc_curve(labels, positive)
         precision, recall, pr_thresholds = precision_recall_curve(labels, positive)
+        runtime_path = source / "test_runtime_metrics.json"
+        measured_loss = read_json(runtime_path).get("test_loss") if runtime_path.is_file() else None
+        if measured_loss is not None and (isinstance(measured_loss, bool) or not np.isfinite(measured_loss) or measured_loss < 0):
+            raise ValueError("Invalid measured test loss")
         summary = {"source_run": source.name, "audit": audit, "metrics": audit["metrics"],
+                   "measured_test_loss": measured_loss,
                    "roc_auc": float(roc_auc_score(labels, positive)),
                    "average_precision": float(average_precision_score(labels, positive)),
                    "brier_score": float(brier_score_loss(labels, positive)), "confidence_ece": float(ece),
                    "recomputed_nll_from_saved_probabilities": float(log_loss(labels, probs / probs.sum(axis=1, keepdims=True), labels=[0, 1])),
-                   "test_loss_status": "Trainer test loss not logged in historical run; reconstructed NLL is separate",
+                   "test_loss_status": ("measured in source test_runtime_metrics.json; reconstructed NLL is separate"
+                                        if measured_loss is not None else
+                                        "Trainer test loss not logged in source run; reconstructed NLL is separate"),
                    "nll_probability_preprocessing": "renormalize saved float32 probabilities per row to remove rounding drift",
                    "selection_performed": False, "validation_probabilities_available": (source / "validation_predictions.json").exists()}
         save_json(out / "analysis_summary.json", summary)
@@ -162,6 +233,7 @@ def analyze_run(source_run, root=ROOT):
                 "environment_versions":[{"library":k,"version":v} for k,v in versions["versions"].items()],
                 "test_word_length_statistics":{"mean":float(np.mean(lengths)),"median":float(np.median(lengths)),"max":int(max(lengths))},
                 "artifact_catalog":[{"file":p.name,"source_run":source.name} for p in sorted(source.glob('*.png'))]}
+        tables["training_threshold"] = _training_threshold_evidence(source, labels, probs, out)
         save_json(out / "tables.json", tables)
         fig,ax=plt.subplots(figsize=(7,4)); ax.bar(["Negative", "Positive"],np.bincount(labels,minlength=2))
         ax.set(ylabel="Test examples",title="Observed test class distribution: 533 / 533");finish(fig,out/"class_distribution.png")

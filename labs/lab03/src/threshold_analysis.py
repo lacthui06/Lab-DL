@@ -18,7 +18,8 @@ def _source_key(paths):
     return {"source_runs":{k:p.name for k,p in paths.items()},
             "source_manifests":{k:hash_file(p/"manifest.json") for k,p in paths.items()},
             "analysis_code":hash_file(Path(__file__)),
-            "audit_code":hash_file(Path(__file__).with_name("threshold_evidence.py"))}
+            "audit_code":hash_file(Path(__file__).with_name("threshold_evidence.py")),
+            "plot_helpers":hash_file(Path(__file__).with_name("analysis.py"))}
 
 
 def _metric_plot(rows, path, title):
@@ -40,16 +41,47 @@ def _per_class(cm, method):
     return rows
 
 
-def ensure_threshold_analysis(training_run=None, root=ROOT):
-    """Cache theo manifest và code; không ghép nhầm kết quả của model/run khác."""
+def matching_threshold_runs(training_run=None, root=ROOT):
+    """Chọn bộ run cùng policy/checkpoint, bỏ qua inference không liên quan."""
     root=Path(root)
     state=read_json(root/"config/workflow.json")
     kinds=["threshold_selection","evaluation","inference"]
-    if not all(k in state["active_runs"] for k in kinds): return None
-    paths={k:selected_run(k,root) for k in kinds}
-    evaluation_cfg=read_json(paths["evaluation"]/"config.json")
-    recorded_training=Path(evaluation_cfg["evaluated_checkpoint"]).parent.name
-    if training_run is not None and Path(training_run).name != recorded_training: return None
+    # Không ghép active inference không liên quan với evaluation của checkpoint cũ.
+    candidates = {k: [] for k in kinds}
+    for row in reversed(state["runs"]):
+        kind = row["kind"]
+        if kind in candidates and row["status"] == "completed":
+            path = root / "outputs/runs" / row["id"]
+            if (path / "decision_threshold.json").is_file():
+                candidates[kind].append(path)
+    # Registry tối giản có thể chỉ cung cấp active_runs.
+    for kind in kinds:
+        if kind in state["active_runs"]:
+            path = selected_run(kind, root)
+            if (path / "decision_threshold.json").is_file() and path not in candidates[kind]:
+                candidates[kind].insert(0, path)
+    paths = None
+    for evaluation in candidates["evaluation"]:
+        cfg = read_json(evaluation / "config.json")
+        recorded_training = Path(cfg["evaluated_checkpoint"]).parent.name
+        if training_run is not None and Path(training_run).name != recorded_training:
+            continue
+        policy = read_json(evaluation / "decision_threshold.json")
+        matching = {k: next((p for p in candidates[k] if read_json(p / "decision_threshold.json") == policy), None)
+                    for k in ["threshold_selection", "inference"]}
+        if all(matching.values()):
+            paths = dict(matching, evaluation=evaluation)
+            break
+    return paths
+
+
+def ensure_threshold_analysis(training_run=None, root=ROOT):
+    """Cache theo manifest và code; không ghép nhầm kết quả của model/run khác."""
+    root = Path(root)
+    state = read_json(root / "config/workflow.json")
+    paths = matching_threshold_runs(training_run, root)
+    if paths is None:
+        return None
     expected=_source_key(paths)
     for row in reversed(state["runs"]):
         if row["kind"]!="threshold_analysis" or row["status"]!="completed": continue

@@ -1,0 +1,20 @@
+[
+  {
+    "notebook": "02_finetuning_binary_classification.ipynb",
+    "mode": "view",
+    "fixture": "isolated copied evidence plus synthetic runtime scalar",
+    "errors": 0,
+    "training_executed": false,
+    "new_training_threshold_branch_executed": true,
+    "embedded_pngs": 17
+  },
+  {
+    "notebook": "lab03_huggingface_complete.ipynb",
+    "mode": "view",
+    "fixture": "isolated copied evidence plus synthetic runtime scalar",
+    "errors": 0,
+    "training_executed": false,
+    "new_training_threshold_branch_executed": true,
+    "embedded_pngs": 20
+  }
+]

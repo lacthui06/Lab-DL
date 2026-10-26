@@ -1,10 +1,11 @@
 {
-  "artifact_run": "20261026T124745Z_verification_edded031",
-  "review_file": "outputs/runs/20261026T124745Z_verification_edded031/review.json",
-  "tests_passed": 53,
+  "artifact_run": "20261026T130154Z_verification_f2147def",
+  "review_file": "outputs/runs/20261026T130154Z_verification_f2147def/review.json",
+  "tests_passed": 55,
   "notebooks_executed": 3,
-  "walkthrough_lines": 998,
-  "description_lines": 270,
-  "threshold_analysis_run": "20261026T124315Z_threshold_analysis_8bc30b27",
-  "notebook_render_run": "20261026T124505Z_notebook_render_29bd8d4e"
+  "walkthrough_lines": 1008,
+  "description_lines": 272,
+  "threshold_analysis_run": "20261026T125941Z_threshold_analysis_3124d66e",
+  "notebook_render_run": "20261026T125929Z_notebook_render_313034a2",
+  "new_run_notebook_smoke": "passed on isolated fixture"
 }

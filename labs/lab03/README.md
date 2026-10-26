@@ -7,7 +7,7 @@ Bài thực hành Deep Learning — UTH: sentiment analysis bằng mô hình pre
 ## 1. Xem bài và kết quả
 
 - [Notebook Exercise 1](notebooks/01_sentiment_analysis_pipeline.ipynb): tokenization, pipeline và manual forward.
-- [Notebook Exercise 2](notebooks/02_finetuning_binary_classification.ipynb): dữ liệu, Trainer, metrics, năm biểu đồ và phân tích lỗi.
+- [Notebook Exercise 2](notebooks/02_finetuning_binary_classification.ipynb): dữ liệu, Trainer, metrics, threshold, biểu đồ và phân tích lỗi.
 - [Notebook tích hợp](notebooks/lab03_huggingface_complete.ipynb): cả hai Exercise, phù hợp xem toàn bộ bài.
 - [Báo cáo thực hành](walkthrough_lab_03.md): lý thuyết, phương pháp, kết quả và giới hạn có bằng chứng.
 - [Đề bài](description_lab_03.md).
@@ -25,7 +25,7 @@ labs/lab03/
   src/
     datasets/               tải official splits, kiểm tra kích thước và tokenization
     models/                 model, pipeline/manual, kiểm tra checkpoint
-    training/               Trainer, metrics, sanity overfit dùng riêng trong tests
+    training/               Trainer, metrics, threshold và sanity overfit dùng riêng trong tests
     utils/                  log, registry, manifest và plots
     workflow.py             luồng CLI/notebook dùng chung
     evidence.py             audit đọc-only, tính lại metrics từ dự đoán
@@ -33,7 +33,7 @@ labs/lab03/
   tests/                    tests chức năng và kiểm tra artifacts thật
   outputs/runs/             artifacts Kaggle nhẹ, giữ nguyên manifest gốc
   validation/               kết quả audit và thực thi notebook tại máy rà soát
-  description_lab_03.md     đề bài
+  description_lab_03.md     đề bài, thảo luận và quyết định
   walkthrough_lab_03.md     báo cáo thực nghiệm để nộp
   internal_changes.md       lịch sử kỹ thuật; không thuộc báo cáo nộp
 ```
@@ -77,7 +77,7 @@ cd ../..
 .venv-lab03/bin/python labs/lab03/scripts/audit_outputs.py
 ```
 
-- **53 tests đạt trên CPU**: dataset contract, dynamic padding, pipeline/manual, checkpoint, sanity overfit, Trainer, run tracking, năm plots, recovery, metrics/artifact audit và phát hiện dữ liệu bị sửa.
+- **55 tests đạt trên CPU**: dataset contract, dynamic padding, pipeline/manual, checkpoint, sanity overfit, Trainer, run tracking, năm plots, recovery, metrics/artifact audit và phát hiện dữ liệu bị sửa.
 - Audit kiểm tra 56 file SHA256 nguồn (24 file gốc và 32 file của selection/evaluation/inference mới), tính lại validation sweep, test metrics và confusion matrices. Báo cáo audit đầy đủ được lưu trong một run `artifact_audit` dưới `outputs/`, kèm bản tiện tra cứu tại `validation/`.
 - 29 file checkpoint không có trong Git được liệt kê rõ là thiếu có chủ đích, không coi là đã kiểm tra tại máy rà soát.
 - Ba notebook chạy hết ở view, Hugging Face offline, không có cell lỗi. Xem `validation/notebook_execution.json`.
@@ -98,6 +98,60 @@ Trên Kaggle có thể gọi các lệnh bằng `subprocess.run([...], cwd=REPO,
 Quy trình dùng toàn bộ official splits, max length 128, 3 epochs, batch train/eval 16/32, LR 2e-5, weight decay 0.01, warmup ratio 0.1, FP16 chỉ khi CUDA có sẵn. Lưu/evaluate mỗi epoch; chọn best theo validation accuracy. Sanity test không tác động mô hình train chính. Chạy lại tạo run mới, không resume hoặc ghi đè run cũ. Chỉ dùng `--allow-cpu` nếu chủ động chấp nhận thời gian full training CPU.
 
 Có thể thực thi ba notebook với MODE=train thay CLI. Không chạy notebook tích hợp và notebook từng bài đồng thời nếu chỉ muốn một lần thí nghiệm.
+
+### Chạy từ notebook Kaggle mới
+
+Bật GPU và Internet trước. Cell sau clone đúng nhánh `lab03`, tạo Python 3.12 riêng và dùng cùng interpreter cho kiểm tra/training. Cell không chứa token và không tự push kết quả lên GitHub.
+
+```python
+import os
+import sys
+import subprocess
+from pathlib import Path
+
+REPO_URL = "https://github.com/lacthui06/Lab-DL.git"
+REPO = Path("/kaggle/working/Lab-DL")
+ENV = Path("/kaggle/working/lab03-py312")
+PYTHON = str(ENV / "bin/python")
+
+if not REPO.exists():
+    subprocess.run(
+        ["git", "clone", "--branch", "lab03", "--single-branch", REPO_URL, str(REPO)],
+        check=True,
+    )
+# Nếu đã clone từ trước, kiểm tra thay đổi rồi git pull --ff-only origin lab03.
+assert (REPO / "labs/lab03/requirements.txt").is_file()
+
+RUN_ENV = os.environ.copy()
+RUN_ENV["CUDA_VISIBLE_DEVICES"] = "0"
+RUN_ENV["TOKENIZERS_PARALLELISM"] = "false"
+RUN_ENV["PYTHONUNBUFFERED"] = "1"
+
+def run(*args):
+    return subprocess.run(list(args), cwd=REPO, env=RUN_ENV, check=True)
+
+run(sys.executable, "-m", "pip", "install", "uv")
+UV = [sys.executable, "-m", "uv"]
+run(*UV, "python", "install", "3.12")
+if not Path(PYTHON).exists():
+    run(*UV, "venv", "--python", "3.12", str(ENV))
+run(*UV, "pip", "install", "--python", PYTHON,
+    "-r", str(REPO / "labs/lab03/requirements.txt"))
+run(*UV, "pip", "check", "--python", PYTHON)
+run(PYTHON, "-c", "import torch; print(torch.__version__); "
+    "assert torch.cuda.is_available(), 'Enable GPU in Kaggle Settings'; "
+    "print(torch.cuda.get_device_name(0))")
+run(PYTHON, "-m", "pytest", "labs/lab03/tests", "-q", "-c", "labs/lab03/pytest.ini")
+run(PYTHON, "-u", "labs/lab03/scripts/run_exercise1.py")
+run(PYTHON, "-u", "labs/lab03/scripts/train_finetune.py")
+```
+
+Đây là một lần train mới; chỉ chạy khi cần làm thí nghiệm lại. Đọc kết quả đã công bố hoặc bổ sung threshold từ checkpoint cũ không cần train lại. Sau train, `config/workflow.json` trỏ đến run mới; không ghi đè run Kaggle tham chiếu. Muốn lưu lại toàn bộ cell output, đăng ký kernel của môi trường này rồi render notebook view:
+
+```python
+run(PYTHON, "-m", "ipykernel", "install", "--user", "--name", "lab03")
+run(PYTHON, "labs/lab03/scripts/render_notebooks.py", "--kernel", "lab03")
+```
 
 ## 6. Kết quả hiện hành và truy vết
 
@@ -245,3 +299,5 @@ Validation Macro F1: **0,843279 → 0,852663**. Test chỉ thêm một mẫu đ�
 ```
 
 Hai lệnh này dùng evidence đã lưu, không tải weights và không train lại. Notebook `view` tự dùng kết quả bổ sung khi nó thuộc đúng training run; không gắn policy cũ vào một model mới. Bản notebook đã chạy được sao lưu đầy đủ trong run `notebook_render`, bao gồm cả bảng và hình hiển thị.
+
+Run train mới có policy riêng được phân tích trực tiếp từ validation/test artifacts của chính run đó; xuất thêm `training_threshold_metrics.png`, `training_threshold_per_class.png` và `training_threshold_confusion.png`. Không cần tạo ba run selection/evaluation/inference riêng để notebook hiển thị so sánh threshold. `measured_test_loss` lấy từ `test_runtime_metrics.json` khi có; run gốc không log loss vẫn giữ trạng thái thiếu. Registry chọn bộ evidence cùng checkpoint/policy, không ghép tùy tiện các active run khác model.

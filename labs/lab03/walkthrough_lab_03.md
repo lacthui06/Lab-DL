@@ -353,13 +353,13 @@ Notebook chuyển các records này thành bảng dễ đọc và hình minh h�
 
 Confidence được định dạng làm tròn cho trình bày; file JSON giữ giá trị floating point gốc. Không thay giá trị trong artifact chỉ để bảng có số đẹp. Nhãn của câu thứ ba cho thấy model nhận một kết luận chung tiêu cực, nhưng không đủ chứng minh đã hiểu mọi cấu trúc “but”.
 
-Ba trực quan hóa bổ sung của Exercise 1 được tạo từ artifacts thật trong analysis run riêng `20261026T080357Z_exercise1_analysis_a8b6bff3`. Ảnh table và JSON summary được lưu cùng nhau dưới `outputs/runs/`, nên bảng nhìn trong notebook có thể thu hồi độc lập.
+Ba trực quan hóa bổ sung của Exercise 1 được tạo từ artifacts thật trong analysis run riêng `20261026T125627Z_exercise1_analysis_6a474f62`. Ảnh table và JSON summary được lưu cùng nhau dưới `outputs/runs/`, nên bảng nhìn trong notebook có thể thu hồi độc lập.
 
-![Tokenizer table exported from actual Exercise 1 evidence](outputs/runs/20261026T080357Z_exercise1_analysis_a8b6bff3/tokenizer_table.png)
+![Tokenizer table exported from actual Exercise 1 evidence](outputs/runs/20261026T125627Z_exercise1_analysis_6a474f62/tokenizer_table.png)
 
-![Sentiment predictions table](outputs/runs/20261026T080357Z_exercise1_analysis_a8b6bff3/sentiment_predictions.png)
+![Sentiment predictions table](outputs/runs/20261026T125627Z_exercise1_analysis_6a474f62/sentiment_predictions.png)
 
-![Pipeline and manual probability comparison](outputs/runs/20261026T080357Z_exercise1_analysis_a8b6bff3/pipeline_manual_comparison.png)
+![Pipeline and manual probability comparison](outputs/runs/20261026T125627Z_exercise1_analysis_6a474f62/pipeline_manual_comparison.png)
 
 Ở hình đối chiếu, panel trái cho hai cột score gần chồng khít ở từng câu, còn panel phải đối chiếu sai lệch với tolerance 1e-5. Điều cần đọc là mức sai lệch thực so với tolerance, không phải coi biểu đồ score gần 1 là accuracy gần 100%.
 
@@ -418,11 +418,11 @@ Khi báo cáo EDA, cần đặt rõ mẫu số: histogram này là 8.530 mẫu t
 
 Phân tích bổ sung tách hai góc nhìn EDA từ test records đã có:
 
-![Observed test label counts](outputs/runs/20261026T080403Z_analysis_7b9e92eb/class_distribution.png)
+![Observed test label counts](outputs/runs/20261026T125634Z_analysis_73ee3c56/class_distribution.png)
 
 Hai cột có chiều cao 533 xác nhận mẫu số lớp của confusion matrix; hình không phải thống kê nhãn train được suy đoán từ test.
 
-![Test review word length distribution](outputs/runs/20261026T080403Z_analysis_7b9e92eb/review_length_distribution.png)
+![Test review word length distribution](outputs/runs/20261026T125634Z_analysis_73ee3c56/review_length_distribution.png)
 
 Hình độ dài bổ sung đếm từ bằng khoảng trắng trên text test, có mean **21,2205**, median **20**, max **52**. Đây không phải WordPiece token lengths: không so trực tiếp số 52 với max train tokens 78 để kết luận split nào dài hơn. Tách tên trục và tên split giúp tránh lẫn các đại lượng chỉ vì cả hai cùng được gọi chung là “length”.
 
@@ -605,10 +605,10 @@ Các file output từ một phiên phân tích mới phải mang source run ID �
 Module `src/analysis.py` phụ trách luồng trực quan hóa từ artifacts, tách với GPU training. `ensure_exercise1_analysis` tạo hoặc đọc cache đúng code/manifest của Exercise 1; `ensure_analysis` làm tương tự cho fine-tuning diagnostics. Cache key chứa hash manifest nguồn và code phân tích, không chỉ tên run, để sửa logic không âm thầm tái dùng hình cũ.
 Các artifact mới nằm trong run riêng với `analysis_source.json`, config, snapshot, log, status và manifest của chính run phân tích.
 
-Analysis run hiện hành là `20261026T080403Z_analysis_7b9e92eb`, lấy nguồn từ `20261025T181550Z_finetuning_e02bced7`. `analysis_summary.json` giữ AUC/AP/Brier/ECE và NLL tái tính; `roc_pr_coordinates.json` giữ các tọa độ để vẽ lại; `reliability_bins.json` giữ dữ liệu từng bin. `tables.json` giữ các bảng phase/config/environment/history/per-class; PNG tương ứng được notebook hiển thị trực tiếp.
+Analysis run hiện hành là `20261026T125634Z_analysis_73ee3c56`, lấy nguồn từ `20261025T181550Z_finetuning_e02bced7`. `analysis_summary.json` giữ AUC/AP/Brier/ECE và NLL tái tính; `roc_pr_coordinates.json` giữ các tọa độ để vẽ lại; `reliability_bins.json` giữ dữ liệu từng bin. `tables.json` giữ các bảng phase/config/environment/history/per-class; PNG tương ứng được notebook hiển thị trực tiếp.
 Thư mục `threshold_test_diagnostic/` có curve JSON/PNG và metadata `selection_performed=false`, `selected_threshold=null`. Các records này giúp phân biệt output nhìn thấy với metadata chứng minh output được tính ở đâu và dùng cho mục đích nào.
 
-Việc thực thi notebook cũng có artifact riêng: run `20261026T124505Z_notebook_render_29bd8d4e` lưu bản executed của cả ba notebook và `execution_summary.json`. `scripts/render_notebooks.py --kernel lab03` thực hiện render view và lưu output dưới `outputs/`; không chỉ để hình tồn tại trong kernel tương tác. `scripts/analyze_outputs.py` cung cấp CLI tạo các run phân tích trực quan từ artifacts nguồn.
+Việc thực thi notebook cũng có artifact riêng: run `20261026T125929Z_notebook_render_313034a2` lưu bản executed của cả ba notebook và `execution_summary.json`. `scripts/render_notebooks.py --kernel lab03` thực hiện render view và lưu output dưới `outputs/`; không chỉ để hình tồn tại trong kernel tương tác. `scripts/analyze_outputs.py` cung cấp CLI tạo các run phân tích trực quan từ artifacts nguồn.
 Bản source notebook trong `notebooks/` giữ output để đọc trực tiếp trên GitHub, còn bản render trong outputs giữ gói bằng chứng của lần thực thi.
 
 ### 2.19. Kiểm thử phần mềm và audit kết quả
@@ -616,7 +616,7 @@ Bản source notebook trong `notebooks/` giữ output để đọc trực tiếp
 Test suite bao phủ tokenization, collator, pipeline/manual, checkpoint, Trainer, run tracking, plots, CLI và audit. Các tests mô hình nhỏ/fixture nhằm xác nhận chức năng có thể chạy, không đo chất lượng của DistilBERT thật trên Rotten Tomatoes. Kiểm tra artifacts thật bổ sung xác nhận metrics được tính lại từ 1.066 prediction records.
 Hai lớp bằng chứng này trả lời hai câu hỏi khác nhau và cần báo cáo tách biệt.
 
-Bộ kiểm thử sau mở rộng đạt **53 passed trên CPU**, gồm kiểm tra threshold grid/validation-only, boundary/tie, policy và các luồng CLI trên fixture. Ba notebook render thành công ở view offline: Exercise 1 có 5 code cells, Exercise 2 có 15 code cells, bản tích hợp có 19 code cells. Số cell là quy mô thực thi được ghi nhận, không phải thước đo độc lập chất lượng học thuật của notebook.
+Bộ kiểm thử sau mở rộng đạt **55 passed trên CPU**, gồm kiểm tra threshold grid/validation-only, boundary/tie, policy và các luồng CLI trên fixture. Ba notebook render thành công ở view offline: Exercise 1 có 5 code cells, Exercise 2 có 15 code cells, bản tích hợp có 19 code cells. Số cell là quy mô thực thi được ghi nhận, không phải thước đo độc lập chất lượng học thuật của notebook.
 Source run Kaggle không bị đổi metrics trong quá trình tạo các phân tích và bản render này.
 
 | Lớp kiểm tra | Có thể phát hiện | Không chứng minh |
@@ -629,6 +629,14 @@ Source run Kaggle không bị đổi metrics trong quá trình tạo các phân 
 
 Các test threshold cần kiểm tra split selection, boundary/tie và sự tách biệt validation/test. Một test chỉ chứng minh hàm trả về một dictionary là chưa đủ cho nguy cơ test-set tuning. Các kiểm tra hiển thị phải bảo đảm ảnh/bảng thật sự được ghi vào nơi lấy artifacts, không chỉ có object trong memory.
 Giữ nguyên assertions thay vì bỏ qua test lỗi để đạt một con số passed đẹp.
+
+### 2.20. Kiểm tra đường đọc artifact của run mới
+
+Notebook phải hiển thị đúng cả run tham chiếu lẫn một run vừa train. Run mới có policy tại run root được phân tích trực tiếp từ validation/test records; không đòi hỏi thêm ba run selection/evaluation/inference như bước phục hồi checkpoint lịch sử. Các ảnh `training_threshold_metrics.png`, `training_threshold_per_class.png` và `training_threshold_confusion.png` được lưu trong analysis run, kèm bảng nguồn trong `tables.json`.
+
+`measured_test_loss` được lấy từ `test_runtime_metrics.json` của chính source run khi tồn tại. Trạng thái not logged chỉ dành cho run thiếu scalar loss; NLL tái tính giữ tên riêng. Bảng/hình của MODE=train thuộc run mới; các con số trong phần diễn giải tĩnh được ghi rõ là Kaggle tham chiếu.
+
+Một lần inference bằng pretrained SST-2 có thể trở thành active inference mới. Bộ chọn evidence vì vậy truy vết các run cùng policy/checkpoint trong registry, thay vì ghép tùy tiện ba active run không liên quan. Tests bao phủ tình huống này. Hai notebook có Exercise 2 còn được chạy end-to-end trên một fixture cô lập mô phỏng run mới: kiểm tra nhánh threshold riêng, measured loss và xuất ảnh; đây là kiểm thử trình bày, không phải một thực nghiệm GPU mới.
 
 ## 3. COMPARATIVE RESULTS, ERROR DIAGNOSTICS & FINAL REPORT (Rule: documentation-and-adrs)
 
@@ -740,7 +748,7 @@ Mục tiêu bổ sung sweep là làm rõ decision rule, không bảo đảm luô
 
 ### 3.7.1. Đọc trực tiếp ROC/PR được tạo từ test scores
 
-![ROC and precision-recall curves](outputs/runs/20261026T080403Z_analysis_7b9e92eb/roc_pr_curves.png)
+![ROC and precision-recall curves](outputs/runs/20261026T125634Z_analysis_73ee3c56/roc_pr_curves.png)
 
 ROC nằm cao hơn rõ rệt đường chéo tham chiếu, phù hợp ROC-AUC khoảng 0,9199. AUC không phải tỷ lệ phân loại đúng tại threshold 0,5; nó mô tả thứ tự scores giữa hai lớp trên nhiều operating points. PR curve giữ precision cao ở vùng recall thấp và giảm khi tiến gần recall 1; đường prevalence là 0,5 vì test cân bằng.
 AP khoảng 0,9269 cho thấy xếp hạng Positive hữu ích so với mốc prevalence, nhưng không loại bỏ nhu cầu chọn ngưỡng theo mục tiêu validation.
@@ -758,12 +766,12 @@ Cột “Test loss” của run GPU gốc vẫn là not logged. Scalar loss **0,
 
 ### 3.7.2. Đọc probability distribution và reliability diagram
 
-![Probability distribution by true class](outputs/runs/20261026T080403Z_analysis_7b9e92eb/probability_distribution.png)
+![Probability distribution by true class](outputs/runs/20261026T125634Z_analysis_73ee3c56/probability_distribution.png)
 
 Phần lớn Negative có $P(Positive)$ gần 0 và Positive có score gần 1, phù hợp khả năng xếp hạng khá tốt. Vẫn có Negative nằm ở vùng score gần 1 và Positive nằm ở vùng gần 0; đó là các lỗi tự tin cao không thể sửa bằng việc coi confidence là chứng nhận đúng. Vạch 0,5 trong hình là reference chưa fit, không phải một threshold được chọn từ histogram test.
 Các phần chồng lấn nhắc rằng tăng hoặc giảm ngưỡng luôn đánh đổi hai hướng lỗi.
 
-![Top-label reliability and confidence count](outputs/runs/20261026T080403Z_analysis_7b9e92eb/calibration_curve.png)
+![Top-label reliability and confidence count](outputs/runs/20261026T125634Z_analysis_73ee3c56/calibration_curve.png)
 
 Panel trái so accuracy thực của bin với mean predicted-class confidence; các điểm quan sát đều nằm dưới đường lý tưởng trong lần phân tích này. Panel phải cho thấy phần lớn mẫu nằm ở bin confidence 0,9–1,0, không phân bố đều giữa các bins. Cụ thể, bin cao nhất có **934 mẫu**, confidence trung bình **0,987576** nhưng accuracy chỉ **0,875803**, chênh khoảng **11,18 điểm phần trăm**.
 Đó là bằng chứng overconfidence trên nhóm quan sát, không chỉ một nhận xét từ bốn câu lỗi được chọn.
@@ -773,7 +781,7 @@ Phương án calibration trong tương lai cần một tập fitting khác test,
 
 ### 3.7.3. Đọc threshold sensitivity mà không chọn từ test
 
-![Test threshold sensitivity, no selected operating point](outputs/runs/20261026T080403Z_analysis_7b9e92eb/threshold_test_diagnostic/threshold_curves.png)
+![Test threshold sensitivity, no selected operating point](outputs/runs/20261026T125634Z_analysis_73ee3c56/threshold_test_diagnostic/threshold_curves.png)
 
 Panel trái mô tả Accuracy, Macro F1 và Binary F1 trên grid; panel phải thể hiện Precision, Recall, Specificity và FPR. Recall giảm khi threshold tăng vì Positive decision trở nên khắt khe hơn; Specificity tăng, FPR giảm. Các đường Accuracy/F1 gần nhau ở vùng giữa nhưng có biến thiên theo từng điểm dữ liệu, không xác định một threshold tối ưu phổ quát.
 Không có vạch selected threshold vì `selection_performed=false`; chỉ có đường reference 0,5.
@@ -889,6 +897,8 @@ Không dùng nhãn test để fit một mapping calibration rồi báo lại cù
 Test loss của lần training gốc vẫn chưa được log; khoảng trống full-test reload đã được giải quyết bằng run evaluation mới, có measured test loss 0,5442678 và policy validation 0,8. Weights không nằm trong Git nên việc rà soát checkout không đồng nghĩa đã tự chạy checkpoint tại máy rà soát. Không có peak VRAM hay energy consumption, nhiều seeds hoặc confidence interval để lượng hóa độ ổn định và ý nghĩa thống kê của mức tăng một mẫu đúng.
 Những giới hạn còn lại được nêu đúng phạm vi; không giữ một trạng thái pending đã được artifacts mới giải quyết, cũng không biến audit predictions thành thực thi model mới.
 
+Kiểm tra 1.066 văn bản validation và 1.066 văn bản test đã lưu không phát hiện bản sao nội bộ hoặc giao nhau giữa hai tập, cả với chuỗi nguyên bản và sau casefold/chuẩn hóa whitespace. Không có toàn văn train trong artifacts nên kiểm tra này không chứng minh train/test không trùng. Cũng chưa chạy label-permutation training; không đánh dấu toàn bộ kiểm toán leakage đã hoàn tất chỉ từ các kiểm tra có phạm vi hẹp này.
+
 ### 3.10. Decision Traceability về Mục 1.0
 
 | Quyết định (ID trong description) | Câu hỏi thảo luận | Hướng xử lý | Bằng chứng / giới hạn |
@@ -948,37 +958,37 @@ Model sentiment SST-2 của Exercise 1 vẫn có thể tải từ Hub theo cấu
 
 ### 3.11.1. Bản trình bày bổ sung từ bằng chứng đã kiểm toán
 
-Run phân tích `20261026T124315Z_threshold_analysis_8bc30b27` không thực thi lại model. Nó đọc ba run Kaggle bổ sung, kiểm tra 32 SHA256 và tính lại grid validation, test metrics, confusion matrices và loss từ probabilities. Các hình so sánh được xuất từ chính những bản ghi đã kiểm chứng; không tạo dự đoán tổng hợp.
+Run phân tích `20261026T125941Z_threshold_analysis_3124d66e` không thực thi lại model. Nó đọc ba run Kaggle bổ sung, kiểm tra 32 SHA256 và tính lại grid validation, test metrics, confusion matrices và loss từ probabilities. Các hình so sánh được xuất từ chính những bản ghi đã kiểm chứng; không tạo dự đoán tổng hợp.
 
-![Validation metrics before and after selection](outputs/runs/20261026T124315Z_threshold_analysis_8bc30b27/validation_comparison.png)
+![Validation metrics before and after selection](outputs/runs/20261026T125941Z_threshold_analysis_3124d66e/validation_comparison.png)
 
 Validation được dùng để chọn; hình này giải thích vì sao policy ưu tiên 0,8 theo Macro F1. Nó không phải đồ thị test và không cần nhìn test để xác định điểm chọn.
 
-![Test metrics under fixed policies](outputs/runs/20261026T124315Z_threshold_analysis_8bc30b27/test_comparison.png)
+![Test metrics under fixed policies](outputs/runs/20261026T125941Z_threshold_analysis_3124d66e/test_comparison.png)
 
 Trên test, Precision tăng nhưng Recall và Binary F1 giảm. Chênh lệch rất nhỏ về Accuracy/Macro F1 cần được đọc cùng số lỗi thay đổi; không dùng trục biểu đồ cắt sát metric để thổi phồng lợi ích.
 
-![Confusion matrices under the same scale](outputs/runs/20261026T124315Z_threshold_analysis_8bc30b27/confusion_comparison.png)
+![Confusion matrices under the same scale](outputs/runs/20261026T125941Z_threshold_analysis_3124d66e/confusion_comparison.png)
 
 Hai confusion matrices có cùng thang màu 0–1 và cùng support 533 mỗi lớp. Độ đậm của ô TN tăng và ô TP giảm biểu hiện chính xác hướng đánh đổi do nâng threshold.
 
-![Counts of correct decisions and errors](outputs/runs/20261026T124315Z_threshold_analysis_8bc30b27/error_tradeoff.png)
+![Counts of correct decisions and errors](outputs/runs/20261026T125941Z_threshold_analysis_3124d66e/error_tradeoff.png)
 
 Từ 895 lên 896 mẫu đúng là kết quả ròng của 22 lỗi FP được sửa và 21 FN mới phát sinh. Không được chỉ chọn các mẫu được sửa để trình bày như threshold luôn có lợi.
 
-![Per-class operating metrics](outputs/runs/20261026T124315Z_threshold_analysis_8bc30b27/per_class_comparison.png)
+![Per-class operating metrics](outputs/runs/20261026T125941Z_threshold_analysis_3124d66e/per_class_comparison.png)
 
 Bảng lưu đủ Precision, Recall/TPR, F1, FPR và support cho từng lớp ở cả hai quyết định. TPR Negative tăng đồng thời TPR Positive giảm; chọn policy thực tế phải dựa trên chi phí lỗi của ứng dụng.
 
-![Examples changed by the policy](outputs/runs/20261026T124315Z_threshold_analysis_8bc30b27/changed_predictions.png)
+![Examples changed by the policy](outputs/runs/20261026T125941Z_threshold_analysis_3124d66e/changed_predictions.png)
 
 Ví dụ “a handsome but unfulfilling suspense drama…” có nhãn Negative nhưng argmax Positive với P(Positive) khoảng 0,59158; threshold 0,8 sửa thành Negative. Trái lại, “red dragon never cuts corners” có nhãn Positive và P(Positive) khoảng 0,75294, bị policy mới chuyển thành Negative sai. Hai trường hợp minh họa cùng vùng quyết định có cả lợi và hại.
 
-![Operating points on ranking curves](outputs/runs/20261026T124315Z_threshold_analysis_8bc30b27/operating_points.png)
+![Operating points on ranking curves](outputs/runs/20261026T125941Z_threshold_analysis_3124d66e/operating_points.png)
 
 ROC và PR dùng probabilities của evaluation sau reload. Hai điểm chỉ là hai policy cố định trên cùng scores; không fit thêm weights, không chọn lại ngưỡng trên test. Ranking của model không thay đổi khi chỉ thay threshold.
 
-![Recorded inference result](outputs/runs/20261026T124315Z_threshold_analysis_8bc30b27/inference_result.png)
+![Recorded inference result](outputs/runs/20261026T125941Z_threshold_analysis_3124d66e/inference_result.png)
 
 Inference dùng policy có checkpoint identity trùng nguồn selection. Câu tương phản có P(Positive) thấp hơn nhiều cả hai ngưỡng nên kết quả không đổi. Cần phân biệt khả năng tái lập quyết định của một câu với khả năng tổng quát hóa trên một tập mới.
 

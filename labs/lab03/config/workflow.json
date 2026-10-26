@@ -2,15 +2,15 @@
   "active_runs": {
     "exercise1": "20261025T181532Z_exercise1_71da6f40",
     "finetuning": "20261025T181550Z_finetuning_e02bced7",
-    "exercise1_analysis": "20261026T080357Z_exercise1_analysis_a8b6bff3",
-    "analysis": "20261026T080403Z_analysis_7b9e92eb",
-    "notebook_render": "20261026T124505Z_notebook_render_29bd8d4e",
-    "verification": "20261026T124745Z_verification_edded031",
+    "exercise1_analysis": "20261026T125627Z_exercise1_analysis_6a474f62",
+    "analysis": "20261026T125634Z_analysis_73ee3c56",
+    "notebook_render": "20261026T125929Z_notebook_render_313034a2",
+    "verification": "20261026T130154Z_verification_f2147def",
     "threshold_selection": "20261026T083558Z_threshold_selection_b64cf564",
     "evaluation": "20261026T083612Z_evaluation_a724c16c",
     "inference": "20261026T083627Z_inference_0ed240e2",
-    "threshold_analysis": "20261026T124315Z_threshold_analysis_8bc30b27",
-    "artifact_audit": "20261026T124633Z_artifact_audit_d4d1e652"
+    "threshold_analysis": "20261026T125941Z_threshold_analysis_3124d66e",
+    "artifact_audit": "20261026T130002Z_artifact_audit_4fb5f597"
   },
   "runs": [
     {
@@ -75,6 +75,36 @@
     },
     {
       "id": "20261026T124745Z_verification_edded031",
+      "kind": "verification",
+      "status": "completed"
+    },
+    {
+      "id": "20261026T125627Z_exercise1_analysis_6a474f62",
+      "kind": "exercise1_analysis",
+      "status": "completed"
+    },
+    {
+      "id": "20261026T125634Z_analysis_73ee3c56",
+      "kind": "analysis",
+      "status": "completed"
+    },
+    {
+      "id": "20261026T125941Z_threshold_analysis_3124d66e",
+      "kind": "threshold_analysis",
+      "status": "completed"
+    },
+    {
+      "id": "20261026T125929Z_notebook_render_313034a2",
+      "kind": "notebook_render",
+      "status": "completed"
+    },
+    {
+      "id": "20261026T130002Z_artifact_audit_4fb5f597",
+      "kind": "artifact_audit",
+      "status": "completed"
+    },
+    {
+      "id": "20261026T130154Z_verification_f2147def",
       "kind": "verification",
       "status": "completed"
     }

@@ -36,3 +36,25 @@ def test_actual_threshold_visuals_cache_and_keep_source_evidence(tmp_path):
     verify_manifest(out)
     assert ensure_threshold_analysis(root=tmp_path) == out
     assert {str(p): hash_file(p) for run in copied for p in run.rglob('*') if p.is_file()} == before
+
+
+def test_threshold_visuals_ignore_unrelated_latest_inference(tmp_path):
+    """Inference SST-2 mới không được làm hỏng bộ evidence của checkpoint cũ."""
+    state = read_json(ROOT / 'config/workflow.json')
+    kinds = ['threshold_selection', 'evaluation', 'inference']
+    rows=[]
+    active={}
+    for kind in kinds:
+        run_id=state['active_runs'][kind]
+        shutil.copytree(ROOT/'outputs/runs'/run_id,tmp_path/'outputs/runs'/run_id)
+        rows.append({'id':run_id,'kind':kind,'status':'completed'})
+        active[kind]=run_id
+    other=tmp_path/'outputs/runs/unrelated_inference'
+    save_json(other/'config.json',{'inference':{'model':'pretrained SST-2'}})
+    rows.append({'id':other.name,'kind':'inference','status':'completed'})
+    active['inference']=other.name
+    save_json(tmp_path/'config/workflow.json',{'active_runs':active,'runs':rows})
+    out=ensure_threshold_analysis(root=tmp_path)
+    summary=read_json(out/'summary.json')
+    assert summary['source_runs']['inference']==state['active_runs']['inference']
+    assert summary['selected_threshold']==.8
