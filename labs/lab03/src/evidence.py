@@ -25,7 +25,16 @@ def selected_run(kind, root=ROOT):
 
 def verify_manifest(run):
     run = Path(run).resolve()
-    checked, absent = [], []
+    checked, absent, omitted_logs = [], [], []
+    availability_path = run / "artifact_availability.json"
+    declared_logs = {}
+    if availability_path.is_file():
+        availability = read_json(availability_path)
+        if availability.get("source_manifest_sha256") != hash_file(run / "manifest.json"):
+            raise ValueError("Artifact availability is bound to a different manifest")
+        declared_logs = availability.get("omitted_raw_logs", {})
+        if not isinstance(declared_logs, dict) or not set(declared_logs) <= {"console.log", "recovery.log"}:
+            raise ValueError("Only raw logs may be declared omitted")
     manifest = read_json(run / "manifest.json")
     if not manifest:
         raise ValueError("Empty manifest")
@@ -39,11 +48,17 @@ def verify_manifest(run):
             checked.append(name)
         elif Path(name).parts[0] in {"best_model", "checkpoints"}:
             absent.append(name)
+        elif name in declared_logs:
+            declaration = declared_logs[name]
+            if not isinstance(declaration, dict) or declaration.get("sha256") != digest:
+                raise ValueError("Omitted log hash differs from source manifest")
+            omitted_logs.append(name)
         else:
             raise FileNotFoundError(f"Required evidence missing: {name}")
     if read_json(run / "status.json")["status"] != "completed":
         raise ValueError("Selected run did not complete")
     return {"verified_files": len(checked), "omitted_checkpoint_files": absent,
+            "omitted_raw_logs": omitted_logs,
             "checkpoint_available_locally": (run / "best_model/model.safetensors").is_file()}
 
 

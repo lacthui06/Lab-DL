@@ -32,12 +32,12 @@ labs/lab03/
   scripts/                  train, eval, infer, audit và recovery
   tests/                    tests chức năng và kiểm tra artifacts thật
   outputs/runs/             artifacts Kaggle nhẹ, giữ nguyên manifest gốc
-  validation/               kết quả audit và thực thi notebook tại máy rà soát
+  validation/               kết quả audit và thực thi notebook tại môi trường kiểm chứng
   description_lab_03.md     đề bài, thảo luận và quyết định
   walkthrough_lab_03.md     báo cáo thực nghiệm để nộp
 ```
 
-Cấu hình và kết quả nằm trong `labs/lab03/config/` và `labs/lab03/outputs/`, dùng chung một registry. Các byte artifacts gốc không bị chỉnh sửa; 24 file hiện có khớp manifest.
+Cấu hình và kết quả nằm trong `labs/lab03/config/` và `labs/lab03/outputs/`, dùng chung một registry. Các byte artifacts gốc không bị chỉnh sửa; 86 file nguồn mới hiện có khớp manifest; raw logs và checkpoint được kê khai riêng.
 
 ## 3. Cài đặt
 
@@ -76,9 +76,9 @@ cd ../..
 .venv-lab03/bin/python labs/lab03/scripts/audit_outputs.py
 ```
 
-- **55 tests đạt trên CPU**: dataset contract, dynamic padding, pipeline/manual, checkpoint, sanity overfit, Trainer, run tracking, năm plots, recovery, metrics/artifact audit và phát hiện dữ liệu bị sửa.
-- Audit kiểm tra 56 file SHA256 nguồn (24 file gốc và 32 file của selection/evaluation/inference mới), tính lại validation sweep, test metrics và confusion matrices. Báo cáo audit đầy đủ được lưu trong một run `artifact_audit` dưới `outputs/`, kèm bản tiện tra cứu tại `validation/`.
-- 29 file checkpoint không có trong Git được liệt kê rõ là thiếu có chủ đích, không coi là đã kiểm tra tại máy rà soát.
+- **65 tests đạt trên CPU**: dataset contract, dynamic padding, pipeline/manual, checkpoint, sanity overfit, Trainer, run tracking, năm plots, recovery, metrics/artifact audit và phát hiện dữ liệu bị sửa.
+- Audit kiểm tra 51 file khoa học hiện hành, tính lại validation sweep, test metrics và confusion matrices. Selection dùng validation phase trong training run. Báo cáo audit đầy đủ được lưu trong một run `artifact_audit` dưới `outputs/`, kèm bản tiện tra cứu tại `validation/`.
+- 30 file checkpoint không có trong Git được liệt kê rõ là thiếu có chủ đích, không coi là đã kiểm tra tại môi trường kiểm chứng.
 - Ba notebook chạy hết ở view, Hugging Face offline, không có cell lỗi. Xem `validation/notebook_execution.json`.
 
 Tests có fixture nhỏ để kiểm tra pipeline; chúng không phải benchmark Rotten Tomatoes. Audit thực dùng `all_predictions.json` từ Kaggle và không suy luận lại từ weights.
@@ -156,8 +156,8 @@ run(PYTHON, "labs/lab03/scripts/render_notebooks.py", "--kernel", "lab03")
 
 | Giai đoạn | Run được registry chọn |
 |---|---|
-| Exercise 1 | `20261025T181532Z_exercise1_71da6f40` |
-| Fine-tuning | `20261025T181550Z_finetuning_e02bced7` |
+| Exercise 1 | `20261026T155744Z_exercise1_65dfe784` |
+| Fine-tuning | `20261026T155822Z_finetuning_2c2f0401` |
 
 | Test metric | Giá trị |
 |---|---:|
@@ -168,23 +168,23 @@ run(PYTHON, "labs/lab03/scripts/render_notebooks.py", "--kernel", "lab03")
 
 Confusion matrix `[TN FP; FN TP]` = `[[444,89],[82,451]]`. Checkpoint epoch 3 được chọn theo validation accuracy 84,33%; epoch 2 có loss validation thấp hơn. Có dấu hiệu overfitting; đề không đặt ngưỡng accuracy 85%.
 
-Nguồn: [metrics](outputs/runs/20261025T181550Z_finetuning_e02bced7/test_metrics.json), [toàn bộ dự đoán](outputs/runs/20261025T181550Z_finetuning_e02bced7/all_predictions.json), [lịch sử](outputs/runs/20261025T181550Z_finetuning_e02bced7/trainer_history.json), [audit độc lập](validation/artifact_audit.json).
+Nguồn: [metrics](outputs/published/finetuning/test_metrics.json), [toàn bộ dự đoán](outputs/published/finetuning/all_predictions.json), [lịch sử](outputs/published/finetuning/trainer_history.json), [audit độc lập](validation/artifact_audit.json).
 
 ## 7. Checkpoint, inference và lưu trữ
 
-**GitHub không chứa trọng số.** Run Kaggle lưu bằng chứng reload thành công trong `reload_check.json`; máy rà soát không chạy lại checkpoint. Không có URL weights công khai đã xác minh, nên cần giữ ZIP Kaggle của bạn.
+**GitHub không chứa trọng số.** Run Kaggle lưu bằng chứng reload thành công trong `reload_check.json`; môi trường kiểm chứng không chạy lại checkpoint. Không có URL weights công khai đã xác minh, nên cần giữ ZIP Kaggle của bạn.
 
 Để đánh giá/suy luận lại, giải nén `best_model/` từ ZIP vào đúng đường dẫn:
 
 ```text
-labs/lab03/outputs/runs/20261025T181550Z_finetuning_e02bced7/best_model/
+labs/lab03/outputs/runs/20261026T155822Z_finetuning_2c2f0401/best_model/
 ```
 
 Rồi chạy:
 
 ```bash
-.venv-lab03/bin/python labs/lab03/scripts/eval.py --model-path labs/lab03/outputs/runs/20261025T181550Z_finetuning_e02bced7/best_model
-.venv-lab03/bin/python labs/lab03/scripts/infer.py --model-path labs/lab03/outputs/runs/20261025T181550Z_finetuning_e02bced7/best_model --text "A wonderful movie."
+.venv-lab03/bin/python labs/lab03/scripts/eval.py --model-path labs/lab03/outputs/runs/20261026T155822Z_finetuning_2c2f0401/best_model
+.venv-lab03/bin/python labs/lab03/scripts/infer.py --model-path labs/lab03/outputs/runs/20261026T155822Z_finetuning_2c2f0401/best_model --text "A wonderful movie."
 ```
 
 Eval/infer với `best_model/` ưu tiên config snapshot của run (gồm max length và dataset), nên thay đổi config hiện tại không làm lệch đánh giá run cũ. Eval chỉ tải tokenizer trong checkpoint, không tải lại backbone/tokenizer không liên quan.
@@ -197,7 +197,7 @@ SHA256 weights được giữ trong manifest: `5a63c9c2a6391132c86b0e6c08277cc23
 
 Mỗi run có config, snapshot, console log, provenance, status, SHA256 manifest, metrics, lịch sử, dự đoán và report. Năm hình: learning curves, confusion matrix chuẩn hóa kèm counts, binary metrics bar, train token-length KDE/cutoff và bảng mẫu đúng/sai.
 
-`outputs/` mặc định bị ignore để tránh đẩy nhầm model; các artifacts nhẹ của hai run hiện hành đã được commit. Với run mới, chỉ stage phần nhẹ:
+`outputs/` mặc định bị ignore để tránh đẩy nhầm model; các artifacts nhẹ của các run hiện hành đã được commit. Với run mới, chỉ stage phần nhẹ:
 
 ```bash
 git add -f -- labs/lab03/outputs/runs/<run_id> ':(glob,exclude)**/best_model/**' ':(glob,exclude)**/checkpoints/**'
@@ -242,13 +242,13 @@ Train mới thực hiện:
 
 Code `src/training/thresholds.py` chặn chọn ngưỡng khi `split != 'validation'`. `scripts/select_threshold.py` chỉ đọc validation để chọn, không đọc test predictions. Test suite kiểm tra cả quy tắc này và lưu artifacts. Việc gắn nhãn split trong API không tự chứng minh nguồn dữ liệu; notebook/CLI chịu trách nhiệm truyền đúng split.
 
-Training run lịch sử không lưu validation probabilities. Phiên Kaggle bổ sung đã phục hồi đúng checkpoint, predict đủ validation và chọn ngưỡng **0,8** theo validation Macro F1; weights tiếp tục nằm ngoài Git. Đồ thị `threshold_test_diagnostic/threshold_curves.png` chỉ mô tả độ nhạy trên test đã quan sát; **không chọn ngưỡng tối ưu từ test** và không thay đổi kết quả 83,96% của run gốc.
+Run hiện hành đã lưu đủ validation probabilities, loss và policy **0,8** chọn theo validation Macro F1; weights tiếp tục nằm ngoài Git. Đồ thị `threshold_test_diagnostic/threshold_curves.png` chỉ mô tả độ nhạy trên test đã quan sát; **không chọn ngưỡng tối ưu từ test** và không thay đổi kết quả 83,96% của run gốc.
 
 Nếu còn ZIP checkpoint, khôi phục `best_model/` rồi chọn ngưỡng mà không train lại:
 
 ```bash
 .venv-lab03/bin/python labs/lab03/scripts/select_threshold.py \
-  --model-path labs/lab03/outputs/runs/20261025T181550Z_finetuning_e02bced7/best_model
+  --model-path labs/lab03/outputs/runs/20261026T155822Z_finetuning_2c2f0401/best_model
 ```
 
 Lệnh in đường dẫn policy trong run `threshold_selection` mới. Dùng policy đó khi đánh giá/suy luận:
@@ -275,9 +275,9 @@ Policy threshold được gắn SHA256 của checkpoint; không áp policy của
 
 | Vai trò | Run Kaggle nguồn |
 |---|---|
-| Chọn threshold trên validation | `20261026T083558Z_threshold_selection_b64cf564` |
-| Tải lại checkpoint, đánh giá full test | `20261026T083612Z_evaluation_a724c16c` |
-| Inference với policy đóng băng | `20261026T083627Z_inference_0ed240e2` |
+| Chọn threshold trên validation | `20261026T155822Z_finetuning_2c2f0401` |
+| Tải lại checkpoint, đánh giá full test | `20261026T160058Z_evaluation_07c24854` |
+| Inference với policy đóng băng | `20261026T160111Z_inference_7f2b16f0` |
 
 | Test metric | Argmax | Policy validation 0,8 |
 |---|---:|---:|
@@ -288,7 +288,7 @@ Policy threshold được gắn SHA256 của checkpoint; không áp policy của
 | Macro F1 | 83,9580% | 84,0343% |
 | TN / FP / FN / TP | 444 / 89 / 82 / 451 | 466 / 67 / 103 / 430 |
 
-Validation Macro F1: **0,843279 → 0,852663**. Test chỉ thêm một mẫu đúng, giảm 22 FP nhưng tăng 21 FN; không khẳng định 0,8 tốt hơn ở mọi mục tiêu. Measured test loss sau reload là **0,5442677736**, không đổi khi thay decision threshold. Giữ riêng loss này với NLL tái tính từ probabilities của run training lịch sử.
+Validation Macro F1: **0,843279 → 0,852663**. Test chỉ thêm một mẫu đúng, giảm 22 FP nhưng tăng 21 FN; không khẳng định 0,8 tốt hơn ở mọi mục tiêu. Measured test loss sau reload là **0,5442677736**, không đổi khi thay decision threshold. Giữ riêng loss này với loss 0,5443162918 lúc fine-tuning và NLL 0,5442964394 tái tính từ probabilities.
 
 [Walkthrough](walkthrough_lab_03.md) giải thích đầy đủ quyết định và đánh đổi. Module `src/threshold_evidence.py` đối chiếu policy giữa ba run, SHA256 checkpoint, validation fingerprint, 19 ngưỡng và toàn bộ predictions. Module `src/threshold_analysis.py` xuất chín hình so sánh cùng bảng có thể tính lại; notebook hiển thị trực tiếp các hình đó.
 
@@ -300,3 +300,25 @@ Validation Macro F1: **0,843279 → 0,852663**. Test chỉ thêm một mẫu đ�
 Hai lệnh này dùng evidence đã lưu, không tải weights và không train lại. Notebook `view` tự dùng kết quả bổ sung khi nó thuộc đúng training run; không gắn policy cũ vào một model mới. Bản notebook đã chạy được sao lưu đầy đủ trong run `notebook_render`, bao gồm cả bảng và hình hiển thị.
 
 Run train mới có policy riêng được phân tích trực tiếp từ validation/test artifacts của chính run đó; xuất thêm `training_threshold_metrics.png`, `training_threshold_per_class.png` và `training_threshold_confusion.png`. Không cần tạo ba run selection/evaluation/inference riêng để notebook hiển thị so sánh threshold. `measured_test_loss` lấy từ `test_runtime_metrics.json` khi có; run gốc không log loss vẫn giữ trạng thái thiếu. Registry chọn bộ evidence cùng checkpoint/policy, không ghép tùy tiện các active run khác model.
+
+
+## 12. Notebook trực quan và artifact để làm report
+
+Notebook hiển thị hình/bảng ngay tại từng phase và lưu chính các kết quả đó dưới `outputs/`. Với notebook Kaggle điều phối CLI bằng subprocess, chạy cell hiển thị trong kernel notebook:
+
+```python
+import runpy
+from pathlib import Path
+LAB = Path("/kaggle/working/Lab-DL/labs/lab03")
+_ = runpy.run_path(str(LAB / "scripts/display_results.py"), run_name="__main__")
+```
+
+Bộ report chọn run tường minh tại `config/report.json`. Chạy lệnh sau để sao chép hình/bảng đã có, không tải model và không vẽ lại đồ thị:
+
+```bash
+.venv-lab03/bin/python labs/lab03/scripts/publish_artifacts.py
+```
+
+Mở `outputs/published/index.md` để xem bảng kết quả và toàn bộ hình. `metrics_summary.json`, `artifact_catalog.json` và `source_runs.json` giúp dùng lại artifact cho report. Đổi các run được chọn rồi xuất lại khi cần; không cần trích raw outputs hoặc tạo lại toàn bộ phần phân tích cho mỗi bản trình bày. Checkpoint và raw logs không được đưa vào bộ published.
+
+Phiên Kaggle hiện hành đã chốt dataset revision `aa13bc287fa6fcab6daf52f0dfb9994269ffea28` và model revisions trong config. 86 file của bảy run mới hiện có khớp manifest; bảy console logs không có trong bộ công bố được kê khai bằng `artifact_availability.json`. Manifest gốc được giữ nguyên, dữ liệu khoa học không được phép khai báo thiếu dưới dạng log.

@@ -95,7 +95,10 @@ def audit_threshold_experiment(selection_run, evaluation_run, inference_run):
     selection_run, evaluation_run, inference_run = map(Path, (selection_run, evaluation_run, inference_run))
     paths = {"threshold_selection": selection_run, "evaluation": evaluation_run, "inference": inference_run}
     manifest_audits = {kind: verify_manifest(path) for kind, path in paths.items()}
-    if any(v["omitted_checkpoint_files"] for v in manifest_audits.values()):
+    cfg_selection = read_json(selection_run / "config.json")
+    inline_selection = "threshold_checkpoint" not in cfg_selection and (selection_run / "data_statistics.json").is_file()
+    if any(v["omitted_checkpoint_files"] for kind, v in manifest_audits.items()
+           if kind != "threshold_selection" or not inline_selection):
         raise ValueError("Supplemental run must contain all artifacts recorded in its manifest")
     policy = read_json(selection_run / "decision_threshold.json")
     if policy.get("split") != "validation" or policy.get("selection_performed") is not True:
@@ -121,7 +124,10 @@ def audit_threshold_experiment(selection_run, evaluation_run, inference_run):
     cfg_selection = read_json(selection_run / "config.json")
     cfg_evaluation = read_json(evaluation_run / "config.json")
     cfg_inference = read_json(inference_run / "config.json")
-    checkpoint_path = cfg_selection.get("threshold_checkpoint")
+    checkpoint_path = (cfg_evaluation.get("evaluated_checkpoint") if inline_selection
+                       else cfg_selection.get("threshold_checkpoint"))
+    if inline_selection and PurePosixPath(str(checkpoint_path)).parent.name != selection_run.name:
+        raise ValueError("Inline validation policy belongs to a different training run")
     if not isinstance(checkpoint_path, str) or not checkpoint_path:
         raise ValueError("Missing threshold checkpoint provenance")
     if cfg_evaluation.get("evaluated_checkpoint") != checkpoint_path or cfg_inference.get("inference", {}).get("model") != checkpoint_path:
@@ -167,6 +173,7 @@ def audit_threshold_experiment(selection_run, evaluation_run, inference_run):
     threshold_cm = confusion_matrix(labels, predicted, labels=[0, 1]).tolist()
     return {
         "source_runs": {kind: path.name for kind, path in paths.items()},
+        "selection_location": "finetuning.validation_threshold" if inline_selection else "threshold_selection",
         "verified_files": sum(v["verified_files"] for v in manifest_audits.values()),
         "manifest_audits": manifest_audits,
         "policy": policy,

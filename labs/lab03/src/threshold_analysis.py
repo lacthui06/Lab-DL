@@ -67,8 +67,22 @@ def matching_threshold_runs(training_run=None, root=ROOT):
         if training_run is not None and Path(training_run).name != recorded_training:
             continue
         policy = read_json(evaluation / "decision_threshold.json")
-        matching = {k: next((p for p in candidates[k] if read_json(p / "decision_threshold.json") == policy), None)
+        def same_cohort(path, kind):
+            if read_json(path / "decision_threshold.json") != policy:
+                return False
+            source_cfg = read_json(path / "config.json")
+            if kind == "inference":
+                return source_cfg.get("inference", {}).get("model") == cfg["evaluated_checkpoint"]
+            checkpoint = source_cfg.get("threshold_checkpoint")
+            return checkpoint == cfg["evaluated_checkpoint"] or (
+                checkpoint is None and path.name == recorded_training and (path / "data_statistics.json").is_file())
+        matching = {k: next((p for p in candidates[k] if same_cohort(p, k)), None)
                     for k in ["threshold_selection", "inference"]}
+        if matching["threshold_selection"] is None:
+            candidate = Path(training_run) if training_run is not None else root / "outputs/runs" / recorded_training
+            policy_path = candidate / "decision_threshold.json"
+            if policy_path.is_file() and read_json(policy_path) == policy:
+                matching["threshold_selection"] = candidate
         if all(matching.values()):
             paths = dict(matching, evaluation=evaluation)
             break

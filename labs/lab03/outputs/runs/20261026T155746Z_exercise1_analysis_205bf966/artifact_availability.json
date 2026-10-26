@@ -1,0 +1,9 @@
+{
+  "source_manifest_sha256": "470d47acb0c0085097abbd9c69d87f652f886b2e7258fd5fa55e394aa638ca34",
+  "omitted_raw_logs": {
+    "console.log": {
+      "sha256": "30af519e9bdf2289e8ac5e015f2b0ef01ecf1bcf55d56fcfccc52903abcdd7a4",
+      "reason": "raw log absent from available artifact set"
+    }
+  }
+}

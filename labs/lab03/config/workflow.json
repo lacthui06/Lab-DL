@@ -1,16 +1,16 @@
 {
   "active_runs": {
-    "exercise1": "20261025T181532Z_exercise1_71da6f40",
-    "finetuning": "20261025T181550Z_finetuning_e02bced7",
-    "exercise1_analysis": "20261026T125627Z_exercise1_analysis_6a474f62",
-    "analysis": "20261026T125634Z_analysis_73ee3c56",
-    "notebook_render": "20261026T125929Z_notebook_render_313034a2",
-    "verification": "20261026T130154Z_verification_f2147def",
+    "exercise1": "20261026T155744Z_exercise1_65dfe784",
+    "finetuning": "20261026T155822Z_finetuning_2c2f0401",
+    "exercise1_analysis": "20261026T161956Z_exercise1_analysis_46ca085f",
+    "analysis": "20261026T161957Z_analysis_b336c410",
+    "notebook_render": "20261026T163051Z_notebook_render_03fd373a",
+    "verification": "20261026T163347Z_verification_641a8f92",
     "threshold_selection": "20261026T083558Z_threshold_selection_b64cf564",
-    "evaluation": "20261026T083612Z_evaluation_a724c16c",
-    "inference": "20261026T083627Z_inference_0ed240e2",
-    "threshold_analysis": "20261026T125941Z_threshold_analysis_3124d66e",
-    "artifact_audit": "20261026T130002Z_artifact_audit_4fb5f597"
+    "evaluation": "20261026T160058Z_evaluation_07c24854",
+    "inference": "20261026T160111Z_inference_7f2b16f0",
+    "threshold_analysis": "20261026T162909Z_threshold_analysis_f8b3fdf7",
+    "artifact_audit": "20261026T162631Z_artifact_audit_c84d606c"
   },
   "runs": [
     {
@@ -105,6 +105,71 @@
     },
     {
       "id": "20261026T130154Z_verification_f2147def",
+      "kind": "verification",
+      "status": "completed"
+    },
+    {
+      "id": "20261026T155744Z_exercise1_65dfe784",
+      "kind": "exercise1",
+      "status": "completed"
+    },
+    {
+      "id": "20261026T155746Z_exercise1_analysis_205bf966",
+      "kind": "exercise1_analysis",
+      "status": "completed"
+    },
+    {
+      "id": "20261026T155822Z_finetuning_2c2f0401",
+      "kind": "finetuning",
+      "status": "completed"
+    },
+    {
+      "id": "20261026T160023Z_analysis_163a53b0",
+      "kind": "analysis",
+      "status": "completed"
+    },
+    {
+      "id": "20261026T160058Z_evaluation_07c24854",
+      "kind": "evaluation",
+      "status": "completed"
+    },
+    {
+      "id": "20261026T160111Z_inference_7f2b16f0",
+      "kind": "inference",
+      "status": "completed"
+    },
+    {
+      "id": "20261026T160130Z_notebook_render_f8e70da2",
+      "kind": "notebook_render",
+      "status": "completed"
+    },
+    {
+      "id": "20261026T161956Z_exercise1_analysis_46ca085f",
+      "kind": "exercise1_analysis",
+      "status": "completed"
+    },
+    {
+      "id": "20261026T161957Z_analysis_b336c410",
+      "kind": "analysis",
+      "status": "completed"
+    },
+    {
+      "id": "20261026T162631Z_artifact_audit_c84d606c",
+      "kind": "artifact_audit",
+      "status": "completed"
+    },
+    {
+      "id": "20261026T162909Z_threshold_analysis_f8b3fdf7",
+      "kind": "threshold_analysis",
+      "status": "completed"
+    },
+    {
+      "id": "20261026T163051Z_notebook_render_03fd373a",
+      "kind": "notebook_render",
+      "status": "completed"
+    },
+    {
+      "id": "20261026T163347Z_verification_641a8f92",
       "kind": "verification",
       "status": "completed"
     }

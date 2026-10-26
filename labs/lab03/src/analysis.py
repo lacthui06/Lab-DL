@@ -229,14 +229,21 @@ def analyze_run(source_run, root=ROOT):
         lengths=[len(r["text"].split()) for r in rows]
         tables={"epoch_history":epochs,"per_class_metrics":per_class,"metrics_comparison":comparison,
                 "split_sizes":[{"split":k,"samples":v} for k,v in stats["split_sizes"].items()],
+                "label_counts":[{"split":split,"label":int(label),"samples":int(count)}
+                                for split,counts in stats.get("label_counts", {"test":{"0":int(sum(labels==0)),"1":int(sum(labels==1))}}).items()
+                                for label,count in counts.items()],
                 "token_statistics":[stats["train_token_lengths"]],"training_config":[config["exercise2"]],
                 "environment_versions":[{"library":k,"version":v} for k,v in versions["versions"].items()],
                 "test_word_length_statistics":{"mean":float(np.mean(lengths)),"median":float(np.median(lengths)),"max":int(max(lengths))},
                 "artifact_catalog":[{"file":p.name,"source_run":source.name} for p in sorted(source.glob('*.png'))]}
         tables["training_threshold"] = _training_threshold_evidence(source, labels, probs, out)
         save_json(out / "tables.json", tables)
-        fig,ax=plt.subplots(figsize=(7,4)); ax.bar(["Negative", "Positive"],np.bincount(labels,minlength=2))
-        ax.set(ylabel="Test examples",title="Observed test class distribution: 533 / 533");finish(fig,out/"class_distribution.png")
+        counts=stats.get("label_counts", {"test":{"0":int(sum(labels==0)),"1":int(sum(labels==1))}})
+        fig,axes=plt.subplots(1,len(counts),figsize=(5*len(counts),4),squeeze=False)
+        for ax,(split,values) in zip(axes[0],counts.items()):
+            bars=ax.bar(["Negative","Positive"],[values["0"],values["1"]])
+            ax.bar_label(bars);ax.set(ylabel="Examples",title=f"{split}: official label counts")
+        finish(fig,out/"class_distribution.png")
         fig,ax=plt.subplots(figsize=(9,4));sns.histplot(x=lengths,hue=labels,bins=30,element="step",ax=ax)
         ax.set(xlabel="Whitespace-separated words (not WordPiece tokens)",ylabel="Test examples",title="Review length by true label");finish(fig,out/"review_length_distribution.png")
         fig,ax=plt.subplots(figsize=(9,4))

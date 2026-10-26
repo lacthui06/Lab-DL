@@ -98,3 +98,7 @@ lightning_logs/
 **/outputs/.registry.lock
 
 labs/lab03/internal_changes.md
+
+labs/lab03/outputs/publication_history/
+
+labs/lab03/outputs/.published-*/

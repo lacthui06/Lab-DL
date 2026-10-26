@@ -3,7 +3,7 @@ from pathlib import Path
 import argparse
 import sys
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
-from labs.lab03.src.evidence import selected_run, audit_exercise1, audit_finetuning
+from labs.lab03.src.evidence import selected_run, audit_exercise1, audit_finetuning, verify_manifest
 from labs.lab03.src.utils.runs import save_json, ROOT, run_context
 
 from labs.lab03.src.threshold_analysis import matching_threshold_runs
@@ -24,7 +24,9 @@ if __name__ == "__main__":
         print("Saved audit artifact:", out)
     save_json(args.output, result)
     print("Artifact audit: PASSED")
-    print("Verified files:", sum(row["verified_files"] for row in result.values()))
+    sources = {selected_run("exercise1"), selected_run("finetuning")}
+    if paths: sources.update(paths.values())
+    print("Unique verified source files:", sum(verify_manifest(p)["verified_files"] for p in sources))
     print("Recomputed test accuracy:", result["finetuning"]["metrics"]["accuracy"])
     print("Checkpoint availability:", result["finetuning"]["checkpoint_available_locally"])
     print("Audit report:", args.output)

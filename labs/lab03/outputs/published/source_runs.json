@@ -1,0 +1,23 @@
+{
+  "runs": {
+    "exercise1": "20261026T155744Z_exercise1_65dfe784",
+    "exercise1_analysis": "20261026T161956Z_exercise1_analysis_46ca085f",
+    "finetuning": "20261026T155822Z_finetuning_2c2f0401",
+    "analysis": "20261026T161957Z_analysis_b336c410",
+    "evaluation": "20261026T160058Z_evaluation_07c24854",
+    "threshold_analysis": "20261026T162909Z_threshold_analysis_f8b3fdf7",
+    "inference": "20261026T160111Z_inference_7f2b16f0"
+  },
+  "source_manifests": {
+    "exercise1": "0df1428fafe25b5b1619baba8e82d6bab023aa87708832ad344f15dc04683ca8",
+    "exercise1_analysis": "376abe59f866f4a80c29958596e8a2e47ee605dc2cdf53afac75e13b127a97ff",
+    "finetuning": "9e3f61347554cc018d3912ea6df2479d685671251fc893680292838811aa43d2",
+    "analysis": "c038ab042dc7da02fa28d7022e655d056fb7af30b45d17960f73a3223b38b325",
+    "evaluation": "3acced8ed5199addd7db66ea5ff98827f2aa5763ea86cfab92bbd94c0c05a499",
+    "threshold_analysis": "44e3a5e0f47f03fbf0b1ac32dd24549817a927f0831494676ac33133d92871f1",
+    "inference": "a79e63b3ebe9b65958a46eabc7124706a274d1aefe7b4c3e0a30da519c5558a8"
+  },
+  "exporter_sha256": "c7639c7c94626adda21fe4e06ff0d413c1257571031b6797680d78abd4ca877a",
+  "weights_included": false,
+  "raw_logs_included": false
+}

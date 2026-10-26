@@ -1,0 +1,8 @@
+{
+  "source_runs": {
+    "threshold_selection": "20261026T155822Z_finetuning_2c2f0401",
+    "inference": "20261026T160111Z_inference_7f2b16f0",
+    "evaluation": "20261026T160058Z_evaluation_07c24854"
+  },
+  "purpose": "audit and present frozen validation threshold on test; no new fitting"
+}

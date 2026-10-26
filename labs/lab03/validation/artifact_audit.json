@@ -1,15 +1,19 @@
 {
   "exercise1": {
-    "verified_files": 6,
+    "verified_files": 5,
     "omitted_checkpoint_files": [],
+    "omitted_raw_logs": [
+      "console.log"
+    ],
     "checkpoint_available_locally": false,
-    "run": "20261025T181532Z_exercise1_71da6f40",
+    "run": "20261026T155744Z_exercise1_65dfe784",
     "compared_sentences": 3
   },
   "finetuning": {
-    "verified_files": 18,
+    "verified_files": 27,
     "omitted_checkpoint_files": [
       "best_model/config.json",
+      "best_model/decision_threshold.json",
       "best_model/model.safetensors",
       "best_model/special_tokens_map.json",
       "best_model/tokenizer.json",
@@ -39,8 +43,11 @@
       "checkpoints/checkpoint-1602/training_args.bin",
       "checkpoints/checkpoint-1602/vocab.txt"
     ],
+    "omitted_raw_logs": [
+      "console.log"
+    ],
     "checkpoint_available_locally": false,
-    "run": "20261025T181550Z_finetuning_e02bced7",
+    "run": "20261026T155822Z_finetuning_2c2f0401",
     "metrics": {
       "accuracy": 0.8395872420262664,
       "binary_precision": 0.8351851851851851,
@@ -103,25 +110,66 @@
   },
   "threshold_experiment": {
     "source_runs": {
-      "threshold_selection": "20261026T083558Z_threshold_selection_b64cf564",
-      "evaluation": "20261026T083612Z_evaluation_a724c16c",
-      "inference": "20261026T083627Z_inference_0ed240e2"
+      "threshold_selection": "20261026T155822Z_finetuning_2c2f0401",
+      "evaluation": "20261026T160058Z_evaluation_07c24854",
+      "inference": "20261026T160111Z_inference_7f2b16f0"
     },
-    "verified_files": 32,
+    "selection_location": "finetuning.validation_threshold",
+    "verified_files": 46,
     "manifest_audits": {
       "threshold_selection": {
-        "verified_files": 11,
-        "omitted_checkpoint_files": [],
+        "verified_files": 27,
+        "omitted_checkpoint_files": [
+          "best_model/config.json",
+          "best_model/decision_threshold.json",
+          "best_model/model.safetensors",
+          "best_model/special_tokens_map.json",
+          "best_model/tokenizer.json",
+          "best_model/tokenizer_config.json",
+          "best_model/training_args.bin",
+          "best_model/vocab.txt",
+          "checkpoints/checkpoint-1068/config.json",
+          "checkpoints/checkpoint-1068/model.safetensors",
+          "checkpoints/checkpoint-1068/optimizer.pt",
+          "checkpoints/checkpoint-1068/rng_state.pth",
+          "checkpoints/checkpoint-1068/scheduler.pt",
+          "checkpoints/checkpoint-1068/special_tokens_map.json",
+          "checkpoints/checkpoint-1068/tokenizer.json",
+          "checkpoints/checkpoint-1068/tokenizer_config.json",
+          "checkpoints/checkpoint-1068/trainer_state.json",
+          "checkpoints/checkpoint-1068/training_args.bin",
+          "checkpoints/checkpoint-1068/vocab.txt",
+          "checkpoints/checkpoint-1602/config.json",
+          "checkpoints/checkpoint-1602/model.safetensors",
+          "checkpoints/checkpoint-1602/optimizer.pt",
+          "checkpoints/checkpoint-1602/rng_state.pth",
+          "checkpoints/checkpoint-1602/scheduler.pt",
+          "checkpoints/checkpoint-1602/special_tokens_map.json",
+          "checkpoints/checkpoint-1602/tokenizer.json",
+          "checkpoints/checkpoint-1602/tokenizer_config.json",
+          "checkpoints/checkpoint-1602/trainer_state.json",
+          "checkpoints/checkpoint-1602/training_args.bin",
+          "checkpoints/checkpoint-1602/vocab.txt"
+        ],
+        "omitted_raw_logs": [
+          "console.log"
+        ],
         "checkpoint_available_locally": false
       },
       "evaluation": {
-        "verified_files": 14,
+        "verified_files": 13,
         "omitted_checkpoint_files": [],
+        "omitted_raw_logs": [
+          "console.log"
+        ],
         "checkpoint_available_locally": false
       },
       "inference": {
-        "verified_files": 7,
+        "verified_files": 6,
         "omitted_checkpoint_files": [],
+        "omitted_raw_logs": [
+          "console.log"
+        ],
         "checkpoint_available_locally": false
       }
     },
@@ -359,17 +407,17 @@
         },
         {
           "threshold": 0.6,
-          "accuracy": 0.8470919324577861,
-          "precision": 0.8425925925925926,
-          "recall": 0.8536585365853658,
+          "accuracy": 0.8461538461538461,
+          "precision": 0.8423005565862709,
+          "recall": 0.851782363977486,
           "specificity": 0.8405253283302064,
           "FPR": 0.15947467166979362,
-          "binary_f1": 0.848089468779124,
-          "macro_f1": 0.8470853387332824,
+          "binary_f1": 0.8470149253731343,
+          "macro_f1": 0.8461489721205294,
           "TN": 448,
           "FP": 85,
-          "FN": 78,
-          "TP": 455,
+          "FN": 79,
+          "TP": 454,
           "negative_support": 533,
           "positive_support": 533,
           "sample_count": 1066
@@ -725,17 +773,17 @@
       },
       {
         "threshold": 0.6,
-        "accuracy": 0.8470919324577861,
-        "precision": 0.8425925925925926,
-        "recall": 0.8536585365853658,
+        "accuracy": 0.8461538461538461,
+        "precision": 0.8423005565862709,
+        "recall": 0.851782363977486,
         "specificity": 0.8405253283302064,
         "FPR": 0.15947467166979362,
-        "binary_f1": 0.848089468779124,
-        "macro_f1": 0.8470853387332824,
+        "binary_f1": 0.8470149253731343,
+        "macro_f1": 0.8461489721205294,
         "TN": 448,
         "FP": 85,
-        "FN": 78,
-        "TP": 455,
+        "FN": 79,
+        "TP": 454,
         "negative_support": 533,
         "positive_support": 533,
         "sample_count": 1066
@@ -869,7 +917,7 @@
       "macro_recall": 0.8433395872420263,
       "macro_f1": 0.8432787664569972
     },
-    "validation_loss": 0.4897061884403229,
+    "validation_loss": 0.48963817954063416,
     "test_argmax": {
       "accuracy": 0.8395872420262664,
       "binary_precision": 0.8351851851851851,
@@ -978,7 +1026,7 @@
       }
     },
     "checkpoint_origin": {
-      "run": "20261025T181550Z_finetuning_e02bced7",
+      "run": "20261026T155822Z_finetuning_2c2f0401",
       "original_manifest_available": true,
       "weights_sha256": "5a63c9c2a6391132c86b0e6c08277cc23ccc692dd080b78ba2db074225bb5105",
       "validation_fingerprint": "4d310508c191379e",

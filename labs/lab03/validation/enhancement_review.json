@@ -1,11 +1,11 @@
 {
-  "artifact_run": "20261026T130154Z_verification_f2147def",
-  "review_file": "outputs/runs/20261026T130154Z_verification_f2147def/review.json",
-  "tests_passed": 55,
+  "artifact_run": "20261026T163347Z_verification_641a8f92",
+  "review_file": "outputs/runs/20261026T163347Z_verification_641a8f92/review.json",
+  "tests_passed": 65,
   "notebooks_executed": 3,
-  "walkthrough_lines": 1008,
+  "published_figures": 35,
+  "walkthrough_lines": 1010,
   "description_lines": 272,
-  "threshold_analysis_run": "20261026T125941Z_threshold_analysis_3124d66e",
-  "notebook_render_run": "20261026T125929Z_notebook_render_313034a2",
-  "new_run_notebook_smoke": "passed on isolated fixture"
+  "notebook_render_run": "20261026T163051Z_notebook_render_03fd373a",
+  "current_training_run": "20261026T155822Z_finetuning_2c2f0401"
 }
