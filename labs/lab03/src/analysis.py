@@ -211,8 +211,10 @@ def analyze_run(source_run, root=ROOT):
         history = read_json(source / "trainer_history.json"); epochs=[]
         for row in history:
             if "eval_accuracy" not in row: continue
-            train_eval = next(r for r in history if r.get("epoch") == row["epoch"] and "train_accuracy" in r)
-            train_log = next(r for r in history if r.get("epoch") == row["epoch"] and "loss" in r)
+            train_eval = next((r for r in history if r.get("epoch") == row["epoch"] and "train_accuracy" in r), None)
+            if train_eval is None: continue
+            preceding = [r for r in history if "loss" in r and r.get("step", 0) <= row.get("step", 0)]
+            train_log = preceding[-1] if preceding else {"loss": None}
             epochs.append({"epoch": row["epoch"], "step": row["step"], "optimization_loss": train_log["loss"],
                  "train_eval_loss": train_eval["train_loss"], "train_accuracy": train_eval["train_accuracy"],
                  "validation_loss": row["eval_loss"], "validation_accuracy": row["eval_accuracy"]})

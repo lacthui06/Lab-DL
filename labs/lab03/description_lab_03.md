@@ -202,7 +202,7 @@ Không ghi đè predictions, metrics hoặc manifest của run lịch sử khi t
 Manifest gốc có thể liệt kê weights không commit; audit phải báo rõ thiếu có chủ đích.
 File ZIP tải kết quả chỉ là tiện ích lưu trữ, không phải nội dung thuật toán bắt buộc của bài nộp.
 
-## 7. Bằng chứng thực nghiệm và trạng thái hoàn tất
+## 7. Bằng chứng lịch sử 3 epoch đã kiểm chứng
 
 Run fine-tuning gốc là `20261026T155822Z_finetuning_2c2f0401`.
 Run mới dùng đủ official splits, ba epochs và 1.602 optimizer steps; selection được thực hiện trên validation trong cùng workflow.
@@ -270,3 +270,38 @@ Không đánh dấu checkpoint đã được tái đánh giá toàn test chỉ v
 - https://huggingface.co/datasets/cornell-movie-review-data/rotten_tomatoes
 
 Quy trình đọc kết quả phải hỗ trợ cả bộ run phục hồi checkpoint và một run train mới có policy riêng. Run mới lưu loss đo thật, bảng/hình so sánh threshold và metric theo lớp; inference không liên quan không được làm sai ghép nguồn. Kiểm thử notebook trên fixture chỉ chứng minh nhánh trình bày hoạt động, không thay cho bằng chứng GPU.
+
+
+## 10. Thảo luận và quyết định cho thí nghiệm 10 epoch
+
+### 10.1. Vấn đề cần giải quyết
+
+Learning curves lịch sử chỉ có ba mốc cuối epoch, chưa thể hiện rõ diễn biến learning rate, gradient và validation trong từng epoch. Train accuracy tiếp tục tăng trong khi validation gần đứng yên, validation loss tăng ở epoch cuối. Không đủ bằng chứng để gọi ba epoch là tối ưu.
+
+### 10.2. Những lựa chọn đã chốt trước khi chạy
+
+| Câu hỏi | Lựa chọn | Lý do / đánh đổi |
+|---|---|---|
+| Có chạy đủ 10 epoch không? | Có, mọi candidate đủ 10; không early stopping | Quan sát giai đoạn học và overfit đầy đủ; tốn GPU hơn nhưng có giới hạn |
+| Có lấy weights epoch 10 không? | Không mặc định; lấy validation Macro-F1 tốt nhất | Tách ngân sách quan sát khỏi lựa chọn model |
+| Quan sát theo step thế nào? | Log 25 step, eval/save 100 step và cuối epoch | Đủ chi tiết mà không đánh giá toàn bộ train ở mọi step |
+| So train loss với val loss thế nào? | Vẽ train-eval cùng val; optimization loss ở hình riêng | Tránh đánh đồng dropout-on/window average với eval loss |
+| Baseline đủ mạnh chưa? | Bổ sung TF-IDF word unigram/bigram + Logistic Regression | Có mô hình học từ dữ liệu, mạnh hơn baseline hằng |
+| Chọn C của baseline ở đâu? | Validation, grid 0.1/1/10 | Từ vựng/IDF vẫn fit chỉ trên train |
+| LR nào tối ưu? | Thử 1e-5, 2e-5, 3e-5 cùng seed và ngân sách | Đánh giá bằng chứng thay vì đoán; không gọi tối ưu toàn cục |
+| Objective chọn model? | Validation Macro-F1 argmax | Quan tâm cả hai lớp; tiêu chí công bố trước test |
+| Objective chọn threshold? | Validation Macro-F1 trên grid 19 điểm | Giữ protocol và tie-break rõ ràng; không chọn từ test |
+| Có refit train+val sau selection? | Không | Giữ validation thật cho threshold và checkpoint selection |
+| Tối ưu GPU gì? | AMP FP16, dynamic padding bội 8, model-only save | Giảm compute/I/O; chưa đo thì không tuyên bố tăng throughput |
+| Dùng T4 x2 không? | Chỉ GPU đầu tiên | Dễ kiểm soát batch hiệu dụng, seed, checkpoint và debug |
+| Đo bất định gì? | Bootstrap test phân tầng cho accuracy/Macro-F1 | Chỉ bất định lấy mẫu, chưa đo biến thiên seed |
+| Đóng gói ra sao? | Review nhẹ + checkpoint riêng | Review có toàn bộ ảnh/số liệu/log; trọng số ngoài Git |
+
+### 10.3. Điều kiện hoàn tất phiên mở rộng
+
+Phần mềm sẵn sàng và test fixture pass không đồng nghĩa đã có kết quả 10 epoch.
+Nghiệm thu thực nghiệm cần đủ ba candidate, mỗi candidate có completed_epochs=10, history theo step, validation predictions và manifest.
+`frozen_selection.json` phải được ghi trước predictions test.
+Review ZIP phải chứa console logs nguyên byte, source manifests, all predictions, các hình và study report.
+Notebook phải hiển thị hình thật trong output cell, được thu hồi sau khi chạy.
+Chỉ sau khi nhận kết quả thật mới điền số liệu so sánh và kết luận của study mới.

@@ -1,0 +1,42 @@
+{
+  "status": "ready_for_kaggle_execution",
+  "tests": {
+    "tests": 72,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "pip_check": "passed",
+  "notebook_static_validation": {
+    "compiled_code_cells": 6,
+    "relative_links_checked": 49,
+    "broken_links": 0
+  },
+  "functional_fixture_verification": [
+    "10 complete epochs with tiny DistilBERT",
+    "validation-only candidate selection",
+    "baseline vocabulary train-only",
+    "frozen selection before test",
+    "recompute metrics from prediction records",
+    "reject rehashed incorrect metrics",
+    "inline PNG display",
+    "review and checkpoint ZIP checksum verification",
+    "nonfinite-loss guard and explicit AMP-overflow records"
+  ],
+  "full_gpu_study_executed": false,
+  "new_measured_10epoch_metrics_available": false,
+  "required_kaggle_execution": {
+    "learning_rates": [
+      1e-05,
+      2e-05,
+      3e-05
+    ],
+    "epochs_per_candidate": 10,
+    "early_stopping": false,
+    "single_gpu": true
+  },
+  "historical_results_preserved": true,
+  "root_readme_and_lab01_changed": false,
+  "scope_note": "Local tests use tiny synthetic fixtures. Full official-split training must run on Kaggle GPU; historical 3-epoch test results are not new 10-epoch measurements.",
+  "evidence_run": "20261026T175728Z_training_readiness_597149cd"
+}

@@ -18,7 +18,7 @@
     "batch_size": 16,
     "eval_batch_size": 32,
     "learning_rate": 2e-05,
-    "num_train_epochs": 3,
+    "num_train_epochs": 10,
     "weight_decay": 0.01,
     "warmup_ratio": 0.1,
     "fp16": true,
@@ -28,6 +28,14 @@
       "split": "validation",
       "grid": "0.05 to 0.95, step 0.05",
       "tie_break": "closest to 0.5, then smaller threshold"
-    }
+    },
+    "eval_strategy": "steps",
+    "eval_steps": 100,
+    "logging_steps": 25,
+    "metric_for_best_model": "macro_f1",
+    "gradient_accumulation_steps": 1,
+    "max_grad_norm": 1.0,
+    "dataloader_num_workers": 0,
+    "save_only_model": true
   }
 }

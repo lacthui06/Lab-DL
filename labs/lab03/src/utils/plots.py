@@ -24,15 +24,20 @@ def plot_lengths(lengths, cutoff, path):
 
 def plot_learning(history, path):
     fig, axes = plt.subplots(1, 2, figsize=(11, 4))
-    for key, label in [("loss", "Training loss"), ("eval_loss", "Validation loss")]:
-        rows = [r for r in history if key in r and "epoch" in r]
-        axes[0].plot([r["epoch"] for r in rows], [r[key] for r in rows], marker="o", label=label)
-    for key, label in [("train_accuracy", "Train accuracy"), ("eval_accuracy", "Validation accuracy")]:
+    # Ưu tiên train-eval loss: cùng chế độ eval với validation, dropout đã tắt.
+    train_key = "train_loss" if any("train_loss" in r for r in history) else "loss"
+    for key, label in [(train_key, "Train loss (eval mode)" if train_key == "train_loss" else "Train optimization loss"),
+                       ("eval_loss", "Validation loss")]:
+        rows = [r for r in history if key in r and "epoch" in r
+                and (key != "train_loss" or "train_accuracy" in r)]
+        axes[0].plot([r["epoch"] for r in rows], [r[key] for r in rows], marker="o", markersize=3, label=label)
+    for key, label in [("train_accuracy", "Train accuracy (eval mode)"), ("eval_accuracy", "Validation accuracy")]:
         rows = [r for r in history if key in r]
-        axes[1].plot([r["epoch"] for r in rows], [r[key] for r in rows], marker="o", label=label)
-    axes[1].legend()
-    axes[0].legend(); axes[0].set(xlabel="Epoch", ylabel="Loss")
-    axes[1].set(xlabel="Epoch", ylabel="Accuracy", ylim=(0, 1))
+        axes[1].plot([r["epoch"] for r in rows], [r[key] for r in rows], marker="o", markersize=3, label=label)
+    for ax in axes:
+        ax.legend(); ax.grid(alpha=.2); ax.set_xlabel("Epoch")
+    axes[0].set_ylabel("Cross-entropy loss")
+    axes[1].set(ylabel="Accuracy", ylim=(0, 1))
     finish(fig, path)
 
 def plot_confusion(labels, preds, path):
@@ -65,4 +70,23 @@ def plot_samples(rows, path):
         for j in range(4):
             table[i, j].set_facecolor("#d9ead3" if row["true_label"] == row["predicted_label"] else "#f4cccc")
             table[i, j].set_height(.9 / (len(rows) + 1))
+    finish(fig, path)
+
+
+def plot_step_learning(history, path, best_step=None):
+    """Ghi tách loss tối ưu, validation, learning rate và gradient theo step."""
+    fig, axes = plt.subplots(2, 2, figsize=(12, 8))
+    for ax, keys, title in [
+        (axes[0, 0], [("loss", "Optimization loss (window mean)"), ("eval_loss", "Validation loss")], "Loss: different measurement contexts"),
+        (axes[0, 1], [("eval_accuracy", "Validation accuracy"), ("eval_macro_f1", "Validation macro F1")], "Validation trajectory"),
+        (axes[1, 0], [("learning_rate", "Learning rate")], "Scheduler"),
+        (axes[1, 1], [("grad_norm", "Gradient norm before clipping")], "Optimization stability"),
+    ]:
+        for key, label in keys:
+            rows = [r for r in history if key in r and "step" in r and r[key] is not None and np.isfinite(r[key])]
+            if rows: ax.plot([r["step"] for r in rows], [r[key] for r in rows], label=label)
+        ax.set(title=title, xlabel="Optimizer step"); ax.grid(alpha=.2)
+        if best_step is not None:
+            ax.axvline(best_step, ls="--", color="black", alpha=.6, label="Selected checkpoint")
+        if ax.lines: ax.legend(fontsize=8)
     finish(fig, path)

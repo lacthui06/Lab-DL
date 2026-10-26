@@ -2,7 +2,9 @@
 
 Bài thực hành Deep Learning — UTH: sentiment analysis bằng mô hình pretrained và fine-tuning mô hình phân loại văn bản nhị phân bằng Hugging Face Trainer.
 
-**Đã có kết quả Kaggle thật:** dùng toàn bộ Rotten Tomatoes, 8.530 train / 1.066 validation / 1.066 test. Test Accuracy **83,96%**, Binary F1 **84,06%**. Mã nguồn, notebook và báo cáo dùng chung run registry, có thể xem kết quả mà không train lại.
+**Kết quả lịch sử 3 epoch đã kiểm chứng:** dùng toàn bộ Rotten Tomatoes, 8.530 train / 1.066 validation / 1.066 test. Test Accuracy **83,96%**, Binary F1 **84,06%**. Mã nguồn, notebook và báo cáo dùng chung run registry, có thể xem kết quả mà không train lại.
+
+**Quy trình chạy mới:** [Notebook Kaggle 10 epoch](notebooks/04_kaggle_10epoch_study.ipynb). Mỗi candidate chạy đủ **10 epoch**, không early stopping; thử ba learning rate trên validation, baseline TF-IDF, threshold validation, biểu đồ hiển thị ngay trong notebook và hai ZIP riêng. **Kết quả 10 epoch đang chờ chạy GPU**, không lấy số liệu 3 epoch bên dưới gán sang cấu hình mới.
 
 ## 1. Xem bài và kết quả
 
@@ -21,7 +23,8 @@ labs/lab03/
   config/
     config.json             tham số cho lần chạy mới
     workflow.json           active runs và lịch sử
-  notebooks/                ba notebook có output
+    study.json              thiết kế 10 epoch, LR grid và baseline
+  notebooks/                ba notebook lịch sử có output và notebook Kaggle 10 epoch
   src/
     datasets/               tải official splits, kiểm tra kích thước và tokenization
     models/                 model, pipeline/manual, kiểm tra checkpoint
@@ -76,7 +79,7 @@ cd ../..
 .venv-lab03/bin/python labs/lab03/scripts/audit_outputs.py
 ```
 
-- **65 tests đạt trên CPU**: dataset contract, dynamic padding, pipeline/manual, checkpoint, sanity overfit, Trainer, run tracking, năm plots, recovery, metrics/artifact audit và phát hiện dữ liệu bị sửa.
+- **72 tests đạt trên CPU** (bản 10 epoch, xem `validation/ten_epoch_readiness.json`): dataset contract, dynamic padding, pipeline/manual, checkpoint, sanity overfit, Trainer, run tracking, năm plots, recovery, metrics/artifact audit và phát hiện dữ liệu bị sửa.
 - Audit kiểm tra 51 file khoa học hiện hành, tính lại validation sweep, test metrics và confusion matrices. Selection dùng validation phase trong training run. Báo cáo audit đầy đủ được lưu trong một run `artifact_audit` dưới `outputs/`, kèm bản tiện tra cứu tại `validation/`.
 - 30 file checkpoint không có trong Git được liệt kê rõ là thiếu có chủ đích, không coi là đã kiểm tra tại môi trường kiểm chứng.
 - Ba notebook chạy hết ở view, Hugging Face offline, không có cell lỗi. Xem `validation/notebook_execution.json`.
@@ -94,7 +97,16 @@ CUDA_VISIBLE_DEVICES=0 TOKENIZERS_PARALLELISM=false .venv-lab03/bin/python labs/
 
 Trên Kaggle có thể gọi các lệnh bằng `subprocess.run([...], cwd=REPO, env=RUN_ENV, check=True)`, trong đó `RUN_ENV['CUDA_VISIBLE_DEVICES']='0'`; không dùng Python mặc định của notebook nếu requirements nằm trong venv khác.
 
-Quy trình dùng toàn bộ official splits, max length 128, 3 epochs, batch train/eval 16/32, LR 2e-5, weight decay 0.01, warmup ratio 0.1, FP16 chỉ khi CUDA có sẵn. Lưu/evaluate mỗi epoch; chọn best theo validation accuracy. Sanity test không tác động mô hình train chính. Chạy lại tạo run mới, không resume hoặc ghi đè run cũ. Chỉ dùng `--allow-cpu` nếu chủ động chấp nhận thời gian full training CPU.
+Lệnh `train_finetune.py` chạy một cấu hình đủ **10 epoch** với LR 2e-5. Quy trình mở rộng khuyến nghị dùng notebook `04_kaggle_10epoch_study.ipynb` hoặc:
+
+```bash
+CUDA_VISIBLE_DEVICES=0 TOKENIZERS_PARALLELISM=false CUBLAS_WORKSPACE_CONFIG=:4096:8 .venv-lab03/bin/python labs/lab03/scripts/run_study.py
+.venv-lab03/bin/python labs/lab03/scripts/package_study.py
+```
+
+Study thử LR 1e-5, 2e-5, 3e-5; **mỗi LR đủ 10 epoch**, tổng 30 epoch giữa ba candidate. Log mỗi 25 step, validation/checkpoint mỗi 100 step và cuối epoch. Chọn checkpoint/LR bằng validation Macro-F1, sau đó dùng validation chọn threshold, cuối cùng đánh giá test. Mỗi candidate chỉ có validation predictions, không có test predictions. Không chạy full study trên CPU.
+
+Batch train/eval 16/32, max length 128, AdamW, weight decay 0.01, warmup 10%, linear scheduler, clip gradient 1.0, FP16 trên CUDA, dynamic padding bội 8. Lưu model-only checkpoint để giảm dung lượng; không resume optimizer. Mỗi lần chạy tạo run mới. Sanity test dùng mô hình riêng, không làm thay đổi weights pretrained của thí nghiệm chính.
 
 Có thể thực thi ba notebook với MODE=train thay CLI. Không chạy notebook tích hợp và notebook từng bài đồng thời nếu chỉ muốn một lần thí nghiệm.
 
@@ -322,3 +334,22 @@ Bộ report chọn run tường minh tại `config/report.json`. Chạy lệnh s
 Mở `outputs/published/index.md` để xem bảng kết quả và toàn bộ hình. `metrics_summary.json`, `artifact_catalog.json` và `source_runs.json` giúp dùng lại artifact cho report. Đổi các run được chọn rồi xuất lại khi cần; không cần trích raw outputs hoặc tạo lại toàn bộ phần phân tích cho mỗi bản trình bày. Checkpoint và raw logs không được đưa vào bộ published.
 
 Phiên Kaggle hiện hành đã chốt dataset revision `aa13bc287fa6fcab6daf52f0dfb9994269ffea28` và model revisions trong config. 86 file của bảy run mới hiện có khớp manifest; bảy console logs không có trong bộ công bố được kê khai bằng `artifact_availability.json`. Manifest gốc được giữ nguyên, dữ liệu khoa học không được phép khai báo thiếu dưới dạng log.
+
+
+## 13. Notebook Kaggle 10 epoch: chạy và thu hồi
+
+1. Cập nhật nhánh `lab03`; trên Kaggle chọn **File -> Import Notebook -> GitHub** và nhập URL của `notebooks/04_kaggle_10epoch_study.ipynb` trên nhánh này.
+2. Bật GPU T4 và Internet, chạy các cell từ trên xuống. Python 3.12 nằm trong venv riêng, không cài đè PyTorch của kernel Kaggle.
+3. Preflight chạy tests CPU và lưu XML/log trong `outputs/preflight/`. Training chỉ bắt đầu sau khi tests pass.
+4. Study fit TF-IDF trên train, chọn C bằng validation; ba DistilBERT candidate chạy đủ 10 epoch. Best checkpoint được chọn từ mọi mốc validation, không mặc định lấy epoch 10.
+5. Cell hiển thị chạy ngay trong kernel notebook: learning curves từng LR, threshold sweep, bảng kết quả, confusion matrices, ROC/PR, confidence và inference. Những hình này có file gốc dưới `outputs/runs/`.
+6. Tải **review ZIP** để xem xét/report; tải **checkpoint ZIP** để giữ model/tokenizer/policy. Không commit checkpoint ZIP lên Git thông thường.
+7. **Save Version** và **File -> Download Notebook** để giữ cả output cell. Review ZIP không tự thu hồi notebook tương tác trong trình duyệt.
+
+Có thể copy từng block `# %%` từ [kaggle_10epoch_cells.py](scripts/kaggle_10epoch_cells.py) vào các cell Code thay vì Import Notebook. Đây là cùng các cell của notebook, không phải một pipeline training khác.
+
+Study tự xuất `study_report.md` với bảng và ảnh từ dữ liệu đã chạy. `candidate_comparison.json`, `frozen_selection.json`, `probability_diagnostics.json`, `threshold_errors.json` và `test_comparison.json` là nguồn số liệu đi kèm, không thay thế ảnh inline.
+
+CI bootstrap 95% dùng 2.000 lần resample phân tầng test cho model/policy cố định. Nó không đo biến thiên giữa seed train. Test lịch sử đã từng được xem; kết quả mới không phải bằng chứng trên một blind test hoàn toàn mới. Ba learning rate là tìm kiếm có giới hạn, không có tuyên bố tối ưu toàn cục hoặc đảm bảo tăng accuracy.
+
+Khi thu hồi kết quả mới, cập nhật Section 2/3 của walkthrough từ đúng run study; các bảng/hình lịch sử vẫn giữ đúng nguồn và không bị đổi nhãn thành 10 epoch.

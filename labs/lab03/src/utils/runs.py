@@ -27,6 +27,12 @@ def hash_file(path):
 def snapshot():
     return {"python": sys.version, "platform": platform.platform(),
             "cuda_available": torch.cuda.is_available(),
+            "torch_cuda_build": torch.version.cuda,
+            "cudnn_version": torch.backends.cudnn.version(),
+            "cuda_visible_devices": os.environ.get("CUDA_VISIBLE_DEVICES"),
+            "cublas_workspace_config": os.environ.get("CUBLAS_WORKSPACE_CONFIG"),
+            "deterministic_algorithms": torch.are_deterministic_algorithms_enabled(),
+            "deterministic_warn_only": torch.is_deterministic_algorithms_warn_only_enabled(),
             "device": torch.cuda.get_device_name(0) if torch.cuda.is_available() else "cpu",
             "versions": {n: importlib.metadata.version(n) for n in
              ["torch", "transformers", "datasets", "evaluate", "accelerate", "numpy", "scikit-learn"]}}

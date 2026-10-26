@@ -12,6 +12,8 @@
 
 **Cấu trúc báo cáo:** một tài liệu gồm đặc tả, phương pháp thực nghiệm và kết quả/chẩn đoán, có truy vết tới cấu hình và bộ artifact.
 
+**Phạm vi số liệu:** các bảng đã đo bên dưới thuộc thí nghiệm lịch sử 3 epoch. Phiên 10 epoch được đặc tả ở Mục 1.17, vận hành ở Mục 2.21 và có tiêu chí báo cáo ở Mục 3.13; kết quả GPU mới đang chờ thực thi. Không đổi nhãn số liệu lịch sử thành kết quả 10 epoch.
+
 ### Tóm tắt
 
 Lab triển khai hai mức sử dụng hệ sinh thái Hugging Face: dùng ngay một mô hình đã fine-tune và tự fine-tune backbone cho bài toán đích. Exercise 1 mở quy trình `pipeline` thành tokenizer, tensor đầu vào, forward, logits, softmax và nhãn dự đoán. Exercise 2 giữ nguyên official train/validation/test của Rotten Tomatoes, dùng `Trainer` để tối ưu ba epochs và chọn checkpoint bằng validation accuracy.
@@ -294,6 +296,77 @@ Chỉ hiển thị bảng mà không lưu bản nguồn sẽ gây khó khăn khi
 
 Run gốc được giữ nguyên bytes để manifest SHA256 vẫn có giá trị. Artifact phân tích bổ sung phải lưu ở vị trí riêng hoặc run phân tích riêng, không sửa metrics gốc để thêm một kết quả chưa được đo. Notebook view có thể tạo artifacts phân tích từ predictions cũ, nhưng phải ghi rõ source run và mode.
 Không coi một lần view là một lần huấn luyện mới.
+
+### 1.17. Thiết kế mở rộng: đủ 10 epoch và selection có kiểm soát
+
+Mục tiêu không phải làm đường cong trông đẹp hơn.
+Mục tiêu là quan sát đủ quá trình tối ưu và có bằng chứng để chọn checkpoint hợp lý.
+Ba điểm lịch sử cho thấy dấu hiệu overfit nhưng chưa đủ để chứng minh ngân sách ba epoch tối ưu.
+Phiên mới chạy đủ 10 epoch cho từng candidate; không đăng ký EarlyStoppingCallback.
+Ngân sách 10 epoch là yêu cầu thí nghiệm; không có nghĩa weights epoch 10 phải được dùng cuối cùng.
+
+Ba learning rate công bố trước là 1e-5, 2e-5 và 3e-5.
+Các yếu tố còn lại giữ cố định để việc so sánh có kiểm soát.
+Mỗi candidate dùng cùng full official splits, cùng seed 42, cùng batch size và 10 epoch.
+Không tăng grid sau khi xem test để kiếm một con số tốt hơn.
+Ba giá trị không bao phủ toàn bộ không gian hyperparameter.
+Vì vậy không dùng cụm từ tối ưu toàn cục trong kết luận.
+
+Model checkpoint selection dùng validation Macro-F1 trên argmax hai logits.
+Mọi validation milestone đều có thể trở thành best checkpoint.
+Trong cùng candidate, Trainer giữ checkpoint đạt điểm tốt nhất đầu tiên nếu Macro-F1 bằng nhau.
+Sau khi mỗi candidate hoàn thành 10 epoch, so best checkpoint giữa các learning rate.
+Ưu tiên Macro-F1 cao hơn; bằng điểm thì loss thấp hơn; vẫn bằng thì LR nhỏ hơn.
+Lựa chọn này không đọc accuracy hay loss test.
+
+Threshold selection dùng validation probabilities của checkpoint đã chọn.
+Grid giữ 19 điểm từ 0.05 đến 0.95, bước 0.05.
+Objective là validation Macro-F1.
+Tie-break giữ gần 0.5 rồi threshold nhỏ hơn.
+Dùng cùng validation cho LR/checkpoint/threshold gây nguy cơ thích nghi quá mức với validation.
+Protocol giới hạn grid và công bố rõ nguy cơ này, không khẳng định validation là bằng chứng không thiên lệch tuyệt đối.
+Không lấy test để giải quyết tie-break.
+
+Baseline mới dùng TF-IDF word unigram và bigram.
+Sublinear TF giảm tác động của số lần lặp từ quá lớn.
+`min_df=2` bỏ từ chỉ xuất hiện trong một tài liệu train.
+`max_features=50000` giới hạn từ vựng và bộ nhớ.
+Logistic Regression dùng L2 mặc định, solver liblinear và max_iter=2000.
+C grid là 0.1, 1.0 và 10.0; chọn bằng validation Macro-F1, rồi loss, rồi C nhỏ hơn.
+Từ vựng, IDF và weights chỉ fit trên train.
+Không fit lại trên train+validation vì cần giữ tập chọn threshold.
+
+Loss/accuracy epoch cần so ở cùng measurement context.
+Train-eval được đo toàn bộ train cuối epoch, dropout tắt, không cập nhật weights.
+Validation được đo cùng chế độ tại các mốc step và cuối epoch.
+Optimization loss vẫn cần để debug nhưng là trung bình cửa sổ mini-batch khi weights đang thay đổi.
+Không gộp optimization loss với train-eval loss thành một chuỗi không có chú thích.
+Hình epoch dùng train-eval loss, còn hình step trình bày optimization loss riêng.
+
+AdamW dùng weight decay 0.01, warmup 10% và linear scheduler.
+Max gradient norm là 1.0 để giảm bước cập nhật quá lớn.
+Logging không che NaN/Inf; callback dừng và đánh dấu run failed nếu loss không hữu hạn.
+Grad norm không hữu hạn ở FP32 là lỗi; ở AMP được gắn cờ rõ ràng vì scaler có thể bỏ qua update để hạ scale.
+Selection summary ghi số optimizer updates bị AMP bỏ qua, không che hiện tượng đó bằng đường loss mượt.
+FP16 bật trên CUDA để tận dụng T4, không bật cho CPU tests.
+Dynamic padding theo bội 8 khi FP16 để phù hợp tensor cores.
+Dataloader workers=0 ưu tiên tính ổn định và tránh shared-memory bus errors.
+Chỉ dùng một GPU, kể cả khi session cung cấp hai T4.
+Không bật torch.compile, quantization hoặc kiến trúc lớn hơn khi chưa có bằng chứng workload cần chúng.
+
+`save_only_model=True` giữ trọng số và trainer state nhưng không lưu optimizer/scheduler state nặng.
+Điều này giảm I/O và dung lượng checkpoint khi thử ba learning rate.
+Đánh đổi là không cung cấp resume chính xác optimizer từ checkpoint đó.
+Quy trình này chạy độc lập từ đầu cho mỗi candidate; không giả vờ có resume đầy đủ.
+Checkpoint tốt nhất vẫn tải lại bình thường để đánh giá và inference.
+Hai checkpoint gần nhất/tốt nhất được Trainer giữ theo save_total_limit=2.
+
+Seed cố định cả thư viện và dataloader thông qua transformers.set_seed/TrainingArguments.
+CuDNN benchmark tắt và deterministic bật.
+Torch deterministic algorithms được bật warn_only để ghi nhận kernel chưa deterministic thay vì hứa tuyệt đối.
+CUBLAS_WORKSPACE_CONFIG được đặt trước khi child Python import Torch trên Kaggle.
+Snapshot ghi CUDA build, CuDNN, GPU, visibility, deterministic mode và package versions.
+Không khẳng định hai GPU/runtime khác nhau cho kết quả bitwise identical chỉ từ seed.
 
 ## 2. FULL-FLOW EXPERIMENT LINEAGE & CHANGELOG (Rule: walkthrough-and-experiment-tracking)
 
@@ -639,6 +712,102 @@ Notebook phải hiển thị đúng cả run tham chiếu lẫn một run vừa 
 `measured_test_loss` được lấy từ `test_runtime_metrics.json` của chính source run khi tồn tại. Trạng thái not logged chỉ dành cho run thiếu scalar loss; NLL tái tính giữ tên riêng. Bảng/hình của MODE=train thuộc run mới; các con số trong phần diễn giải tĩnh được ghi rõ là Kaggle tham chiếu.
 
 Một lần inference bằng pretrained SST-2 có thể trở thành active inference mới. Bộ chọn evidence vì vậy truy vết các run cùng policy/checkpoint trong registry, thay vì ghép tùy tiện ba active run không liên quan. Tests bao phủ tình huống này. Hai notebook có Exercise 2 còn được chạy end-to-end trên một fixture cô lập mô phỏng run mới: kiểm tra nhánh threshold riêng, measured loss và xuất ảnh; đây là kiểm thử trình bày, không phải một thực nghiệm GPU mới.
+
+### 2.21. Vận hành study 10 epoch trên Kaggle
+
+Điểm vào khuyến nghị là `notebooks/04_kaggle_10epoch_study.ipynb`.
+Notebook có roadmap/module/artifact table ở đầu, sau đó chia pha theo thứ tự thực thi.
+Bật GPU và Internet trước khi cài môi trường để phát hiện thiếu accelerator sớm.
+Nếu session restart, chạy lại setup; biến trong kernel cũ không tồn tại sau restart.
+
+Cell setup clone nhánh lab03 từ repository của bài thực hành.
+Nếu đường dẫn repo đã tồn tại, code không reset hoặc xóa thay đổi/kết quả.
+Nếu bản cũ chưa có run_study.py, assert yêu cầu cập nhật code trước khi chạy.
+Không tự git pull khi outputs/config registry đang có thay đổi do training.
+Dùng session sạch là cách đơn giản nhất để chạy lại toàn bộ từ đầu.
+
+Interpreter notebook Kaggle và interpreter training là hai môi trường khác nhau.
+Kernel có thể dùng Python 3.13 nhưng pinned training dependencies được cài vào Python 3.12 riêng.
+Bootstrap dùng uv, không phụ thuộc ensurepip của python -m venv trên image Kaggle.
+Mọi lệnh training gọi chính xác /kaggle/working/lab03-py312/bin/python.
+Không cài đè torch/datasets vào môi trường dùng chung của Kaggle.
+`uv pip check` là cổng xác nhận dependency trước khi training.
+Cảnh báo copy thay hardlink không phải lỗi mô hình; bootstrap chọn link-mode copy.
+
+Preflight chạy pytest trong child interpreter nhưng CUDA_VISIBLE_DEVICES rỗng.
+Fixture tiny kiểm thử tensor, loss, threshold, manifests và full lifecycle 10 epoch nhỏ.
+Sanity overfit dùng model riêng và một batch nhỏ, không fine-tune backbone thật trên CPU.
+XML và console output của preflight được lưu dưới outputs/preflight/<timestamp>/.
+Nếu pytest thất bại, notebook không tiếp tục vào study.
+Không bỏ assertion để đạt trạng thái pass.
+
+Exercise 1 chạy trước để kiểm tra tải model/tokenizer và đối chiếu pipeline/manual.
+Tokenization breakdown, xác suất và bảng so sánh được lưu trong run riêng.
+Notebook hiển thị PNG từ exercise1_analysis ngay sau khi tạo.
+Không gọi display trong subprocess rồi kỳ vọng ảnh tự xuất hiện trong kernel cha.
+
+Study audit exact và casefold-whitespace overlap trên cả ba official splits.
+Các bước normalization chỉ phục vụ kiểm toán, không sửa văn bản đưa vào mô hình.
+Nếu có overlap, file thống kê sẽ ghi số lượng; không âm thầm đổi benchmark.
+Baseline fit train, validation chọn C và threshold.
+Sau đó ba candidate Transformer chạy đủ 10 epoch theo cùng thiết kế.
+
+Với 8.530 mẫu, batch 16 và một GPU, mỗi epoch có 534 optimizer steps.
+Với gradient_accumulation_steps=1, 10 epoch có 5.340 optimizer steps mỗi candidate.
+Đây là con số theo cấu hình đã chốt; nếu đổi batch/GPU/accumulation phải tính lại.
+Log mỗi 25 step cho khoảng 213 điểm loss cửa sổ, cộng log cuối quá trình.
+Validation/save mỗi 100 step và cuối epoch cho thấy diễn biến chi tiết hơn 10 điểm cuối epoch.
+Train-eval chỉ đo cuối epoch để hạn chế chi phí đánh giá toàn tập train.
+
+Run kind candidate có config, provenance, history, statistics, curves, validation predictions và checkpoint.
+Candidate không sinh all_predictions.json của test.
+Test labels có thể được kiểm tra contract/overlap nhưng không được đưa vào fit hoặc selection.
+Reload check candidate dùng một ví dụ validation để không chạm predictions test sớm.
+Sau mỗi candidate, garbage collection và CUDA empty_cache giải phóng đối tượng đã không còn dùng.
+Không xóa active tensor để cố giảm số liệu bộ nhớ giả tạo.
+
+Sau khi ba candidate hoàn tất, study ghi candidate_comparison.json.
+Winner được chốt theo đúng tie-break đã đặc tả.
+Policy threshold và candidate manifest SHA được ghi trong frozen_selection.json trước bước test.
+checkpoint_reference.json trỏ đến best_model của winner.
+Không copy weights thành một checkpoint khác rồi làm mất nguồn identity.
+
+Study tải lại best_model đã lưu để đánh giá full test.
+Không dùng model đang ở epoch 10 nếu best checkpoint khác epoch 10.
+Cả argmax và policy threshold đều được báo cáo; threshold không thay loss của cùng probabilities.
+Baseline được đánh giá cùng test ở threshold 0.5 và threshold validation của riêng nó.
+Bảng so sánh không che việc precision tăng nhưng recall/F1 giảm.
+
+Notebook render các hình trong kernel cha bằng IPython.display.Image.
+Mỗi candidate có learning_curves.png, step_learning_curves.png, token histogram và validation threshold curves.
+Study có candidate comparison, baseline comparison, confusion matrices, sample predictions và ranking/calibration diagnostics.
+Cell hiển thị có kiểm tra số lượng hình để không im lặng thành công khi output bị thiếu.
+PNG inline và file PNG trong outputs là cùng một dữ liệu.
+Không dựng lại một hình khác để nộp report rồi khó truy vết.
+
+`study_report.md` được xuất tự động từ actual candidate/test records.
+Report có relative links tới hình của study và từng candidate.
+File JSON đi kèm cho phép tính lại metrics, không thay cho hình trình bày.
+Không cần gọi agent để đọc JSON, viết lại code rồi tái vẽ mỗi lần lấy report.
+Có thể chỉnh nội dung thảo luận sau khi đọc kết quả, giữ nguyên records/manifests nguồn.
+
+Đóng gói bằng scripts/package_study.py sau khi study completed.
+Script kiểm tra source manifests trước khi chọn file.
+Review ZIP chứa tất cả candidate nhẹ, study, Exercise 1 và config, console logs giữ byte gốc.
+Không lấy toàn bộ outputs cũ hoặc cached environment vào ZIP.
+Review ZIP có bundle_manifest.json và kiểm tra SHA256 của từng member sau nén.
+Không chỉ kiểm tra file tồn tại hoặc ZIP mở được.
+
+Checkpoint ZIP chỉ giữ best_model của winner cùng tokenizer, config và threshold policy.
+Không đưa weights của tất cả candidate vào gói gửi review.
+Giữ checkpoint ZIP riêng để infer/reload, không commit trọng số lên Git.
+Review ZIP và checkpoint ZIP đều lưu gốc dưới outputs/bundles/ rồi copy ra /kaggle/working để tải.
+Nếu panel Output chưa hiện, refresh thư mục; đường dẫn print trong cell là nguồn chính xác.
+
+Save Version trên Kaggle để giữ phiên có output.
+Tải notebook bằng File -> Download Notebook để lấy output cells do trình duyệt quản lý.
+Script Python không thể tự đọc notebook tương tác đang mở như một file container thông thường.
+ZIP chứa các artifacts đã ghi ra đĩa, không thay thế việc thu hồi notebook này.
 
 ## 3. COMPARATIVE RESULTS, ERROR DIAGNOSTICS & FINAL REPORT (Rule: documentation-and-adrs)
 
@@ -1008,3 +1177,78 @@ Kết quả cho thấy pretrained Transformer có thể học sentiment với ng
 Nhiều seeds, kiểm toán leakage nội dung, calibration fitting trên tập riêng và xác nhận trên held-out chưa quan sát là các hướng tiếp theo; chúng chưa được suy ra là hoàn thành từ unit tests hoặc từ một run GPU.
 
 Policy threshold của phiên mở rộng gắn `checkpoint_identity` bằng SHA256 weights. Eval/infer từ chối policy của checkpoint khác; inference cũng lưu bản policy đầy đủ để giữ criterion, tie-break và nguồn validation khi tách artifacts khỏi máy train.
+
+
+### 3.13. Kết quả study 10 epoch: chờ evidence GPU
+
+Phiên mở rộng hiện có code, notebook và tests; chưa có measured result của ba candidate 10 epoch.
+Các kết quả 83.96%/84.06% trong Section 3 ở trên thuộc run lịch sử 3 epoch đã kiểm chứng.
+Không sao chép những số đó sang bảng 10 epoch để tạo cảm giác đã hoàn tất training.
+Sau khi thu hồi review ZIP, xác minh bundle manifest trước khi cập nhật báo cáo.
+
+Cần báo cáo mỗi candidate: learning rate, completed epoch, global step, best checkpoint step và validation Macro-F1/loss.
+Cần ghi best epoch có trùng epoch 10 không; nếu không, giải thích ngân sách training khác lựa chọn checkpoint.
+Cần đọc cả hình epoch và hình step để xác định dấu hiệu overfit/overconfidence.
+Không kết luận epoch 10 tốt hơn epoch 3 chỉ vì train accuracy cao hơn.
+
+Bảng test phải có TF-IDF, DistilBERT argmax và validation-selected policies.
+Giữ metric từng lớp, confusion matrix, FP/FN và số lượng mẫu.
+Accuracy cao hơn một vài mẫu chưa đủ khẳng định ý nghĩa thống kê hay tính ổn định.
+NLL/Brier/ECE và ROC-AUC/AP trả lời các câu hỏi khác nhau, không thay thế nhau.
+Confidence 0.99 không đồng nghĩa mô hình đúng 99% trên mọi dữ liệu mới.
+
+Bootstrap 95% dùng 2.000 resample phân tầng test, giữ số mẫu hai lớp.
+CI được tính cho accuracy và Macro-F1 của model/policy cố định.
+Đây không phải CI bao gồm việc huấn luyện lại hoặc chọn hyperparameter.
+Muốn đo biến thiên seed cần thí nghiệm nhiều seed riêng và ngân sách được công bố trước.
+Không gọi một seed là kết quả trung bình nhiều lần train.
+
+Test lịch sử đã từng được xem khi thiết kế phiên mở rộng.
+Dù selection code mới chỉ dùng validation, không được gọi đây là một blind benchmark hoàn toàn mới.
+Muốn kết luận ngoài phân phối hoặc tránh ảnh hưởng của việc xem test cũ cần tập đánh giá khác chưa quan sát.
+Không giấu kết quả nếu study mới không cải thiện F1.
+Kết luận tốt là kết luận được evidence hỗ trợ, kể cả khi mô hình đơn giản hoặc checkpoint sớm thắng.
+
+### 3.14. Câu hỏi bảo vệ cho thiết kế 10 epoch
+
+**Vì sao train đủ 10 epoch dù đã thấy overfit?**
+Yêu cầu của thí nghiệm là quan sát đủ diễn biến. Checkpoint tốt nhất được giữ trên validation nên không bắt buộc dùng weights cuối cùng. Đây là đánh đổi compute lấy bằng chứng về đường học.
+
+**10 epoch có đồng nghĩa 10 lần cập nhật weights?**
+Không. Với 8.530 mẫu, batch 16, một GPU và accumulation=1, một epoch có 534 optimizer steps. Mỗi candidate 10 epoch có 5.340 steps.
+
+**Ba LR có phải train 30 epoch trên một model?**
+Không. Đó là ba model khởi tạo độc lập từ cùng pretrained backbone và seed. Mỗi model có scheduler 10 epoch riêng; không nối 10+10+10 để học tiếp.
+
+**Nếu best checkpoint ở epoch 2, có vi phạm train 10 epoch không?**
+Không. completed_epochs và global_step chứng minh đã chạy đủ; best_checkpoint mô tả model được chọn. Thời lượng thực nghiệm và tiêu chí chọn là hai thông tin khác nhau.
+
+**Vì sao không chọn LR theo test accuracy?**
+Test chỉ dùng đánh giá sau khi chốt lựa chọn. Dùng test để chọn LR làm kết quả báo cáo lạc quan và khó tổng quát hóa. Trong code, candidate không tạo test predictions.
+
+**Vì sao Macro-F1 thay accuracy lịch sử?**
+Đây là tiêu chí công bố trước cho phiên mở rộng nhằm theo dõi cả hai lớp. Không đổi tiêu chí của run cũ; giữ nguyên lineage và báo cáo đúng protocol riêng cho từng run.
+
+**Vì sao checkpoint dùng argmax nhưng threshold lại tối ưu sau?**
+Đó là thiết kế hai giai đoạn cố định: chọn checkpoint bằng Macro-F1 argmax, rồi điều chỉnh operating point bằng validation probabilities. Không tuyên bố đây là tối ưu chung trên mọi checkpoint/threshold có thể có.
+
+**Validation dùng nhiều lần như vậy có bị overfit không?**
+Có nguy cơ thích nghi với validation. Vì vậy grid nhỏ và cố định, tie-break rõ ràng, không mở rộng search sau khi thấy test. Muốn so sánh nghiên cứu mạnh hơn cần nested validation hoặc một đánh giá ngoài chưa quan sát.
+
+**Tại sao TF-IDF không được fit trên toàn bộ text dù không dùng nhãn test?**
+IDF và vocabulary là tham số học từ phân phối dữ liệu. Fit trên test vẫn đưa thông tin test vào preprocessing, nên pipeline chỉ fit train.
+
+**Loss train và validation vì sao có thể trái chiều accuracy?**
+Cross-entropy phụ thuộc xác suất gán cho nhãn thật, còn accuracy chỉ phụ thuộc nhãn thắng. Ít mẫu sai nhưng tự tin hơn vẫn có thể làm loss tăng trong khi accuracy gần giữ nguyên.
+
+**Bootstrap CI có chứng minh model ổn định không?**
+Chỉ phản ánh dao động do lấy mẫu test với model/policy cố định. Nó không đo bất định huấn luyện và không thay thế nhiều seed.
+
+**Tại sao không lưu optimizer trong ZIP?**
+Mục tiêu gói checkpoint là inference/reload, không resume chính xác quá trình tối ưu. model-only checkpoint giảm dung lượng; config và tài liệu công bố rõ đánh đổi này.
+
+**Vì sao có cả PNG inline và JSON?**
+PNG inline giúp học và thảo luận trong notebook. File PNG phục vụ report; JSON giữ records để tính lại và audit. Hai dạng bổ sung nhau, không bắt người đọc chạy lại code mới thấy hình.
+
+**Nếu model mới kém hơn TF-IDF hoặc run cũ thì sao?**
+Báo cáo đúng kết quả, phân tích bias/variance, learning curves và giới hạn search. Không sửa test policy hoặc giấu baseline để làm kết luận đẹp hơn.

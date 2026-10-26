@@ -10,7 +10,8 @@
     "evaluation": "20261026T160058Z_evaluation_07c24854",
     "inference": "20261026T160111Z_inference_7f2b16f0",
     "threshold_analysis": "20261026T162909Z_threshold_analysis_f8b3fdf7",
-    "artifact_audit": "20261026T162631Z_artifact_audit_c84d606c"
+    "artifact_audit": "20261026T162631Z_artifact_audit_c84d606c",
+    "training_readiness": "20261026T175728Z_training_readiness_597149cd"
   },
   "runs": [
     {
@@ -171,6 +172,11 @@
     {
       "id": "20261026T163347Z_verification_641a8f92",
       "kind": "verification",
+      "status": "completed"
+    },
+    {
+      "id": "20261026T175728Z_training_readiness_597149cd",
+      "kind": "training_readiness",
       "status": "completed"
     }
   ]

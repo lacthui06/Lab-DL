@@ -1,0 +1,4 @@
+{
+  "study_settings": "config/study.json",
+  "purpose": "software_preflight_not_gpu_benchmark"
+}

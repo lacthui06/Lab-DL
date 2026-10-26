@@ -48,7 +48,7 @@ def test_complete_workflow_with_local_fixture(tiny, tmp_path, monkeypatch):
         num_train_epochs=1, batch_size=4, eval_batch_size=4)
     out = workflow.finetune(cfg, allow_cpu=True)
     assert json.loads((out / "status.json").read_text())["status"] == "completed"
-    assert len(list(out.glob("*.png"))) == 5
+    assert len(list(out.glob("*.png"))) == 6
     assert len(json.loads((out / "all_predictions.json").read_text())) == 8
     assert (out / "best_model/model.safetensors").is_file()
     assert (out / "reload_check.json").is_file()

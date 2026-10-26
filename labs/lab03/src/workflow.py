@@ -12,7 +12,7 @@ from .training.metrics import compute_metrics
 from .training.thresholds import export_threshold_analysis, binary_metrics_at_threshold
 from .decision import checkpoint_identity
 from .utils.runs import ROOT, run_context, save_json
-from .utils.plots import plot_lengths, plot_learning, plot_confusion, plot_metrics, plot_samples
+from .utils.plots import plot_lengths, plot_learning, plot_step_learning, plot_confusion, plot_metrics, plot_samples
 
 
 def read_config(path=None):
@@ -22,6 +22,7 @@ def seed_all(seed):
     set_seed(seed)
     torch.backends.cudnn.benchmark = False
     torch.backends.cudnn.deterministic = True
+    torch.use_deterministic_algorithms(True, warn_only=True)
 
 def exercise1(config=None):
     config = config or read_config()
@@ -134,13 +135,13 @@ def report_run(out, metrics, rows):
     if correct == len(rows): text += ["No misclassified examples were available in this run."]
     (out / "report.md").write_text("\n".join(text) + "\n", encoding="utf-8")
 
-def finetune(config=None, allow_cpu=False):
+def finetune(config=None, allow_cpu=False, evaluate_test=True):
     config = config or read_config()
     if not torch.cuda.is_available() and not allow_cpu:
         raise RuntimeError("Full training requires a GPU by default. Use --allow-cpu only if you intentionally accept the cost.")
     seed_all(config["seed"])
     cfg = dict(config["exercise2"], seed=config["seed"])
-    with run_context("finetuning", config) as out:
+    with run_context("finetuning" if evaluate_test else "candidate", config) as out:
         raw, tokenizer, tokenized = prepare_data(config)
         lengths = [len(ids) for ids in tokenizer(raw["train"]["text"], truncation=False)["input_ids"]]
         save_json(out / "data_statistics.json", {"split_sizes": {k: len(raw[k]) for k in ("train", "validation", "test")},
@@ -152,10 +153,26 @@ def finetune(config=None, allow_cpu=False):
         save_json(out / "provenance.json", {"model_commit": getattr(model.config, "_commit_hash", None),
                   "dataset_fingerprints": {k: raw[k]._fingerprint for k in ("train", "validation", "test")}})
         trainer = make_trainer(model, tokenizer, tokenized, cfg, out)
+        if torch.cuda.is_available(): torch.cuda.reset_peak_memory_stats()
         trained = trainer.train()
+        if abs(float(trainer.state.epoch) - float(cfg["num_train_epochs"])) > 1e-5:
+            raise RuntimeError("Training did not finish the requested epoch budget")
+        save_json(out / "selection_summary.json", {
+            "requested_epochs": cfg["num_train_epochs"], "completed_epochs": trainer.state.epoch,
+            "global_step": trainer.state.global_step, "early_stopping": False,
+            "amp_skipped_optimizer_steps": getattr(trainer, "amp_skipped_optimizer_steps", 0),
+            "successful_optimizer_updates": trainer.state.global_step - getattr(trainer, "amp_skipped_optimizer_steps", 0),
+            "selection_split": "validation", "metric": trainer.args.metric_for_best_model,
+            "best_metric": trainer.state.best_metric,
+            "best_checkpoint": trainer.state.best_model_checkpoint,
+            "test_evaluated": evaluate_test,
+            "cuda_peak_allocated_bytes": torch.cuda.max_memory_allocated() if torch.cuda.is_available() else None,
+        })
         save_json(out / "train_metrics.json", trained.metrics)
         save_json(out / "trainer_history.json", trainer.state.log_history)
         plot_learning(trainer.state.log_history, out / "learning_curves.png")
+        plot_step_learning(trainer.state.log_history, out / "step_learning_curves.png",
+            best_step=int(Path(trainer.state.best_model_checkpoint).name.split("-")[-1]))
         trainer.save_model(str(out / "best_model"))
         tokenizer.save_pretrained(str(out / "best_model"))
         policy = None
@@ -164,6 +181,12 @@ def finetune(config=None, allow_cpu=False):
             policy = select_threshold_for_validation(trainer, tokenized["validation"], raw["validation"], out,
                                                      checkpoint_path=out / "best_model")
             save_json(out / "best_model/decision_threshold.json", policy)
+        if not evaluate_test:
+            # Không dự đoán test trong giai đoạn chọn cấu hình.
+            checks = verify_saved_model(trainer.model, out / "best_model",
+                                        [raw["validation"][0]["text"]], cfg["max_length"])
+            save_json(out / "reload_check.json", checks)
+            return out
         metrics, rows = evaluate_model(trainer, tokenized["test"], raw["test"], out,
                                       decision_threshold=policy["selected_threshold"] if policy else None)
         checks = verify_saved_model(trainer.model, out / "best_model",

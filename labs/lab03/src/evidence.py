@@ -116,8 +116,15 @@ def audit_finetuning(run):
     validation = [row for row in history if "eval_accuracy" in row]
     config = read_json(run / "config.json")
     train = read_json(run / "train_metrics.json")
-    if len(validation) != config["exercise2"]["num_train_epochs"] or train["epoch"] != len(validation):
+    requested_epochs = config["exercise2"]["num_train_epochs"]
+    # Lịch theo step có nhiều validation records trong một epoch; không đếm
+    # số lần evaluate thành số epoch. Vẫn bắt buộc đủ mốc cuối từng epoch.
+    epoch_ends = {int(round(row["epoch"])) for row in validation
+                  if np.isclose(row["epoch"], round(row["epoch"]), atol=1e-8, rtol=0)}
+    if (not np.isclose(train["epoch"], requested_epochs)
+            or epoch_ends != set(range(1, int(requested_epochs) + 1))):
         raise ValueError("Incomplete training history")
+    selection_metric = "eval_" + config["exercise2"].get("metric_for_best_model", "accuracy").removeprefix("eval_")
     reload = read_json(run / "reload_check.json")
     if reload.get("weights_exact_match") is not True:
         raise ValueError("Missing saved checkpoint verification evidence")
@@ -125,6 +132,6 @@ def audit_finetuning(run):
     cm = confusion_matrix(labels, preds, labels=[0, 1])
     return dict(result, run=run.name, metrics=metrics, constant_negative_baseline=baseline, correct=int(np.trace(cm)),
                 incorrect=int(cm.sum() - np.trace(cm)), confusion_matrix=cm.tolist(),
-                best_validation_epoch=max(validation, key=lambda row: row["eval_accuracy"])["epoch"],
+                best_validation_epoch=max(validation, key=lambda row: row[selection_metric])["epoch"],
                 classification_report=classification_report(labels, preds, target_names=["NEGATIVE", "POSITIVE"], output_dict=True),
                 checkpoint_verification="Kaggle reload_check.json; weights are not re-executed by this audit")
