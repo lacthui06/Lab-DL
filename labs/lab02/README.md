@@ -1,7 +1,7 @@
 # Lab 02 — Transfer learning trên CIFAR-10
 
 
-So sánh ResNet18 và DenseNet121 pretrained, head-only và fine-tune. Kết quả hiện tại là CPU 64×64, seed 42; pipeline tinh chỉnh LR/optimizer/unfreeze đã triển khai và kiểm thử; benchmark tuning đầy đủ chưa chạy.
+So sánh ResNet18 và DenseNet121 pretrained, head-only và fine-tune. Hai notebook hiển thị bảng, hình và nhận xét trực tiếp, không cần mở link để đọc kết quả. Artifact chi tiết local hiện là CPU 64×64, seed 42; notebook modeling còn có bảng control GPU 224×224 đã kiểm tra trực tiếp trên Kaggle (ResNet18 91,37%, DenseNet121 91,11% test accuracy), tách rõ khỏi hình lịch sử. Grid tuning đầy đủ đang thực thi theo nhóm; kết quả cuối và artifact GPU sẽ bổ sung sau khi tất cả nhóm hoàn tất, theo yêu cầu tải một đợt của người dùng.
 
 ## Structure
 

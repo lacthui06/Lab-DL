@@ -1,0 +1,86 @@
+{
+  "date": "2026-10-27",
+  "last_remote_check": {
+    "checked_at_utc": "2026-10-27T05:15:33.281Z",
+    "version_5": "Running",
+    "version_6": "Running",
+    "active_batch_gpu_sessions": 2,
+    "action": "No new submission: both batch slots occupied; no completed tuning output to harvest yet"
+  },
+  "interactive_backup": {
+    "kaggle_version": 7,
+    "name": "Interactive backup with output before stop",
+    "save_type": "Quick Save with Save output for this version",
+    "save_status": "Successful",
+    "interactive_session_status_after_backup": "Cancelled at user request",
+    "batch_versions_5_and_6": "Running; not stopped"
+  },
+  "models": [
+    "resnet18",
+    "densenet121"
+  ],
+  "grid_candidates_per_model": 13,
+  "total_fine_trials": 26,
+  "max_simultaneous_batch_gpu_sessions": 2,
+  "global_selection": "validation accuracy/loss/time only after all groups complete",
+  "source_payload_sha256": "3e95748f789764f0793211c4d4b4f7493a3506c14cada22dc9f9043e25022fca",
+  "groups": [
+    {
+      "group": 0,
+      "candidate_ids": [
+        "control",
+        "adamw_last_block_3e-06",
+        "adamw_last_block_1e-05"
+      ],
+      "notebook": "outputs/cache/lab02_kaggle_tuning_group_00.ipynb",
+      "kaggle_version": 5,
+      "status": "submitted_running",
+      "url": "https://www.kaggle.com/code/minhthnt/lab02cifar10?scriptVersionId=362699908"
+    },
+    {
+      "group": 1,
+      "candidate_ids": [
+        "adamw_last_block_3e-05",
+        "adamw_last_two_blocks_3e-06",
+        "adamw_last_two_blocks_1e-05"
+      ],
+      "notebook": "outputs/cache/lab02_kaggle_tuning_group_01.ipynb",
+      "kaggle_version": 6,
+      "status": "submitted_running",
+      "url": "https://www.kaggle.com/code/minhthnt/lab02cifar10?scriptVersionId=362700105"
+    },
+    {
+      "group": 2,
+      "candidate_ids": [
+        "adamw_last_two_blocks_3e-05",
+        "sgd_last_block_0.0001",
+        "sgd_last_block_0.0003"
+      ],
+      "notebook": "outputs/cache/lab02_kaggle_tuning_group_02.ipynb",
+      "kaggle_version": null,
+      "status": "pending_batch_gpu_session_cap"
+    },
+    {
+      "group": 3,
+      "candidate_ids": [
+        "sgd_last_block_0.001",
+        "sgd_last_two_blocks_0.0001",
+        "sgd_last_two_blocks_0.0003"
+      ],
+      "notebook": "outputs/cache/lab02_kaggle_tuning_group_03.ipynb",
+      "kaggle_version": null,
+      "status": "pending_batch_gpu_session_cap"
+    },
+    {
+      "group": 4,
+      "candidate_ids": [
+        "sgd_last_two_blocks_0.001"
+      ],
+      "notebook": "outputs/cache/lab02_kaggle_tuning_group_04.ipynb",
+      "kaggle_version": null,
+      "status": "pending_batch_gpu_session_cap"
+    }
+  ],
+  "git_push_performed": false,
+  "note": "Running means remote execution has started; candidate training epochs and completion are not yet verified. Groups 2-4 were rejected by Kaggle batch GPU session cap and are not queued."
+}

@@ -96,6 +96,16 @@ Khuyến nghị giữa hai kiến trúc dùng cùng validation bands và **selec
 
 AdamW weight decay tách khỏi gradient còn SGD dùng L2 theo optimizer; cùng hệ số không làm hai regularization hoàn toàn tương đương. Kết quả so sánh phản ánh từng recipe hoàn chỉnh. Mở thêm block có thể tăng khả năng thích nghi nhưng cũng có thể tăng overfit, thời gian và VRAM; chưa khẳng định cải thiện khi chưa đo validation.
 
+### 1.5.0. Cách đọc lựa chọn block, candidate và ngân sách
+
+![Sơ đồ block được mở và giữ frozen](outputs/review/20261024T075133Z_cifar10_cpu_full64_71863a0e/unfreeze_block_map.png)
+
+Mở block cuối là giả thuyết transfer learning cần kiểm chứng: giữ phần đầu ổn định, thích nghi biểu diễn gần đầu ra. ResNet dùng layer4+fc; candidate sâu hơn mở layer3. DenseNet dùng denseblock4+norm5+classifier; mở block3 phải gồm transition3 nối block3→block4. Một block ở hai mạng không tương đương số tham số. Sơ đồ màu trong notebook chỉ rõ vị trí, không dùng độ dài thanh tham số để biểu diễn vị trí layer.
+
+Ví dụ candidate: AdamW, backbone LR=0,00001, head LR=0,0001, last_block, cosine. Đây là một recipe cần chạy, không phải điểm đo chất lượng. Grid có 13 candidate/model: 1 control + 3 LR × 2 depth với AdamW + 3 LR × 2 depth với SGD. Fine-tune giữ batch được head search chọn từ 64/128. Đổi batch có thể giảm số optimizer step mỗi epoch nhưng không bảo đảm thời gian giảm hoặc chất lượng tăng.
+
+Run đã đo dùng head 5/fine 2 epoch theo config trong run, không phải 10 hoặc 30. Cấu hình mới chưa chạy dùng head 10, fine min 10/max 30. Best checkpoint có thể sớm hơn số epoch thực chạy. Báo cáo tách planned/completed/best epoch và stop_reason; hết ngân sách không đồng nghĩa hội tụ. Không sửa history/metric cũ để khớp cấu hình mới.
+
 ### 1.5.1. Đo thời gian và chi phí
 
 - `train_pass_seconds` và `validation_seconds` đo riêng, đồng bộ CUDA trước/sau; train pass gồm loader, truyền dữ liệu và tính toán.
@@ -289,3 +299,33 @@ Kiểm chứng đợt cleanup: **50/50 test đạt**, không skip; 23 file Pytho
 **Giải pháp chất lượng:** trước tiên chạy control đủ ngân sách trên cùng GPU/resolution/cache policy. Run cũ fine-tune tăng accuracy từ 76,09% lên 81,49% (ResNet) và 78,21% lên 81,53% (DenseNet), nhưng chỉ 2 epoch nên chưa đánh giá hội tụ. Theo dõi val loss, best epoch và train–val gap; sau đó đánh giá LR, optimizer và depth. Nếu vẫn underfit, augmentation/224×224 là thí nghiệm tiếp theo; nếu val loss tăng khi train loss giảm, tăng regularization/giảm depth hoặc dừng theo validation. Chưa có benchmark mới nên không khẳng định đã cải thiện accuracy.
 
 Kiểm tra bản sửa batch/epoch/visualization: [training_revision_validation.json](outputs/review/training_revision_validation.json), [JUnit](outputs/review/training_revision_tests.xml): **55 test đạt**, lint đạt; notebook modeling chạy lại đủ cell, không output trống hoặc lỗi. Không huấn luyện benchmark mới; artifact gốc trong outputs/runs giữ nguyên.
+
+Bổ sung giải thích theo ảnh: sơ đồ block, ví dụ đọc candidate bằng LR thập phân, stop evidence và xu hướng val loss đã được hiển thị trong notebook. [Kiểm tra local mới nhất](outputs/review/screenshot_revision_validation.json) và [JUnit](outputs/review/screenshot_revision_tests.xml): 28 test liên quan đạt; lint/diff sạch. Chỉ sửa folder, không commit/push, không có benchmark mới.
+
+### 26/10/2026 — Khởi chạy control trên Kaggle
+
+[Version 2 riêng tư trên Kaggle](https://www.kaggle.com/code/minhthnt/lab02cifar10?scriptVersionId=362563464) đã xác nhận Tesla T4 (2 GPU được cấp), PyTorch 2.11.0+cu128; pipeline hiện dùng một thiết bị CUDA, chưa có distributed training. Source local được đóng gói với SHA256 `3e95748f789764f0793211c4d4b4f7493a3506c14cada22dc9f9043e25022fca`. Cổng kiểm tra từ xa đạt 25 test trong 51,56 giây; dữ liệu và pretrained weights đã tải thành công.
+
+Run `20261026T165328Z_cifar10_gpu_full224_77790096` dùng `config/full.json`: batch 64/128, head 10 epoch/trial; fine-tune AdamW last block, min 10/max 30 epoch, patience 7 theo validation loss. Đã bắt đầu trích xuất feature ResNet18 trên 45.000 ảnh train; chưa có kết quả hoàn tất. Đây là control ngân sách mới, không phải grid 13 candidate của `config/tuned.json`. Cần thu hồi artifact, kiểm tra actual epochs/stop reason, rồi cập nhật notebook và so sánh quality/time; không suy diễn metric mới từ trạng thái Running. Theo yêu cầu người dùng, không commit/push Git.
+
+Rà soát local sau khi khởi chạy: [JUnit mới nhất](outputs/review/final_review_tests.xml) ghi **55/55 test đạt**, 2 cảnh báo deprecation TorchScript, không lỗi. Notebook modeling thực thi lại thành công; view kết quả fine-search thêm candidate ID trên từng điểm và bảng optimizer/backbone LR/head LR/depth/scheduler/actual epochs/validation/time/stop reason khi có dữ liệu thực. Thay đổi view này là bước trình bày local sau snapshot Kaggle, không thay source huấn luyện đang chạy.
+
+### 27/10/2026 — Chạy grid đầy đủ theo nhóm
+
+Theo yêu cầu chạy hết, 13 candidate trong `config/tuned.json` được chia cố định thành các nhóm chỉ số [0–2], [3–5], [6–8], [9–11], [12], mỗi nhóm chạy cả ResNet18 và DenseNet121. Tổng cộng 26 fine trials, không bỏ LR, optimizer hay depth nào. Cấu hình head, seed, split và early stopping giữ nguyên giữa các nhóm; mỗi nhóm có run/source/config riêng. Notebook đã được kiểm tra cú pháp và phủ đủ 13 ID không trùng, lưu trong `outputs/cache/lab02_kaggle_tuning_group_00.ipynb` đến `_04.ipynb`.
+
+[Kế hoạch và trạng thái gửi job](outputs/review/tuning_submissions.json) là nguồn theo dõi nhóm còn thiếu. Version 5 (group 0) và Version 6 (group 1) đã được Kaggle nhận, đang Running. Kaggle từ chối gửi group 2–4 vì giới hạn tối đa 2 batch GPU sessions đồng thời; các nhóm này chưa nằm trong hàng đợi và chưa chạy. Không được ghi chúng là đã hoàn tất. Phiên Interactive riêng giữ nguyên.
+
+Kết quả từng nhóm chỉ là tạm thời. Sau khi đủ năm nhóm, phải gộp các bảng fine-search theo candidate ID và chọn toàn grid bằng validation accuracy/loss/time theo policy đã định; không chọn nhóm hoặc model dựa trên test. Test của winner trong từng nhóm chỉ là artifact trung gian, không phải bằng chứng chọn winner toàn grid. Thời gian cần ghi riêng số epoch thực chạy và điều kiện các job chạy đồng thời, không quy chênh lệch toàn bộ thời gian thành ưu thế kiến trúc. Không commit/push Git.
+
+### 27/10/2026 — Hoàn thiện trình bày local, tuning bổ sung sau
+
+Theo yêu cầu mới nhất, hai notebook không còn link Markdown dẫn người đọc ra ngoài để hiểu kết quả. Bảng, hình PNG và nhận xét nằm ngay trong file ipynb; code cell chỉ gọi module. EDA chỉ xử lý raw/integrity/preprocessing/features, nêu đủ phát hiện không có nhãn ngoài phạm vi, pixel không hữu hạn, ảnh hằng hoặc ảnh trùng byte; phân biệt preview 64×64 đã đo với profile GPU 224×224.
+
+Notebook modeling thêm bảng control GPU đã đối chiếu trực tiếp từ comparison.csv và training_summary của Kaggle Version 3: test accuracy head/fine của ResNet18 85,86%/91,37%, DenseNet121 87,90%/91,11%; fine test loss 0,360075/0,293843. ResNet18 chạy 13/30 epoch, best accuracy checkpoint epoch 13, fit wall 2010,99 giây; DenseNet121 chạy 18/30, best epoch 16, fit wall 4601,71 giây. Cả hai dừng theo validation-loss patience 7; head 10 epoch/trial. Bảng có đủ Macro F1/Precision/Recall đã đọc, không dựng metric theo lớp GPU khi chưa thu hồi predictions/confusion counts. Thông tin này là bảng đối chiếu remote, không giả làm artifact đã tải local.
+
+Các hình CPU được giữ nguyên và ghi rõ lịch sử, không đổi nhãn thành GPU. View metric theo lớp hiển thị đủ các lớp cho cả head/fine thay vì chỉ các lớp F1 thấp. Nhãn kế hoạch chỉ nói chưa có kết quả trong run đang xem; không còn khẳng định grid toàn cục chưa khởi chạy. Control ResNet có dấu hiệu overfit (train gần 100%, validation khoảng 91–92%, val loss tăng cuối), nên không suy diễn thêm epoch sẽ cải thiện. Phần kết luận ghi rõ chỉ chênh 0,26 điểm phần trăm accuracy giữa hai model, DenseNet loss thấp hơn và một seed chưa đủ ưu thế thống kê.
+
+Phần đang chạy sẽ bổ sung sau: đủ 26 trial, kiểm tra cùng head khởi tạo giữa nhóm, gộp validation và chọn toàn grid, thu hồi notebook/artifact một đợt rồi nhúng biểu đồ GPU và phân tích lỗi theo lớp vào notebook. Không dừng/đổi job, không huấn luyện CPU, không commit/push Git trong đợt hoàn thiện trình bày này.
+
+Kiểm chứng đợt hoàn thiện local: hai notebook thực thi thành công, EDA 9 ảnh/modeling 12 ảnh PNG nhúng, tối đa 7 dòng/code cell, không output lỗi, không link Markdown. 25 test notebook/cleanup đạt trong 34,83 giây; diff không lỗi khoảng trắng. Kết quả kiểm chứng lưu tại `outputs/review/local_completion_validation.json` và `outputs/review/local_completion_tests.xml`. Các chỉ số này kiểm chứng trình bày/code local, không thay cho kết quả tuning đang chạy.

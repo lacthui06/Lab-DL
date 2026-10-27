@@ -65,6 +65,8 @@ class NotebookReviewTests(unittest.TestCase):
     def test_notebooks_are_executed_compact_and_visual(self):
         for path in (ROOT / 'notebooks').glob('*.ipynb'):
             notebook = json.loads(path.read_text(encoding='utf-8'))
+            markdown = '\n'.join(''.join(c['source']) for c in notebook['cells'] if c['cell_type']=='markdown')
+            self.assertNotRegex(markdown, r'\]\(', 'Notebook results must be self-contained, not linked out')
             cells = [c for c in notebook['cells'] if c['cell_type'] == 'code']
             self.assertTrue(cells)
             image_count = 0
@@ -127,10 +129,14 @@ def test_unexecuted_fine_grid_is_explanatory_table_not_results(tmp_path, monkeyp
     monkeypatch.setattr(view, 'display', tables.append)
     monkeypatch.setattr(view, '_save', lambda *a: (_ for _ in ()).throw(AssertionError('No measured plot without results')))
     view.fine_search(tmp_path, tmp_path, ROOT)
-    assert len(tables) == 2
-    assert set(tables[0]['Status']) == {'NOT RUN'}
-    assert not {'accuracy', 'loss', 'train_seconds'} & set(tables[0].columns)
-    assert tables[1]['Head search batches'].iloc[0] == '[64, 128]'
+    frames = [item for item in tables if isinstance(item, pd.DataFrame)]
+    assert len(frames) == 2
+    assert set(frames[0]['Status']) == {'NO RESULTS IN THIS RUN'}
+    assert not {'accuracy', 'loss', 'train_seconds'} & set(frames[0].columns)
+    assert frames[1]['Head search batches'].iloc[0] == '[64, 128]'
+    explanation = ' '.join(item.data for item in tables if not isinstance(item, pd.DataFrame))
+    assert '0.00001' in explanation and '0.0001' in explanation
+    assert 'accuracy/loss' in explanation
 
 
 def test_learning_plot_separates_stages_and_preserves_original_histories(tmp_path, monkeypatch):

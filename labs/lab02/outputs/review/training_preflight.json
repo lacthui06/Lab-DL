@@ -1,0 +1,53 @@
+{
+  "date": "2026-10-26",
+  "status": "kaggle_version_2_running_resnet18_finetune",
+  "training_started": true,
+  "python": "3.13.3 (tags/v3.13.3:6280bb5, Apr  8 2025, 14:47:33) [MSC v.1943 64 bit (AMD64)]",
+  "torch": "2.14.1+cpu",
+  "cuda_available": false,
+  "current_physical_adapter": "Intel(R) UHD Graphics (queried Win32_VideoController)",
+  "config": "config/tuned.json",
+  "batch_sizes": [
+    64,
+    128
+  ],
+  "models": [
+    "resnet18",
+    "densenet121"
+  ],
+  "head_trials_per_model": 6,
+  "fine_trials_per_model": 13,
+  "head_epochs": 10,
+  "fine_max_epochs": 30,
+  "early_stopping": {
+    "min_epochs": 10,
+    "patience": 7,
+    "min_delta": 0.0001
+  },
+  "source_bundle": "D:\\DL\\Lab-DL\\labs\\lab02\\outputs\\cache\\lab02_gpu_source.zip",
+  "bundle_sha256": "348d3a23ce5817aea596c008920c5d196210909495ab4ac33196c16c861c67c0",
+  "files": 34,
+  "git_commit_or_push_performed": false,
+  "required_input": null,
+  "remote_submission": {
+    "notebook": "https://www.kaggle.com/code/minhthnt/lab02cifar10?scriptVersionId=362563464",
+    "version": 2,
+    "config": "config/full.json",
+    "accelerator": "GPU T4 x2",
+    "torch": "2.11.0+cu128",
+    "gpu_verified_in_log": true,
+    "remote_tests": "25 passed, 17 warnings in 51.56s",
+    "run_id": "20261026T165328Z_cifar10_gpu_full224_77790096",
+    "epochs_observed": 1,
+    "observed_progress": {
+      "resnet18_head_trials_completed": 6,
+      "head_epochs_per_trial": 10,
+      "resnet18_finetune_epochs_completed": 1,
+      "resnet18_finetune_validation_accuracy_at_epoch_1": 0.8910,
+      "run_completed": false,
+      "artifacts_downloaded": false
+    },
+    "scope": "Control first; the full tuning grid has not been launched",
+    "source_payload_sha256": "3e95748f789764f0793211c4d4b4f7493a3506c14cada22dc9f9043e25022fca"
+  }
+}
