@@ -30,7 +30,7 @@ def main(argv=None):
     if saved['metadata'].get('dataset')!='CIFAR10':
         raise ValueError('This CLI requires a CIFAR10 checkpoint')
     name=saved['metadata']['model']
-    model=build_model(name,pretrained=False)
+    model=build_model(name,pretrained=False,dropout=saved['metadata'].get('dropout',0.))
     model.load_state_dict(saved['state_dict']);model.eval()
     if args.image:
         with Image.open(args.image) as source: image=source.convert('RGB')

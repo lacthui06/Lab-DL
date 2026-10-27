@@ -4,6 +4,7 @@ import contextlib
 import copy
 from datetime import datetime, timezone
 import itertools
+import importlib.metadata as package_metadata
 import json
 import os
 from pathlib import Path
@@ -115,14 +116,21 @@ def pass_epoch(model, loader, device, optimizer=None, mode_fn=None):
     return {"loss": total_loss / count, "accuracy": correct / count}
 
 
+def _save_checkpoint(state, path):
+    """Commit on the same filesystem; an interrupted write preserves the last epoch."""
+    temporary = path.with_suffix('.tmp')
+    try:
+        torch.save(state, temporary)
+        temporary.replace(path)
+    finally:
+        temporary.unlink(missing_ok=True)
+
+
 def fit(model, train, val, optimizer, epochs, device, folder, metadata, mode_fn=None, scheduler=None,
-        stopping=None):
+        stopping=None, resume=False):
     if epochs < 1:
         raise ValueError('epochs must be positive')
     folder.mkdir(parents=True, exist_ok=True)
-    write_json(folder / "config.json", metadata)
-    writer = SummaryWriter(str(folder / "tensorboard"))
-    writer.add_text("configuration", json.dumps(metadata, indent=2))
     history, best, best_loss = [], -1., float('inf')
     stopping = stopping or {}
     minimum = stopping.get('min_epochs', epochs)
@@ -130,12 +138,63 @@ def fit(model, train, val, optimizer, epochs, device, folder, metadata, mode_fn=
     delta = stopping.get('min_delta', 0.)
     monitor_best, stale, stop_reason = float('inf'), 0, 'epoch_budget_exhausted'
     train_pass_seconds, validation_seconds = 0., 0.
+    elapsed_before, first_epoch, best_checkpoint = 0., 1, None
+    signature = {'metadata': metadata, 'epochs': epochs, 'stopping': stopping,
+                 'optimizer': type(optimizer).__name__,
+                 'scheduler': type(scheduler).__name__ if scheduler is not None else None,
+                 'optimizer_groups': [{k: v for k, v in group.items() if k != 'params'}
+                                      for group in optimizer.param_groups],
+                 'loaders': [{'samples': len(loader.dataset), 'batch_size': loader.batch_size,
+                              'workers': loader.num_workers, 'sampler': type(loader.sampler).__name__}
+                             for loader in (train, val)],
+                 'device': str(device), 'torch': str(torch.__version__),
+                 'python': platform.python_version(), 'numpy': np.__version__,
+                 'torchvision': package_metadata.version('torchvision'),
+                 'threads': torch.get_num_threads(),
+                 'device_name': torch.cuda.get_device_name(device) if device.type == 'cuda' else platform.machine()}
+    if resume:
+        saved = torch.load(folder / 'last.pt', map_location='cpu', weights_only=True)
+        if saved.get('schema_version') != 1:
+            raise ValueError('Unsupported resume checkpoint schema')
+        if saved['signature'] != signature:
+            raise ValueError('Resume configuration/environment differs from saved trial')
+        model.load_state_dict(saved['state_dict'])
+        optimizer.load_state_dict(saved['optimizer_state_dict'])
+        if scheduler is not None:
+            scheduler.load_state_dict(saved['scheduler_state_dict'])
+        history, best_checkpoint = saved['history'], saved['best_checkpoint']
+        first_epoch = saved['epoch'] + 1
+        best, best_loss = best_checkpoint['val_accuracy'], best_checkpoint['val_loss']
+        monitor_best, stale = saved['monitor_best'], saved['stale']
+        stop_reason = saved['stop_reason']
+        train_pass_seconds, validation_seconds = saved['train_pass_seconds'], saved['validation_seconds']
+        elapsed_before = saved['elapsed_seconds']
+        random.setstate(saved['python_rng'])
+        numpy_rng = saved['numpy_rng']
+        np.random.set_state((numpy_rng[0], np.asarray(numpy_rng[1], dtype=np.uint32),
+                             numpy_rng[2], numpy_rng[3], numpy_rng[4]))
+        torch.set_rng_state(saved['torch_rng'])
+        if device.type == 'cuda':
+            torch.cuda.set_rng_state_all(saved['cuda_rng'])
+        for loader, state in zip((train, val), saved['loader_rng']):
+            if (loader.generator is None) != (state is None):
+                raise ValueError('Resume DataLoader generator differs')
+            if state is not None:
+                loader.generator.set_state(state)
+        _save_checkpoint(best_checkpoint, folder / 'best.pt')
+    elif (folder / 'last.pt').exists() or (folder / 'history.csv').exists():
+        raise ValueError('Trial already contains history; use explicit resume or a new run')
+    write_json(folder / "config.json", metadata)
+    writer = SummaryWriter(str(folder / "tensorboard"), purge_step=first_epoch if resume else None)
+    writer.add_text("configuration", json.dumps(metadata, indent=2))
     if device.type == 'cuda':
         torch.cuda.reset_peak_memory_stats(device)
     sync(device)
     start = time.perf_counter()
     try:
-        for epoch in range(1, epochs + 1):
+        for epoch in range(first_epoch, epochs + 1):
+            if stop_reason == 'validation_loss_patience':
+                break
             epoch_start = time.perf_counter()
             rates = {f'lr_group_{i}': group['lr'] for i, group in enumerate(optimizer.param_groups)}
             sync(device)
@@ -172,8 +231,9 @@ def fit(model, train, val, optimizer, epochs, device, folder, metadata, mode_fn=
             if va['accuracy'] > best or (va['accuracy'] == best and va['loss'] < best_loss):
                 best = va["accuracy"]
                 best_loss = va['loss']
-                torch.save({"state_dict": model.state_dict(), "metadata": metadata,
-                            "best_epoch": epoch, "val_accuracy": best, 'val_loss':best_loss}, folder / "best.pt")
+                best_checkpoint = {"state_dict": {k: v.detach().cpu().clone() for k, v in model.state_dict().items()}, "metadata": metadata,
+                                   "best_epoch": epoch, "val_accuracy": best, 'val_loss':best_loss}
+                _save_checkpoint(best_checkpoint, folder / "best.pt")
             if scheduler is not None:
                 scheduler.step()
             print(f"{folder.name} epoch {epoch}/{epochs}: train={tr['accuracy']:.4f}, val={va['accuracy']:.4f}", flush=True)
@@ -183,6 +243,21 @@ def fit(model, train, val, optimizer, epochs, device, folder, metadata, mode_fn=
                 stale += 1
             if epoch >= minimum and stale >= patience:
                 stop_reason = 'validation_loss_patience'
+            numpy_rng = np.random.get_state()
+            _save_checkpoint({'schema_version': 1, 'signature': signature, 'epoch': epoch,
+                'state_dict': model.state_dict(), 'optimizer_state_dict': optimizer.state_dict(),
+                'scheduler_state_dict': scheduler.state_dict() if scheduler is not None else None,
+                'history': history, 'best_checkpoint': best_checkpoint,
+                'monitor_best': monitor_best, 'stale': stale, 'stop_reason': stop_reason,
+                'train_pass_seconds': train_pass_seconds, 'validation_seconds': validation_seconds,
+                'elapsed_seconds': elapsed_before + time.perf_counter() - start,
+                'python_rng': random.getstate(),
+                'numpy_rng': (numpy_rng[0], numpy_rng[1].tolist(), *numpy_rng[2:]),
+                'torch_rng': torch.get_rng_state(),
+                'cuda_rng': torch.cuda.get_rng_state_all() if device.type == 'cuda' else [],
+                'loader_rng': [loader.generator.get_state() if loader.generator is not None else None
+                               for loader in (train, val)]}, folder / 'last.pt')
+            if stop_reason == 'validation_loss_patience':
                 break
         sync(device)
         result = {"best_val_accuracy": best, 'best_val_loss':best_loss,
@@ -191,10 +266,13 @@ def fit(model, train, val, optimizer, epochs, device, folder, metadata, mode_fn=
                   'minimum_observed_val_loss': min(r['val_loss'] for r in history),
                   'last_val_loss': history[-1]['val_loss'],
                   'convergence_claim': 'not established; inspect validation trend and stopping evidence',
-                  "train_seconds": time.perf_counter() - start,
+                  "train_seconds": elapsed_before + time.perf_counter() - start,
+                  'resumed': resume, 'resume_boundary': 'completed epoch; incomplete epoch replayed',
+                  'timing_policy': 'active fit segments; downtime excluded; resumed timing not a fresh benchmark',
                   'train_pass_seconds':train_pass_seconds, 'validation_seconds':validation_seconds,
                   'train_images_per_second':len(train.dataset)*len(history)/max(train_pass_seconds,1e-12),
                   'peak_cuda_memory_mib':torch.cuda.max_memory_allocated(device)/2**20 if device.type=='cuda' else None,
+                  'peak_memory_scope': 'current fit process segment only' if resume else 'whole fit',
                   "best_epoch": torch.load(folder / "best.pt", weights_only=True, map_location="cpu")["best_epoch"]}
         writer.add_hparams({k: metadata[k] for k in ('model','stage','batch_size','lr',
                           'optimizer','backbone_lr','unfreeze','scheduler') if k in metadata},
@@ -245,6 +323,8 @@ def search_finetune(model, name, cfg, selected, data_dir, run, device,
                 'dataset':'CIFAR10', 'image_size':cfg['image_size'],
                 'initialization':'same selected head checkpoint for every fine-tune trial',
                 'batchnorm':'running statistics frozen', 'parameter_counts':parameter_counts(model),
+                'dropout':cfg.get('dropout', 0.),
+                'train_augmentation':cfg.get('train_augmentation', False),
                 'data_sha256':file_hash(run/'selected_indices.npz'),
                 'execution':'cached_frozen_prefix' if prefix_data else 'full_image_forward'}
         if prefix_data:
@@ -264,7 +344,7 @@ def search_finetune(model, name, cfg, selected, data_dir, run, device,
         else:
             fit_model = model
             train_loader = image_loader(data_dir, 'train', selected['train'], name, batch_size,
-                cfg['seed'], True, cfg['image_size'])
+                cfg['seed'], True, cfg['image_size'], augmentation=cfg.get('train_augmentation', False))
             val_loader = image_loader(data_dir, 'val', selected['val'], name, batch_size,
                 cfg['seed'], image_size=cfg['image_size'])
         trial_folder = folder / (f'finetune_trial_{number:02d}' if 'finetune_candidates' in cfg else 'finetune')
@@ -297,7 +377,7 @@ def run_model(name, cfg, selected, data_dir, run, device):
     seed_all(cfg["seed"])
     folder = run / name
     folder.mkdir(exist_ok=True)
-    model = build_model(name).to(device)
+    model = build_model(name, dropout=cfg.get('dropout', 0.)).to(device)
     configure_trainable(model, name, "head")
     (folder / "architecture.txt").write_text(str(model), encoding="utf-8")
     params = [{"name": n, "shape": str(tuple(p.shape)), "parameters": p.numel(),
@@ -307,7 +387,9 @@ def run_model(name, cfg, selected, data_dir, run, device):
     write_json(folder / "preprocessing.json", {"weights": str(SPECS[name][1]),
                "dataset": "CIFAR10", "channels": "RGB", "image_size": cfg["image_size"],
                "transform": str(image_transform(name, cfg['image_size'])),
-               "augmentation": "none; deterministic cached features and fair stage comparison"})
+               "augmentation": ("fine-tune train only: RandomCrop(32,padding=4,reflect), HorizontalFlip(0.5); head cache/val/test deterministic"
+                                if cfg.get('train_augmentation') else "none; deterministic cached features"),
+               "dropout": cfg.get('dropout', 0.)})
     batch = next(iter(image_loader(data_dir, "train", selected["train"][:16], name, 16, cfg["seed"], image_size=cfg["image_size"])))
     with SummaryWriter(str(folder / "input_preview")) as writer:
         image = batch[0] * torch.tensor(preprocess.std)[None, :, None, None] + torch.tensor(preprocess.mean)[None, :, None, None]
@@ -324,6 +406,7 @@ def run_model(name, cfg, selected, data_dir, run, device):
         head = classifier(model, name)
         head.load_state_dict(initial_head)
         meta = {"model": name, "stage": "head", "lr": lr, "batch_size": bs,
+                "dropout": cfg.get('dropout', 0.),
                 "seed": cfg["seed"], "weights": str(SPECS[name][1]),
                 "dataset": "CIFAR10", "image_size": cfg["image_size"],
                 'optimizer':cfg.get('head_optimizer', 'adamw'),
@@ -351,7 +434,7 @@ def run_model(name, cfg, selected, data_dir, run, device):
                "all_search_training_seconds": sum(t["train_seconds"] for t in trials)})
     # Selection is persisted before ANY test images are loaded for this model.
     write_json(folder / "selection.json", {"criterion": "validation accuracy/loss bands then fit time",
-               "head": winner, "finetune_policy": "last block + classifier, fixed config, best validation epoch"})
+               "head": winner, "finetune_policy": "configured unfreeze depth + classifier; best validation accuracy epoch"})
     fine_result, meta, all_fine_seconds = search_finetune(
         model, name, cfg, selected, data_dir, run, device,
         train_features, val_features, winner['batch_size'])
@@ -365,7 +448,7 @@ def run_model(name, cfg, selected, data_dir, run, device):
         ("head", head_folder, winner, head_meta),
         ("finetune", fine_folder, fine_result, meta)]:
         saved = torch.load(stage_folder / "best.pt", map_location=device, weights_only=True)
-        restored = build_model(name, pretrained=False).to(device)
+        restored = build_model(name, pretrained=False, dropout=saved['metadata'].get('dropout', 0.)).to(device)
         restored.load_state_dict(saved["state_dict"])
         restored.eval()
         loader = image_loader(data_dir, "test", selected["test"], name, bs, cfg["seed"], image_size=cfg["image_size"])
@@ -447,6 +530,20 @@ def run_suite(config_path, work_dir=None, device_override="auto", seed_override=
                'device_name':torch.cuda.get_device_name(device) if device.type=='cuda' else platform.processor(),
                'cuda':torch.version.cuda, 'cudnn':torch.backends.cudnn.version(),
                'timing_policy':'synchronized train/validation passes; fit wall includes logging/checkpoint I/O' })
+    environment = json.loads((run/'environment.json').read_text(encoding='utf-8'))
+    environment['packages'] = {}
+    for package in ['torch', 'torchvision', 'numpy', 'pandas', 'scikit-learn', 'tensorboard', 'pillow']:
+        installed = package_metadata.metadata(package)
+        environment['packages'][package] = {'version': package_metadata.version(package),
+                                            'requires_python': installed.get('Requires-Python')}
+    environment['reproducibility'] = {
+        'seed': cfg['seed'], 'split_seed': cfg.get('split_seed', cfg['seed']),
+        'cudnn_deterministic': torch.backends.cudnn.deterministic,
+        'cudnn_benchmark': torch.backends.cudnn.benchmark,
+        'deterministic_algorithms': torch.are_deterministic_algorithms_enabled(),
+        'cross_device_equivalence': 'not established; verify on target GPU'}
+    write_json(run/'environment_snapshot.json', environment)
+    write_json(work/'outputs/logs/environment_snapshot.json', {**environment, 'run': str(run)})
     source = {str(p.relative_to(ROOT)): file_hash(p) for p in ROOT.rglob("*.py")
               if ".venv" not in p.parts and "outputs" not in p.parts}
     write_json(run / "source_hashes.json", source)
@@ -506,6 +603,7 @@ def main():
             'head_trials_per_model':len(cfg['learning_rates'])*len(cfg['batch_sizes']),
             'fine_trials_per_model':len(candidates), 'fine_epochs_per_trial':cfg['finetune_epochs'],
             'early_stopping':stopping_policy(cfg),
+            'dropout':cfg.get('dropout', 0.), 'fine_train_augmentation':cfg.get('train_augmentation',False),
             'split_seed':cfg.get('split_seed',cfg['seed']), 'training_seed':args.seed if args.seed is not None else cfg['seed'],
             'cache_frozen_prefix':cfg.get('cache_frozen_prefix',False), 'candidates':candidates}, indent=2))
         return

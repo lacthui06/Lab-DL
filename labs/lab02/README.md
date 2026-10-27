@@ -82,11 +82,43 @@ Tải chia phần: `python scripts/download_assets.py --chunked`. Chỉ tải d�
 
 `finalize.py --run <run>` kiểm chứng/xuất report; `--all` còn chờ run, chạy test và hai notebook cho đúng run đó, rồi inference checkpoint được validation chọn. Muốn xem thủ công, dùng `LAB02_RUN`; vị trí source dùng `LAB02_ROOT`.
 
-Resume: `python scripts/resume_interrupted.py outputs/runs/<run_id> --device cuda`. Chỉ hỗ trợ ranh giới kiến trúc; từ chối kiến trúc đang có trial/checkpoint dở dang hoặc thiết bị khác run gốc, không ghi đè kết quả. Không resume giữa epoch/trial.
+Resume toàn suite: `python scripts/resume_interrupted.py outputs/runs/<run_id> --device cuda`. Chỉ hỗ trợ ranh giới kiến trúc; từ chối kiến trúc đang có trial/checkpoint dở dang hoặc thiết bị khác run gốc, không ghi đè kết quả. Khôi phục fit của một trial mới dùng `--trial` như hướng dẫn bên dưới.
+
+### Training và TensorBoard live
+
+`SummaryWriter` ghi event files ngay trong training, dưới `<model>/<trial>/tensorboard/`; `input_preview/` lưu ảnh đầu vào và model graph. Trong terminal thứ hai, cùng môi trường và thư mục `labs/lab02`, chạy:
+
+```bash
+tensorboard --logdir outputs/runs --port 6006
+```
+
+Mở [dashboard local](http://localhost:6006) khi server đã khởi động. Có thể mở trong lúc train, không cần chờ `finalize.py`. Để tập trung một run, đổi `--logdir` thành `outputs/runs/<run_id>`. Nếu train trên máy khác, cần truy cập server trên máy đó hoặc mang event files về local. Chạy cell hiển thị CSV/PNG không tạo events và không mở server.
+
+Run lịch sử trong checkout thiếu checkpoint và event files gốc. `tensorboard_server_verification.json` chỉ là bằng chứng lần kiểm chứng cũ, không chứng nhận server hiện đang chạy. Không tái tạo events giả từ metric để thay bằng chứng training thật.
+
+### Khôi phục một trial mới tại cuối epoch
+
+Run mới lưu `best.pt` cho inference và `last.pt` cho resume. `last.pt` được thay atomically sau mỗi epoch hoàn tất, chứa model, optimizer, scheduler, best checkpoint, early-stopping counters, history, RNG Python/NumPy/Torch/CUDA và generator của hai DataLoader. Epoch đang chạy dở sẽ được chạy lại; chưa hỗ trợ khôi phục giữa batch. Không áp dụng cho checkpoint lịch sử thiếu schema mới.
+
+```bash
+python scripts/resume_interrupted.py outputs/runs/<run_id> --trial resnet18/head_trial_00 --device cuda
+```
+
+Lệnh này tiếp tục **fit của một trial**, không tự tiếp tục chọn trial, đánh giá test hay hoàn tất suite/report. Run vẫn giữ trạng thái chưa hoàn tất; không gọi `finalize.py --all` như thể đã chạy hết pipeline. Lệnh resume không có `--trial` vẫn chỉ dùng tại ranh giới kiến trúc. Không khẳng định hỗ trợ tự động resume toàn bộ suite giữa trial.
+
+Giữ nguyên source, config, data indices, cache và môi trường. CLI kiểm tra source hash, indices và metadata trước khi resume; không đổi LR/ngân sách/cache policy. Thời gian resume cộng các đoạn fit, loại thời gian chờ; peak memory chỉ thuộc đoạn process hiện tại. Không dùng timing resume để xếp hạng benchmark mới. Event writer purge các bước chưa commit để không lặp đường cong.
+
+### Control trước tuning mở rộng — đề xuất, chưa chạy
+
+Giữ nguyên `full.json`/`tuned.json`; chưa tự giảm batch hoặc epoch. Control đề xuất: cả hai model, cùng split seed 42, ảnh 224×224, AdamW, head rồi mở block cuối, cùng chính sách cache và stopping. Chọn batch khả thi sau GPU sanity và đo VRAM; chưa chốt 64 hay 128. Chưa chạy grid 6 head + 13 fine trials/model trước khi biết GPU và ngân sách. Augmentation là thí nghiệm riêng: cache đặc trưng cố định không tạo augmentation ngẫu nhiên mỗi epoch.
+
+Trước full training: kiểm tra môi trường GPU, shape/gradient và one-batch overfit; đọc validation để quyết định LR/batch/depth. Test chỉ dùng sau lựa chọn validation. Snapshot mới có phiên bản và `Requires-Python` của các package chính tại `<run>/environment_snapshot.json`; `outputs/logs/environment_snapshot.json` trỏ môi trường run mới nhất. Đây không phải xác nhận toàn bộ pins lịch sử cài được trên Linux. Lưu trữ cả run (events, `best.pt`, `last.pt`, config, indices, cache nếu cần resume, environment, manifest) ở nơi quản lý artifact; không commit weights nặng vào Git.
 
 Python của run lịch sử: CPython 3.13.3; môi trường thực tế lưu trong `environment.json` của run. Ghim phiên bản không bảo đảm cài được trên mọi OS; chưa chạy lại full training trong đợt chỉnh trình bày này.
 
 ## Results Summary
+
+Notebook modeling trình bày kết quả theo thứ tự: metric tổng (loss, accuracy, macro precision, macro recall/TPR, macro F1) → heatmap từng lớp (Precision, Recall/TPR, F1, FPR) → confusion matrix/ảnh sai → ROC/PR fine-tune đã lưu → chi phí. Recall và TPR dùng chung nhãn; bỏ biểu đồ cột recall/FPR lặp với heatmap. ROC dùng trục FPR–TPR qua nhiều ngưỡng, khác metric argmax; PR dùng recall–precision. Legend ROC là AUC, legend PR là AP. Bảng macro curve score lấy trung bình score từng lớp từ CSV đã lưu, không tạo đường cong hoặc inference mới. LR/batch vẫn là biểu đồ đường theo yêu cầu.
 
 | Fine-tune | Test accuracy | Test loss | Pipeline train (s) |
 |---|---:|---:|---:|

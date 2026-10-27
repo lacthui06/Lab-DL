@@ -112,6 +112,10 @@ class NotebookReviewTests(unittest.TestCase):
             audit = audit_snapshot(snapshot, hashes)
             self.assertEqual(audit['byte_exact_files'], 0)
             self.assertEqual(audit['newline_only_files'], ['config.py'])
+            (snapshot/'src').mkdir()
+            (snapshot/'src/config.py').write_bytes(original)
+            windows = audit_snapshot(snapshot, {'src\\config.py': hashes['config.py']})
+            self.assertEqual(windows['byte_exact_files'], 1)
             path.write_bytes(b'learning_rate = 0.1\n')
             with self.assertRaises(ValueError):
                 audit_snapshot(snapshot, hashes)

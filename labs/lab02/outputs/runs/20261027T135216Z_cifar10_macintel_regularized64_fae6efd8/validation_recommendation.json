@@ -1,0 +1,13 @@
+{
+  "model": "resnet18",
+  "stage": "finetune",
+  "best_val_accuracy": 0.8068,
+  "best_val_loss": 0.5573202421188355,
+  "train_seconds": 3407.8440729129943,
+  "execution": "full_image_forward",
+  "validation_accuracy": 0.8068,
+  "time_comparable": true,
+  "selection_policy": {},
+  "criterion": "validation accuracy/loss, selected-recipe cost only with matching execution policies",
+  "time_scope": "feature extraction + selected head + selected fine-tune; full search cost reported separately"
+}

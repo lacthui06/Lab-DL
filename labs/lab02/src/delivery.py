@@ -46,7 +46,8 @@ def audit_snapshot(snapshot: Path, hashes: dict[str, str]) -> dict:
     exact = 0
     newline_only = []
     for relative, expected in hashes.items():
-        content = (snapshot / relative).read_bytes()
+        # Windows manifests use backslashes; preserve the original keys and bytes.
+        content = (snapshot / relative.replace('\\', '/')).read_bytes()
         if hashlib.sha256(content).hexdigest() == expected:
             exact += 1
             continue

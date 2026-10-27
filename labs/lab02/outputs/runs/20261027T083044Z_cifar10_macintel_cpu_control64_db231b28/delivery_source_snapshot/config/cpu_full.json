@@ -1,0 +1,30 @@
+{
+  "dataset": "CIFAR10",
+  "seed": 42,
+  "threads": 4,
+  "train_limit": 0,
+  "val_limit": 0,
+  "test_limit": 0,
+  "models": [
+    "resnet18",
+    "densenet121"
+  ],
+  "learning_rates": [
+    0.001,
+    0.01
+  ],
+  "batch_sizes": [
+    64,
+    128
+  ],
+  "head_epochs": 5,
+  "finetune_epochs": 2,
+  "finetune_backbone_lr": 1e-05,
+  "finetune_head_lr": 0.0001,
+  "weight_decay": 0.0001,
+  "feature_batch_size": 64,
+  "image_size": 64,
+  "cache_frozen_prefix": true,
+  "profile": "cifar10_cpu_full64",
+  "notes": "Historical profile reference only: recorded run used batch 32/64, head 5 and fine 2 epochs. Current batch grid is 64/128; do not infer new metrics. Use GPU full/tuned for new training."
+}

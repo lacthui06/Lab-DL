@@ -1,0 +1,14 @@
+{
+  "resnet18-f37072fd.pth": {
+    "sha256": "f37072fd47e89c5e827621c5baffa7500819f7896bbacec160b1a16c560e07ec",
+    "official_filename_prefix_verified": true
+  },
+  "densenet121-a639ec97.pth": {
+    "sha256": "a639ec97d7c33b07ae66f0b5fb7d0192f95a3b11b7576c66c0126c2a727c4395",
+    "official_filename_prefix_verified": true
+  },
+  "cifar-10-python.tar.gz": {
+    "md5": "c58f30108f718f92721af3b95e74349a",
+    "official_checksum_verified": true
+  }
+}

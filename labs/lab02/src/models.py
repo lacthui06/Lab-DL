@@ -9,13 +9,21 @@ SPECS = {
 }
 
 
-def build_model(name, pretrained=True):
+def build_model(name, pretrained=True, dropout=0.):
+    if not isinstance(dropout, (int, float)) or not 0 <= dropout < 1:
+        raise ValueError('dropout must be in [0, 1)')
     builder, weights = SPECS[name]
     model = builder(weights=weights if pretrained else None)
     if name == "resnet18":
         model.fc = nn.Linear(model.fc.in_features, 10)
     else:
         model.classifier = nn.Linear(model.classifier.in_features, 10)
+    # Preserve legacy checkpoint keys when dropout is disabled.
+    if dropout:
+        if name == 'resnet18':
+            model.fc = nn.Sequential(nn.Dropout(dropout), model.fc)
+        else:
+            model.classifier = nn.Sequential(nn.Dropout(dropout), model.classifier)
     return model
 
 
@@ -34,8 +42,11 @@ def features(model, name, images):
 
 def trainable_blocks(name, depth='last_block'):
     """Include DenseNet transition3 when opening denseblock3 and later layers."""
-    if name not in SPECS or depth not in ('last_block', 'last_two_blocks'):
+    if name not in SPECS or depth not in ('last_block', 'last_two_blocks', 'last_units'):
         raise ValueError('Unsupported model or unfreeze depth')
+    if depth == 'last_units':
+        return (['layer4.1'] if name == 'resnet18' else
+                [f'features.denseblock4.denselayer{i}' for i in range(13, 17)] + ['features.norm5'])
     if name == 'resnet18':
         return ['layer4'] if depth == 'last_block' else ['layer3', 'layer4']
     return (['features.denseblock4', 'features.norm5'] if depth == 'last_block' else
@@ -94,3 +105,6 @@ class CachedTail(nn.Module):
 
     def state_dict(self, *args, **kwargs):
         return self.model.state_dict(*args, **kwargs)
+
+    def load_state_dict(self, state_dict, strict=True):
+        return self.model.load_state_dict(state_dict, strict=strict)

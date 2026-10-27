@@ -49,10 +49,17 @@ def prepare_indices(data_dir, run_dir, cfg, split_dir=None):
 
 
 class IndexedImages(Dataset):
-    def __init__(self, data_dir, split, indices, name, image_size=224):
+    def __init__(self, data_dir, split, indices, name, image_size=224, augmentation=False):
+        if augmentation and split != 'train':
+            raise ValueError('Augmentation is only allowed for train')
         self.raw = datasets.CIFAR10(str(data_dir), train=split != "test")
         self.indices = np.asarray(indices)
         self.transform = image_transform(name, image_size)
+        if augmentation:
+            # Mild translations at original CIFAR resolution, then standard preprocessing.
+            self.transform = transforms.Compose([
+                transforms.RandomCrop(32, padding=4, padding_mode='reflect'),
+                transforms.RandomHorizontalFlip(p=.5), self.transform])
 
     def __len__(self):
         return len(self.indices)
@@ -63,10 +70,11 @@ class IndexedImages(Dataset):
         return self.transform(image), label, original
 
 
-def image_loader(data_dir, split, indices, name, batch, seed, shuffle=False, image_size=224):
+def image_loader(data_dir, split, indices, name, batch, seed, shuffle=False, image_size=224,
+                 augmentation=False):
     import torch
     generator = torch.Generator().manual_seed(seed)
-    return DataLoader(IndexedImages(data_dir, split, indices, name, image_size), batch_size=batch,
+    return DataLoader(IndexedImages(data_dir, split, indices, name, image_size, augmentation), batch_size=batch,
                       shuffle=shuffle, num_workers=0, generator=generator,
                       pin_memory=torch.cuda.is_available())
 

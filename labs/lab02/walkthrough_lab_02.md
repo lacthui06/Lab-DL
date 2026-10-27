@@ -289,3 +289,59 @@ Kiểm chứng đợt cleanup: **50/50 test đạt**, không skip; 23 file Pytho
 **Giải pháp chất lượng:** trước tiên chạy control đủ ngân sách trên cùng GPU/resolution/cache policy. Run cũ fine-tune tăng accuracy từ 76,09% lên 81,49% (ResNet) và 78,21% lên 81,53% (DenseNet), nhưng chỉ 2 epoch nên chưa đánh giá hội tụ. Theo dõi val loss, best epoch và train–val gap; sau đó đánh giá LR, optimizer và depth. Nếu vẫn underfit, augmentation/224×224 là thí nghiệm tiếp theo; nếu val loss tăng khi train loss giảm, tăng regularization/giảm depth hoặc dừng theo validation. Chưa có benchmark mới nên không khẳng định đã cải thiện accuracy.
 
 Kiểm tra bản sửa batch/epoch/visualization: [training_revision_validation.json](outputs/review/training_revision_validation.json), [JUnit](outputs/review/training_revision_tests.xml): **55 test đạt**, lint đạt; notebook modeling chạy lại đủ cell, không output trống hoặc lỗi. Không huấn luyện benchmark mới; artifact gốc trong outputs/runs giữ nguyên.
+
+### 27/10/2026 — Chuẩn bị training, resume và trình bày
+
+Phạm vi được duyệt: log/checkpoint, kiểm chứng môi trường, visual ưu tiên và kết luận. Không chạy full training, không thay `full.json`/`tuned.json`, không thay metric, snapshot hoặc manifest trong run lịch sử.
+
+**Monitoring:** writer tiếp tục đặt trong `fit`, mỗi trial có event directory riêng. Notebook đưa scalar monitoring cạnh learning curves, tách head/fine-tune và dùng accuracy %. Bảng artifact đếm event/checkpoint thực có, không coi record HTTP 200 lịch sử là server đang chạy. Hai terminal và lệnh mở dashboard được giải thích trong README.
+
+**Resume mới:** `best.pt` phục vụ inference; `last.pt` commit atomically sau epoch hoàn tất. State gồm weights, optimizer, scheduler, best checkpoint, history, early stopping, RNG và DataLoader generators. `fit(..., resume=True)` phục hồi epoch kế tiếp; epoch đang dở chạy lại. CLI `resume_interrupted.py --trial <model>/<trial>` chỉ tiếp tục fit một trial, không tự nối chọn model/test/report toàn suite. Resume toàn suite vẫn giới hạn ranh giới kiến trúc; không quảng bá thành resume giữa trial toàn pipeline. CLI từ chối khác source hash, indices, cấu hình hoặc môi trường đã ghi. Checkpoint cũ không có schema mới không được chuyển đổi thành bằng chứng resume.
+
+Đánh đổi: `last.pt` chứa thêm optimizer và bản weights tốt nhất nên tăng dung lượng/IO; bản weights tốt nhất giữ trên CPU để không giữ thêm một bản trên VRAM. Timing resume không dùng xếp hạng benchmark, peak memory chỉ thuộc đoạn process hiện tại. Chưa xác minh resume CUDA hoặc tương đương giữa thiết bị. Chưa hỗ trợ concurrent writers cho cùng trial.
+
+**Môi trường:** run mới ghi `environment_snapshot.json` cùng run và `outputs/logs/environment_snapshot.json` cho run mới nhất; có package version, `Requires-Python` của các dependency chính, seed và deterministic settings. Không suy ra toàn bộ pins Windows tương thích Linux chỉ từ snapshot này. Local thực kiểm Python 3.12.7, torch 2.2.2, torchvision 0.17.2, CPU; `requirements.txt` lịch sử giữ nguyên. TensorBoard 2.21.0 và Ruff 0.17.3 được cài thêm vào `.venv` phục vụ validation.
+
+**Visual:** tham số có count và % trainable; không gọi thanh tham số là sơ đồ tầng. LR/batch dùng heatmap cấu hình đã đo; không nội suy LR. Quality tách khỏi timing, có Macro F1. FPR dùng màu đỏ và chú thích lower-is-better, metric còn lại dùng xanh và higher-is-better. Confusion notebook vẽ từ counts gốc, ghi count + % theo hàng và bảng ba lỗi lớn nhất/model. Hình chọn mẫu vẫn không đại diện accuracy. Các ảnh `outputs/review/` được tái tạo khi thực thi notebook; `outputs/runs/` giữ nguyên.
+
+**Kết luận:** fine-tune cải thiện trong điều kiện run cũ nhưng head/fine có ngân sách khác nhau. Hai epoch chưa xác lập hội tụ; chênh test 0,04 điểm phần trăm với một seed chưa xác lập ưu thế kiến trúc. Khuyến nghị vẫn dựa validation. Không suy ra nguyên nhân ảnh tối/nền từ confusion; cần thí nghiệm riêng. Control GPU cùng chính sách là bước tiếp theo, batch/ngân sách chưa chốt vì chưa có thông tin GPU. Augmentation phải xét lại cache cố định trước khi bổ sung.
+
+**Lỗi portability phát hiện trong validation:** hash manifest lịch sử có đường dẫn Windows `scripts\\...`; hàm audit chuẩn hóa dấu phân cách khi đọc trên macOS, giữ nguyên key/hash/bytes. Test bao phủ cả đường dẫn Windows và phát hiện sửa nội dung.
+
+Tham chiếu kỹ thuật: [PyTorch checkpoint](https://docs.pytorch.org/tutorials/beginner/saving_loading_models), [SummaryWriter và purge_step](https://docs.pytorch.org/docs/stable/tensorboard.html). Bằng chứng kiểm thử của lượt này đặt trong `.agents/lab02-pretrain-review/`; không dùng kết quả 55 test lịch sử để thay kết quả local mới.
+
+**Kiểm chứng local lượt 27/10:** 55 test đạt, 2 skip do thiếu CIFAR-10 raw (contract raw và finalizer integration), thời gian 71,37 giây. Ruff F checks, `pip check`, `git diff --check` đạt. Test ngắt/resume mô hình nhỏ có dropout/shuffle/AdamW/cosine cho weights khớp chính xác lần chạy liền mạch, event steps không lặp. CLI head-trial resume được kiểm thử, không tự đánh dấu suite completed. Notebook modeling thực thi 11/11 code cell, 11 PNG inline, không lỗi/output trống, tối đa 7 dòng/cell; EDA giữ nguyên. Hình mới đã được xem trực tiếp. Chưa kiểm chứng CUDA, full training, raw-data finalizer hoặc mở lại TensorBoard live của run cũ thiếu events.
+
+Điều chỉnh theo yêu cầu tiếp theo: khôi phục LR/batch về biểu đồ đường như trước (trục X log LR, trục Y best validation accuracy, mỗi batch một đường). Các điểm là trial đã đo; đoạn nối chỉ giúp theo dõi cùng batch, không phải kết quả tại LR trung gian. Giữ bảng cấu hình được chọn và dữ liệu gốc. Các nhận xét heatmap LR ở mục trên mô tả phiên bản trước điều chỉnh này.
+
+### Bố cục đánh giá đã xác nhận
+
+Notebook sắp theo: metric tổng → heatmap từng lớp → confusion matrix và ảnh sai → ROC/PR → chi phí → artifact/save-load/kết luận. Phần tổng thêm macro precision, macro recall/TPR bên cạnh loss/accuracy/macro F1; bảng và hình phần trăm ghi đơn vị rõ. Recall/TPR dùng chung, không tạo hai metric trùng. Phần từng lớp chỉ còn heatmap Precision → Recall/TPR → F1 → FPR; không hiển thị biểu đồ cột recall/FPR lặp. File review `class_rates.png` cũ giữ lại nhưng không còn được tạo hoặc trình bày bởi notebook.
+
+ROC/PR hiển thị riêng từng model ở chiều rộng đọc được, dùng nguyên PNG/CSV fine-tune lịch sử. ROC: X=FPR, Y=TPR qua ngưỡng score one-vs-rest; PR: X=recall, Y=precision. Metric argmax không phải ngưỡng 0,5. Legend ROC ghi AUC; PR ghi AP, không phải F1. Bảng macro score là trung bình số đo theo lớp, không suy diễn đường macro từ các số tổng. Không có prediction mới hoặc thay đổi source snapshot, metric và artifact của run gốc. Ghi chú notebook giải thích head/fine-tune và loss không phải tỷ lệ ảnh sai; so thời gian vẫn chịu giới hạn cache policy.
+
+Kiểm chứng thay đổi bố cục: notebook modeling thực thi 13/13 code cell, 12 PNG inline, không lỗi/output trống, tối đa 7 dòng/cell. Kiểm thử notebook-review/cleanup đạt 24 test, 1 skip do thiếu CIFAR-10 raw (34,23 giây); Ruff F checks và `git diff --check` đạt. Đã xem hình tổng, heatmap và ảnh ROC/PR nguồn. Không chạy lại full training suite hoặc benchmark cho thay đổi trình bày này.
+
+### Calibration CPU trên Mac Intel — ngoại lệ được người dùng xác nhận
+
+Người dùng xác nhận train trên Mac Intel hiện tại, ngân sách 3 tiếng, cho phép ngoại lệ CPU riêng Lab02 và đo thử trước khi duyệt cấu hình đầy đủ. Dữ liệu CIFAR-10 và weights ImageNet chính thức đã tải, xác thực bằng downloader sẵn có; dùng CA bundle certifi để khắc phục chứng chỉ Python, không tắt kiểm tra HTTPS. Chuyển sang tải chia phần do luồng đơn khoảng 45–50 KB/s.
+
+Phép đo riêng dùng 640 train/160 validation, split seed 42, RGB 64×64, bốn CPU thread, thử fit batch 64 và 128; feature extraction luôn batch 64. Không dùng test và không cập nhật selected_run. Hai job calibration hoàn tất lần lượt 46,84 và 52,08 giây. Head-only sanity trên 8 ảnh thật qua cho cả hai model (loss cuối ResNet18 0,001062, DenseNet121 0,006667; accuracy 100% trên batch đó). Không dùng sanity accuracy như test accuracy. Hai test overfit trên kiến trúc thật/ảnh tổng hợp cũng qua; fine-tune dữ liệu thật kiểm tra gradient hữu hạn khác 0 và tính tương đương prefix cache trước cập nhật.
+
+| Model | Fit batch | Extraction train+val (s) | Head epoch (s) | Cached fine epoch (s) | Full-image fine epoch (s) |
+|---|---:|---:|---:|---:|---:|
+| ResNet18 | 64 | 2,954 | 0,046 | 3,509 | 7,646 |
+| ResNet18 | 128 | 4,176 | 0,080 | 4,823 | 5,810 |
+| DenseNet121 | 64 | 7,953 | 0,043 | 2,179 | 9,508 |
+| DenseNet121 | 128 | 8,217 | 0,039 | 3,558 | 10,010 |
+
+Đây là fit một epoch trên tập nhỏ, không phải benchmark full. Batch 128 không mặc định nhanh hơn, đặc biệt với cached fine-tune. Control **đề xuất, chưa chạy/chưa thay config active** nằm trong `.agents/lab02-cpu-profile/control_proposed.json`: cả hai model, full 45000/5000/10000, 64×64, head LR {0,001;0,01} × batch {64;128}, 10 epoch/trial, fine-tune block cuối một candidate 10 epoch cố định, cùng cache/BN policy, không augmentation/scheduler mới. Không khẳng định hội tụ sau 10 epoch.
+
+Ước lượng dùng thời gian train và validation riêng, scale theo số mẫu; head cộng cả bốn trial, fine lấy batch chậm hơn, test dự kiến hai lượt/model theo throughput validation. Tổng điểm ước lượng 91,08 phút; nhân dự phòng 1,5 là 136,61 phút, chưa gồm tải/chuẩn bị/xuất notebook và ảnh hưởng nhiệt/cache lớn. Không bảo đảm hoàn thành theo ước lượng. Cần người dùng duyệt control cụ thể và áp giới hạn wall-clock còn lại trước khi chạy thật; file config không tự áp timeout.
+
+Log, checkpoint đo thử và script được giữ riêng trong `.agents/lab02-cpu-profile/`; artifact lịch sử trong outputs/runs và registry không đổi. Ruff và kiểm tra diff đạt; không tái dùng thông báo skip thiếu raw từ lượt trước để mô tả trạng thái dữ liệu hiện tại (raw nay đã tải).
+# Cập nhật cấu hình regularization ngày 27/10/2026 — chưa train
+
+Người dùng chọn tăng freeze: ResNet18 mở `layer4.1` + classifier (4.725.770 tham số), DenseNet121 mở 4 dense layer cuối + norm5 + classifier (651.658 tham số). Thêm dropout 0.2 trước classifier Linear; augmentation chỉ cho fine-tune train bằng crop 32/padding reflect 4 và horizontal flip 0.5, sau đó preprocessing cũ. Head search vẫn dùng features cache trước dropout; fine-tune dùng ảnh trực tiếp, validation/test không augmentation.
+
+Cấu hình thực thi nằm tại `.agents/lab02-val-diagnostics/regularized.json`. Giữ nguyên LR, weight decay 1e-4, head grid, 10/10 epoch, thống kê BatchNorm cố định và best checkpoint theo validation accuracy. Chưa thêm early stopping hoặc thay ngưỡng chọn model. Không benchmark/full train bởi agent; người dùng tự chạy, chưa có số liệu chứng minh cải thiện hoặc cam kết thời gian. Khi so với control cần gọi đây là thay đổi kết hợp, không quy kết tác dụng riêng dropout/augmentation/freeze.

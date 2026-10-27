@@ -1,0 +1,20 @@
+{
+  "status": "passed",
+  "metric_recomputation": true,
+  "confusion_totals": true,
+  "validation_selection": true,
+  "roundtrips": 4,
+  "tensorboard_scalar_runs": [
+    "densenet121/finetune/tensorboard",
+    "densenet121/head_trial_00/tensorboard",
+    "densenet121/head_trial_01/tensorboard",
+    "densenet121/head_trial_02/tensorboard",
+    "densenet121/head_trial_03/tensorboard",
+    "resnet18/finetune/tensorboard",
+    "resnet18/head_trial_00/tensorboard",
+    "resnet18/head_trial_01/tensorboard",
+    "resnet18/head_trial_02/tensorboard",
+    "resnet18/head_trial_03/tensorboard"
+  ],
+  "tests": "See pytest_validation.log for actual test execution"
+}

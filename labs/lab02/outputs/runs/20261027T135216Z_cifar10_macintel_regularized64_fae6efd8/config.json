@@ -1,0 +1,38 @@
+{
+  "dataset": "CIFAR10",
+  "seed": 42,
+  "split_seed": 42,
+  "threads": 4,
+  "train_limit": 0,
+  "val_limit": 0,
+  "test_limit": 0,
+  "models": [
+    "resnet18",
+    "densenet121"
+  ],
+  "learning_rates": [
+    0.001,
+    0.01
+  ],
+  "batch_sizes": [
+    64,
+    128
+  ],
+  "head_epochs": 10,
+  "finetune_epochs": 10,
+  "finetune_backbone_lr": 1e-05,
+  "finetune_head_lr": 0.0001,
+  "weight_decay": 0.0001,
+  "feature_batch_size": 64,
+  "image_size": 64,
+  "head_optimizer": "adamw",
+  "optimizer": "adamw",
+  "unfreeze": "last_units",
+  "dropout": 0.2,
+  "train_augmentation": true,
+  "scheduler": "none",
+  "cache_frozen_prefix": false,
+  "require_cuda": false,
+  "profile": "cifar10_macintel_regularized64",
+  "notes": "User-run only. Fresh image augmentation during fine-tune train; cached deterministic head search with dropout. Smaller unfrozen tail, fixed BatchNorm statistics. Legacy LR/grid/epochs/weight decay and accuracy checkpoint selection preserved. No runtime benchmark or time guarantee."
+}

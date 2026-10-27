@@ -1,0 +1,6 @@
+{
+  "passed": true,
+  "samples": 8,
+  "max_logit_error": 0.0,
+  "policy": "frozen deterministic prefix; last block only"
+}

@@ -1,7 +1,7 @@
 """Validated fine-tuning candidates and validation-only quality/cost selection."""
 import math
 
-DEPTHS = ('last_block', 'last_two_blocks')
+DEPTHS = ('last_block', 'last_two_blocks', 'last_units')
 OPTIMIZERS = ('adamw', 'sgd')
 
 
@@ -23,6 +23,13 @@ def stopping_policy(cfg: dict) -> dict:
 def fine_candidates(cfg: dict) -> list[dict]:
     """Keep legacy configs runnable; explicit candidates replace the fixed fine stage."""
     stopping_policy(cfg)
+    dropout = cfg.get('dropout', 0.)
+    if not isinstance(dropout, (int, float)) or not math.isfinite(dropout) or not 0 <= dropout < 1:
+        raise ValueError('dropout must be finite in [0, 1)')
+    if not isinstance(cfg.get('train_augmentation', False), bool):
+        raise ValueError('train_augmentation must be boolean')
+    if cfg.get('train_augmentation') and cfg.get('cache_frozen_prefix'):
+        raise ValueError('Fresh image augmentation requires cache_frozen_prefix=false')
     candidates = cfg.get('finetune_candidates')
     if candidates is None:
         candidates = [dict(id='default', optimizer=cfg.get('optimizer', 'adamw'),
