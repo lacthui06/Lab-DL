@@ -1,0 +1,10 @@
+{
+  "mode": "view",
+  "kernel": "lab03",
+  "notebooks": [
+    "01_eda_preprocessing_feature_engineering.ipynb",
+    "02_modeling.ipynb"
+  ],
+  "purpose": "persist all executed notebook outputs; no GPU training",
+  "skipped_gpu_templates": []
+}

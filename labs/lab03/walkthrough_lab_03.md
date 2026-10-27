@@ -4,6 +4,8 @@
 
 **Kết quả chính hiện hành:** frozen DistilBERT `20261027T095655Z_frozen_trial_d8d09116`, đủ 10 epoch, chọn epoch 9 theo validation loss, threshold validation 0.45; test Accuracy 82.83%, Macro-F1 82.82%, loss 0.412560. Phần kết quả cuối và quyết định nghiệm thu ở **Mục 3.19–3.21**. Các phần ba epoch/study full fine-tuning giữ như lịch sử có nguồn, không coi các số đó là metric frozen hiện tại.
 
+**Bố cục notebook hiện hành:** chỉ có `01_eda_preprocessing_feature_engineering.ipynb` và `02_modeling.ipynb`. Những tên/số notebook cũ trong diễn tiến là lịch sử trước khi gom, không phải file cần chạy thêm.
+
 **Cách đọc báo cáo:** Mục 1 là đặc tả/lý thuyết; Mục 2 ghi pipeline và vòng lặp; Mục 3 giữ các kết quả theo thứ tự thực nghiệm. Notebook tích hợp và Exercise 2 hiện trực tiếp bằng chứng frozen cuối. Không chọn bản chính bằng cách lấy maximum test accuracy; mục tiêu sau cùng là giảm dấu hiệu overfitting với chất lượng dự đoán được báo cáo đầy đủ.
 
 
@@ -37,7 +39,7 @@ Sau khi chọn checkpoint, workflow dự đoán toàn bộ validation và chọn
 | P06 — Model/loss | Logits hai lớp và cross-entropy được tạo ở đâu? | `src/models/classifier.py`, `src/training/metrics.py` | Model configuration, tensor contract |
 | P07 — Training | Có học được và checkpoint được chọn thế nào? | `src/training/trainer.py`, `src/workflow.py` | Train/validation history, best checkpoint |
 | P08 — Binary threshold | Ngưỡng được chọn từ split nào? | `src/training/thresholds.py`, `src/decision.py`, `scripts/select_threshold.py` | 1.066 validation scores, sweep 19 điểm, policy threshold 0,8 |
-| P09 — Evaluation | Kết quả test có nhất quán không? | `src/evidence.py`, `src/analysis.py`, `scripts/audit_outputs.py` | Metrics recomputed, confusion matrix, ROC/PR và calibration |
+| P09 — Evaluation | Kết quả test có nhất quán không? | `src/evidence.py`, `src/analysis.py`, `scripts/finalize_results.py` | Metrics recomputed, confusion matrix, ROC/PR và calibration |
 | P10 — Error analysis | Mô hình sai ở những dạng câu nào? | `src/workflow.py`, notebook, walkthrough | Sample predictions và hình đúng/sai |
 | P11 — Reuse | Có thể xem lại và tải mô hình ra sao? | `scripts/eval.py`, `scripts/infer.py`, registry | View outputs, save/load evidence |
 
@@ -690,7 +692,7 @@ Các artifact mới nằm trong run riêng với `analysis_source.json`, config,
 Analysis run hiện hành là `20261026T161957Z_analysis_b336c410`, lấy nguồn từ `20261026T155822Z_finetuning_2c2f0401`. `analysis_summary.json` giữ AUC/AP/Brier/ECE và NLL tái tính; `roc_pr_coordinates.json` giữ các tọa độ để vẽ lại; `reliability_bins.json` giữ dữ liệu từng bin. `tables.json` giữ các bảng phase/config/environment/history/per-class; PNG tương ứng được notebook hiển thị trực tiếp.
 Thư mục `threshold_test_diagnostic/` có curve JSON/PNG và metadata `selection_performed=false`, `selected_threshold=null`. Các records này giúp phân biệt output nhìn thấy với metadata chứng minh output được tính ở đâu và dùng cho mục đích nào.
 
-Việc thực thi notebook cũng có artifact riêng: run `20261026T163051Z_notebook_render_03fd373a` lưu bản executed của cả ba notebook và `execution_summary.json`. `scripts/render_notebooks.py --kernel lab03` thực hiện render view và lưu output dưới `outputs/`; không chỉ để hình tồn tại trong kernel tương tác. `scripts/analyze_outputs.py` cung cấp CLI tạo các run phân tích trực quan từ artifacts nguồn.
+Ở bố cục cũ, run `20261026T163051Z_notebook_render_03fd373a` từng lưu thêm bản executed của cả ba notebook. Snapshot trùng này đã được lược khỏi cây hiện hành và còn trong lịch sử Git; renderer mới chỉ lưu summary/hash của hai notebook đã có output. `scripts/render_notebooks.py --kernel lab03` thực hiện render view và lưu output dưới `outputs/`; không chỉ để hình tồn tại trong kernel tương tác. `scripts/finalize_results.py` cung cấp CLI tạo các run phân tích trực quan từ artifacts nguồn.
 Bản source notebook trong `notebooks/` giữ output để đọc trực tiếp trên GitHub, còn bản render trong outputs giữ gói bằng chứng của lần thực thi.
 
 ### 2.19. Kiểm thử phần mềm và audit kết quả
@@ -722,7 +724,7 @@ Một lần inference bằng pretrained SST-2 có thể trở thành active infe
 
 ### 2.21. Vận hành study 10 epoch trên Kaggle
 
-Điểm vào khuyến nghị là `notebooks/04_kaggle_10epoch_study.ipynb`.
+Điểm vào khuyến nghị là `notebooks/02_modeling.ipynb`.
 Notebook có roadmap/module/artifact table ở đầu, sau đó chia pha theo thứ tự thực thi.
 Bật GPU và Internet trước khi cài môi trường để phát hiện thiếu accelerator sớm.
 Nếu session restart, chạy lại setup; biến trong kernel cũ không tồn tại sau restart.
@@ -1101,9 +1103,9 @@ Chạy audit để tính lại metrics từ predictions và kiểm tra toàn v�
 
 ```bash
 .venv-lab03/bin/python -m pytest labs/lab03/tests -q -c labs/lab03/pytest.ini
-.venv-lab03/bin/python labs/lab03/scripts/audit_outputs.py
+.venv-lab03/bin/python labs/lab03/scripts/finalize_results.py
 .venv-lab03/bin/python labs/lab03/scripts/run_exercise1.py
-CUDA_VISIBLE_DEVICES=0 TOKENIZERS_PARALLELISM=false .venv-lab03/bin/python labs/lab03/scripts/train.py
+CUDA_VISIBLE_DEVICES=0 TOKENIZERS_PARALLELISM=false .venv-lab03/bin/python labs/lab03/scripts/run_frozen_trial.py --device cuda
 ```
 
 Hai lệnh đầu có thể chạy trên CPU với artifacts/dependencies phù hợp. Hai lệnh sau thực hiện model/data workflow thật; full fine-tuning mặc định cần CUDA và Internet nếu cache chưa có. Không coi một stdout có PID hay progress bar là đủ; cần kiểm tra status, metrics và output artifacts.
@@ -1619,3 +1621,16 @@ Review ZIP frozen không có checkpoint. Raw reload_check ghi weights_exact_matc
 Policy trong ZIP frozen đã đo giữ nguyên bản gốc và chưa có checkpoint_identity mà CLI inference yêu cầu. Không sửa file này trong raw run. `scripts/prepare_frozen_checkpoint.py --model-path <thư-mục-best_model-đã-giải-nén>` kiểm tra SHA256 weights đúng frozen_selection, tạo policy có identity và training_config.json trong bản checkpoint lưu riêng. Sau đó gọi `scripts/infer.py --model-path <thư-mục-best_model-đã-giải-nén> --text <câu-mới>`; CLI áp dụng threshold 0.45 đã chọn, không fit lại hoặc quét test.
 
 Utility từ chối checkpoint khác weights hoặc vị trí nằm trong raw evidence. Tests dùng weights giả chỉ để kiểm tra ràng buộc hash và bảo toàn nguồn; không mô tả đó là load model thật. Lượt training tương lai ghi metadata đầy đủ sẵn trong ZIP. Saved historical predictions/weights không bị thay đổi vì sửa tiện ích inference.
+
+
+### 3.22. Tinh gọn theo hai giai đoạn dữ liệu và modeling
+
+Notebook 01 gom EDA, preprocessing và feature engineering: full splits, class distribution, train token lengths, ví dụ WordPiece/IDs/mask và augmentation train-only. MODE=view hiển thị artifact đã commit; MODE=prepare dùng loader/tokenizer/augmentation hiện hành để tạo isolated runs mới. Không train mô hình ở notebook chuẩn bị dữ liệu.
+
+Notebook 02 gom modeling: pretrained sentiment Exercise 1, baseline TF-IDF, frozen DistilBERT, đủ 10 epoch, checkpoint/threshold validation-only, test, calibration, lỗi và ZIP. MODE=view đọc kết quả frozen đã kiểm toán; MODE=train chạy lại từ pretrained base trên Kaggle hoặc local. Device auto ưu tiên CUDA, fallback CPU; device cpu/cuda cho lựa chọn tường minh. Full local CPU được hỗ trợ cho người dùng nhưng có thể chậm; kiểm thử phần mềm chỉ chạy fixture nhỏ để xác thực.
+
+Cell notebook gọi NotebookSession và module chung; không chứa một training loop khác với CLI. Kaggle dùng Python 3.12 venv riêng; local dùng kernel đã cài requirements. Các cell sau training chọn đúng run vừa tạo; không gán ảnh review của run cũ cho một lượt train mới. Model/threshold của lần chạy mới được lựa chọn theo validation như protocol đã chốt.
+
+Tám notebook cũ và bốn helper copy-cell được bỏ sau khi gom; wrapper train.py và các CLI training/audit/recovery cũ không còn dùng được bỏ, thay bằng run_frozen_trial.py và finalize_results.py. Source/dataset/model/metrics modules, test chức năng và raw artifacts khoa học còn cần kiểm toán được giữ. Các run render/proof phần mềm cũ không thuộc bundle/report khoa học được loại bỏ, bằng chứng kiểm tra mới thay thế chúng. Git history giữ khả năng phục hồi các bố cục cũ.
+
+Ảnh hiển thị trong notebook vẫn lấy từ outputs/ và bộ published để làm report nhanh. Renderer lưu execution_summary và SHA256 của notebook đã thực thi, không lưu thêm bản notebook ảnh base64 vào mỗi run. Kết quả học đã đo không thay đổi chỉ vì tinh gọn bố cục; không cần full training mới để xác nhận hai notebook view.

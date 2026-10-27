@@ -32,7 +32,7 @@ Các thảo luận, quyết định và bằng chứng thực nghiệm được 
 
 Đề gốc không chỉ định dataset, backbone, số epochs hoặc cấu trúc thư mục.
 Đề gốc không đặt ngưỡng Accuracy tối thiểu 85%.
-Phạm vi bài gồm roadmap, ba notebook, isolated runs, hình trực quan và quét threshold.
+Phạm vi bài gồm roadmap, hai notebook theo luồng dữ liệu/modeling, isolated runs, hình trực quan và quét threshold.
 Các phần bổ sung phải phục vụ giải thích bài và truy vết kết quả, không được dùng để gán ngược một tiêu chí chưa có cho đề giảng viên.
 
 ## 2. Phạm vi đã thống nhất
@@ -40,7 +40,7 @@ Các phần bổ sung phải phục vụ giải thích bài và truy vết kết
 1. Thực hiện đủ hai Exercise bằng Hugging Face và PyTorch.
 2. Exercise 1 dùng mô hình sentiment pretrained SST-2, đối chiếu pipeline và forward thủ công trên cùng câu.
 3. Exercise 2 fine-tune DistilBERT nền trên toàn bộ Rotten Tomatoes với các split chính thức.
-4. Có ba notebook: Exercise 1, Exercise 2 và bản tích hợp.
+4. Có hai notebook: EDA/preprocessing/feature engineering và modeling (bao gồm cả hai Exercise).
 5. Mỗi notebook bắt đầu bằng roadmap có phase, mục tiêu, module/file tham chiếu và artifact.
 6. Các phase trình bày theo dòng xử lý thực tế; hình và bảng xuất hiện ngay sau phần giải thích tương ứng.
 7. Notebook ưu tiên trực quan hóa và diễn giải thay vì in các khối JSON dài.
@@ -361,3 +361,12 @@ Frozen test accuracy 82.83%, Binary F1 83.23%, Macro-F1 82.82%, loss 0.412560. S
 ### D24 — Notebook và artifact phải phục vụ report thế nào?
 
 Bản tích hợp và Exercise 2 đọc frozen trial làm kết quả chính; notebook study cũ có nhãn lịch sử. Ảnh hiển thị từ artifact nguồn hoặc run phân tích dẫn xuất đã kiểm toán. `outputs/published/index.md` và `artifact_catalog.json` cung cấp hình/bảng dùng ngay cho report; không cần sinh lại đồ thị mỗi lần.
+
+
+## 15. Quyết định tinh gọn còn hai notebook
+
+Gom toàn bộ EDA → preprocessing → feature engineering vào 01_eda_preprocessing_feature_engineering.ipynb. Gom pretrained sentiment, baseline, training, threshold, evaluation và lỗi vào 02_modeling.ipynb. Không tạo notebook hoặc helper copy-cell riêng theo từng LR/phiên train.
+
+Modeling hỗ trợ view/train trên cùng notebook, chọn device auto/cuda/cpu; training gọi cùng script/module với CLI. Local CPU được hỗ trợ khi chủ động chạy; kiểm thử phần mềm dùng fixture nhỏ, không full CPU training. Mọi hình hiển thị ngay trên notebook và có artifact trong outputs/.
+
+Các mục mô tả notebook 04–08 ở phần lịch sử là diễn tiến trước khi gom, không phải các file cần chạy hiện tại. Run kết quả gốc và cấu hình khoa học vẫn giữ nguyên. Chỉ bỏ snapshot notebook/render và proof phần mềm cũ bị lặp; không phá manifests khoa học.

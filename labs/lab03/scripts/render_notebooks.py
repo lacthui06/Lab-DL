@@ -6,7 +6,7 @@ import sys
 import nbformat
 from nbclient import NotebookClient
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
-from labs.lab03.src.utils.runs import ROOT, run_context, save_json
+from labs.lab03.src.utils.runs import ROOT, run_context, save_json, hash_file
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -36,9 +36,9 @@ if __name__ == "__main__":
             errors = sum(o.output_type == "error" for c in notebook.cells if c.cell_type == "code" for o in c.outputs)
             if errors: raise AssertionError(f"Notebook failed: {path.name}")
             nbformat.write(notebook,path)
-            nbformat.write(notebook,out / path.name)
             result = {"notebook":path.name,"mode":"view","executed_code_cells":sum(c.cell_type == "code" for c in notebook.cells),
-                      "errors":errors,"training_executed":False,"artifact":path.name,
+                      "errors":errors,"training_executed":False,"artifact":path.relative_to(ROOT).as_posix(),
+                      "notebook_sha256":hash_file(path),
                       "inline_pngs":sum("image/png" in o.get("data", {}) for c in notebook.cells if c.cell_type=="code" for o in c.outputs)}
             results.append(result); print("Executed and saved:",path.name,flush=True)
         save_json(out / "execution_summary.json", results)

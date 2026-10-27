@@ -1,4 +1,4 @@
-"""Notebook Kaggle phải có 10 phase riêng và EDA thực, không giấu mọi output ở cell cuối."""
+"""Hai notebook phải phân vai rõ, có view/train và cell code hợp lệ."""
 import ast
 import json
 import runpy
@@ -8,28 +8,23 @@ import nbformat
 from labs.lab03.src.utils.runs import ROOT,run_context
 
 
-def test_augmented_notebook_has_ten_explained_code_cells_and_single_training_invocation():
-    n=nbformat.read(ROOT/'notebooks/07_kaggle_augmented_epoch_training.ipynb',as_version=4)
-    nbformat.validate(n)
-    code=[c for c in n.cells if c.cell_type=='code']
-    assert len(code)==10 and n.metadata['lab03']['code_cell_count']==10
-    for i,c in enumerate(n.cells):
-        if c.cell_type=='code':
-            ast.parse(c.source)
-            assert n.cells[i-1].cell_type=='markdown'
-    combined='\n'.join(c.source for c in code)
-    assert combined.count('run_python("labs/lab03/scripts/run_study.py"')==1
-    assert 'preview_dataset.py' in code[4].source
-    assert 'preview_augmentation.py' in code[5].source
-    assert 'epoch_history.json' in code[6].source
-    assert 'frozen_selection.json' in code[7].source
-    assert 'test_comparison.json' in code[8].source
-    assert 'package_study.py' in code[9].source
-    assert 'show_figures' in code[3].source and 'show_figures' in code[4].source
-    assert n.metadata['lab03']['execution_mode']=='train'
-    helper=(ROOT/'scripts/kaggle_augmented_epoch_cells.py').read_text()
-    assert helper.count('# %%\n')==10
-    assert all(c.source in helper for c in code)
+def test_only_two_notebooks_cover_preparation_and_modeling():
+    paths=sorted((ROOT/'notebooks').glob('*.ipynb'))
+    assert [p.name for p in paths]==['01_eda_preprocessing_feature_engineering.ipynb','02_modeling.ipynb']
+    for path in paths:
+        notebook=nbformat.read(path,as_version=4);nbformat.validate(notebook)
+        assert 'Module/file' in notebook.cells[0].source
+        codes=[c.source for c in notebook.cells if c.cell_type=='code']
+        for source in codes:ast.parse(source)
+        assert sum('MODE = "view"' in source for source in codes)==1
+        assert 'session.setup()' in codes[0]
+    preparation=nbformat.read(paths[0],as_version=4)
+    modeling=nbformat.read(paths[1],as_version=4)
+    assert 'session.prepare()' in '\n'.join(c.source for c in preparation.cells)
+    assert 'session.train()' not in '\n'.join(c.source for c in preparation.cells)
+    source='\n'.join(c.source for c in modeling.cells)
+    assert source.count('session.train()')==1
+    assert 'session.preflight()' in source and 'session.export()' in source
 
 
 def test_dataset_preview_persists_original_counts_and_three_figures(tiny,tmp_path,monkeypatch):
@@ -48,15 +43,3 @@ def test_dataset_preview_persists_original_counts_and_three_figures(tiny,tmp_pat
     assert preview['examples_split']=='train' and preview['augmentation_applied'] is False
     assert preview['label_counts']['train']=={'0':2,'1':2}
     assert len(list(out.glob('*.png')))==3
-
-
-def test_frozen_notebook_preserves_ten_phases_and_download_routes():
-    notebook=nbformat.read(ROOT/'notebooks/08_kaggle_frozen_encoder_trial.ipynb',as_version=4)
-    nbformat.validate(notebook)
-    cells=[c for c in notebook.cells if c.cell_type=='code']
-    assert len(cells)==10
-    for c in cells:ast.parse(c.source)
-    assert sum('run_frozen_trial.py' in c.source for c in cells)==1
-    assert '/files/' in cells[-1].source and 'bundle_manifest.json' in cells[-1].source
-    helper=(ROOT/'scripts/kaggle_frozen_trial_cells.py').read_text()
-    assert all(c.source in helper for c in cells)

@@ -51,7 +51,7 @@
     "frozen_augmentation_preview": "ea22a364a709fb6232898fbfd352584b09da795c463f9e5bb410b73d44dfcfd7",
     "final_review": "c8066e2bded65f38487ca1835ea78ba98a14fb24dbe815324517c5e64b4862e6"
   },
-  "exporter_sha256": "6a1e95efb241ebf8d7da76e582d79c928cfe89d7a12c87e9985ca4c0a941fe4d",
+  "exporter_sha256": "49cf17c5df5d1dffcf588fe79c722edfc4b82e1861392270e5599ae05fef024d",
   "primary_result": "frozen_trial",
   "weights_included": false,
   "raw_logs_included": false

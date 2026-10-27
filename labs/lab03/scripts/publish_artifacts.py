@@ -6,7 +6,6 @@ import os
 import shutil
 import sys
 import uuid
-from datetime import datetime, timezone
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 from labs.lab03.src.evidence import read_json, verify_manifest
 from labs.lab03.src.utils.runs import ROOT, hash_file, save_json
@@ -130,11 +129,17 @@ def publish_artifacts(settings=None, output_dir=None, source_root=ROOT):
                 lines += [f"### {item['file']}",'',f"![{item['role']}]({item['file']})",'']
         (staged/'index.md').write_text('\n'.join(lines),encoding='utf-8')
         save_json(staged/'manifest.json',{p.relative_to(staged).as_posix():hash_file(p) for p in sorted(staged.rglob('*')) if p.is_file()})
+        backup = None
         if output.exists():
-            history=output.parent/'publication_history';history.mkdir(exist_ok=True)
-            backup=history/(datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')+'_'+uuid.uuid4().hex[:8])
-            shutil.move(str(output),str(backup))
-        os.replace(staged,output)
+            backup = output.parent/('.published-old-'+uuid.uuid4().hex)
+            os.replace(output, backup)
+        try:
+            os.replace(staged,output)
+        except BaseException:
+            if backup is not None:os.replace(backup,output)
+            raise
+        else:
+            if backup is not None:shutil.rmtree(backup)
     finally:
         if staged.exists():shutil.rmtree(staged)
     return output

@@ -4,25 +4,20 @@
     "finetuning": "20261026T155822Z_finetuning_2c2f0401",
     "exercise1_analysis": "20261026T192053Z_exercise1_analysis_4323ef53",
     "analysis": "20261026T192100Z_analysis_388b4fff",
-    "notebook_render": "20261027T112638Z_notebook_render_fac859cf",
-    "verification": "20261026T192814Z_verification_912ee7b9",
     "threshold_selection": "20261026T083558Z_threshold_selection_b64cf564",
     "evaluation": "20261026T160058Z_evaluation_07c24854",
     "inference": "20261026T160111Z_inference_7f2b16f0",
     "threshold_analysis": "20261026T192102Z_threshold_analysis_40690c71",
     "artifact_audit": "20261026T162631Z_artifact_audit_c84d606c",
-    "training_readiness": "20261026T175728Z_training_readiness_597149cd",
     "study": "20261026T184219Z_study_94f2ba7b",
     "candidate": "20261026T185804Z_candidate_8308037d",
     "study_audit": "20261026T190634Z_study_audit_10e28bdf",
     "study_review": "20261026T191751Z_study_review_d66d4edb",
     "epoch_presentation": "20261027T061914Z_epoch_presentation_9a0cfccc",
-    "epoch_training_readiness": "20261027T062614Z_epoch_training_readiness_f3cd89b8",
-    "augmentation_readiness": "20261027T065000Z_augmentation_readiness_46a4dddd",
-    "notebook_layout_readiness": "20261027T071424Z_notebook_layout_readiness_744959a8",
     "frozen_trial": "20261027T095655Z_frozen_trial_d8d09116",
     "final_review": "20261027T112616Z_final_review_82e3f77d",
-    "submission_verification": "20261027T112907Z_submission_verification_ebeab049"
+    "notebook_render": "20261027T120930Z_notebook_render_5cc883e1",
+    "verification": "20261027T121218Z_verification_ff365b79"
   },
   "runs": [
     {
@@ -46,16 +41,6 @@
       "status": "completed"
     },
     {
-      "id": "20261026T080353Z_notebook_render_ad2be64a",
-      "kind": "notebook_render",
-      "status": "completed"
-    },
-    {
-      "id": "20261026T081129Z_verification_07d51602",
-      "kind": "verification",
-      "status": "completed"
-    },
-    {
       "id": "20261026T083558Z_threshold_selection_b64cf564",
       "kind": "threshold_selection",
       "status": "completed"
@@ -76,18 +61,8 @@
       "status": "completed"
     },
     {
-      "id": "20261026T124505Z_notebook_render_29bd8d4e",
-      "kind": "notebook_render",
-      "status": "completed"
-    },
-    {
       "id": "20261026T124633Z_artifact_audit_d4d1e652",
       "kind": "artifact_audit",
-      "status": "completed"
-    },
-    {
-      "id": "20261026T124745Z_verification_edded031",
-      "kind": "verification",
       "status": "completed"
     },
     {
@@ -106,18 +81,8 @@
       "status": "completed"
     },
     {
-      "id": "20261026T125929Z_notebook_render_313034a2",
-      "kind": "notebook_render",
-      "status": "completed"
-    },
-    {
       "id": "20261026T130002Z_artifact_audit_4fb5f597",
       "kind": "artifact_audit",
-      "status": "completed"
-    },
-    {
-      "id": "20261026T130154Z_verification_f2147def",
-      "kind": "verification",
       "status": "completed"
     },
     {
@@ -151,11 +116,6 @@
       "status": "completed"
     },
     {
-      "id": "20261026T160130Z_notebook_render_f8e70da2",
-      "kind": "notebook_render",
-      "status": "completed"
-    },
-    {
       "id": "20261026T161956Z_exercise1_analysis_46ca085f",
       "kind": "exercise1_analysis",
       "status": "completed"
@@ -173,21 +133,6 @@
     {
       "id": "20261026T162909Z_threshold_analysis_f8b3fdf7",
       "kind": "threshold_analysis",
-      "status": "completed"
-    },
-    {
-      "id": "20261026T163051Z_notebook_render_03fd373a",
-      "kind": "notebook_render",
-      "status": "completed"
-    },
-    {
-      "id": "20261026T163347Z_verification_641a8f92",
-      "kind": "verification",
-      "status": "completed"
-    },
-    {
-      "id": "20261026T175728Z_training_readiness_597149cd",
-      "kind": "training_readiness",
       "status": "completed"
     },
     {
@@ -246,38 +191,8 @@
       "status": "completed"
     },
     {
-      "id": "20261026T192048Z_notebook_render_b2e1b712",
-      "kind": "notebook_render",
-      "status": "completed"
-    },
-    {
-      "id": "20261026T192814Z_verification_912ee7b9",
-      "kind": "verification",
-      "status": "completed"
-    },
-    {
       "id": "20261027T061914Z_epoch_presentation_9a0cfccc",
       "kind": "epoch_presentation",
-      "status": "completed"
-    },
-    {
-      "id": "20261027T062349Z_notebook_render_161a4450",
-      "kind": "notebook_render",
-      "status": "completed"
-    },
-    {
-      "id": "20261027T062614Z_epoch_training_readiness_f3cd89b8",
-      "kind": "epoch_training_readiness",
-      "status": "completed"
-    },
-    {
-      "id": "20261027T065000Z_augmentation_readiness_46a4dddd",
-      "kind": "augmentation_readiness",
-      "status": "completed"
-    },
-    {
-      "id": "20261027T071424Z_notebook_layout_readiness_744959a8",
-      "kind": "notebook_layout_readiness",
       "status": "completed"
     },
     {
@@ -351,13 +266,13 @@
       "status": "completed"
     },
     {
-      "id": "20261027T112638Z_notebook_render_fac859cf",
+      "id": "20261027T120930Z_notebook_render_5cc883e1",
       "kind": "notebook_render",
       "status": "completed"
     },
     {
-      "id": "20261027T112907Z_submission_verification_ebeab049",
-      "kind": "submission_verification",
+      "id": "20261027T121218Z_verification_ff365b79",
+      "kind": "verification",
       "status": "completed"
     }
   ]

@@ -1,33 +1,22 @@
 {
-  "current_experiment": {
-    "run": "20261026T184219Z_study_94f2ba7b",
-    "selected_candidate": {
-      "run_id": "20261026T185804Z_candidate_8308037d",
-      "learning_rate": 3e-05,
-      "selection_split": "validation",
-      "macro_f1": 0.8564726691922859,
-      "loss": 0.7027483582496643,
-      "completed_epochs": 10.0,
-      "best_step": 1700
-    },
-    "test_metrics": {
-      "accuracy": 0.8339587242026266,
-      "binary_precision": 0.8384030418250951,
-      "binary_recall": 0.8273921200750469,
-      "binary_f1": 0.8328611898016998,
-      "macro_precision": 0.8340163357273623,
-      "macro_recall": 0.8339587242026267,
-      "macro_f1": 0.8339515641459571
-    },
-    "frozen_threshold": 0.5,
-    "full_results_file": "outputs/experiment_results.json"
+  "artifact_run": "20261027T121218Z_verification_ff365b79",
+  "tests_passed": 109,
+  "notebook_count": 2,
+  "relative_links_verified": 60,
+  "notebook_inline_pngs": {
+    "01_eda_preprocessing_feature_engineering.ipynb": 6,
+    "02_modeling.ipynb": 11
   },
-  "artifact_verification_run": "20261026T192814Z_verification_912ee7b9",
-  "tests": {
-    "tests": 75,
-    "failures": 0,
-    "errors": 0,
-    "skipped": 0
-  },
-  "historical_evidence_run": "20261026T163347Z_verification_641a8f92"
+  "full_training_executed": false,
+  "saved_scientific_metrics_changed": false,
+  "device_modes_supported": [
+    "auto",
+    "cuda",
+    "cpu"
+  ],
+  "local_cuda_training_benchmarked": false,
+  "scientific_raw_evidence_preserved": true,
+  "old_render_and_software_proof_runs_removed": 19,
+  "duplicate_copy_cell_helpers_removed": 4,
+  "obsolete_cli_wrappers_removed": 7
 }

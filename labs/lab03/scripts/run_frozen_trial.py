@@ -6,6 +6,7 @@ import json
 import subprocess
 import sys
 import zipfile
+from copy import deepcopy
 import numpy as np
 import torch
 from transformers import set_seed
@@ -18,7 +19,7 @@ from labs.lab03.src.models.classifier import load_model, verify_saved_model
 from labs.lab03.src.training.trainer import make_trainer
 from labs.lab03.src.training.frozen import configure_frozen_optimizer
 from labs.lab03.src.training.thresholds import select_validation_threshold, binary_metrics_at_threshold, scan_thresholds
-from labs.lab03.src.utils.plots import plot_epoch_learning, plot_confusion
+from labs.lab03.src.utils.plots import plot_epoch_learning, plot_confusion, plot_samples
 from labs.lab03.src.study import fit_text_baseline, audit_split_texts, prediction_diagnostics
 from labs.lab03.src.evidence import verify_manifest
 
@@ -50,9 +51,19 @@ def archive_destination(root, allow_cpu_fixture=False, kaggle_working=Path('/kag
     return kaggle_working
 
 
-def run(config, root=ROOT, allow_cpu_fixture=False):
-    if not torch.cuda.is_available() and not allow_cpu_fixture:
-        raise RuntimeError('GPU is required; enable Kaggle Accelerator before training')
+def resolve_device(device):
+    if device not in {'auto', 'cpu', 'cuda'}:
+        raise ValueError('device must be auto, cpu or cuda')
+    if device == 'cuda' and not torch.cuda.is_available():
+        raise RuntimeError('CUDA requested but unavailable; enable GPU or choose device=cpu')
+    return ('cuda' if torch.cuda.is_available() else 'cpu') if device == 'auto' else device
+
+
+def run(config, root=ROOT, allow_cpu_fixture=False, device='auto'):
+    config = deepcopy(config)
+    config['exercise2']['device'] = 'cpu' if allow_cpu_fixture else resolve_device(device)
+    if config['exercise2']['device'] == 'cpu' and not allow_cpu_fixture:
+        print('Device: CPU. Full training is supported but can be slow; CUDA is recommended.', flush=True)
     e = config['exercise2']
     if e['num_train_epochs'] != 10 or e['metric_for_best_model'] != 'loss':
         raise ValueError('This trial requires 10 epochs and validation-loss checkpoint selection')
@@ -136,6 +147,18 @@ def run(config, root=ROOT, allow_cpu_fixture=False):
             comparison.append({'model': name, **binary_metrics_at_threshold(labels, probs[:, 1], threshold)})
         save_json(out/'test_comparison.json', comparison)
         plot_confusion(labels, tp[:, 1] >= policy['selected_threshold'], out/'confusion_matrix.png')
+        examples = []
+        for row in records(raw['test'], tp):
+            predicted = int(row['probabilities'][1] >= policy['selected_threshold'])
+            examples.append({**row, 'predicted_label':predicted,
+                'confidence':row['probabilities'][predicted], 'correct':predicted == row['true_label']})
+        shown = []
+        for correct in (True, False):
+            for label in (0, 1):
+                shown.extend(sorted([r for r in examples if r['correct']==correct and r['true_label']==label],
+                                    key=lambda r:-r['confidence'])[:2])
+        save_json(out/'sample_predictions.json', shown)
+        plot_samples(shown, out/'sample_predictions.png')
         diagnostics = prediction_diagnostics(labels, tp, out, policy['selected_threshold'], config['seed'])
         save_json(out/'probability_diagnostics.json', diagnostics)
         summary = f"""# Frozen DistilBERT trial\n\nRun: `{out.name}`\n\nTrain completed 10 epochs. Best checkpoint: epoch {best['epoch']} (validation loss).\n\nEmbedding and first {e['freeze_layers']} encoder layers frozen.\nEncoder LR {e['learning_rate']}; head LR {e['head_learning_rate']}.\n\nThreshold: {policy['selected_threshold']} (validation Macro-F1).\n\nThis configuration is a hypothesis, not a guaranteed improvement.\nOne seed only; historical test exposure; no causal claim about individual changes.\n\n```json\n{json.dumps(comparison, indent=2)}\n```\n"""
@@ -186,5 +209,6 @@ def run(config, root=ROOT, allow_cpu_fixture=False):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--config', type=Path, default=ROOT/'config/frozen_trial.json')
+    parser.add_argument('--device', choices=['auto', 'cpu', 'cuda'], default='auto')
     args = parser.parse_args()
-    run(json.loads(args.config.read_text()))
+    run(json.loads(args.config.read_text()), device=args.device)

@@ -82,6 +82,8 @@ def test_frozen_trial_artifacts_and_review_zip(tiny, tmp_path, monkeypatch):
     assert selection['completed_epochs'] == 10 and not selection['test_used_for_selection']
     assert (out/'learning_curves.png').is_file()
     assert (out/'validation_threshold_curves.png').is_file()
+    assert (out/'sample_predictions.png').is_file()
+    assert json.loads((out/'sample_predictions.json').read_text())
     assert (out/'best_model/decision_threshold.json').is_file()
     bundle = tmp_path/'outputs'/f'lab03_review_{out.name}.zip'
     with zipfile.ZipFile(bundle) as z:

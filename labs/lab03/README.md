@@ -6,20 +6,16 @@ Bài thực hành gồm pretrained sentiment analysis và fine-tuning DistilBERT
 
 **Mục tiêu của bản chính là giảm dấu hiệu overfitting**, không chọn accuracy cao nhất từ các lần test. Epoch 10: train/validation accuracy 84.25%/83.77%, chênh 0.47 điểm phần trăm; train/validation loss 0.3581/0.3696. Bản full fine-tuning có accuracy cao hơn nhưng gap lớn hơn. Một seed và test đã được xem trước không đủ để khẳng định tối ưu tuyệt đối hoặc không bao giờ overfit.
 
-## 1. Đọc và trình bày bài
+## 1. Chỉ hai notebook
 
-| File | Vai trò |
-|---|---|
-| [Notebook tích hợp](notebooks/lab03_huggingface_complete.ipynb) | Bản trình bày chính, cả hai Exercise, có roadmap/module, bảng và ảnh inline |
-| [Notebook Exercise 1](notebooks/01_sentiment_analysis_pipeline.ipynb) | Tokenization, pipeline, manual forward; bằng chứng pretrained inference lịch sử |
-| [Notebook Exercise 2](notebooks/02_finetuning_binary_classification.ipynb) | Frozen trial, đủ 10 epoch, threshold, test và phân tích lỗi |
-| [Notebook 08 — train Kaggle](notebooks/08_kaggle_frozen_encoder_trial.ipynb) | Chạy từ pretrained base, đúng 10 cell, tự xuất ZIP |
-| [Notebook 05 — study lịch sử](notebooks/05_study_results_and_discussion.ipynb) | Giữ bằng chứng full fine-tuning để so sánh |
-| [Description](description_lab_03.md) | Đề gốc, các điểm thảo luận, quyết định và tiêu chí nghiệm thu |
-| [Walkthrough](walkthrough_lab_03.md) | Lý thuyết, phương pháp, lịch sử thí nghiệm, báo cáo cuối và câu hỏi bảo vệ |
-| [Artifact report](outputs/published/index.md) | Ảnh/bảng đã chọn để sử dụng trực tiếp khi làm report |
+| Notebook | Nội dung | Chế độ |
+|---|---|---|
+| [01 — EDA, preprocessing, feature engineering](notebooks/01_eda_preprocessing_feature_engineering.ipynb) | Full splits, phân bố nhãn/độ dài, WordPiece/IDs/mask, augmentation trước/sau | `MODE="view"` xem artifact; `MODE="prepare"` tạo lại phần chuẩn bị |
+| [02 — Modeling](notebooks/02_modeling.ipynb) | Exercise 1 pretrained sentiment, baseline, frozen DistilBERT, train 10 epoch, threshold, test và lỗi | `MODE="view"` xem kết quả; `MODE="train"` train mới |
 
-Notebook báo cáo đã được thực thi ở `MODE="view"`, giữ output trong file. Chế độ này đọc artifacts, không tải model/dataset và không train. Notebook 04/06/07/08 là template GPU; renderer offline bỏ qua. Chỉ notebook 08 là cấu hình train được khuyến nghị cho bản chính hiện tại; các profile cũ giữ để tái lập lịch sử.
+Cả hai có roadmap/module ở đầu, giải thích theo phase, bảng và ảnh inline. Ảnh được hiển thị từ chính PNG đã lưu outputs/. Module .py giữ thuật toán dùng chung; không duy trì thêm bản copy-cell hoặc notebook riêng cho từng thí nghiệm. Các notebook cũ có thể phục hồi từ lịch sử Git.
+
+Đọc [description](description_lab_03.md) để xem đề/thảo luận/quyết định; [walkthrough](walkthrough_lab_03.md) để xem báo cáo và câu hỏi bảo vệ. [Artifact report](outputs/published/index.md) chứa hình/bảng dùng trực tiếp, không cần extract ZIP hoặc viết lại code vẽ khi làm report.
 
 ## 2. Pipeline và quyết định chính
 
@@ -42,7 +38,7 @@ labs/lab03/
     frozen_trial.json     profile train bản chính
     report.json           run nguồn và primary_result của report
     workflow.json         registry runtime; không thay report.json tự động
-  notebooks/              bản báo cáo có output và template train Kaggle
+  notebooks/              đúng hai notebook: chuẩn bị dữ liệu và modeling
   src/
     datasets/             full splits, tokenizer, train-only augmentation
     models/               pretrained/model loading, manual inference, reload check
@@ -64,24 +60,24 @@ labs/lab03/
 
 `report.json` cố định nguồn để notebook không tự lấy nhầm một fixture hoặc run vừa chạy. `workflow.json` ghi active run phục vụ runtime. Dataset validation được tải qua Hugging Face; không nằm trong thư mục `validation/` của source.
 
-## 4. Chạy từ đầu trên Kaggle
+## 4. Chạy notebook trên Kaggle hoặc local
 
-Import [notebook 08](notebooks/08_kaggle_frozen_encoder_trial.ipynb) từ nhánh chứa code hiện tại, dùng session mới, bật **GPU + Internet**, chạy lần lượt 10 cell hoặc Run All. Cell 1 clone repo và tạo Python 3.12 riêng bằng uv; không hạ cấp PyTorch của kernel Kaggle. Không cần thêm checkpoint cũ vào Input vì lượt này train từ pretrained base.
+**Kaggle:** import notebook cần dùng từ nhánh code hiện tại, dùng session mới và bật Internet. Với modeling chọn GPU nếu có. Cell đầu tự clone repo nếu chưa có và tạo Python 3.12 riêng bằng uv. Không cần upload checkpoint cũ.
 
-| Cell | Công việc |
-|---|---|
-| 1 | Repo, Python 3.12 riêng, GPU, dependencies |
-| 2 | Chốt frozen_trial config |
-| 3 | Preflight tests và sanity fixture CPU |
-| 4 | Exercise 1 và ba ảnh inline |
-| 5 | EDA official dataset và ảnh inline |
-| 6 | Preview augmentation trước/sau |
-| 7 | Baseline, train 10 epoch, khóa policy, test; hiện epoch table/curves |
-| 8 | Trình bày quyết định checkpoint/threshold đã ghi |
-| 9 | Test comparison, confusion, ROC/PR, calibration và lỗi |
-| 10 | Kiểm tra SHA256 và link tải review/checkpoint ZIP |
+**Local:** clone repo, cài requirements và dùng kernel Python 3.12 theo Mục 5. Mở notebook từ thư mục repo hoặc notebooks/.
 
-Cell 7 thực hiện train -> validation selection -> test đúng thứ tự. Cell 8–9 chỉ hiển thị bằng chứng; không chọn lại model sau khi xem test. Không chạy lại cell 7 chỉ để xem hình. Session restart làm mất biến, cần chạy lại các cell setup; output cũ hiển thị không có nghĩa biến còn tồn tại.
+Chỉ sửa hai biến ở cell đầu:
+
+```python
+MODE = "view"       # NB01: view/prepare; NB02: view/train
+DEVICE = "auto"     # auto/cuda/cpu
+```
+
+- Notebook 01: `prepare` tải dataset/tokenizer và tạo artifact EDA/augmentation, không train mô hình.
+- Notebook 02: `train` chạy preflight, Exercise 1, baseline và frozen training đủ 10 epoch; `view` mặc định không train lại.
+- `auto` chọn CUDA nếu có, nếu không CPU. `cuda` báo lỗi rõ nếu không có GPU. `cpu` chạy local được nhưng full training chậm; khuyến nghị CUDA. Kiểm thử phần mềm dùng fixture nhỏ; không cần full training để xác nhận bố cục notebook.
+
+Notebook modeling gọi training một lần. Pipeline khóa checkpoint bằng validation loss, chọn threshold validation rồi mới đo test; các cell sau chỉ hiển thị artifact của đúng run vừa tạo. Không dùng ảnh review lịch sử thay cho kết quả train mới. Run All theo thứ tự; session restart làm mất biến dù output cũ còn hiển thị.
 
 ## 5. Cài đặt và CLI
 
@@ -98,10 +94,10 @@ uv pip check --python .venv-lab03/bin/python
 .venv-lab03/bin/python -m pytest labs/lab03/tests -q
 ```
 
-Windows dùng `.venv-lab03/Scripts/python.exe`. Chỉ sanity/fixture cực nhỏ chạy trên CPU; full training cần Kaggle GPU.
+Windows dùng `.venv-lab03/Scripts/python.exe`. Kiểm thử cục bộ chỉ dùng sanity/fixture nhỏ. Full training do người chạy notebook/CLI thực hiện trên Kaggle hoặc local; CUDA được khuyến nghị.
 
 ```bash
-CUDA_VISIBLE_DEVICES=0 TOKENIZERS_PARALLELISM=false .venv-lab03/bin/python labs/lab03/scripts/run_frozen_trial.py --config labs/lab03/config/frozen_trial.json
+CUDA_VISIBLE_DEVICES=0 TOKENIZERS_PARALLELISM=false .venv-lab03/bin/python labs/lab03/scripts/run_frozen_trial.py --config labs/lab03/config/frozen_trial.json --device auto
 ```
 
 Tái kiểm toán và xuất artifact report từ kết quả đã lưu, không train:
@@ -150,3 +146,10 @@ CHECKPOINT_DIR="/path/to/extracted/best_model"
 ```
 
 Thay đường dẫn bằng thư mục best_model thực tế. Lệnh đầu từ chối checkpoint khác SHA256 hoặc đường dẫn nằm trong raw run nguồn. Lệnh inference tự đọc threshold đã gắn và lưu predictions/PNG vào run inference riêng. Các lượt train mới xuất sẵn policy có checkpoint identity và training_config.json trong checkpoint ZIP. Việc thêm metadata không làm thay đổi weights hoặc cần train lại.
+
+
+## 10. Phạm vi tinh gọn
+
+Giữ hai notebook và các module/CLI còn dùng. Bỏ tám notebook cũ sau khi gom nội dung, bốn helper copy-cell, wrapper train.py và sáu CLI training/audit/recovery cũ không còn dùng. Bỏ các run render/báo cáo kiểm thử phần mềm cũ bị lặp; giữ bằng chứng kiểm tra mới nhất. Không xóa predictions, logs hoặc manifests của thí nghiệm dùng trong báo cáo. Cấu hình và artifact lịch sử được giữ để kiểm toán so sánh, không phải notebook người dùng cần chạy thêm.
+
+Notebook đã có output là bản trình bày chính. Renderer lưu execution summary và SHA256 của notebook thay vì chép thêm toàn bộ notebook vào mỗi run, tránh lưu lặp ảnh base64. Không cần train lại vì thay bố cục.
