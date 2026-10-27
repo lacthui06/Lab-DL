@@ -92,3 +92,13 @@ def test_frozen_trial_artifacts_and_review_zip(tiny, tmp_path, monkeypatch):
     with zipfile.ZipFile(checkpoint) as z:
         assert 'best_model/model.safetensors' in z.namelist()
         assert 'best_model/decision_threshold.json' in z.namelist()
+
+
+def test_fixture_zip_stays_in_fixture_even_when_kaggle_directory_exists(tmp_path):
+    from labs.lab03.scripts.run_frozen_trial import archive_destination
+    kaggle = tmp_path/'kaggle/working'
+    kaggle.mkdir(parents=True)
+    fixture_root = tmp_path/'pytest-fixture'
+    fixture_root.mkdir()
+    assert archive_destination(fixture_root, True, kaggle) == fixture_root/'outputs'
+    assert archive_destination(fixture_root, False, kaggle) == kaggle

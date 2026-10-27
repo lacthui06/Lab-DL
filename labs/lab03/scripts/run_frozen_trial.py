@@ -43,6 +43,13 @@ def records(raw_split, probs):
             for i, (text, label, prob) in enumerate(zip(raw_split['text'], raw_split['label'], probs))]
 
 
+def archive_destination(root, allow_cpu_fixture=False, kaggle_working=Path('/kaggle/working')):
+    """Fixture luôn ghi trong tmp_path kể cả khi pytest đang chạy trên Kaggle."""
+    if allow_cpu_fixture or not kaggle_working.is_dir():
+        return Path(root)/'outputs'
+    return kaggle_working
+
+
 def run(config, root=ROOT, allow_cpu_fixture=False):
     if not torch.cuda.is_available() and not allow_cpu_fixture:
         raise RuntimeError('GPU is required; enable Kaggle Accelerator before training')
@@ -134,7 +141,7 @@ def run(config, root=ROOT, allow_cpu_fixture=False):
     audit = verify_manifest(out)
     save_json(out/'package_audit.json', audit)
     # package_audit is a derived packaging record, not part of the original run manifest.
-    destination = Path('/kaggle/working') if Path('/kaggle/working').is_dir() else root/'outputs'
+    destination = archive_destination(root, allow_cpu_fixture)
     bundle = destination/f'lab03_review_{out.name}.zip'
     files = [p for p in out.rglob('*') if p.is_file() and not
              {'best_model', 'checkpoints'}.intersection(p.relative_to(out).parts)]
