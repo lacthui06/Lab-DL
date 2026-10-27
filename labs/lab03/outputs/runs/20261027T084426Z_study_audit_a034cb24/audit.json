@@ -1,0 +1,43 @@
+{
+  "status": "passed",
+  "study_run": "20261027T083010Z_study_99bce559",
+  "winner": {
+    "run_id": "20261027T083713Z_candidate_d00acd03",
+    "learning_rate": 1e-05,
+    "selection_split": "validation",
+    "macro_f1": 0.8489381946272041,
+    "loss": 0.5849069356918335,
+    "completed_epochs": 10.0,
+    "best_step": 3306
+  },
+  "candidate_count": 2,
+  "epochs_per_candidate": 10,
+  "verified_manifests": {
+    "20261027T083010Z_study_99bce559": {
+      "verified_files": 38,
+      "omitted_checkpoint_files": [],
+      "omitted_raw_logs": [],
+      "checkpoint_available_locally": false
+    },
+    "20261027T083013Z_candidate_a2759300": {
+      "verified_files": 48,
+      "omitted_checkpoint_files": [],
+      "omitted_raw_logs": [],
+      "checkpoint_available_locally": true
+    },
+    "20261027T083713Z_candidate_d00acd03": {
+      "verified_files": 48,
+      "omitted_checkpoint_files": [],
+      "omitted_raw_logs": [],
+      "checkpoint_available_locally": true
+    }
+  },
+  "test_samples": 1066,
+  "test_used_for_selection": false,
+  "threshold": 0.65,
+  "training_seeds": [
+    42
+  ],
+  "weights_loaded_for_audit": false,
+  "historical_test_previously_inspected": true
+}

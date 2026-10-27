@@ -4,12 +4,11 @@ Nguồn run được chọn tường minh trong `config/report.json`. Không hu�
 
 | Policy | Accuracy | Precision | Recall | Binary F1 | Macro F1 | Test loss |
 |---|---:|---:|---:|---:|---:|---:|
-| TF-IDF + logistic regression (0.5) | 78.2364% | 78.6667% | 77.4859% | 78.0718% | 78.2352% | Not logged |
-| TF-IDF + validation threshold | 78.7054% | 75.4153% | 85.1782% | 80.0000% | 78.6158% | Not logged |
-| DistilBERT (0.5) | 83.3959% | 83.8403% | 82.7392% | 83.2861% | 83.3952% | 0.798076 |
-| DistilBERT + validation threshold | 83.3959% | 83.8403% | 82.7392% | 83.2861% | 83.3952% | 0.798076 |
+| TF-IDF | 78.9869% | 79.2060% | 78.6116% | 78.9077% | 78.9866% | Not logged |
+| Frozen DistilBERT threshold 0.5 | 82.8330% | 82.5279% | 83.3021% | 82.9132% | 82.8326% | 0.412560 |
+| Frozen DistilBERT validation threshold | 82.8330% | 81.3620% | 85.1782% | 83.2264% | 82.8236% | 0.412560 |
 
-Bảng chính thuộc study 10 epoch; các role finetuning/evaluation/analysis cũ giữ bằng chứng lịch sử 3 epoch. Không gán số liệu hai protocol cho cùng một run.
+Bảng chính thuộc frozen trial: checkpoint epoch 9 theo validation loss, threshold 0.45 theo validation Macro-F1. Ưu tiên giảm overfitting; không khẳng định accuracy cao nhất lịch sử. Các study khác giữ vai trò so sánh.
 
 ## Nguồn thí nghiệm
 
@@ -30,6 +29,15 @@ Bảng chính thuộc study 10 epoch; các role finetuning/evaluation/analysis c
 | study_exercise1_analysis | `20261026T184207Z_exercise1_analysis_5406bc6c` |
 | study_review | `20261026T191751Z_study_review_d66d4edb` |
 | epoch_presentation | `20261027T061914Z_epoch_presentation_9a0cfccc` |
+| frozen_trial | `20261027T095655Z_frozen_trial_d8d09116` |
+| augmented_study | `20261027T083010Z_study_99bce559` |
+| augmented_lr_5e6 | `20261027T083013Z_candidate_a2759300` |
+| augmented_lr_1e5 | `20261027T083713Z_candidate_d00acd03` |
+| frozen_exercise1 | `20261027T095627Z_exercise1_80baa48e` |
+| frozen_exercise1_analysis | `20261027T095630Z_exercise1_analysis_dc3ef4d7` |
+| frozen_dataset_preview | `20261027T095637Z_dataset_preview_e2b4d582` |
+| frozen_augmentation_preview | `20261027T095647Z_augmentation_preview_acb26523` |
+| final_review | `20261027T112616Z_final_review_82e3f77d` |
 
 ## Hình và bảng
 
@@ -302,3 +310,175 @@ Các PNG dưới đây là bản sao của hình đã lưu trong run nguồn. JS
 ### epoch_presentation/20261026T185804Z_candidate_8308037d/learning_curves.png
 
 ![epoch_presentation](epoch_presentation/20261026T185804Z_candidate_8308037d/learning_curves.png)
+
+### frozen_trial/augmentation_counts.png
+
+![frozen_trial](frozen_trial/augmentation_counts.png)
+
+### frozen_trial/augmentation_examples.png
+
+![frozen_trial](frozen_trial/augmentation_examples.png)
+
+### frozen_trial/calibration_confidence.png
+
+![frozen_trial](frozen_trial/calibration_confidence.png)
+
+### frozen_trial/confusion_matrix.png
+
+![frozen_trial](frozen_trial/confusion_matrix.png)
+
+### frozen_trial/learning_curves.png
+
+![frozen_trial](frozen_trial/learning_curves.png)
+
+### frozen_trial/roc_pr_curves.png
+
+![frozen_trial](frozen_trial/roc_pr_curves.png)
+
+### frozen_trial/validation_threshold_curves.png
+
+![frozen_trial](frozen_trial/validation_threshold_curves.png)
+
+### augmented_study/augmentation_counts.png
+
+![augmented_study](augmented_study/augmentation_counts.png)
+
+### augmented_study/augmentation_examples.png
+
+![augmented_study](augmented_study/augmentation_examples.png)
+
+### augmented_study/baseline_model_comparison.png
+
+![augmented_study](augmented_study/baseline_model_comparison.png)
+
+### augmented_study/calibration_confidence.png
+
+![augmented_study](augmented_study/calibration_confidence.png)
+
+### augmented_study/candidate_validation_comparison.png
+
+![augmented_study](augmented_study/candidate_validation_comparison.png)
+
+### augmented_study/class_distribution.png
+
+![augmented_study](augmented_study/class_distribution.png)
+
+### augmented_study/confusion_matrix.png
+
+![augmented_study](augmented_study/confusion_matrix.png)
+
+### augmented_study/inference_predictions.png
+
+![augmented_study](augmented_study/inference_predictions.png)
+
+### augmented_study/metrics_bar.png
+
+![augmented_study](augmented_study/metrics_bar.png)
+
+### augmented_study/roc_pr_curves.png
+
+![augmented_study](augmented_study/roc_pr_curves.png)
+
+### augmented_study/sample_predictions.png
+
+![augmented_study](augmented_study/sample_predictions.png)
+
+### augmented_study/test_threshold/confusion_matrix.png
+
+![augmented_study](augmented_study/test_threshold/confusion_matrix.png)
+
+### augmented_lr_5e6/augmentation_counts.png
+
+![augmented_lr_5e6](augmented_lr_5e6/augmentation_counts.png)
+
+### augmented_lr_5e6/augmentation_examples.png
+
+![augmented_lr_5e6](augmented_lr_5e6/augmentation_examples.png)
+
+### augmented_lr_5e6/learning_curves.png
+
+![augmented_lr_5e6](augmented_lr_5e6/learning_curves.png)
+
+### augmented_lr_5e6/step_learning_curves.png
+
+![augmented_lr_5e6](augmented_lr_5e6/step_learning_curves.png)
+
+### augmented_lr_5e6/token_length_distribution.png
+
+![augmented_lr_5e6](augmented_lr_5e6/token_length_distribution.png)
+
+### augmented_lr_5e6/validation_threshold/threshold_curves.png
+
+![augmented_lr_5e6](augmented_lr_5e6/validation_threshold/threshold_curves.png)
+
+### augmented_lr_1e5/augmentation_counts.png
+
+![augmented_lr_1e5](augmented_lr_1e5/augmentation_counts.png)
+
+### augmented_lr_1e5/augmentation_examples.png
+
+![augmented_lr_1e5](augmented_lr_1e5/augmentation_examples.png)
+
+### augmented_lr_1e5/learning_curves.png
+
+![augmented_lr_1e5](augmented_lr_1e5/learning_curves.png)
+
+### augmented_lr_1e5/step_learning_curves.png
+
+![augmented_lr_1e5](augmented_lr_1e5/step_learning_curves.png)
+
+### augmented_lr_1e5/token_length_distribution.png
+
+![augmented_lr_1e5](augmented_lr_1e5/token_length_distribution.png)
+
+### augmented_lr_1e5/validation_threshold/threshold_curves.png
+
+![augmented_lr_1e5](augmented_lr_1e5/validation_threshold/threshold_curves.png)
+
+### frozen_exercise1_analysis/pipeline_manual_comparison.png
+
+![frozen_exercise1_analysis](frozen_exercise1_analysis/pipeline_manual_comparison.png)
+
+### frozen_exercise1_analysis/sentiment_predictions.png
+
+![frozen_exercise1_analysis](frozen_exercise1_analysis/sentiment_predictions.png)
+
+### frozen_exercise1_analysis/tokenizer_table.png
+
+![frozen_exercise1_analysis](frozen_exercise1_analysis/tokenizer_table.png)
+
+### frozen_dataset_preview/class_distribution.png
+
+![frozen_dataset_preview](frozen_dataset_preview/class_distribution.png)
+
+### frozen_dataset_preview/token_length_distribution.png
+
+![frozen_dataset_preview](frozen_dataset_preview/token_length_distribution.png)
+
+### frozen_dataset_preview/train_examples.png
+
+![frozen_dataset_preview](frozen_dataset_preview/train_examples.png)
+
+### frozen_augmentation_preview/augmentation_counts.png
+
+![frozen_augmentation_preview](frozen_augmentation_preview/augmentation_counts.png)
+
+### frozen_augmentation_preview/augmentation_examples.png
+
+![frozen_augmentation_preview](frozen_augmentation_preview/augmentation_examples.png)
+
+### final_review/experiment_comparison.png
+
+![final_review](final_review/experiment_comparison.png)
+
+### final_review/generalization_gaps.png
+
+![final_review](final_review/generalization_gaps.png)
+
+### final_review/per_class_metrics.png
+
+![final_review](final_review/per_class_metrics.png)
+
+### final_review/sample_predictions.png
+
+![final_review](final_review/sample_predictions.png)

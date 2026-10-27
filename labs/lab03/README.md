@@ -1,57 +1,93 @@
 # Lab 03 — Getting started with Hugging Face
 
-Bài thực hành Deep Learning — UTH: sentiment analysis bằng mô hình pretrained và fine-tuning mô hình phân loại văn bản nhị phân bằng Hugging Face Trainer.
+Bài thực hành gồm pretrained sentiment analysis và fine-tuning DistilBERT cho phân loại văn bản nhị phân trên toàn bộ Rotten Tomatoes.
 
-**Kết quả lịch sử 3 epoch đã kiểm chứng:** dùng toàn bộ Rotten Tomatoes, 8.530 train / 1.066 validation / 1.066 test. Test Accuracy **83,96%**, Binary F1 **84,06%**. Mã nguồn, notebook và báo cáo dùng chung run registry, có thể xem kết quả mà không train lại.
+**Kết quả chính đã chạy trên Kaggle:** frozen DistilBERT, đủ **10 epoch**, chọn checkpoint **epoch 9 theo validation loss**, threshold **0.45 chọn bằng validation Macro-F1**. Test đúng **883/1.066**, Accuracy **82.83%**, Binary F1 **83.23%**, Macro-F1 **82.82%**, test loss **0.412560**.
 
-**Study 10 epoch đã chạy và kiểm chứng:** [Notebook kết quả, hình và thảo luận](notebooks/05_study_results_and_discussion.ipynb). Ba LR đều hoàn thành 10 epoch; winner LR **3e-5**, best checkpoint **step 1700 / epoch 3,184**, threshold validation **0,5**. Test Accuracy **83,40%**, Macro-F1 **83,40%**, đúng **889/1.066**. Hơn baseline TF-IDF nhưng thấp hơn argmax lịch sử 6 mẫu; không tuyên bố chạy nhiều epoch luôn tốt hơn. [Notebook 04](notebooks/04_kaggle_10epoch_study.ipynb) là template để chạy thí nghiệm GPU mới.
+**Mục tiêu của bản chính là giảm dấu hiệu overfitting**, không chọn accuracy cao nhất từ các lần test. Epoch 10: train/validation accuracy 84.25%/83.77%, chênh 0.47 điểm phần trăm; train/validation loss 0.3581/0.3696. Bản full fine-tuning có accuracy cao hơn nhưng gap lớn hơn. Một seed và test đã được xem trước không đủ để khẳng định tối ưu tuyệt đối hoặc không bao giờ overfit.
 
-**Lượt train có tăng mẫu:** dùng [Notebook 07](notebooks/07_kaggle_augmented_epoch_training.ipynb), xem Mục 16.
+## 1. Đọc và trình bày bài
 
-**Lượt train không tăng mẫu:** dùng [Notebook 06 — regularized epoch training](notebooks/06_kaggle_regularized_epoch_training.ipynb) để tổng kết đủ 10 epoch và thử giảm overfitting. Profile này chưa có kết quả GPU; xem Mục 15 trước khi chạy.
+| File | Vai trò |
+|---|---|
+| [Notebook tích hợp](notebooks/lab03_huggingface_complete.ipynb) | Bản trình bày chính, cả hai Exercise, có roadmap/module, bảng và ảnh inline |
+| [Notebook Exercise 1](notebooks/01_sentiment_analysis_pipeline.ipynb) | Tokenization, pipeline, manual forward; bằng chứng pretrained inference lịch sử |
+| [Notebook Exercise 2](notebooks/02_finetuning_binary_classification.ipynb) | Frozen trial, đủ 10 epoch, threshold, test và phân tích lỗi |
+| [Notebook 08 — train Kaggle](notebooks/08_kaggle_frozen_encoder_trial.ipynb) | Chạy từ pretrained base, đúng 10 cell, tự xuất ZIP |
+| [Notebook 05 — study lịch sử](notebooks/05_study_results_and_discussion.ipynb) | Giữ bằng chứng full fine-tuning để so sánh |
+| [Description](description_lab_03.md) | Đề gốc, các điểm thảo luận, quyết định và tiêu chí nghiệm thu |
+| [Walkthrough](walkthrough_lab_03.md) | Lý thuyết, phương pháp, lịch sử thí nghiệm, báo cáo cuối và câu hỏi bảo vệ |
+| [Artifact report](outputs/published/index.md) | Ảnh/bảng đã chọn để sử dụng trực tiếp khi làm report |
 
-## 1. Xem bài và kết quả
+Notebook báo cáo đã được thực thi ở `MODE="view"`, giữ output trong file. Chế độ này đọc artifacts, không tải model/dataset và không train. Notebook 04/06/07/08 là template GPU; renderer offline bỏ qua. Chỉ notebook 08 là cấu hình train được khuyến nghị cho bản chính hiện tại; các profile cũ giữ để tái lập lịch sử.
 
-- [Notebook kết quả study 10 epoch](notebooks/05_study_results_and_discussion.ipynb): audit, đủ learning curves, threshold, baseline, test và thảo luận.
-- [Notebook Exercise 1](notebooks/01_sentiment_analysis_pipeline.ipynb): tokenization, pipeline và manual forward.
-- [Notebook Exercise 2](notebooks/02_finetuning_binary_classification.ipynb): dữ liệu, Trainer, metrics, threshold, biểu đồ và phân tích lỗi.
-- [Notebook tích hợp](notebooks/lab03_huggingface_complete.ipynb): cả hai Exercise, phù hợp xem toàn bộ bài.
-- [Báo cáo thực hành](walkthrough_lab_03.md): lý thuyết, phương pháp, kết quả và giới hạn có bằng chứng.
-- [Đề bài](description_lab_03.md).
+## 2. Pipeline và quyết định chính
 
-Các notebook báo cáo đã lưu output của một lượt thực thi **`MODE="view"`** trên artifacts Kaggle. Notebook 04 là template GPU, được renderer offline bỏ qua để tránh vô tình train. Có thể đọc trực tiếp trên GitHub. Khi chạy lại notebook, mặc định view đọc dữ liệu đã commit, không tải model/dataset, không huấn luyện và không cần GPU. Đổi `MODE="train"` ở cell setup để tạo thí nghiệm mới; phần fine-tuning yêu cầu GPU theo mặc định.
+1. Exercise 1 dùng `distilbert-base-uncased-finetuned-sst-2-english`, đối chiếu pipeline và manual softmax.
+2. Exercise 2 dùng DistilBERT **base**, classification head mới; không lấy sentiment model của Exercise 1 để giả làm fine-tuning mới.
+3. Giữ official splits **8.530 train / 1.066 validation / 1.066 test**, không cắt nhỏ hoặc tự chia lại.
+4. WordPiece tokenizer, max_length=128, dynamic padding; giữ từ phủ định/tương phản.
+5. Augmentation train-only thêm **274 mẫu** (137 mỗi lớp), effective train **8.804**. Nhãn kế thừa có thể nhiễu; không phải 274 ground-truth mới do người gán.
+6. Đóng băng embedding và **4/6 encoder layers đầu**; cập nhật 14.767.874/66.955.010 tham số.
+7. Encoder LR **2e-6**, head LR **1e-5**; warmup 10%, linear decay, AdamW decay **0.1**, bias/LayerNorm không decay.
+8. Dropout encoder/attention/classifier **0.2/0.2/0.4**, chỉ hoạt động khi train. Metrics full train và validation đều đo trong eval mode.
+9. Chạy đủ **10 epoch**, không early stopping; checkpoint có validation loss thấp nhất được nạp lại. Quét 19 threshold validation sau đó khóa policy trước test.
+10. Lưu run riêng với config, environment, raw console, predictions, PNG và SHA256 manifest. Notebook hiển thị từ cùng PNG đã lưu.
 
-## 2. Cấu trúc
+## 3. Vai trò các thư mục
 
 ```text
 labs/lab03/
-  config/
-    config.json             tham số cho lần chạy mới
-    workflow.json           active runs và lịch sử
-    study.json              thiết kế 10 epoch, LR grid và baseline
-  notebooks/                ba notebook lịch sử có output và notebook Kaggle 10 epoch
+  config/                 cấu hình và lựa chọn run tường minh
+    frozen_trial.json     profile train bản chính
+    report.json           run nguồn và primary_result của report
+    workflow.json         registry runtime; không thay report.json tự động
+  notebooks/              bản báo cáo có output và template train Kaggle
   src/
-    datasets/               tải official splits, kiểm tra kích thước và tokenization
-    models/                 model, pipeline/manual, kiểm tra checkpoint
-    training/               Trainer, metrics, threshold và sanity overfit dùng riêng trong tests
-    utils/                  log, registry, manifest và plots
-    workflow.py             luồng CLI/notebook dùng chung
-    evidence.py             audit đọc-only, tính lại metrics từ dự đoán
-  scripts/                  train, eval, infer, audit và recovery
-  tests/                    tests chức năng và kiểm tra artifacts thật
-  outputs/runs/             artifacts Kaggle nhẹ, giữ nguyên manifest gốc
-  validation/               kết quả audit và thực thi notebook tại môi trường kiểm chứng
-  description_lab_03.md     đề bài, thảo luận và quyết định
-  walkthrough_lab_03.md     báo cáo thực nghiệm để nộp
+    datasets/             full splits, tokenizer, train-only augmentation
+    models/               pretrained/model loading, manual inference, reload check
+    training/             Trainer, optimizer/freeze, metrics, threshold
+    utils/                run context, registry, manifest và plots
+    final_review.py       audit frozen và so sánh từ predictions thật
+  scripts/                CLI train, preview, audit, xuất report và render notebook
+  tests/                  fixture sanity, freeze/optimizer, leakage guards, artifact audits
+  outputs/
+    runs/                 evidence thí nghiệm gốc và phân tích dẫn xuất riêng
+    imports/              bundle metadata và đối chiếu source commit của dữ liệu nhập
+    preflight/            log/XML tests chạy trước training
+    published/            ảnh/bảng nhẹ được chọn để viết report
+    experiment_results.json  tóm tắt máy đọc của kết quả chính
+  validation/             kết quả kiểm chứng phần mềm/notebook; không phải dataset validation
+  description_lab_03.md   đề, thảo luận và quyết định
+  walkthrough_lab_03.md   tài liệu sống: spec, experiments, results
 ```
 
-Cấu hình và kết quả nằm trong `labs/lab03/config/` và `labs/lab03/outputs/`, dùng chung một registry. Các byte artifacts gốc không bị chỉnh sửa; 86 file nguồn mới hiện có khớp manifest; raw logs và checkpoint được kê khai riêng.
+`report.json` cố định nguồn để notebook không tự lấy nhầm một fixture hoặc run vừa chạy. `workflow.json` ghi active run phục vụ runtime. Dataset validation được tải qua Hugging Face; không nằm trong thư mục `validation/` của source.
 
-## 3. Cài đặt
+## 4. Chạy từ đầu trên Kaggle
 
-Yêu cầu `Requires-Python` giao nhau của các pin trực tiếp là **>=3.10**; tính sẵn có của wheel/phụ thuộc bắc cầu còn tùy nền tảng. Quy trình hỗ trợ đã kiểm chứng dùng Python **3.12**: đã kiểm chứng CPU Linux 3.12.14 và run Kaggle ghi nhận 3.12.15. Dùng môi trường riêng, tránh hạ cấp thư viện nền Kaggle.
+Import [notebook 08](notebooks/08_kaggle_frozen_encoder_trial.ipynb) từ nhánh chứa code hiện tại, dùng session mới, bật **GPU + Internet**, chạy lần lượt 10 cell hoặc Run All. Cell 1 clone repo và tạo Python 3.12 riêng bằng uv; không hạ cấp PyTorch của kernel Kaggle. Không cần thêm checkpoint cũ vào Input vì lượt này train từ pretrained base.
 
-Từ gốc repo, trên Linux/Kaggle:
+| Cell | Công việc |
+|---|---|
+| 1 | Repo, Python 3.12 riêng, GPU, dependencies |
+| 2 | Chốt frozen_trial config |
+| 3 | Preflight tests và sanity fixture CPU |
+| 4 | Exercise 1 và ba ảnh inline |
+| 5 | EDA official dataset và ảnh inline |
+| 6 | Preview augmentation trước/sau |
+| 7 | Baseline, train 10 epoch, khóa policy, test; hiện epoch table/curves |
+| 8 | Trình bày quyết định checkpoint/threshold đã ghi |
+| 9 | Test comparison, confusion, ROC/PR, calibration và lỗi |
+| 10 | Kiểm tra SHA256 và link tải review/checkpoint ZIP |
+
+Cell 7 thực hiện train -> validation selection -> test đúng thứ tự. Cell 8–9 chỉ hiển thị bằng chứng; không chọn lại model sau khi xem test. Không chạy lại cell 7 chỉ để xem hình. Session restart làm mất biến, cần chạy lại các cell setup; output cũ hiển thị không có nghĩa biến còn tồn tại.
+
+## 5. Cài đặt và CLI
+
+Requirements trực tiếp có giao `Requires-Python >=3.10`, nhưng môi trường hỗ trợ đã kiểm chứng là **Python 3.12**. Run Kaggle ghi 3.12.15; môi trường CPU kiểm chứng ghi trong artifact riêng. Không ghi `python==...` vào requirements pip.
+
+Từ gốc repo trên Linux:
 
 ```bash
 python -m pip install uv
@@ -59,379 +95,58 @@ uv python install 3.12
 uv venv --python 3.12 .venv-lab03
 uv pip install --python .venv-lab03/bin/python -r labs/lab03/requirements.txt
 uv pip check --python .venv-lab03/bin/python
+.venv-lab03/bin/python -m pytest labs/lab03/tests -q
 ```
 
-Trên Windows dùng `.venv-lab03\Scripts\python.exe` thay cho `.venv-lab03/bin/python`. Không cần kích hoạt nếu gọi trực tiếp interpreter.
-
-Trên Kaggle, bật **Settings -> Accelerator -> GPU** và **Internet** trước training; session restart sẽ mất biến Python và cần chạy lại các cell setup. Có thể đặt venv ngoài repo tại `/kaggle/working/lab03-py312` như phiên thực nghiệm đã chạy.
-
-`torch==2.6.0` bản Linux PyPI cung cấp CUDA build phù hợp của phiên đã kiểm chứng. Nếu cần cài wheel cụ thể trước requirements:
-
-```bash
-# CUDA 12.4: cần driver hỗ trợ; kiểm tra bằng nvidia-smi
-uv pip install --python .venv-lab03/bin/python torch==2.6.0 --index-url https://download.pytorch.org/whl/cu124
-# Hoặc máy chỉ CPU dùng https://download.pytorch.org/whl/cpu
-```
-
-Requirements pin dependencies trực tiếp, chưa là lockfile toàn bộ dependency bắc cầu. Không cần torchvision. Dataset và model công khai không cần token; mạng phải truy cập được Hugging Face và các CDN/Xet chuyển hướng. Không tắt kiểm tra TLS khi gặp lỗi tải.
-
-## 4. Kiểm thử và audit (không cần GPU)
-
-```bash
-cd labs/lab03
-../../.venv-lab03/bin/python -m pytest -q
-cd ../..
-.venv-lab03/bin/python labs/lab03/scripts/audit_outputs.py
-```
-
-- **95 tests đạt trên CPU** (phiên notebook 10 cell, xem `validation/notebook_layout_readiness.json`; bằng chứng study đã đo ở `validation/study_completion.json`): dataset contract, dynamic padding, pipeline/manual, checkpoint, sanity overfit, Trainer, run tracking, năm plots, recovery, metrics/artifact audit và phát hiện dữ liệu bị sửa.
-- Audit kiểm tra 51 file khoa học hiện hành, tính lại validation sweep, test metrics và confusion matrices. Selection dùng validation phase trong training run. Báo cáo audit đầy đủ được lưu trong một run `artifact_audit` dưới `outputs/`, kèm bản tiện tra cứu tại `validation/`.
-- 30 file checkpoint không có trong Git được liệt kê rõ là thiếu có chủ đích, không coi là đã kiểm tra tại môi trường kiểm chứng.
-- Ba notebook chạy hết ở view, Hugging Face offline, không có cell lỗi. Xem `validation/notebook_execution.json`.
-
-Tests có fixture nhỏ để kiểm tra pipeline; chúng không phải benchmark Rotten Tomatoes. Audit thực dùng `all_predictions.json` từ Kaggle và không suy luận lại từ weights.
-
-## 5. Chạy thí nghiệm mới trên GPU
-
-Từ gốc repo, dùng interpreter của môi trường vừa cài:
-
-```bash
-.venv-lab03/bin/python labs/lab03/scripts/run_exercise1.py
-CUDA_VISIBLE_DEVICES=0 TOKENIZERS_PARALLELISM=false .venv-lab03/bin/python labs/lab03/scripts/train_finetune.py
-```
-
-Trên Kaggle có thể gọi các lệnh bằng `subprocess.run([...], cwd=REPO, env=RUN_ENV, check=True)`, trong đó `RUN_ENV['CUDA_VISIBLE_DEVICES']='0'`; không dùng Python mặc định của notebook nếu requirements nằm trong venv khác.
-
-Lệnh `train_finetune.py` chạy một cấu hình đủ **10 epoch** với LR 2e-5. Quy trình mở rộng khuyến nghị dùng notebook `04_kaggle_10epoch_study.ipynb` hoặc:
-
-```bash
-CUDA_VISIBLE_DEVICES=0 TOKENIZERS_PARALLELISM=false CUBLAS_WORKSPACE_CONFIG=:4096:8 .venv-lab03/bin/python labs/lab03/scripts/run_study.py
-.venv-lab03/bin/python labs/lab03/scripts/package_study.py
-```
-
-Study thử LR 1e-5, 2e-5, 3e-5; **mỗi LR đủ 10 epoch**, tổng 30 epoch giữa ba candidate. Log mỗi 25 step, validation/checkpoint mỗi 100 step và cuối epoch. Chọn checkpoint/LR bằng validation Macro-F1, sau đó dùng validation chọn threshold, cuối cùng đánh giá test. Mỗi candidate chỉ có validation predictions, không có test predictions. Không chạy full study trên CPU.
-
-Batch train/eval 16/32, max length 128, AdamW, weight decay 0.01, warmup 10%, linear scheduler, clip gradient 1.0, FP16 trên CUDA, dynamic padding bội 8. Lưu model-only checkpoint để giảm dung lượng; không resume optimizer. Mỗi lần chạy tạo run mới. Sanity test dùng mô hình riêng, không làm thay đổi weights pretrained của thí nghiệm chính.
-
-Có thể thực thi ba notebook với MODE=train thay CLI. Không chạy notebook tích hợp và notebook từng bài đồng thời nếu chỉ muốn một lần thí nghiệm.
-
-### Chạy từ notebook Kaggle mới
-
-Bật GPU và Internet trước. Cell sau clone đúng nhánh `lab03`, tạo Python 3.12 riêng và dùng cùng interpreter cho kiểm tra/training.
-
-```python
-import os
-import sys
-import subprocess
-from pathlib import Path
-
-REPO_URL = "https://github.com/lacthui06/Lab-DL.git"
-REPO = Path("/kaggle/working/Lab-DL")
-ENV = Path("/kaggle/working/lab03-py312")
-PYTHON = str(ENV / "bin/python")
-
-if not REPO.exists():
-    subprocess.run(
-        ["git", "clone", "--branch", "lab03", "--single-branch", REPO_URL, str(REPO)],
-        check=True,
-    )
-# Nếu đã clone từ trước, kiểm tra thay đổi rồi git pull --ff-only origin lab03.
-assert (REPO / "labs/lab03/requirements.txt").is_file()
-
-RUN_ENV = os.environ.copy()
-RUN_ENV["CUDA_VISIBLE_DEVICES"] = "0"
-RUN_ENV["TOKENIZERS_PARALLELISM"] = "false"
-RUN_ENV["PYTHONUNBUFFERED"] = "1"
-
-def run(*args):
-    return subprocess.run(list(args), cwd=REPO, env=RUN_ENV, check=True)
-
-run(sys.executable, "-m", "pip", "install", "uv")
-UV = [sys.executable, "-m", "uv"]
-run(*UV, "python", "install", "3.12")
-if not Path(PYTHON).exists():
-    run(*UV, "venv", "--python", "3.12", str(ENV))
-run(*UV, "pip", "install", "--python", PYTHON,
-    "-r", str(REPO / "labs/lab03/requirements.txt"))
-run(*UV, "pip", "check", "--python", PYTHON)
-run(PYTHON, "-c", "import torch; print(torch.__version__); "
-    "assert torch.cuda.is_available(), 'Enable GPU in Kaggle Settings'; "
-    "print(torch.cuda.get_device_name(0))")
-run(PYTHON, "-m", "pytest", "labs/lab03/tests", "-q", "-c", "labs/lab03/pytest.ini")
-run(PYTHON, "-u", "labs/lab03/scripts/run_exercise1.py")
-run(PYTHON, "-u", "labs/lab03/scripts/train_finetune.py")
-```
-
-Đây là một lần train mới; chỉ chạy khi cần làm thí nghiệm lại. Đọc kết quả đã công bố hoặc bổ sung threshold từ checkpoint cũ không cần train lại. Sau train, `config/workflow.json` trỏ đến run mới; không ghi đè run Kaggle tham chiếu. Muốn lưu lại toàn bộ cell output, đăng ký kernel của môi trường này rồi render notebook view:
-
-```python
-run(PYTHON, "-m", "ipykernel", "install", "--user", "--name", "lab03")
-run(PYTHON, "labs/lab03/scripts/render_notebooks.py", "--kernel", "lab03")
-```
-
-## 6. Kết quả lịch sử 3 epoch và truy vết
-
-| Giai đoạn | Run được registry chọn |
-|---|---|
-| Exercise 1 | `20261026T155744Z_exercise1_65dfe784` |
-| Fine-tuning | `20261026T155822Z_finetuning_2c2f0401` |
-
-| Test metric | Giá trị |
-|---|---:|
-| Accuracy | 83,9587% |
-| Binary Precision / Recall / F1 | 83,5185% / 84,6154% / 84,0634% |
-| Macro Precision / Recall / F1 | 83,9646% / 83,9587% / 83,9580% |
-| Đúng / tổng | 895 / 1.066 |
-
-Confusion matrix `[TN FP; FN TP]` = `[[444,89],[82,451]]`. Checkpoint epoch 3 được chọn theo validation accuracy 84,33%; epoch 2 có loss validation thấp hơn. Có dấu hiệu overfitting; đề không đặt ngưỡng accuracy 85%.
-
-Nguồn: [metrics](outputs/published/finetuning/test_metrics.json), [toàn bộ dự đoán](outputs/published/finetuning/all_predictions.json), [lịch sử](outputs/published/finetuning/trainer_history.json), [audit độc lập](validation/artifact_audit.json).
-
-## 7. Checkpoint, inference và lưu trữ
-
-**GitHub không chứa trọng số.** Run Kaggle lưu bằng chứng reload thành công trong `reload_check.json`; môi trường kiểm chứng không chạy lại checkpoint. Không có URL weights công khai đã xác minh, nên cần giữ ZIP Kaggle của bạn.
-
-Để đánh giá/suy luận lại, giải nén `best_model/` từ ZIP vào đúng đường dẫn:
-
-```text
-labs/lab03/outputs/runs/20261026T155822Z_finetuning_2c2f0401/best_model/
-```
-
-Rồi chạy:
-
-```bash
-.venv-lab03/bin/python labs/lab03/scripts/eval.py --model-path labs/lab03/outputs/runs/20261026T155822Z_finetuning_2c2f0401/best_model
-.venv-lab03/bin/python labs/lab03/scripts/infer.py --model-path labs/lab03/outputs/runs/20261026T155822Z_finetuning_2c2f0401/best_model --text "A wonderful movie."
-```
-
-Eval/infer với `best_model/` ưu tiên config snapshot của run (gồm max length và dataset), nên thay đổi config hiện tại không làm lệch đánh giá run cũ. Eval chỉ tải tokenizer trong checkpoint, không tải lại backbone/tokenizer không liên quan.
-
-Không truyền `--model-path` thì infer dùng sentiment pretrained SST-2 của Exercise 1, **không phải** mô hình Rotten Tomatoes vừa train. Eval không âm thầm fallback khi thiếu checkpoint.
-
-SHA256 weights được giữ trong manifest: `5a63c9c2a6391132c86b0e6c08277cc23ccc692dd080b78ba2db074225bb5105`. Khi đưa weights vào lại, audit sẽ kiểm tra hash thật. Không upload weights/optimizer hoặc ZIP lớn vào Git.
-
-## 8. Artifacts và chia sẻ run mới
-
-Mỗi run có config, snapshot, console log, provenance, status, SHA256 manifest, metrics, lịch sử, dự đoán và report. Năm hình: learning curves, confusion matrix chuẩn hóa kèm counts, binary metrics bar, train token-length KDE/cutoff và bảng mẫu đúng/sai.
-
-`outputs/` mặc định bị ignore để tránh đẩy nhầm model; các artifacts nhẹ của các run hiện hành đã được commit. Với run mới, chỉ stage phần nhẹ:
-
-```bash
-git add -f -- labs/lab03/outputs/runs/<run_id> ':(glob,exclude)**/best_model/**' ':(glob,exclude)**/checkpoints/**'
-git add labs/lab03/config/workflow.json
-git diff --cached --stat
-```
-
-Giữ manifest gốc kể cả khi weights không đi cùng. Không chỉnh sửa artifacts lịch sử để làm số liệu đẹp hơn; kết quả rà soát bổ sung ghi ở `validation/`. Run registry cần đi cùng run directory khi chuyển máy.
-
-## 9. Notebook mở rộng, roadmap và artifact trực quan
-
-Bản mở rộng đặt roadmap ngay đầu notebook, gồm phase, mục tiêu, module/file tham chiếu và đường dẫn artifact. Notebook không chỉ in JSON: bảng token, so sánh pipeline/manual, ROC–PR, phân bố xác suất, reliability/calibration, metric theo lớp và phân tích threshold đều có PNG đã lưu.
-
-Chạy lại phần phân tích của run cũ **không cần checkpoint/GPU/Internet**:
-
-```bash
-.venv-lab03/bin/python labs/lab03/scripts/analyze_outputs.py
-```
-
-`src/analysis.py` tạo các run `exercise1_analysis` và `analysis` độc lập, lưu hình cùng JSON nguồn. Cache chỉ dùng khi manifest nguồn và code SHA256 còn khớp. Không sửa file hoặc manifest của run Kaggle cũ.
-
-Để thực thi toàn bộ notebook view và lưu **mọi cell output** dưới `outputs/`:
-
-```bash
-.venv-lab03/bin/python -m ipykernel install --user --name lab03
-.venv-lab03/bin/python labs/lab03/scripts/render_notebooks.py --kernel lab03
-```
-
-Run `notebook_render` chứa bản notebook đã thực thi và `execution_summary.json`; các notebook ở thư mục `notebooks/` cũng được cập nhật output. Quy trình chỉ chạy `MODE="view"`. Thực thi interactively vẫn đọc các PNG/bảng từ run phân tích đã lưu; mọi biểu đồ trình bày có file tương ứng trong `outputs/runs/`.
-
-## 10. Quét threshold binary đúng quy trình
-
-Quy tắc dự đoán mở rộng: Positive khi `P(Positive) >= threshold`. Với xác suất đúng bằng 0.5, quy tắc `>=` có thể khác argmax cũ ở trường hợp hòa điểm; không giả định hai cách luôn giống nhau.
-
-Train mới thực hiện:
-
-1. Chọn checkpoint tốt nhất theo **validation accuracy**.
-2. Predict lại **validation** bằng checkpoint đó và lưu `validation_predictions.json`.
-3. Quét 19 ngưỡng từ 0.05 tới 0.95, bước 0.05; chọn **validation Macro F1** lớn nhất. Khi hòa: gần 0.5 nhất, sau đó ngưỡng nhỏ hơn.
-4. Lưu và cố định `decision_threshold.json`; lưu scan, hình và selected policy trong `validation_threshold/`.
-5. Sau đó mới predict test. Giữ `test_metrics.json` theo argmax để so sánh; lưu riêng `test_threshold_metrics.json` cho ngưỡng validation đã cố định.
-
-Code `src/training/thresholds.py` chặn chọn ngưỡng khi `split != 'validation'`. `scripts/select_threshold.py` chỉ đọc validation để chọn, không đọc test predictions. Test suite kiểm tra cả quy tắc này và lưu artifacts. Việc gắn nhãn split trong API không tự chứng minh nguồn dữ liệu; notebook/CLI chịu trách nhiệm truyền đúng split.
-
-Run hiện hành đã lưu đủ validation probabilities, loss và policy **0,8** chọn theo validation Macro F1; weights tiếp tục nằm ngoài Git. Đồ thị `threshold_test_diagnostic/threshold_curves.png` chỉ mô tả độ nhạy trên test đã quan sát; **không chọn ngưỡng tối ưu từ test** và không thay đổi kết quả 83,96% của run gốc.
-
-Nếu còn ZIP checkpoint, khôi phục `best_model/` rồi chọn ngưỡng mà không train lại:
-
-```bash
-.venv-lab03/bin/python labs/lab03/scripts/select_threshold.py \
-  --model-path labs/lab03/outputs/runs/20261026T155822Z_finetuning_2c2f0401/best_model
-```
-
-Lệnh in đường dẫn policy trong run `threshold_selection` mới. Dùng policy đó khi đánh giá/suy luận:
-
-```bash
-.venv-lab03/bin/python labs/lab03/scripts/eval.py \
-  --model-path <best_model_directory> \
-  --threshold-file <threshold_selection_run>/decision_threshold.json
-
-.venv-lab03/bin/python labs/lab03/scripts/infer.py \
-  --model-path <best_model_directory> \
-  --threshold-file <threshold_selection_run>/decision_threshold.json \
-  --text "The film was enjoyable."
-```
-
-Checkpoint train mới mang policy cùng `best_model/`; eval/infer tự đọc nếu có. Checkpoint cũ không policy giữ argmax. Mọi inference CLI giờ được lưu trong run riêng gồm predictions JSON, hình và log, không chỉ in ra terminal.
-
-Test set cũ đã được quan sát trong phát triển; một vòng thử ngưỡng mới trên benchmark đó vẫn mang tính thăm dò, không được trình bày như kiểm định mù độc lập. Không dùng hình test diagnostic để điều chỉnh lựa chọn ngưỡng.
-
-Policy threshold được gắn SHA256 của checkpoint; không áp policy của model A vào model B. Inference lưu cả policy, hình và predictions. Dependency `ipywidgets` được pin để notebook có progress widget đúng môi trường.
-
-
-## 11. Threshold của lịch sử 3 epoch và hình so sánh
-
-| Vai trò | Run Kaggle nguồn |
-|---|---|
-| Chọn threshold trên validation | `20261026T155822Z_finetuning_2c2f0401` |
-| Tải lại checkpoint, đánh giá full test | `20261026T160058Z_evaluation_07c24854` |
-| Inference với policy đóng băng | `20261026T160111Z_inference_7f2b16f0` |
-
-| Test metric | Argmax | Policy validation 0,8 |
-|---|---:|---:|
-| Accuracy | 83,9587% | 84,0525% |
-| Positive Precision | 83,5185% | 86,5191% |
-| Positive Recall | 84,6154% | 80,6754% |
-| Binary F1 | 84,0634% | 83,4951% |
-| Macro F1 | 83,9580% | 84,0343% |
-| TN / FP / FN / TP | 444 / 89 / 82 / 451 | 466 / 67 / 103 / 430 |
-
-Validation Macro F1: **0,843279 → 0,852663**. Test chỉ thêm một mẫu đúng, giảm 22 FP nhưng tăng 21 FN; không khẳng định 0,8 tốt hơn ở mọi mục tiêu. Measured test loss sau reload là **0,5442677736**, không đổi khi thay decision threshold. Giữ riêng loss này với loss 0,5443162918 lúc fine-tuning và NLL 0,5442964394 tái tính từ probabilities.
-
-[Walkthrough](walkthrough_lab_03.md) giải thích đầy đủ quyết định và đánh đổi. Module `src/threshold_evidence.py` đối chiếu policy giữa ba run, SHA256 checkpoint, validation fingerprint, 19 ngưỡng và toàn bộ predictions. Module `src/threshold_analysis.py` xuất chín hình so sánh cùng bảng có thể tính lại; notebook hiển thị trực tiếp các hình đó.
-
-```bash
-.venv-lab03/bin/python labs/lab03/scripts/analyze_outputs.py
-.venv-lab03/bin/python labs/lab03/scripts/audit_outputs.py
-```
-
-Hai lệnh này dùng evidence đã lưu, không tải weights và không train lại. Notebook `view` tự dùng kết quả bổ sung khi nó thuộc đúng training run; không gắn policy cũ vào một model mới. Bản notebook đã chạy được sao lưu đầy đủ trong run `notebook_render`, bao gồm cả bảng và hình hiển thị.
-
-Run train mới có policy riêng được phân tích trực tiếp từ validation/test artifacts của chính run đó; xuất thêm `training_threshold_metrics.png`, `training_threshold_per_class.png` và `training_threshold_confusion.png`. Không cần tạo ba run selection/evaluation/inference riêng để notebook hiển thị so sánh threshold. `measured_test_loss` lấy từ `test_runtime_metrics.json` khi có; run gốc không log loss vẫn giữ trạng thái thiếu. Registry chọn bộ evidence cùng checkpoint/policy, không ghép tùy tiện các active run khác model.
-
-
-## 12. Notebook trực quan và artifact để làm report
-
-Notebook hiển thị hình/bảng ngay tại từng phase và lưu chính các kết quả đó dưới `outputs/`. Với notebook Kaggle điều phối CLI bằng subprocess, chạy cell hiển thị trong kernel notebook:
-
-```python
-import runpy
-from pathlib import Path
-LAB = Path("/kaggle/working/Lab-DL/labs/lab03")
-_ = runpy.run_path(str(LAB / "scripts/display_results.py"), run_name="__main__")
-```
-
-Bộ report chọn run tường minh tại `config/report.json`. Chạy lệnh sau để sao chép hình/bảng đã có, không tải model và không vẽ lại đồ thị:
-
-```bash
-.venv-lab03/bin/python labs/lab03/scripts/publish_artifacts.py
-```
-
-Mở `outputs/published/index.md` để xem bảng kết quả và toàn bộ hình. `metrics_summary.json`, `artifact_catalog.json` và `source_runs.json` giúp dùng lại artifact cho report. Đổi các run được chọn rồi xuất lại khi cần; không cần trích raw outputs hoặc tạo lại toàn bộ phần phân tích cho mỗi bản trình bày. Checkpoint và raw logs không được đưa vào bộ published.
-
-Phiên Kaggle hiện hành đã chốt dataset revision `aa13bc287fa6fcab6daf52f0dfb9994269ffea28` và model revisions trong config. 86 file của bảy run mới hiện có khớp manifest; bảy console logs không có trong bộ công bố được kê khai bằng `artifact_availability.json`. Manifest gốc được giữ nguyên, dữ liệu khoa học không được phép khai báo thiếu dưới dạng log.
-
-
-## 13. Notebook Kaggle 10 epoch: chạy và thu hồi
-
-1. Cập nhật nhánh `lab03`; trên Kaggle chọn **File -> Import Notebook -> GitHub** và nhập URL của `notebooks/04_kaggle_10epoch_study.ipynb` trên nhánh này.
-2. Bật GPU T4 và Internet, chạy các cell từ trên xuống. Python 3.12 nằm trong venv riêng, không cài đè PyTorch của kernel Kaggle.
-3. Preflight chạy tests CPU và lưu XML/log trong `outputs/preflight/`. Training chỉ bắt đầu sau khi tests pass.
-4. Study fit TF-IDF trên train, chọn C bằng validation; ba DistilBERT candidate chạy đủ 10 epoch. Best checkpoint được chọn từ mọi mốc validation, không mặc định lấy epoch 10.
-5. Cell hiển thị chạy ngay trong kernel notebook: learning curves từng LR, threshold sweep, bảng kết quả, confusion matrices, ROC/PR, confidence và inference. Những hình này có file gốc dưới `outputs/runs/`.
-6. Tải **review ZIP** để xem xét/report; tải **checkpoint ZIP** để giữ model/tokenizer/policy. Không commit checkpoint ZIP lên Git thông thường.
-7. **Save Version** và **File -> Download Notebook** để giữ cả output cell. Review ZIP không tự thu hồi notebook tương tác trong trình duyệt.
-
-Có thể copy từng block `# %%` từ [kaggle_10epoch_cells.py](scripts/kaggle_10epoch_cells.py) vào các cell Code thay vì Import Notebook. Đây là cùng các cell của notebook, không phải một pipeline training khác.
-
-Study tự xuất `study_report.md` với bảng và ảnh từ dữ liệu đã chạy. `candidate_comparison.json`, `frozen_selection.json`, `probability_diagnostics.json`, `threshold_errors.json` và `test_comparison.json` là nguồn số liệu đi kèm, không thay thế ảnh inline.
-
-CI bootstrap 95% dùng 2.000 lần resample phân tầng test cho model/policy cố định. Nó không đo biến thiên giữa seed train. Test lịch sử đã từng được xem; kết quả mới không phải bằng chứng trên một blind test hoàn toàn mới. Ba learning rate là tìm kiếm có giới hạn, không có tuyên bố tối ưu toàn cục hoặc đảm bảo tăng accuracy.
-
-Khi thu hồi kết quả mới, cập nhật Section 2/3 của walkthrough từ đúng run study; các bảng/hình lịch sử vẫn giữ đúng nguồn và không bị đổi nhãn thành 10 epoch.
-
-
-## 14. Kết quả thật của study 10 epoch
-
-Study: `20261026T184219Z_study_94f2ba7b`. Review ZIP có 128 file khớp SHA256; source hashes khớp code revision `ca58b27`. Mỗi candidate có 5.340 Trainer steps, 63 validation milestones và 10 train-eval milestones. AMP skipped 5/4/5 updates được giữ rõ trong metadata; không đánh đồng Trainer steps với successful optimizer updates.
-
-| LR | Epoch hoàn tất | Best step | Best epoch | Validation Macro-F1 | Validation loss tại best |
-|---|---:|---:|---:|---:|---:|
-| 1e-5 | 10 | 3200 | 5,993 | 84,9906% | 0,755625 |
-| 2e-5 | 10 | 2100 | 3,933 | 84,8920% | 0,747378 |
-| 3e-5 | 10 | 1700 | 3,184 | 85,6473% | 0,702748 |
-
-Winner được chọn bằng validation Macro-F1 trước test. Threshold sweep đủ 19 điểm chọn **0,5** cho winner; không có yêu cầu ngưỡng đã quét phải khác 0,5. Không dùng test để đổi winner hoặc policy.
-
-| Model / policy | Test Accuracy | Macro-F1 | Binary-F1 |
-|---|---:|---:|---:|
-| TF-IDF + Logistic Regression, 0,5 | 78,2364% | 78,2352% | 78,0718% |
-| TF-IDF, validation threshold 0,4 | 78,7054% | 78,6158% | 80,0000% |
-| DistilBERT winner, threshold 0,5 | 83,3959% | 83,3952% | 83,2861% |
-
-Winner test: **TN=448, FP=85, FN=92, TP=441**; Precision Positive 83,8403%, Recall 82,7392%. Measured test loss **0,7980755568**; reconstructed NLL **0,7980772048** được giữ riêng. ROC-AUC 0,918416; AP 0,925989; Brier 0,150674; confidence ECE 0,146071.
-
-So với argmax lịch sử trên cùng 1.066 index/text/label, study sửa 42 lỗi nhưng tạo 48 lỗi mới: giảm 6 mẫu đúng. Paired bootstrap CI cho chênh accuracy chứa 0, không có kết luận vượt trội thống kê. Protocol còn khác LR/scheduler/criterion nên không phải ablation chỉ thay epoch.
-
-**Không cần train lại để hoàn thiện báo cáo.** Hình đã hiển thị ở notebook 05 và phần mở rộng của notebook tích hợp; `outputs/published/index.md` có bảng/ảnh cho report với `primary_result="study"`. Dữ liệu lịch sử giữ riêng theo role, không bị thay bằng số study.
-
-Raw logs của phiên này có đủ trong Git; checkpoint cố ý nằm ngoài Git. Review tại đây kiểm tra predictions/policy/manifest; không tải weights và không tuyên bố đã lặp lại GPU training. Giữ checkpoint ZIP để inference hoặc reload sau này.
-
-## 15. Train theo epoch và thử giảm overfitting
-
-Dùng [notebook 06](notebooks/06_kaggle_regularized_epoch_training.ipynb) cho lượt chạy mới theo cách trình bày của training loop Lab01: đủ train/validation mỗi epoch, một dòng tổng kết `Epoch 01/10` đến `Epoch 10/10`, bảng `epoch_history.json` có 10 dòng, hình loss/accuracy có đúng 10 điểm cuối epoch. Steps vẫn là đơn vị cập nhật nội bộ, không dùng làm trục chính của hình.
-
-Cấu hình mới nằm ở `config/regularized.json` và `config/regularized_study.json`: LR 5e-6/1e-5, weight decay 0.1, dropout encoder/attention 0.2, classifier dropout 0.3, đánh giá/lưu checkpoint cuối mỗi epoch. Hai candidate chạy đủ 10 epoch mỗi candidate, không early stopping. Vẫn chọn model bằng validation Macro-F1 và threshold từ validation; vẫn cross-entropy gốc, không label smoothing. Các giá trị này là phương án thử có lý do, chưa phải cấu hình đã được chứng minh tối ưu.
-
-**Trạng thái: chưa có kết quả GPU của cấu hình regularized.** Cần chạy notebook 06 để đo hiệu quả; không dùng số liệu study cũ làm kết quả của cấu hình mới. Nếu validation loss vẫn tăng, báo cáo đúng kết quả, không làm mượt/sửa ảnh để che overfitting. Đây là gói thay đổi LR/regularization, không phải thí nghiệm tách riêng nguyên nhân từng yếu tố.
-
-Notebook 05 và phần study của notebook tích hợp đã được trình bày lại: mỗi đường chính có đúng 10 mốc nguyên, dashboard step mặc định ẩn. PNG mới là artifact dẫn xuất trong run `epoch_presentation`; raw graphs/history/weights cũ giữ nguyên. Việc vẽ lại **không sửa overfitting** và không cần train lại.
-
-CLI từ gốc repo:
-
-```bash
-CUDA_VISIBLE_DEVICES=0 TOKENIZERS_PARALLELISM=false CUBLAS_WORKSPACE_CONFIG=:4096:8 .venv-lab03/bin/python labs/lab03/scripts/run_study.py --config labs/lab03/config/regularized.json --settings labs/lab03/config/regularized_study.json
-```
-
-Có thể copy từng block trong [kaggle_regularized_epoch_cells.py](scripts/kaggle_regularized_epoch_cells.py) nếu không dùng Import Notebook. Chạy full GPU training trong notebook rồi lấy review ZIP/checkpoint ZIP ở cell cuối như trước.
-
-## 16. Tăng thêm mẫu train có kiểm soát
-
-Dùng [notebook 07](notebooks/07_kaggle_augmented_epoch_training.ipynb) nếu cần tăng mẫu cùng profile regularization. Giữ đủ 8.530 train gốc; sinh tối đa 25% biến thể, tương đương tối đa 2.132 mẫu bổ sung, nhưng số thực tế phụ thuộc câu đủ điều kiện. Validation/test giữ nguyên 1.066/1.066. Số step/epoch tính lại theo effective train size, không cố định 534.
-
-Augmentation thay một từ/cụm từ cùng cực tính, bỏ câu phủ định/tương phản, chặn trùng casefold-whitespace và giữ số mẫu bổ sung cân bằng hai lớp. Không lấy câu/nhãn từ validation/test để sinh train; heldout text chỉ dùng để chặn collision. Records lưu parent index, câu gốc, câu mới, label và vị trí từ thay thế. Đây là synthetic data với nhãn kế thừa, không phải ground truth mới đã được con người kiểm tra.
-
-Notebook hiện ảnh trước/sau và bảng ví dụ trước khi train. TF-IDF và DistilBERT dùng cùng augmented train pool; audit kiểm tra record checksum và tính nhất quán giữa baseline/candidates. Dropout, tokenization và TF-IDF unigram/bigram giữ vai trò khác nhau; không đưa TF-IDF vectors vào DistilBERT hoặc xóa phủ định/stopwords khỏi review.
-
-`config/augmented.json` và `config/augmented_study.json` cấu hình hai LR, mỗi LR đủ 10 epoch. Preview lưu vào `outputs/runs/<id>_augmentation_preview_*`; mỗi candidate giữ records và stats phân biệt official/effective sizes. Tăng mẫu không đảm bảo hết overfit hoặc tăng accuracy; chỉ kết luận sau khi chạy GPU. Chưa có benchmark thật cho profile augmented này.
-
-## 17. Bố cục notebook 07: 10 cell code để trình bày
-
-Notebook 07 được chia thành đúng 10 cell code, mỗi cell có Markdown giải thích: (1) repo/môi trường/GPU, (2) cấu hình/seed, (3) tests, (4) Exercise 1, (5) dataset EDA, (6) augmentation preview, (7) train và learning curves, (8) đọc quyết định checkpoint/threshold, (9) test và phân tích lỗi, (10) audit/ZIP. Bảng roadmap/module/artifact đặt ở đầu notebook.
-
-`run_study.py` trong cell 7 thực hiện workflow train -> validation selection -> test theo đúng thứ tự. Cell 8 và 9 chỉ trình bày các records đã lưu, không chọn lại model hoặc threshold sau khi thấy test. Lệnh training chỉ xuất hiện một lần. EDA trước augmentation xuất ba ảnh và bảng trong run dataset_preview; ZIP thu hồi cả EDA cùng dataset/tokenizer cohort.
-
-Cách chia cell không thay learning rate, epoch, augmentation hay kết quả. Training mới chỉ chạy khi thực thi cell 7 trên Kaggle GPU; notebook không chứa kết quả giả hoặc tự khẳng định đã giảm overfitting. Helper `kaggle_augmented_epoch_cells.py` có cùng 10 block code cho trường hợp copy/paste.
-
-## 18. Thử giảm overfitting bằng frozen encoder
-
-Dùng [notebook 08](notebooks/08_kaggle_frozen_encoder_trial.ipynb), đúng 10 cell code, để chạy thử [frozen_trial.json](config/frozen_trial.json). Đóng băng embedding và 4/6 tầng encoder đầu; hai tầng cuối có LR 2e-6, head LR 1e-5. Dropout encoder/attention/head là 0.2/0.2/0.4, weight decay 0.1, không decay bias và LayerNorm. Giữ augmentation có lọc hiện tại để tránh ép thêm dữ liệu nhiễu.
-
-Chạy đủ 10 epoch từ pretrained base; không resume hoặc early stopping. Đổi tiêu chí checkpoint sang **validation loss thấp nhất**, công bố trước lượt chạy. Threshold vẫn chọn bằng validation Macro-F1 sau khi cố định checkpoint. Không trộn kết quả với study cũ chọn theo Macro-F1. Cấu hình frozen chưa chạy GPU, chưa có khẳng định đã giảm overfitting.
-
-Notebook hiện learning curves đúng 10 điểm, threshold scan, confusion matrix, ROC/PR và calibration từ cùng PNG được lưu dưới outputs/. Script tự tạo `lab03_review_<run>.zip` và `lab03_checkpoint_<run>.zip` dưới `/kaggle/working`. Review ZIP chứa bằng chứng nhẹ để kiểm tra; checkpoint ZIP giữ riêng cho inference/re-evaluation. Tải notebook có output qua File > Download Notebook. Không commit ZIP trọng số vào Git.
-
-CLI từ gốc repo, trong môi trường requirements của Lab03:
+Windows dùng `.venv-lab03/Scripts/python.exe`. Chỉ sanity/fixture cực nhỏ chạy trên CPU; full training cần Kaggle GPU.
 
 ```bash
 CUDA_VISIBLE_DEVICES=0 TOKENIZERS_PARALLELISM=false .venv-lab03/bin/python labs/lab03/scripts/run_frozen_trial.py --config labs/lab03/config/frozen_trial.json
 ```
+
+Tái kiểm toán và xuất artifact report từ kết quả đã lưu, không train:
+
+```bash
+.venv-lab03/bin/python labs/lab03/scripts/finalize_results.py
+```
+
+## 6. Kết quả và đánh đổi
+
+| Thí nghiệm | Threshold validation | Test accuracy | Macro-F1 | Test loss | Confidence ECE |
+|---|---:|---:|---:|---:|---:|
+| Full fine-tuning 10 epoch cũ | 0.50 | 83.40% | 83.40% | 0.798076 | 0.146071 |
+| Full fine-tuning + augmentation | 0.65 | 84.15% | 84.15% | 0.625951 | 0.130603 |
+| **Frozen 4 layers — bản chính** | **0.45** | **82.83%** | **82.82%** | **0.412560** | **0.037950** |
+
+Frozen giảm test loss và sai lệch confidence, accuracy thấp hơn bản augmented 14 mẫu, tương đương -1.31 điểm phần trăm. Các cấu hình khác cả LR, dropout, freeze và criterion checkpoint: đây là so sánh mô tả, không phải ablation xác định tác động riêng từng yếu tố. Một seed không đo biến thiên huấn luyện; test đã được xem trước nên không gọi là benchmark mới chưa đụng tới.
+
+Ma trận bản chính tại 0.45: **TN=429, FP=104, FN=79, TP=454**. Threshold 0.5 có cùng 883 mẫu đúng nhưng khác precision/recall; không đổi policy đã chọn vì một chỉ số test nhỉnh hơn.
+
+## 7. Thu hồi artifact và checkpoint
+
+Sau training, hai ZIP nằm ở `/kaggle/working`:
+
+- `lab03_review_<run>.zip`: config, log, predictions, epoch history, ảnh, source hashes và manifest; dùng kiểm tra và hoàn thiện report.
+- `lab03_checkpoint_<run>.zip`: best_model, tokenizer và decision_threshold; giữ riêng để inference hoặc evaluate lại.
+
+Nếu link cell không tải, mở **Output > /kaggle/working > Refresh > dấu ba chấm cạnh ZIP > Download**. Tải notebook có output bằng **File > Download Notebook**; script container không đọc được notebook tương tác đang mở trên web.
+
+Git giữ source, notebook có output, PNG và JSON/log bằng chứng cần thiết. Không commit checkpoint, dataset thô hoặc ZIP nặng. Review ZIP của bản chính không có weights: audit trong repo kiểm tra records và SHA256, không giả vờ nạp lại checkpoint. `reload_check.json` gốc ghi xác minh weights và inference trên bốn câu validation tại Kaggle, không phải toàn bộ test.
+
+## 8. Giới hạn và điều kiện kết luận
+
+Dấu hiệu overfitting mạnh đã giảm trong 10 epoch quan sát được; không bảo đảm bằng 0 ở mọi dữ liệu hoặc ngân sách dài hơn. Hai đường gần nhau chưa chứng minh optimal: regularization quá mạnh có thể hạn chế khả năng thích nghi. Synthetic labels có thể nhiễu. Chưa có multi-seed study, semantic leakage audit hoặc kiểm toán dữ liệu pretraining. Bootstrap CI chỉ phản ánh lấy mẫu test có điều kiện trên model/threshold cố định.
+
+Không cần train lại để đọc bài, tạo report hoặc xem ảnh. Muốn thay cấu hình phải tạo run mới, công bố tiêu chí trước khi nhìn test và giữ nguyên bằng chứng cũ.
+
+## 9. Inference từ checkpoint frozen đã tải
+
+Giải nén checkpoint ZIP vào thư mục lưu riêng, ngoài run evidence đã commit. Với ZIP cũ, chuẩn bị policy/config bằng cách đối chiếu SHA256 weights với frozen trial đã chọn; không train và không đổi threshold:
+
+```bash
+CHECKPOINT_DIR="/path/to/extracted/best_model"
+.venv-lab03/bin/python labs/lab03/scripts/prepare_frozen_checkpoint.py --model-path "$CHECKPOINT_DIR"
+.venv-lab03/bin/python labs/lab03/scripts/infer.py --model-path "$CHECKPOINT_DIR" --text "The acting was excellent, but the story was disappointing."
+```
+
+Thay đường dẫn bằng thư mục best_model thực tế. Lệnh đầu từ chối checkpoint khác SHA256 hoặc đường dẫn nằm trong raw run nguồn. Lệnh inference tự đọc threshold đã gắn và lưu predictions/PNG vào run inference riêng. Các lượt train mới xuất sẵn policy có checkpoint identity và training_config.json trong checkpoint ZIP. Việc thêm metadata không làm thay đổi weights hoặc cần train lại.

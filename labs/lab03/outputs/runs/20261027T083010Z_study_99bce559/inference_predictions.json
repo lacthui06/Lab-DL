@@ -1,0 +1,38 @@
+[
+  {
+    "text": "I love this wonderful movie!",
+    "score": 0.9981470108032227,
+    "probabilities": [
+      0.0018530595116317272,
+      0.9981470108032227
+    ],
+    "argmax_label": "POSITIVE",
+    "label": "POSITIVE",
+    "decision_threshold": 0.65,
+    "selection_split": "validation"
+  },
+  {
+    "text": "This movie was terrible and boring.",
+    "score": 0.9970421195030212,
+    "probabilities": [
+      0.9970421195030212,
+      0.002957902615889907
+    ],
+    "argmax_label": "NEGATIVE",
+    "label": "NEGATIVE",
+    "decision_threshold": 0.65,
+    "selection_split": "validation"
+  },
+  {
+    "text": "The acting was excellent, but the story was disappointing.",
+    "score": 0.9937345385551453,
+    "probabilities": [
+      0.9937345385551453,
+      0.006265534088015556
+    ],
+    "argmax_label": "NEGATIVE",
+    "label": "NEGATIVE",
+    "decision_threshold": 0.65,
+    "selection_split": "validation"
+  }
+]

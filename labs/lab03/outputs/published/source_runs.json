@@ -14,7 +14,16 @@
     "study_exercise1": "20261026T184202Z_exercise1_de76a80c",
     "study_exercise1_analysis": "20261026T184207Z_exercise1_analysis_5406bc6c",
     "study_review": "20261026T191751Z_study_review_d66d4edb",
-    "epoch_presentation": "20261027T061914Z_epoch_presentation_9a0cfccc"
+    "epoch_presentation": "20261027T061914Z_epoch_presentation_9a0cfccc",
+    "frozen_trial": "20261027T095655Z_frozen_trial_d8d09116",
+    "augmented_study": "20261027T083010Z_study_99bce559",
+    "augmented_lr_5e6": "20261027T083013Z_candidate_a2759300",
+    "augmented_lr_1e5": "20261027T083713Z_candidate_d00acd03",
+    "frozen_exercise1": "20261027T095627Z_exercise1_80baa48e",
+    "frozen_exercise1_analysis": "20261027T095630Z_exercise1_analysis_dc3ef4d7",
+    "frozen_dataset_preview": "20261027T095637Z_dataset_preview_e2b4d582",
+    "frozen_augmentation_preview": "20261027T095647Z_augmentation_preview_acb26523",
+    "final_review": "20261027T112616Z_final_review_82e3f77d"
   },
   "source_manifests": {
     "exercise1": "0df1428fafe25b5b1619baba8e82d6bab023aa87708832ad344f15dc04683ca8",
@@ -31,10 +40,19 @@
     "study_exercise1": "262ed846faf6c71d1b776a7f7dccf6e1314d8abe066aba06cc925fc00c1376f4",
     "study_exercise1_analysis": "2bd5c6d0b8506e62bcb916dc311f2541c7f6d833c5a81a5f093419dee09db135",
     "study_review": "9ea1be09736b64f3ec767e683fe2d237f0863526808361da84af7fb93ef7b069",
-    "epoch_presentation": "8c2192dfba2da65358e84103dbfd9cc8f27b1cea081bc6869ee2fce2fa940b4d"
+    "epoch_presentation": "8c2192dfba2da65358e84103dbfd9cc8f27b1cea081bc6869ee2fce2fa940b4d",
+    "frozen_trial": "56734dd1fee40a2f015da3b96c13e898961b60b0a46b5211e94d6c9299e0581f",
+    "augmented_study": "39229fe5b5d12dc97cc6e5713faa812e43fa8742c11e893b17d12a89a86fbd10",
+    "augmented_lr_5e6": "649e1b4d2ef4088c81beb8f1f827fa946600a0dd4ec05b7a5cfafc74f90d25c8",
+    "augmented_lr_1e5": "29508fad29830add27e4d943f66cfd04773a0a98aaeb68e753428b217bb03d4a",
+    "frozen_exercise1": "5f9715c589eec1b80fbd093caf0ed08f6cb5d5640bedb977cf7dd93501600f5b",
+    "frozen_exercise1_analysis": "5aa47ea4e798cd284a9bf38bc7678ea1ac1d9a021c1f14bbf4fdca99485f6a37",
+    "frozen_dataset_preview": "412e139ae2f604b1ceb78fb8b783f8c24229db1d1194db4891eca22ad76407b0",
+    "frozen_augmentation_preview": "ea22a364a709fb6232898fbfd352584b09da795c463f9e5bb410b73d44dfcfd7",
+    "final_review": "c8066e2bded65f38487ca1835ea78ba98a14fb24dbe815324517c5e64b4862e6"
   },
-  "exporter_sha256": "4453eb2d9ad69938d1c40ce9175000a588e4665ef629924eef0a7f98d420ae95",
-  "primary_result": "study",
+  "exporter_sha256": "6a1e95efb241ebf8d7da76e582d79c928cfe89d7a12c87e9985ca4c0a941fe4d",
+  "primary_result": "frozen_trial",
   "weights_included": false,
   "raw_logs_included": false
 }

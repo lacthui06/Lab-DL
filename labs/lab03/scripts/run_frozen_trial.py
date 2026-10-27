@@ -107,8 +107,11 @@ def run(config, root=ROOT, allow_cpu_fixture=False):
         vp = probabilities(validation.predictions)
         save_json(out/'validation_predictions.json', records(raw['validation'], vp))
         policy = select_validation_threshold(raw['validation']['label'], vp[:, 1])
+        from labs.lab03.src.decision import checkpoint_identity
+        policy['checkpoint_identity'] = checkpoint_identity(out/'best_model')
         save_json(out/'decision_threshold.json', policy)
         save_json(out/'best_model/decision_threshold.json', policy)
+        save_json(out/'best_model/training_config.json', config)
         curve = scan_thresholds(raw['validation']['label'], vp[:, 1])
         save_json(out/'validation_threshold_scan.json', curve)
         plot_threshold(policy, curve, out/'validation_threshold_curves.png')

@@ -1,0 +1,42 @@
+{
+  "review_run": "20261027T112616Z_final_review_82e3f77d",
+  "status": "passed",
+  "run_id": "20261027T095655Z_frozen_trial_d8d09116",
+  "manifest": {
+    "verified_files": 35,
+    "omitted_checkpoint_files": [
+      "best_model/config.json",
+      "best_model/decision_threshold.json",
+      "best_model/model.safetensors",
+      "best_model/special_tokens_map.json",
+      "best_model/tokenizer.json",
+      "best_model/tokenizer_config.json",
+      "best_model/training_args.bin",
+      "best_model/vocab.txt",
+      "checkpoints/checkpoint-4959/config.json",
+      "checkpoints/checkpoint-4959/model.safetensors",
+      "checkpoints/checkpoint-4959/special_tokens_map.json",
+      "checkpoints/checkpoint-4959/tokenizer.json",
+      "checkpoints/checkpoint-4959/tokenizer_config.json",
+      "checkpoints/checkpoint-4959/trainer_state.json",
+      "checkpoints/checkpoint-4959/training_args.bin",
+      "checkpoints/checkpoint-4959/vocab.txt",
+      "checkpoints/checkpoint-5510/config.json",
+      "checkpoints/checkpoint-5510/model.safetensors",
+      "checkpoints/checkpoint-5510/special_tokens_map.json",
+      "checkpoints/checkpoint-5510/tokenizer.json",
+      "checkpoints/checkpoint-5510/tokenizer_config.json",
+      "checkpoints/checkpoint-5510/trainer_state.json",
+      "checkpoints/checkpoint-5510/training_args.bin",
+      "checkpoints/checkpoint-5510/vocab.txt"
+    ],
+    "omitted_raw_logs": [],
+    "checkpoint_available_locally": false
+  },
+  "selected_epoch": 9,
+  "threshold": 0.45,
+  "test_samples": 1066,
+  "weights_loaded_locally": false,
+  "threshold_reselected_on_test": false,
+  "historical_test_previously_inspected": true
+}

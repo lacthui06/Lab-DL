@@ -1,0 +1,19 @@
+{
+  "threshold": 0.65,
+  "accuracy": 0.8414634146341463,
+  "precision": 0.8395522388059702,
+  "recall": 0.8442776735459663,
+  "specificity": 0.8386491557223265,
+  "FPR": 0.16135084427767354,
+  "binary_f1": 0.8419083255378859,
+  "macro_f1": 0.8414621590060078,
+  "TN": 447,
+  "FP": 86,
+  "FN": 83,
+  "TP": 450,
+  "negative_support": 533,
+  "positive_support": 533,
+  "sample_count": 1066,
+  "selection_split": "validation",
+  "selection_performed_on_test": false
+}

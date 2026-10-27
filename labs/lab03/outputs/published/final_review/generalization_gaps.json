@@ -1,0 +1,10 @@
+{
+  "frozen_final": {
+    "accuracy_gap": 0.004746904229955162,
+    "loss_gap": 0.011551350355148315
+  },
+  "augmented_final": {
+    "accuracy_gap": 0.14456161407103885,
+    "loss_gap": 0.6916162073612213
+  }
+}

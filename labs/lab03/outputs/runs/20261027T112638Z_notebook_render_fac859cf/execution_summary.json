@@ -1,0 +1,38 @@
+[
+  {
+    "notebook": "01_sentiment_analysis_pipeline.ipynb",
+    "mode": "view",
+    "executed_code_cells": 5,
+    "errors": 0,
+    "training_executed": false,
+    "artifact": "01_sentiment_analysis_pipeline.ipynb",
+    "inline_pngs": 3
+  },
+  {
+    "notebook": "02_finetuning_binary_classification.ipynb",
+    "mode": "view",
+    "executed_code_cells": 10,
+    "errors": 0,
+    "training_executed": false,
+    "artifact": "02_finetuning_binary_classification.ipynb",
+    "inline_pngs": 14
+  },
+  {
+    "notebook": "05_study_results_and_discussion.ipynb",
+    "mode": "view",
+    "executed_code_cells": 12,
+    "errors": 0,
+    "training_executed": false,
+    "artifact": "05_study_results_and_discussion.ipynb",
+    "inline_pngs": 21
+  },
+  {
+    "notebook": "lab03_huggingface_complete.ipynb",
+    "mode": "view",
+    "executed_code_cells": 11,
+    "errors": 0,
+    "training_executed": false,
+    "artifact": "lab03_huggingface_complete.ipynb",
+    "inline_pngs": 17
+  }
+]

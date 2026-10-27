@@ -1,5 +1,5 @@
 {
-  "artifact_run": "20261027T062349Z_notebook_render_161a4450",
+  "artifact_run": "20261027T112638Z_notebook_render_fac859cf",
   "notebooks": [
     {
       "notebook": "01_sentiment_analysis_pipeline.ipynb",
@@ -13,11 +13,11 @@
     {
       "notebook": "02_finetuning_binary_classification.ipynb",
       "mode": "view",
-      "executed_code_cells": 16,
+      "executed_code_cells": 10,
       "errors": 0,
       "training_executed": false,
       "artifact": "02_finetuning_binary_classification.ipynb",
-      "inline_pngs": 22
+      "inline_pngs": 14
     },
     {
       "notebook": "05_study_results_and_discussion.ipynb",
@@ -31,11 +31,11 @@
     {
       "notebook": "lab03_huggingface_complete.ipynb",
       "mode": "view",
-      "executed_code_cells": 32,
+      "executed_code_cells": 11,
       "errors": 0,
       "training_executed": false,
       "artifact": "lab03_huggingface_complete.ipynb",
-      "inline_pngs": 46
+      "inline_pngs": 17
     }
   ]
 }

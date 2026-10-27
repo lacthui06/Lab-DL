@@ -1,0 +1,14 @@
+{
+  "requested_epochs": 10,
+  "completed_epochs": 10.0,
+  "global_step": 5510,
+  "early_stopping": false,
+  "amp_skipped_optimizer_steps": 5,
+  "successful_optimizer_updates": 5505,
+  "selection_split": "validation",
+  "metric": "macro_f1",
+  "best_metric": 0.8489381946272041,
+  "best_checkpoint": "/kaggle/working/Lab-DL/labs/lab03/outputs/runs/20261027T083713Z_candidate_d00acd03/checkpoints/checkpoint-3306",
+  "test_evaluated": false,
+  "cuda_peak_allocated_bytes": 1424887296
+}

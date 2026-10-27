@@ -1,0 +1,28 @@
+{
+  "artifact_run": "20261027T112907Z_submission_verification_ebeab049",
+  "tests_passed": 108,
+  "relative_links_verified": 111,
+  "walkthrough_lines": 1621,
+  "primary_result": "frozen_trial",
+  "primary_run": "20261027T095655Z_frozen_trial_d8d09116",
+  "gpu_training_performed_locally": false,
+  "checkpoint_weights_loaded_locally": false,
+  "all_view_notebooks_executed_without_errors": true,
+  "inline_pngs": {
+    "01_sentiment_analysis_pipeline.ipynb": 3,
+    "02_finetuning_binary_classification.ipynb": 14,
+    "05_study_results_and_discussion.ipynb": 21,
+    "lab03_huggingface_complete.ipynb": 17
+  },
+  "bundle_source_hashes_verified": {
+    "augmented_study": 44,
+    "frozen_trial": 47
+  },
+  "validation_selection_and_test_metrics_recomputed": true,
+  "limitations": [
+    "one training seed",
+    "previously inspected test",
+    "synthetic inherited labels",
+    "weights remain in separate checkpoint archive"
+  ]
+}

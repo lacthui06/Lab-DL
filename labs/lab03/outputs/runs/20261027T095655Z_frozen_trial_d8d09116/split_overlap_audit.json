@@ -1,0 +1,26 @@
+{
+  "exact": {
+    "within_split_duplicates": {
+      "train": 0,
+      "validation": 0,
+      "test": 0
+    },
+    "cross_split_overlaps": {
+      "train__validation": 0,
+      "train__test": 0,
+      "validation__test": 0
+    }
+  },
+  "casefold_whitespace": {
+    "within_split_duplicates": {
+      "train": 0,
+      "validation": 0,
+      "test": 0
+    },
+    "cross_split_overlaps": {
+      "train__validation": 0,
+      "train__test": 0,
+      "validation__test": 0
+    }
+  }
+}

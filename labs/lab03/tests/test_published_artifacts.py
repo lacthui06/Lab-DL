@@ -43,7 +43,10 @@ def test_report_export_rejects_unsafe_selection(tmp_path):
 
 
 def test_report_primary_study_keeps_actual_metrics_and_historical_results_separate(tmp_path):
-    module=_module();out=module.publish_artifacts(output_dir=tmp_path/'published')
+    configuration=json.loads((ROOT/'config/report.json').read_text())
+    configuration['primary_result']='study'
+    settings=tmp_path/'study.json';settings.write_text(json.dumps(configuration))
+    module=_module();out=module.publish_artifacts(settings,output_dir=tmp_path/'published')
     summary=json.loads((out/'metrics_summary.json').read_text())
     assert summary['primary_result']=='study' and summary['selected_threshold']==.5
     assert summary['test_comparison'][-1]['accuracy']==pytest.approx(889/1066)
@@ -53,3 +56,14 @@ def test_report_primary_study_keeps_actual_metrics_and_historical_results_separa
     assert (out/'candidate_lr_3e5/step_learning_curves.png').is_file()
     manifest=json.loads((out/'manifest.json').read_text())
     assert all(hash_file(out/name)==digest for name,digest in manifest.items())
+
+
+def test_primary_frozen_trial_uses_its_measured_metrics_and_saved_figures(tmp_path):
+    out=_module().publish_artifacts(output_dir=tmp_path/'published')
+    summary=json.loads((out/'metrics_summary.json').read_text())
+    assert summary['primary_result']=='frozen_trial'
+    assert summary['selected_threshold']==.45
+    assert summary['test_comparison'][-1]['accuracy']==pytest.approx(883/1066)
+    assert summary['measured_test_loss']==pytest.approx(.41256004571914673)
+    assert (out/'frozen_trial/learning_curves.png').is_file()
+    assert (out/'frozen_trial/validation_threshold_curves.png').is_file()

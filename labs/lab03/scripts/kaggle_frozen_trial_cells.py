@@ -136,6 +136,8 @@ if not errors.empty:
 
 # %%
 import hashlib
+from urllib.parse import quote
+from IPython.display import HTML
 import zipfile
 review = Path("/kaggle/working") / f"lab03_review_{TRIAL.name}.zip"
 checkpoint = Path("/kaggle/working") / f"lab03_checkpoint_{TRIAL.name}.zip"
@@ -146,5 +148,7 @@ with zipfile.ZipFile(review) as archive:
 print("SHA256 review manifest: PASSED")
 for path in (review, checkpoint):
     print(path, f"{path.stat().st_size / 1024**2:.1f} MiB")
-    display(FileLink(str(path)))
+    display(HTML(f'<a href="/files/{quote(path.name)}" download="{path.name}">Tải {path.name}</a>'))
 print("Gửi review ZIP để kiểm tra; giữ checkpoint ZIP riêng. Tải thêm notebook có output qua File > Download Notebook.")
+
+print("Nếu link không tải: Output > /kaggle/working > Refresh > dấu ba chấm cạnh ZIP > Download.")

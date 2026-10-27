@@ -1,0 +1,6 @@
+Run: 20261027T082951Z_dataset_preview_a65c140f
+Generating train split:   0%|          | 0/8530 [00:00<?, ? examples/s]Generating train split: 100%|##########| 8530/8530 [00:00<00:00, 466465.18 examples/s]
+Generating validation split:   0%|          | 0/1066 [00:00<?, ? examples/s]Generating validation split: 100%|##########| 1066/1066 [00:00<00:00, 317709.66 examples/s]
+Generating test split:   0%|          | 0/1066 [00:00<?, ? examples/s]Generating test split: 100%|##########| 1066/1066 [00:00<00:00, 331194.67 examples/s]
+Official splits: {'train': 8530, 'validation': 1066, 'test': 1066}
+Train token lengths: {'mean': 27.368347010550995, 'max': 78, 'truncated_fraction': 0.0}

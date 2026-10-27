@@ -1,0 +1,98 @@
+[
+  {
+    "index": 604,
+    "text": "done in mostly by a weak script that can't support the epic treatment .",
+    "true_label": 0,
+    "probabilities": [
+      0.9861246943473816,
+      0.013875309377908707
+    ],
+    "predicted_label": 0,
+    "confidence": 0.9861246943473816,
+    "correct": true
+  },
+  {
+    "index": 700,
+    "text": "too much of the movie feels contrived , as if the filmmakers were worried the story wouldn't work without all those gimmicks .",
+    "true_label": 0,
+    "probabilities": [
+      0.9852997064590454,
+      0.014700297266244888
+    ],
+    "predicted_label": 0,
+    "confidence": 0.9852997064590454,
+    "correct": true
+  },
+  {
+    "index": 194,
+    "text": "a breathtaking adventure for all ages , spirit tells its poignant and uplifting story in a stunning fusion of music and images .",
+    "true_label": 1,
+    "probabilities": [
+      0.002555886749178171,
+      0.9974441528320312
+    ],
+    "predicted_label": 1,
+    "confidence": 0.9974441528320312,
+    "correct": true
+  },
+  {
+    "index": 85,
+    "text": "a captivating and intimate study about dying and loving . . .",
+    "true_label": 1,
+    "probabilities": [
+      0.0027683856897056103,
+      0.997231662273407
+    ],
+    "predicted_label": 1,
+    "confidence": 0.997231662273407,
+    "correct": true
+  },
+  {
+    "index": 607,
+    "text": "though its rather routine script is loaded with familiar situations , the movie has a cinematic fluidity and sense of intelligence that makes it work more than it probably should .",
+    "true_label": 0,
+    "probabilities": [
+      0.012383785098791122,
+      0.987616240978241
+    ],
+    "predicted_label": 1,
+    "confidence": 0.987616240978241,
+    "correct": false
+  },
+  {
+    "index": 664,
+    "text": "what [frei] gives us . . . is a man who uses the damage of war -- far more often than the warfare itself -- to create the kind of art shots that fill gallery shows .",
+    "true_label": 0,
+    "probabilities": [
+      0.016059979796409607,
+      0.9839400053024292
+    ],
+    "predicted_label": 1,
+    "confidence": 0.9839400053024292,
+    "correct": false
+  },
+  {
+    "index": 28,
+    "text": "devotees of star trek ii : the wrath of khan will feel a nagging sense of deja vu , and the grandeur of the best next generation episodes is lacking .",
+    "true_label": 1,
+    "probabilities": [
+      0.9807472825050354,
+      0.01925268955528736
+    ],
+    "predicted_label": 0,
+    "confidence": 0.9807472825050354,
+    "correct": false
+  },
+  {
+    "index": 276,
+    "text": "the movie worked for me right up to the final scene , and then it caved in .",
+    "true_label": 1,
+    "probabilities": [
+      0.9693241715431213,
+      0.030675802379846573
+    ],
+    "predicted_label": 0,
+    "confidence": 0.9693241715431213,
+    "correct": false
+  }
+]

@@ -1,0 +1,7 @@
+{
+  "source_commit": "c10609bff884a5bef1f8a1278826a5cb0ca0a85a",
+  "verified_source_files": 47,
+  "verified_bundle_files": 73,
+  "all_hashes_match": true,
+  "verification": "Git blobs and original bundle SHA256; no weights reloaded locally"
+}

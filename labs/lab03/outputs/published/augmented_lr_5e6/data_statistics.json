@@ -1,0 +1,31 @@
+{
+  "split_sizes": {
+    "train": 8530,
+    "validation": 1066,
+    "test": 1066
+  },
+  "effective_split_sizes": {
+    "train": 8804,
+    "validation": 1066,
+    "test": 1066
+  },
+  "label_counts": {
+    "train": {
+      "0": 4402,
+      "1": 4402
+    },
+    "validation": {
+      "0": 533,
+      "1": 533
+    },
+    "test": {
+      "0": 533,
+      "1": 533
+    }
+  },
+  "train_token_lengths": {
+    "mean": 27.295888232621536,
+    "max": 78,
+    "truncated_fraction": 0.0
+  }
+}

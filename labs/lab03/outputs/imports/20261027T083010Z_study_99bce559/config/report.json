@@ -1,0 +1,20 @@
+{
+  "runs": {
+    "exercise1": "20261026T155744Z_exercise1_65dfe784",
+    "exercise1_analysis": "20261026T161956Z_exercise1_analysis_46ca085f",
+    "finetuning": "20261026T155822Z_finetuning_2c2f0401",
+    "analysis": "20261026T161957Z_analysis_b336c410",
+    "evaluation": "20261026T160058Z_evaluation_07c24854",
+    "threshold_analysis": "20261026T162909Z_threshold_analysis_f8b3fdf7",
+    "inference": "20261026T160111Z_inference_7f2b16f0",
+    "study": "20261026T184219Z_study_94f2ba7b",
+    "candidate_lr_1e5": "20261026T184223Z_candidate_4b1da858",
+    "candidate_lr_2e5": "20261026T185017Z_candidate_202c0434",
+    "candidate_lr_3e5": "20261026T185804Z_candidate_8308037d",
+    "study_exercise1": "20261026T184202Z_exercise1_de76a80c",
+    "study_exercise1_analysis": "20261026T184207Z_exercise1_analysis_5406bc6c",
+    "study_review": "20261026T191751Z_study_review_d66d4edb",
+    "epoch_presentation": "20261027T061914Z_epoch_presentation_9a0cfccc"
+  },
+  "primary_result": "study"
+}

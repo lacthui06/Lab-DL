@@ -2,11 +2,16 @@
 
 **Môn học:** Deep Learning — UTH.
 
+**Kết quả chính hiện hành:** frozen DistilBERT `20261027T095655Z_frozen_trial_d8d09116`, đủ 10 epoch, chọn epoch 9 theo validation loss, threshold validation 0.45; test Accuracy 82.83%, Macro-F1 82.82%, loss 0.412560. Phần kết quả cuối và quyết định nghiệm thu ở **Mục 3.19–3.21**. Các phần ba epoch/study full fine-tuning giữ như lịch sử có nguồn, không coi các số đó là metric frozen hiện tại.
+
+**Cách đọc báo cáo:** Mục 1 là đặc tả/lý thuyết; Mục 2 ghi pipeline và vòng lặp; Mục 3 giữ các kết quả theo thứ tự thực nghiệm. Notebook tích hợp và Exercise 2 hiện trực tiếp bằng chứng frozen cuối. Không chọn bản chính bằng cách lấy maximum test accuracy; mục tiêu sau cùng là giảm dấu hiệu overfitting với chất lượng dự đoán được báo cáo đầy đủ.
+
+
 **Chủ đề:** biểu diễn văn bản, pretrained Transformer, sentiment inference, binary classification và lựa chọn operating threshold.
 
 **Phạm vi:** Exercise 1 dùng DistilBERT sentiment pretrained; Exercise 2 fine-tune DistilBERT trên toàn bộ Rotten Tomatoes.
 
-**Quy ước bằng chứng:** số liệu huấn luyện hiện hành được đọc từ run Kaggle `20261026T155822Z_finetuning_2c2f0401`; các kết quả suy luận Exercise 1 thuộc run `20261026T155744Z_exercise1_65dfe784`.
+**Quy ước bằng chứng lịch sử 3 epoch:** số liệu được đọc từ run Kaggle `20261026T155822Z_finetuning_2c2f0401`; các kết quả suy luận Exercise 1 thuộc run `20261026T155744Z_exercise1_65dfe784`.
 
 **Quy ước kết quả:** validation sweep được lưu ngay trong run fine-tuning `20261026T155822Z_finetuning_2c2f0401`; run `20261026T160058Z_evaluation_07c24854` đánh giá lại toàn test sau khi tải checkpoint; run `20261026T160111Z_inference_7f2b16f0` minh họa inference cùng policy. Hình/bảng tính lại từ predictions được ghi rõ là diagnostics dẫn xuất; evaluation và inference sử dụng lại checkpoint đã chọn, không cập nhật weights.
 
@@ -14,7 +19,7 @@
 
 **Phạm vi số liệu:** các bảng đã đo bên dưới thuộc thí nghiệm lịch sử 3 epoch. Phiên 10 epoch được đặc tả ở Mục 1.17, vận hành ở Mục 2.21 và có tiêu chí báo cáo ở Mục 3.13; kết quả GPU mới đã được kiểm chứng từ review ZIP 128 file. Không đổi nhãn số liệu lịch sử thành kết quả 10 epoch.
 
-### Tóm tắt
+### Tóm tắt lịch sử 3 epoch
 
 Lab triển khai hai mức sử dụng hệ sinh thái Hugging Face: dùng ngay một mô hình đã fine-tune và tự fine-tune backbone cho bài toán đích. Exercise 1 mở quy trình `pipeline` thành tokenizer, tensor đầu vào, forward, logits, softmax và nhãn dự đoán. Exercise 2 giữ nguyên official train/validation/test của Rotten Tomatoes, dùng `Trainer` để tối ưu ba epochs và chọn checkpoint bằng validation accuracy.
 Run Kaggle đạt test Accuracy **83,9587%**, Binary F1 **84,0634%** và Macro F1 **83,9580%**, tương ứng 895 dự đoán đúng trên 1.066 mẫu. Confusion matrix có 444 Negative đúng, 451 Positive đúng, 89 Negative bị đoán Positive và 82 Positive bị đoán Negative. Đường học cho thấy train tiếp tục cải thiện nhưng validation loss tăng ở epoch cuối, nên kết quả phải đi kèm phân tích overfitting thay vì chỉ báo một con số accuracy.
@@ -790,7 +795,7 @@ Không dựng lại một hình khác để nộp report rồi khó truy vết.
 `study_report.md` được xuất tự động từ actual candidate/test records.
 Report có relative links tới hình của study và từng candidate.
 File JSON đi kèm cho phép tính lại metrics, không thay cho hình trình bày.
-Không cần gọi agent để đọc JSON, viết lại code rồi tái vẽ mỗi lần lấy report.
+Bộ artifact đã xuất có thể dùng trực tiếp khi làm report mà không viết lại code vẽ.
 Có thể chỉnh nội dung thảo luận sau khi đọc kết quả, giữ nguyên records/manifests nguồn.
 
 Đóng gói bằng scripts/package_study.py sau khi study completed.
@@ -1471,7 +1476,7 @@ Cell 7 gọi pipeline training một lần, in 10 epoch/candidate và hiển th�
 
 So sánh candidate trong profile đánh giá cuối epoch dùng Epoch làm trục, không dùng step làm trục chính. Dashboard step vẫn là artifact kỹ thuật riêng khi debug. Các số liệu/weights lịch sử không thay đổi chỉ vì bố cục mới. Việc hoàn thiện notebook không tự chứng minh profile augmented/regularized đã tốt hơn; cần kết quả GPU thật để kết luận.
 
-### 3.18. Thử nghiệm frozen encoder: protocol trước khi chạy GPU
+### 3.18. Thử nghiệm frozen encoder: protocol được chốt trước GPU
 
 Mục tiêu mới là giảm overfitting mà vẫn giữ chất lượng phân loại. Không đặt tiêu chí khoảng cách train–validation bằng không: mô hình underfit có thể có hai đường gần nhau nhưng đều dự đoán kém. Kết luận phải xem validation loss, Macro-F1, hình dạng learning curves và calibration cùng nhau.
 
@@ -1491,6 +1496,126 @@ Notebook 08 có đúng 10 cell code, roadmap/module/artifact ở đầu. Sáu ph
 
 Mọi artifact sinh bởi script nằm dưới outputs/runs/<id>_frozen_trial_*. Review ZIP giữ config, source hashes, log, epoch history, selection, dự đoán, ảnh và manifests; giữ cả các run chuẩn bị đang active tương ứng cohort và preflight mới nhất. Checkpoint ZIP chứa best_model cùng tokenizer và decision_threshold.json. Giữ checkpoint ở nơi lưu trữ riêng; không đưa trọng số nặng vào Git. Notebook tương tác phải tải qua giao diện Kaggle nếu cần output cell được bảo toàn.
 
-Thử nghiệm này thay nhiều yếu tố cùng lúc, vì vậy chỉ có thể so sánh cả cấu hình với lịch sử. Không quy phần cải thiện riêng cho freeze, head dropout hoặc LR nếu chưa có ablation. Một seed không đo biến thiên huấn luyện. Đây là protocol chờ chạy GPU; không có kết quả mới hoặc lời hứa không overfit. Nếu validation loss vẫn tăng mạnh cuối quá trình, phải ghi nhận và dùng checkpoint đã chọn, không sửa đường học hoặc bỏ các epoch xấu khỏi biểu đồ.
+Thử nghiệm này thay nhiều yếu tố cùng lúc, vì vậy chỉ có thể so sánh cả cấu hình với lịch sử. Không quy phần cải thiện riêng cho freeze, head dropout hoặc LR nếu chưa có ablation. Một seed không đo biến thiên huấn luyện. Protocol này đã được chạy GPU; kết quả ở Mục 3.19, không có lời hứa không overfit tuyệt đối. Nếu validation loss vẫn tăng mạnh cuối quá trình, phải ghi nhận và dùng checkpoint đã chọn, không sửa đường học hoặc bỏ các epoch xấu khỏi biểu đồ.
 
 Sửa tính tương thích preflight trên Kaggle: fixture đóng gói ZIP luôn ghi trong outputs/ của tmp_path, kể cả khi máy có /kaggle/working. Lượt train thật vẫn xuất ZIP ra /kaggle/working. Bổ sung test mô phỏng thư mục Kaggle tồn tại để tránh lỗi chỉ xuất hiện khi chạy pytest trên nền tảng này; không đổi cấu hình hoặc protocol huấn luyện.
+
+
+### 3.19. Kết quả regularization và frozen trial đã đo
+
+#### 3.19.1. Nguồn bằng chứng và source identity
+
+Hai bộ kết quả mới được nhập nguyên byte: augmented study `20261027T083010Z_study_99bce559` có 141 file trong bundle manifest; frozen trial `20261027T095655Z_frozen_trial_d8d09116` có 73 file. Metadata gốc và kết quả đối chiếu source Git blob nằm dưới outputs/imports/<run>. Không đổi raw log, config, predictions hoặc manifest để làm đẹp kết quả.
+
+Augmented study được đối chiếu 44 source hashes với commit 078866c; frozen trial đối chiếu 47 source hashes với commit c10609b. Checkpoint bị loại khỏi review ZIP có chủ đích, raw manifests vẫn giữ hashes của 24 tệp model/checkpoint mỗi candidate. Không kê khai checkpoint_available_locally=true khi chỉ có review ZIP. Mọi kết luận dưới đây dựa artifact đã lưu và tái tính metrics, không phải full GPU training mới tại môi trường kiểm chứng.
+
+#### 3.19.2. Từ full fine-tuning tới đóng băng backbone
+
+Augmented study thử LR 5e-6 và 1e-5, mỗi cấu hình đủ 10 epoch. Dropout 0.2/0.2/0.3, decay 0.1, max_length=128, batch 16. Tạo được 274 biến thể cân bằng hai lớp, giữ 8.530 train gốc nên effective train 8.804. Cả baseline và Transformer dùng cùng pool. Đây là 3.21% mẫu thêm, không phải đã đạt quota 25%.
+
+Winner theo validation Macro-F1 là LR 1e-5, checkpoint epoch 6/step 3306, validation Macro-F1 0.848938, validation loss 0.584907. Validation loss thấp nhất ở epoch 2 là 0.352521; cuối epoch 10 tăng lên 0.737929, trong khi train loss còn 0.046312 và accuracy 98.98%. Điều này cho thấy dropout/decay/augmentation đã triển khai nhưng chưa đủ hạn chế học thuộc.
+
+Frozen trial giảm số tham số optimizer được cập nhật xuống 14.767.874 trên tổng 66.955.010, tương đương 22.06%. Embedding và bốn tầng đầu requires_grad=False; hai tầng cuối và head tiếp tục nhận gradient. Encoder LR 2e-6, head LR 1e-5, head dropout 0.4. Các thay đổi được công bố trước training và test. Không thể quy riêng kết quả cho freeze vì nhiều yếu tố đổi cùng lúc.
+
+#### 3.19.3. Đủ 10 epoch và đồ thị một điểm mỗi epoch
+
+| Epoch | Train loss eval | Validation loss | Train accuracy | Validation accuracy |
+|---:|---:|---:|---:|---:|
+| 1 | 0.612102 | 0.612096 | 76.72% | 77.58% |
+| 2 | 0.399959 | 0.401842 | 81.87% | 81.99% |
+| 3 | 0.384900 | 0.387137 | 82.74% | 82.46% |
+| 4 | 0.374508 | 0.381047 | 83.39% | 83.40% |
+| 5 | 0.369851 | 0.376652 | 83.36% | 83.40% |
+| 6 | 0.363106 | 0.373288 | 83.95% | 83.49% |
+| 7 | 0.362880 | 0.371724 | 83.85% | 83.58% |
+| 8 | 0.361536 | 0.371199 | 83.96% | 83.77% |
+| 9 | 0.357609 | 0.369328 | 84.21% | 83.58% |
+| 10 | 0.358071 | 0.369622 | 84.25% | 83.77% |
+
+![Frozen learning curves](outputs/published/frozen_trial/learning_curves.png)
+
+Train và validation đều được đo full split trong eval mode, dropout tắt khi đo. Train có synthetic data nên chênh lệch không phải phép đo độc lập tuyệt đối của generalization. Ở epoch 10, gap accuracy 0.47469 điểm phần trăm, loss gap 0.011551. Lượt augmented full fine-tuning tương ứng gap accuracy 14.45616 điểm phần trăm, loss gap 0.691616. Dấu hiệu overfitting mạnh giảm rõ trong khoảng quan sát, không chứng minh mô hình tối ưu hay không overfit nếu train dài hơn.
+
+551 steps/epoch bắt nguồn ceil(8804/16), không phải điều kiện ép số steps. Trainer global_step=5510 sau 10 epoch, AMP bỏ qua ba optimizer updates nên có 5507 updates thành công. Bảng LR epoch ghi nhóm encoder; nhóm head có LR gốc gấp năm lần và decay cùng tỷ lệ. Không gọi global_step là số cập nhật weights thành công khi AMP có skip.
+
+#### 3.19.4. Checkpoint, threshold và thứ tự đánh giá
+
+Chọn epoch 9 vì validation loss 0.369328 thấp nhất. Epoch 10 có validation accuracy 83.77% cao hơn 83.58% của epoch 9 nhưng không được dùng để đổi criterion đã chốt. Run không early stopping, đã quan sát đủ mười epoch trước khi dùng best checkpoint.
+
+Quét 19 threshold validation sau reload cho threshold 0.45. Chọn bằng validation Macro-F1, tie-break gần 0.5 rồi nhỏ hơn; ghi frozen_selection.json với SHA256 weights trước predict test. Không dùng threshold 0.5 chỉ vì test Macro-F1 của nó cao hơn rất nhẹ. Ngưỡng thấp hơn tăng positive recall, đổi FP/FN; không bảo đảm tăng mọi metric.
+
+![Validation threshold](outputs/published/frozen_trial/validation_threshold_curves.png)
+
+#### 3.19.5. Test, baseline và chẩn đoán theo lớp
+
+| Model/policy | Accuracy | Precision Positive | Recall Positive | Binary F1 | Macro-F1 |
+|---|---:|---:|---:|---:|---:|
+| TF-IDF + logistic regression, validation threshold 0.5 | 78.99% | 79.21% | 78.61% | 78.91% | 78.99% |
+| Frozen, threshold 0.5 | 82.83% | 82.53% | 83.30% | 82.91% | 82.83% |
+| Frozen, validation threshold 0.45 | 82.83% | 81.36% | 85.18% | 83.23% | 82.82% |
+
+Test loss đo sau reload là 0.4125600457; NLL dựng lại từ saved probabilities 0.4125613069 khác rất nhỏ do ngữ cảnh số học/serialization. Không thay measured loss bằng derived NLL. Test runtime Kaggle 0.4976 giây; không suy ra tốc độ mọi GPU hoặc coi runtime một lần là benchmark ổn định.
+
+![Frozen confusion](outputs/published/frozen_trial/confusion_matrix.png)
+
+Ma trận threshold 0.45 có TN=429, FP=104, FN=79, TP=454. Negative bị gọi Positive 104/533=19.51%; Positive bị gọi Negative 79/533=14.82%. Negative precision/recall/F1 lần lượt 84.45%/80.49%/82.42%; Positive là 81.36%/85.18%/83.23%. FPR one-vs-rest Negative 14.82%, Positive 19.51%; không nhầm FPR Negative với tỷ lệ lỗi trên hàng Negative.
+
+ROC-AUC 0.898115, average precision 0.906652, Brier 0.128183, top-label confidence ECE 0.037950. ECE phản ánh độ phù hợp confidence trung bình theo bin, không phải bảo đảm từng dự đoán đúng. ROC/PR chỉ chẩn đoán sau khi khóa policy. Bootstrap stratified 2000 lượt có accuracy CI khoảng [80.58%,85.08%], có điều kiện trên fixed model/threshold; không chứa seed variability hoặc uncertainty của model selection.
+
+#### 3.19.6. Lỗi định tính và nhãn khó
+
+![Frozen sample predictions](outputs/published/final_review/sample_predictions.png)
+
+- Review mở đầu `though its rather routine script ...` có nhãn Negative nhưng dự đoán Positive, confidence 0.9876. Câu trộn phê bình kịch bản với nhận xét tích cực về cinematic fluidity/intelligence. Giả thuyết cần đọc thủ công là nhiều tín hiệu đối nghịch làm nhãn tổng thể khó suy ra; không coi confidence cao là chứng minh nhãn gốc sai.
+- Review `what [frei] gives us ... damage of war ... art shots ...` có nhãn Negative nhưng dự đoán Positive, confidence 0.9839. Sắc thái phê bình ngầm phụ thuộc cách hiểu toàn câu; không có attribution experiment để xác định token nào gây lỗi.
+- Review `devotees of star trek ii ... grandeur ... is lacking` có nhãn Positive nhưng dự đoán Negative, confidence 0.9807. Từ ngữ bề mặt mang sắc thái thiếu hụt; có thể cần ngữ cảnh đánh giá hoặc kiểm tra nhãn. Không tự sửa ground truth.
+- Review `the movie worked for me right up to the final scene, and then it caved in` có nhãn Positive nhưng dự đoán Negative, confidence 0.9693. Đoạn kết tiêu cực có thể chi phối cách đọc, nhưng đây chỉ là giả thuyết ngôn ngữ.
+
+Các ví dụ được lấy để báo cáo sau test, không dùng chọn lại hyperparameter hoặc bổ sung vào augmentation của lượt đã đo. Raw predictions giữ index, text, true_label và probabilities để kiểm tra lại. Nhãn khó/đa nghĩa không được dùng làm lý do bỏ mẫu sai khỏi metrics.
+
+### 3.20. So sánh lịch sử, quyết định bản chính và tái sử dụng artifact
+
+| Protocol | Test accuracy | Macro-F1 | Test loss | Confidence ECE |
+|---|---:|---:|---:|---:|
+| Unregularized 10 epoch | 83.40% | 83.40% | 0.798076 | 0.146071 |
+| Augmented full fine-tuning | 84.15% | 84.15% | 0.625951 | 0.130603 |
+| Frozen 4 layers | 82.83% | 82.82% | 0.412560 | 0.037950 |
+
+So với augmented full fine-tuning, frozen accuracy giảm 14/1066=1.31332 điểm phần trăm, loss giảm 0.213391, ECE giảm 0.092654. Đây là đánh đổi đo được của cả cấu hình. Bản chính frozen được trình bày theo mục tiêu giảm overfitting đã thảo luận, không phải tuyên bố statistical superiority hay chọn theo maximum test score. Một seed, heldout đã xem và criterion khác giữa các protocol hạn chế kết luận.
+
+`src/final_review.py` tái kiểm tra source manifests, đủ 10 epoch, minimum loss checkpoint, threshold validation-only, test confusion/metrics, cohort baseline và cấu hình freeze/optimizer. Phân tích dẫn xuất nằm trong run final_review riêng; PNG nguồn không bị dựng lại hoặc chỉnh byte. `scripts/finalize_results.py` cập nhật outputs/experiment_results.json và xuất bộ report ổn định dưới outputs/published.
+
+Notebook tích hợp và Exercise 2 đọc config/report.json, hiển thị ngay PNG/bảng của source đã chọn. Các template train giữ metadata execution_mode=train để renderer offline không vô tình tiêu GPU. Source training có thể chạy CLI; notebook bổ sung roadmap, văn bản giải thích và trực quan tại từng phase. Đây là lý do duy trì cả module .py lẫn notebook, không chỉ in JSON và lưu file.
+
+Review ZIP frozen không có checkpoint. Raw reload_check ghi weights_exact_match và forward CPU FP32 trên bốn câu validation tại Kaggle, không phải chứng minh full-test equality trên máy hiện tại. Audit ở repo không tải weights; chỉ tính lại kết quả từ predictions và đối chiếu SHA256. Muốn inference trên câu mới phải giữ checkpoint ZIP, tokenizer và threshold policy.
+
+### 3.21. Nghiệm thu và câu hỏi bảo vệ cuối
+
+| Yêu cầu | Bằng chứng | Trạng thái |
+|---|---|---|
+| Pretrained sentiment và tokenize | Exercise 1 predictions, pipeline/manual PNG | Đã chạy |
+| Full official dataset | official/effective sizes và EDA | Đã kiểm tra |
+| Fine-tuning đủ 10 epoch | frozen epoch_history 10 hàng, 5510 steps | Đã chạy |
+| Giảm overfitting | loss/accuracy gaps và so sánh cấu hình | Đã đo, không bảo đảm bằng 0 |
+| Binary threshold sweep | 19 validation thresholds, policy 0.45 | Đã chạy |
+| Notebook roadmap/module, ảnh inline | notebook tích hợp/Exercise 2 đã render view | Kiểm tra bằng notebook execution artifact |
+| Artifact dùng cho report | published/index.md, catalog, manifests | Đã xuất |
+| Checkpoint nặng ngoài Git | original manifest/weight identity, ZIP giữ riêng | Đúng thiết kế |
+
+**Vì sao freeze bốn tầng?** Đây là mức regularization định trước để giảm số tham số cập nhật; không có search chứng minh bốn tầng tối ưu hơn ba hoặc năm. Không gọi đây là lựa chọn tốt nhất tuyệt đối.
+
+**Vì sao accuracy không bằng bản cũ?** Giảm khả năng học thuộc cũng có thể giảm khả năng thích nghi. Cần báo cáo đồng thời accuracy/F1 và loss/calibration, không coi đường gần nhau là thành công duy nhất.
+
+**Có cần train lại để làm report không?** Không. Artifact đủ để tính lại metrics, hiển thị PNG và xuất report. Chỉ train lại khi có giả thuyết/cấu hình mới được xác định trước test.
+
+**Tại sao giữ các study cũ?** Để truy vết diễn tiến và đánh đổi. Bản chính được chỉ định trong report.json, không để registry runtime vô tình thay nguồn báo cáo.
+
+**Có thể khẳng định không leakage không?** Có guards cho official splits, train-only fitting/augmentation và text collision. Chưa kiểm toán đầy đủ semantic duplicates hoặc nguồn pretraining; không tuyên bố đã loại mọi dạng leakage.
+
+**Kết luận cuối:** Lab03 đáp ứng hai Exercise, có full dataset, 10 epoch thực, baseline, validation threshold sweep, inline visuals, artifact report và phân tích lỗi có nguồn. Frozen trial giảm mạnh dấu hiệu overfitting trong ngân sách đã quan sát, đổi lại accuracy thấp hơn full fine-tuning. Không cần một lượt GPU khác chỉ để hoàn thiện nội dung bài hiện tại.
+
+#### 3.21.1. Dùng lại checkpoint ZIP frozen mà không train lại
+
+Policy trong ZIP frozen đã đo giữ nguyên bản gốc và chưa có checkpoint_identity mà CLI inference yêu cầu. Không sửa file này trong raw run. `scripts/prepare_frozen_checkpoint.py --model-path <thư-mục-best_model-đã-giải-nén>` kiểm tra SHA256 weights đúng frozen_selection, tạo policy có identity và training_config.json trong bản checkpoint lưu riêng. Sau đó gọi `scripts/infer.py --model-path <thư-mục-best_model-đã-giải-nén> --text <câu-mới>`; CLI áp dụng threshold 0.45 đã chọn, không fit lại hoặc quét test.
+
+Utility từ chối checkpoint khác weights hoặc vị trí nằm trong raw evidence. Tests dùng weights giả chỉ để kiểm tra ràng buộc hash và bảo toàn nguồn; không mô tả đó là load model thật. Lượt training tương lai ghi metadata đầy đủ sẵn trong ZIP. Saved historical predictions/weights không bị thay đổi vì sửa tiện ích inference.

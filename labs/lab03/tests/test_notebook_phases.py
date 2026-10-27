@@ -48,3 +48,15 @@ def test_dataset_preview_persists_original_counts_and_three_figures(tiny,tmp_pat
     assert preview['examples_split']=='train' and preview['augmentation_applied'] is False
     assert preview['label_counts']['train']=={'0':2,'1':2}
     assert len(list(out.glob('*.png')))==3
+
+
+def test_frozen_notebook_preserves_ten_phases_and_download_routes():
+    notebook=nbformat.read(ROOT/'notebooks/08_kaggle_frozen_encoder_trial.ipynb',as_version=4)
+    nbformat.validate(notebook)
+    cells=[c for c in notebook.cells if c.cell_type=='code']
+    assert len(cells)==10
+    for c in cells:ast.parse(c.source)
+    assert sum('run_frozen_trial.py' in c.source for c in cells)==1
+    assert '/files/' in cells[-1].source and 'bundle_manifest.json' in cells[-1].source
+    helper=(ROOT/'scripts/kaggle_frozen_trial_cells.py').read_text()
+    assert all(c.source in helper for c in cells)
