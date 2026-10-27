@@ -60,6 +60,42 @@ def audit_study(study, root=ROOT, expected_sizes=None):
         expected_hash = read_json(run / 'manifest.json')['best_model/' + identity['weights_filename']]
         if expected_hash != identity['weights_sha256']: raise ValueError('Policy weights hash mismatch')
     if rows != reconstructed: raise ValueError('Candidate comparison differs from checkpoint history')
+    if config['training']['exercise2'].get('augmentation', {}).get('enabled', False):
+        from .datasets.augmentation import normalized, LEXICON, PROTECTED
+        import hashlib, json
+        aug = read_json(study/'augmentation.json')
+        records = aug['records']
+        digest = hashlib.sha256(json.dumps(records, ensure_ascii=False, sort_keys=True).encode()).hexdigest()
+        if digest != aug['records_sha256'] or aug['added_count'] != len(records):
+            raise ValueError('Augmentation records checksum/count mismatch')
+        if aug['original_train_size'] != expected_sizes['train'] or aug['effective_train_size'] != expected_sizes['train'] + len(records):
+            raise ValueError('Augmented train size mismatch')
+        counts = {str(label):sum(r['label']==label for r in records) for label in (0,1)}
+        maximum = config['training']['exercise2']['augmentation']['max_ratio']
+        if (counts != aug['added_per_class'] or counts['0'] != counts['1']
+                or len(records) > expected_sizes['train'] * maximum):
+            raise ValueError('Synthetic class balance or augmentation budget mismatch')
+        if len({r['parent_index'] for r in records}) != len(records):
+            raise ValueError('At most one synthetic variant per train parent is allowed')
+        texts = [normalized(r['text']) for r in records]
+        heldout = {normalized(r['text']) for r in read_json(study/'all_predictions.json')}
+        heldout.update(normalized(r['text']) for r in read_json(runs/rows[0]['run_id']/'validation_predictions.json'))
+        if len(set(texts)) != len(texts) or set(texts) & heldout:
+            raise ValueError('Synthetic text duplicate or heldout collision')
+        for record in records:
+            original = record['original_text']; start=record['word_start']; end=record['word_end']
+            word=record['source_word']; replacement=record['replacement']; label=record['label']
+            if (not 0 <= record['parent_index'] < expected_sizes['train'] or PROTECTED.search(original)
+                or original[start:end] != word or LEXICON[label].get(word) != replacement
+                or record['text'] != original[:start]+replacement+original[end:]):
+                raise ValueError('Invalid synthetic transformation')
+        for row in rows:
+            run = runs/row['run_id']
+            if read_json(run/'augmentation.json') != aug:
+                raise ValueError('Baseline and candidates must use identical synthetic train examples')
+            stats=read_json(run/'data_statistics.json')
+            if stats['effective_split_sizes'] != dict(expected_sizes, train=aug['effective_train_size']):
+                raise ValueError('Effective split contract differs')
     winner = choose_candidate(reconstructed)
     frozen = read_json(study / 'frozen_selection.json')
     source = runs / winner['run_id']

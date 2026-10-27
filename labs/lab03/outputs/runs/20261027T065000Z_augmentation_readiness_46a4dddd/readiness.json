@@ -1,0 +1,27 @@
+{
+  "status": "ready_for_kaggle_augmented_epoch_study",
+  "tests": {
+    "tests": 93,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "pip_check": "passed",
+  "additional_packaging_regression_tests_passed": 2,
+  "gpu_augmented_study_executed": false,
+  "full_original_train_preserved": true,
+  "validation_and_test_augmented": false,
+  "maximum_synthetic_fraction": 0.25,
+  "maximum_synthetic_count_for_official_data": 2132,
+  "actual_synthetic_count_on_official_dataset": "not measured locally; reported by Kaggle preview",
+  "augmentation_method": "one same-polarity lexical substitution per eligible train parent",
+  "semantic_label_preservation_guaranteed": false,
+  "labels_human_verified": false,
+  "synthetic_labels": "inherited from parent; approximate semantic preservation",
+  "baseline_and_candidates_share_augmented_pool_tested": true,
+  "heldout_collision_guard_tested": true,
+  "ten_full_epochs_and_effective_train_size_tested": true,
+  "preview_images_and_ZIP_inclusion_tested": true,
+  "relative_links_checked": 64,
+  "root_readme_or_lab01_changed": false
+}

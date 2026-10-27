@@ -17,7 +17,8 @@
     "study_audit": "20261026T190634Z_study_audit_10e28bdf",
     "study_review": "20261026T191751Z_study_review_d66d4edb",
     "epoch_presentation": "20261027T061914Z_epoch_presentation_9a0cfccc",
-    "epoch_training_readiness": "20261027T062614Z_epoch_training_readiness_f3cd89b8"
+    "epoch_training_readiness": "20261027T062614Z_epoch_training_readiness_f3cd89b8",
+    "augmentation_readiness": "20261027T065000Z_augmentation_readiness_46a4dddd"
   },
   "runs": [
     {
@@ -263,6 +264,11 @@
     {
       "id": "20261027T062614Z_epoch_training_readiness_f3cd89b8",
       "kind": "epoch_training_readiness",
+      "status": "completed"
+    },
+    {
+      "id": "20261027T065000Z_augmentation_readiness_46a4dddd",
+      "kind": "augmentation_readiness",
       "status": "completed"
     }
   ]

@@ -6,7 +6,9 @@ Bài thực hành Deep Learning — UTH: sentiment analysis bằng mô hình pre
 
 **Study 10 epoch đã chạy và kiểm chứng:** [Notebook kết quả, hình và thảo luận](notebooks/05_study_results_and_discussion.ipynb). Ba LR đều hoàn thành 10 epoch; winner LR **3e-5**, best checkpoint **step 1700 / epoch 3,184**, threshold validation **0,5**. Test Accuracy **83,40%**, Macro-F1 **83,40%**, đúng **889/1.066**. Hơn baseline TF-IDF nhưng thấp hơn argmax lịch sử 6 mẫu; không tuyên bố chạy nhiều epoch luôn tốt hơn. [Notebook 04](notebooks/04_kaggle_10epoch_study.ipynb) là template để chạy thí nghiệm GPU mới.
 
-**Lượt train tiếp theo:** dùng [Notebook 06 — regularized epoch training](notebooks/06_kaggle_regularized_epoch_training.ipynb) để tổng kết đủ 10 epoch và thử giảm overfitting. Profile này chưa có kết quả GPU; xem Mục 15 trước khi chạy.
+**Lượt train có tăng mẫu:** dùng [Notebook 07](notebooks/07_kaggle_augmented_epoch_training.ipynb), xem Mục 16.
+
+**Lượt train không tăng mẫu:** dùng [Notebook 06 — regularized epoch training](notebooks/06_kaggle_regularized_epoch_training.ipynb) để tổng kết đủ 10 epoch và thử giảm overfitting. Profile này chưa có kết quả GPU; xem Mục 15 trước khi chạy.
 
 ## 1. Xem bài và kết quả
 
@@ -82,7 +84,7 @@ cd ../..
 .venv-lab03/bin/python labs/lab03/scripts/audit_outputs.py
 ```
 
-- **83 tests đạt trên CPU** (phiên epoch/regularization, xem `validation/epoch_training_readiness.json`; bằng chứng study đã đo ở `validation/study_completion.json`): dataset contract, dynamic padding, pipeline/manual, checkpoint, sanity overfit, Trainer, run tracking, năm plots, recovery, metrics/artifact audit và phát hiện dữ liệu bị sửa.
+- **93 tests đạt trên CPU** (phiên augmentation, xem `validation/augmentation_readiness.json`; bằng chứng study đã đo ở `validation/study_completion.json`): dataset contract, dynamic padding, pipeline/manual, checkpoint, sanity overfit, Trainer, run tracking, năm plots, recovery, metrics/artifact audit và phát hiện dữ liệu bị sửa.
 - Audit kiểm tra 51 file khoa học hiện hành, tính lại validation sweep, test metrics và confusion matrices. Selection dùng validation phase trong training run. Báo cáo audit đầy đủ được lưu trong một run `artifact_audit` dưới `outputs/`, kèm bản tiện tra cứu tại `validation/`.
 - 30 file checkpoint không có trong Git được liệt kê rõ là thiếu có chủ đích, không coi là đã kiểm tra tại môi trường kiểm chứng.
 - Ba notebook chạy hết ở view, Hugging Face offline, không có cell lỗi. Xem `validation/notebook_execution.json`.
@@ -401,3 +403,13 @@ CUDA_VISIBLE_DEVICES=0 TOKENIZERS_PARALLELISM=false CUBLAS_WORKSPACE_CONFIG=:409
 ```
 
 Có thể copy từng block trong [kaggle_regularized_epoch_cells.py](scripts/kaggle_regularized_epoch_cells.py) nếu không dùng Import Notebook. Chạy full GPU training trong notebook rồi lấy review ZIP/checkpoint ZIP ở cell cuối như trước.
+
+## 16. Tăng thêm mẫu train có kiểm soát
+
+Dùng [notebook 07](notebooks/07_kaggle_augmented_epoch_training.ipynb) nếu cần tăng mẫu cùng profile regularization. Giữ đủ 8.530 train gốc; sinh tối đa 25% biến thể, tương đương tối đa 2.132 mẫu bổ sung, nhưng số thực tế phụ thuộc câu đủ điều kiện. Validation/test giữ nguyên 1.066/1.066. Số step/epoch tính lại theo effective train size, không cố định 534.
+
+Augmentation thay một từ/cụm từ cùng cực tính, bỏ câu phủ định/tương phản, chặn trùng casefold-whitespace và giữ số mẫu bổ sung cân bằng hai lớp. Không lấy câu/nhãn từ validation/test để sinh train; heldout text chỉ dùng để chặn collision. Records lưu parent index, câu gốc, câu mới, label và vị trí từ thay thế. Đây là synthetic data với nhãn kế thừa, không phải ground truth mới đã được con người kiểm tra.
+
+Notebook hiện ảnh trước/sau và bảng ví dụ trước khi train. TF-IDF và DistilBERT dùng cùng augmented train pool; audit kiểm tra record checksum và tính nhất quán giữa baseline/candidates. Dropout, tokenization và TF-IDF unigram/bigram giữ vai trò khác nhau; không đưa TF-IDF vectors vào DistilBERT hoặc xóa phủ định/stopwords khỏi review.
+
+`config/augmented.json` và `config/augmented_study.json` cấu hình hai LR, mỗi LR đủ 10 epoch. Preview lưu vào `outputs/runs/<id>_augmentation_preview_*`; mỗi candidate giữ records và stats phân biệt official/effective sizes. Tăng mẫu không đảm bảo hết overfit hoặc tăng accuracy; chỉ kết luận sau khi chạy GPU. Chưa có benchmark thật cho profile augmented này.

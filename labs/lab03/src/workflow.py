@@ -143,8 +143,18 @@ def finetune(config=None, allow_cpu=False, evaluate_test=True):
     cfg = dict(config["exercise2"], seed=config["seed"])
     with run_context("finetuning" if evaluate_test else "candidate", config) as out:
         raw, tokenizer, tokenized = prepare_data(config)
+        official_sizes = {k:len(raw[k]) for k in ("train","validation","test")}
+        official_fingerprints = {k:raw[k]._fingerprint for k in ("train","validation","test")}
+        if cfg.get("augmentation", {}).get("enabled", False):
+            from .datasets.augmentation import augment_train, export_augmentation
+            raw, augmented = augment_train(raw, cfg["augmentation"], config["seed"])
+            export_augmentation(augmented, out)
+            # Chỉ tokenize lại train sau augmentation; val/test giữ nguyên.
+            from datasets import DatasetDict
+            tokenized["train"] = tokenize_data(DatasetDict(train=raw["train"]), tokenizer, cfg["max_length"])["train"]
         lengths = [len(ids) for ids in tokenizer(raw["train"]["text"], truncation=False)["input_ids"]]
-        save_json(out / "data_statistics.json", {"split_sizes": {k: len(raw[k]) for k in ("train", "validation", "test")},
+        save_json(out / "data_statistics.json", {"split_sizes": official_sizes,
+                  "effective_split_sizes": {k:len(raw[k]) for k in ("train","validation","test")},
                   "label_counts": {k: {str(label): int(sum(int(v) == label for v in raw[k]["label"])) for label in (0, 1)} for k in ("train", "validation", "test")},
                   "train_token_lengths": {"mean": float(np.mean(lengths)), "max": max(lengths),
                   "truncated_fraction": float(np.mean(np.array(lengths) > cfg["max_length"]))}})
@@ -153,6 +163,7 @@ def finetune(config=None, allow_cpu=False, evaluate_test=True):
                               overrides=cfg.get("model_overrides"))
         save_json(out / "provenance.json", {"model_commit": getattr(model.config, "_commit_hash", None),
                   "dataset_fingerprints": {k: raw[k]._fingerprint for k in ("train", "validation", "test")},
+                  "official_dataset_fingerprints": official_fingerprints,
                   "effective_dropout": {key: getattr(model.config, key, None) for key in ("dropout", "attention_dropout", "seq_classif_dropout")}})
         trainer = make_trainer(model, tokenizer, tokenized, cfg, out)
         if torch.cuda.is_available(): torch.cuda.reset_peak_memory_stats()

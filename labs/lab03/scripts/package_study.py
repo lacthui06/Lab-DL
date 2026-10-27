@@ -23,9 +23,12 @@ def package_study(study, include_checkpoint=True, root=ROOT):
     selected = json.loads((study / 'checkpoint_reference.json').read_text())
     ids = [study.name] + [r['run_id'] for r in candidates]
     state = json.loads((root / 'config/workflow.json').read_text())
-    for kind in ['exercise1', 'exercise1_analysis', 'study_audit']:
+    for kind in ['exercise1', 'exercise1_analysis', 'study_audit', 'augmentation_preview']:
         if state.get('active_runs', {}).get(kind):
             run_id = state['active_runs'][kind]
+            if kind == 'augmentation_preview':
+                if not (study/'augmentation.json').is_file(): continue
+                if json.loads((runs/run_id/'augmentation.json').read_text())['records_sha256'] != json.loads((study/'augmentation.json').read_text())['records_sha256']: continue
             if kind != 'study_audit' or json.loads((runs / run_id / 'config.json').read_text()).get('source_run') == study.name:
                 ids.append(run_id)
     paths = []

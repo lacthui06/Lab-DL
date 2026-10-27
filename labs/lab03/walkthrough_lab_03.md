@@ -1448,3 +1448,17 @@ Dropout cao hơn làm nhiệm vụ train khó hơn và có thể giảm học th
 Giữ công thức cross-entropy gốc, không label smoothing trong lượt này, để tránh so loss khác objective mà không ghi chú. Giữ validation Macro-F1 làm criterion checkpoint/model như trước; vẫn báo cáo validation loss để theo dõi confidence. Chỉ thay model/threshold bằng validation trước test, không sửa criterion theo test lịch sử.
 
 Trạng thái hiện tại: phần mềm/profile đã chuẩn bị và kiểm thử bằng mô hình nhỏ; full GPU result của profile regularized chưa có. Chỉ sau khi chạy Kaggle và thu hồi review ZIP mới cập nhật kết quả thực nghiệm mới. Kết quả 83,40% của study trước không được gán thành kết quả của profile này.
+
+### 3.16. Tăng mẫu train bằng lexical augmentation có kiểm soát
+
+Yêu cầu tăng mẫu được triển khai ở config augmented riêng để không đổi protocol của các thí nghiệm đã đo. Tập gốc giữ đủ 8.530 mẫu. Lexicon có từ/cụm từ cùng cực tính; mỗi review chỉ được thay một vị trí, và cực tính từ thay phải phù hợp label của review. Câu chứa phủ định hoặc từ chuyển ý được bỏ qua nhằm giảm rủi ro đảo nghĩa. Đây là heuristic, không chứng minh label vẫn đúng trong mọi ngữ cảnh.
+
+Bộ sinh không đọc nhãn validation/test. Nó chỉ lấy heldout text làm danh sách chặn collision, không dùng để fit vocabulary hoặc tạo mẫu mới. Original train và synthetic variants được kiểm tra trùng bằng casefold-whitespace. Số thêm ở hai lớp bằng nhau, tối đa floor(4.265 × 0,25)=1.066 mỗi lớp, tổng không quá 2.132. Nếu không đủ câu hợp lệ thì số thêm thấp hơn, không tạo bản sao nguyên xi để đạt quota.
+
+Mỗi record giữ parent_index, original_text, text, label, source_word, replacement, word_start và word_end. Có SHA256 của toàn bộ records với seed cố định. Preview và candidate xuất JSON cùng PNG số lượng/ví dụ. Nhãn là inherited label, không phải ground truth mới do con người xác nhận; xem lại ví dụ trước khi dùng training.
+
+Official split sizes và effective split sizes được ghi riêng. Chỉ tập train thay đổi; validation/test giữ đúng fingerprints và số lượng gốc. Tokenizer chỉ tokenize lại train đã tăng cường. Batch size vẫn 16 nên số step/epoch thay đổi theo ceil(effective_train_size/16). Training vẫn đúng 10 epoch, không cắt theo số step cũ.
+
+Baseline TF-IDF fit trên cùng augmented train pool như DistilBERT; các candidate dùng cùng records và seed. Audit xác minh synthetic counts, transform positions, class balance, duplicate/collision và record checksum giữa baseline/candidates. Không dùng test metric để quyết định biến thể nào được giữ.
+
+Augmentation có thể thêm biến thiên từ vựng nhưng cũng có thể tạo label noise hoặc không đem lại cải thiện. Nó không thay thế dữ liệu người dùng thật và không bảo đảm khắc phục overfitting. Notebook 07 là template GPU mới chưa có measured result; các số study cũ vẫn giữ đúng nguồn riêng.

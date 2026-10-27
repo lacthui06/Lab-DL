@@ -11,6 +11,11 @@ def display_study(study, root=ROOT, show_step_diagnostics=False):
     if study.parent != root / 'outputs/runs': raise ValueError('Invalid study path')
     if json.loads((study / 'status.json').read_text())['status'] != 'completed':
         raise ValueError('Study did not complete')
+    if (study / 'augmentation.json').is_file():
+        aug = json.loads((study / 'augmentation.json').read_text())
+        display(Markdown('## Tăng cường train: số mẫu thực tế và ví dụ để review'))
+        display({k:v for k,v in aug.items() if k != 'records'})
+        display(pd.DataFrame(aug['records']).head(8))
     display(Markdown('## So sánh validation và quyết định đã khóa'))
     rows = json.loads((study / 'candidate_comparison.json').read_text())
     display(pd.DataFrame(rows))

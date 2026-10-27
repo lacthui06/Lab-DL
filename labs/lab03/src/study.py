@@ -178,7 +178,13 @@ def run_study(config=None, settings=None):
         start = time.perf_counter()
         raw = load_data(config['exercise2'])
         save_json(out / 'split_overlap_audit.json', audit_split_texts(raw))
-        baseline, baseline_rows, baseline_policy = fit_text_baseline(raw['train'], raw['validation'], settings['baseline'], config['seed'])
+        baseline_train = raw['train']
+        if config['exercise2'].get('augmentation', {}).get('enabled', False):
+            from .datasets.augmentation import augment_train, export_augmentation
+            augmented_raw, augmentation = augment_train(raw, config['exercise2']['augmentation'], config['seed'])
+            export_augmentation(augmentation, out)
+            baseline_train = augmented_raw['train']
+        baseline, baseline_rows, baseline_policy = fit_text_baseline(baseline_train, raw['validation'], settings['baseline'], config['seed'])
         save_json(out / 'baseline_validation_candidates.json', baseline_rows)
         save_json(out / 'baseline_validation_policy.json', baseline_policy)
         candidates = []

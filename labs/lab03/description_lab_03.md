@@ -318,3 +318,9 @@ Biểu đồ chính chỉ lấy cuối epoch 1–10. Các điểm validation gi�
 Phiên tiếp theo: hai LR 5e-6/1e-5, weight decay 0.1 và dropout encoder/attention 0.2, classifier 0.3. Giữ full splits, seed 42, cross-entropy, 10 epoch và criterion validation Macro-F1. Không thêm label smoothing để tránh thay công thức loss trong lượt này. Có thể giảm học thuộc nhưng cũng có nguy cơ underfit; chưa chạy GPU thì không kết luận đã khắc phục overfitting hoặc tăng accuracy.
 
 Notebook 06 là template chạy mới; notebook 05 giữ bằng chứng đã đo của study trước. Hai trạng thái phải được phân biệt khi nộp bài và thảo luận.
+
+## 12. Feature engineering và synthetic train augmentation
+
+Bổ sung train augmentation theo lexicon cùng cực tính, tối đa 25% dữ liệu gốc, một biến thể trên mỗi parent. Bỏ câu phủ định/tương phản, giữ nguyên punctuation/ngữ cảnh còn lại, loại trùng train/heldout và cân bằng số mẫu thêm giữa hai lớp. TF-IDF fit trên cùng effective train pool với Transformer; validation/test không tăng mẫu, không fit vocabulary trên heldout.
+
+Mọi biến thể kế thừa label từ parent nên có nguy cơ label noise khi ngữ cảnh làm thay đổi sắc thái. Có preview và records để review, không gọi đó là dữ liệu thật mới được gán nhãn. Không nhân đôi y nguyên mẫu rồi tuyên bố tăng thông tin. Phạm vi kiểm thử gồm chống trùng, bảo toàn heldout, tính xác định theo seed và pipeline dùng effective train size. Profile này chưa có kết quả GPU.
