@@ -1470,3 +1470,25 @@ Notebook 07 có đúng 10 cell code và Markdown giải thích trước từng c
 Cell 7 gọi pipeline training một lần, in 10 epoch/candidate và hiển thị từng bảng/learning curves ngay trong notebook. Do workflow chung bảo toàn protocol, lệnh này cũng khóa lựa chọn bằng validation rồi mới test. Cell 8 đọc các quyết định đã chốt và hiển thị threshold/validation; cell 9 đọc test/confusion/ROC/calibration/errors, không selection lại. Cell 10 audit và xuất ZIP. Tách code trình bày không làm thay đổi thứ tự học/evaluate thực tế.
 
 So sánh candidate trong profile đánh giá cuối epoch dùng Epoch làm trục, không dùng step làm trục chính. Dashboard step vẫn là artifact kỹ thuật riêng khi debug. Các số liệu/weights lịch sử không thay đổi chỉ vì bố cục mới. Việc hoàn thiện notebook không tự chứng minh profile augmented/regularized đã tốt hơn; cần kết quả GPU thật để kết luận.
+
+### 3.18. Thử nghiệm frozen encoder: protocol trước khi chạy GPU
+
+Mục tiêu mới là giảm overfitting mà vẫn giữ chất lượng phân loại. Không đặt tiêu chí khoảng cách train–validation bằng không: mô hình underfit có thể có hai đường gần nhau nhưng đều dự đoán kém. Kết luận phải xem validation loss, Macro-F1, hình dạng learning curves và calibration cùng nhau.
+
+Cấu hình trong `config/frozen_trial.json` đóng băng toàn bộ embedding và bốn tầng encoder đầu của DistilBERT. Chỉ hai tầng cuối cùng và classification head được optimizer cập nhật. `src/training/frozen.py` đánh dấu requires_grad=False cho tham số bị đóng băng, rồi chia tham số trainable thành bốn nhóm: encoder/head và decay/no-decay. Không đưa tham số frozen vào optimizer. Test xác nhận chúng không nhận gradient và không đổi sau optimizer step.
+
+Encoder trainable dùng LR 2e-6; head dùng 1e-5 vì head được khởi tạo mới. Warmup 10% số bước và linear decay dùng cùng tỷ lệ trên từng nhóm. Bảng epoch ghi LR nhóm encoder, còn `freezing_and_optimizer.json` ghi LR gốc, tên tham số và weight decay của từng nhóm để truy vết. Không diễn giải LR head bằng LR encoder hiển thị trong bảng.
+
+Dropout encoder/attention giữ 0.2/0.2; tăng classification dropout từ 0.3 lên 0.4. Weight decay giữ 0.1 trên trọng số ma trận, không decay bias và LayerNorm. Đóng băng trọng số không đồng nghĩa với tắt dropout lúc train; khi đo full train/validation và inference, model.eval() tắt dropout ở mọi tầng. Vì vậy train loss dùng eval mode và có thể so sánh trực tiếp với validation loss cùng epoch.
+
+Giữ toàn bộ official splits. Augmentation chỉ thay train, cùng lexicon/bộ lọc/seed hiện tại, không ép tạo thêm 800 mẫu. Số synthetic thực tế ghi từ lần chạy này. TF-IDF baseline dùng cùng effective train pool, chọn C và threshold bằng validation. Dữ liệu heldout không tham gia fit từ vựng, IDF, classifier hoặc sinh mẫu train.
+
+Chạy đủ 10 epoch, không early stopping. Thay tiêu chí chọn checkpoint từ validation Macro-F1 sang validation loss thấp nhất trước khi chạy. Chọn loss để ưu tiên chất lượng xác suất, nhưng không khẳng định nó luôn tối đa hóa F1. Nếu loss bằng nhau chính xác, checkpoint sớm hơn được giữ theo thứ tự epoch. Sau training, Trainer nạp lại checkpoint tốt nhất; script kiểm tra best step khớp hàng validation loss nhỏ nhất trong epoch_history.json.
+
+Sau khi reload, script quét 19 threshold validation để chọn Macro-F1 tối đa, xử lý hòa theo gần 0.5 rồi threshold nhỏ hơn. Ghi frozen_selection.json chứa epoch, threshold và SHA256 trọng số **trước khi predict test**. Không đổi checkpoint, threshold hoặc cấu hình sau khi xem test. Historical test đã từng được quan sát; báo cáo mới không mô tả test như benchmark chưa ai xem.
+
+Notebook 08 có đúng 10 cell code, roadmap/module/artifact ở đầu. Sáu phase đầu chuẩn bị môi trường, cấu hình, preflight, Exercise 1, EDA và augmentation. Cell 7 chạy train/selection/test và hiển thị bảng 10 epoch cùng learning curves. Cell 8 trình bày quyết định validation đã khóa; cell 9 hiện test/confusion/ROC/PR/calibration/errors. Cell 10 xác minh SHA256 review ZIP rồi đưa link tải review và checkpoint riêng.
+
+Mọi artifact sinh bởi script nằm dưới outputs/runs/<id>_frozen_trial_*. Review ZIP giữ config, source hashes, log, epoch history, selection, dự đoán, ảnh và manifests; giữ cả các run chuẩn bị đang active tương ứng cohort và preflight mới nhất. Checkpoint ZIP chứa best_model cùng tokenizer và decision_threshold.json. Giữ checkpoint ở nơi lưu trữ riêng; không đưa trọng số nặng vào Git. Notebook tương tác phải tải qua giao diện Kaggle nếu cần output cell được bảo toàn.
+
+Thử nghiệm này thay nhiều yếu tố cùng lúc, vì vậy chỉ có thể so sánh cả cấu hình với lịch sử. Không quy phần cải thiện riêng cho freeze, head dropout hoặc LR nếu chưa có ablation. Một seed không đo biến thiên huấn luyện. Đây là protocol chờ chạy GPU; không có kết quả mới hoặc lời hứa không overfit. Nếu validation loss vẫn tăng mạnh cuối quá trình, phải ghi nhận và dùng checkpoint đã chọn, không sửa đường học hoặc bỏ các epoch xấu khỏi biểu đồ.

@@ -421,3 +421,17 @@ Notebook 07 được chia thành đúng 10 cell code, mỗi cell có Markdown gi
 `run_study.py` trong cell 7 thực hiện workflow train -> validation selection -> test theo đúng thứ tự. Cell 8 và 9 chỉ trình bày các records đã lưu, không chọn lại model hoặc threshold sau khi thấy test. Lệnh training chỉ xuất hiện một lần. EDA trước augmentation xuất ba ảnh và bảng trong run dataset_preview; ZIP thu hồi cả EDA cùng dataset/tokenizer cohort.
 
 Cách chia cell không thay learning rate, epoch, augmentation hay kết quả. Training mới chỉ chạy khi thực thi cell 7 trên Kaggle GPU; notebook không chứa kết quả giả hoặc tự khẳng định đã giảm overfitting. Helper `kaggle_augmented_epoch_cells.py` có cùng 10 block code cho trường hợp copy/paste.
+
+## 18. Thử giảm overfitting bằng frozen encoder
+
+Dùng [notebook 08](notebooks/08_kaggle_frozen_encoder_trial.ipynb), đúng 10 cell code, để chạy thử [frozen_trial.json](config/frozen_trial.json). Đóng băng embedding và 4/6 tầng encoder đầu; hai tầng cuối có LR 2e-6, head LR 1e-5. Dropout encoder/attention/head là 0.2/0.2/0.4, weight decay 0.1, không decay bias và LayerNorm. Giữ augmentation có lọc hiện tại để tránh ép thêm dữ liệu nhiễu.
+
+Chạy đủ 10 epoch từ pretrained base; không resume hoặc early stopping. Đổi tiêu chí checkpoint sang **validation loss thấp nhất**, công bố trước lượt chạy. Threshold vẫn chọn bằng validation Macro-F1 sau khi cố định checkpoint. Không trộn kết quả với study cũ chọn theo Macro-F1. Cấu hình frozen chưa chạy GPU, chưa có khẳng định đã giảm overfitting.
+
+Notebook hiện learning curves đúng 10 điểm, threshold scan, confusion matrix, ROC/PR và calibration từ cùng PNG được lưu dưới outputs/. Script tự tạo `lab03_review_<run>.zip` và `lab03_checkpoint_<run>.zip` dưới `/kaggle/working`. Review ZIP chứa bằng chứng nhẹ để kiểm tra; checkpoint ZIP giữ riêng cho inference/re-evaluation. Tải notebook có output qua File > Download Notebook. Không commit ZIP trọng số vào Git.
+
+CLI từ gốc repo, trong môi trường requirements của Lab03:
+
+```bash
+CUDA_VISIBLE_DEVICES=0 TOKENIZERS_PARALLELISM=false .venv-lab03/bin/python labs/lab03/scripts/run_frozen_trial.py --config labs/lab03/config/frozen_trial.json
+```
