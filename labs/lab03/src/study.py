@@ -122,12 +122,14 @@ def prediction_diagnostics(labels, probabilities, out, threshold, seed=42, repea
 def _study_figures(rows, comparison, out):
     import matplotlib.pyplot as plt
     fig, axes = plt.subplots(1, 2, figsize=(12, 4))
+    epoch_view=all(json.loads((ROOT/'outputs/runs'/r['run_id']/'config.json').read_text())['exercise2'].get('eval_strategy')=='epoch' for r in rows)
+    axis_key='epoch' if epoch_view else 'step'
     for row in rows:
         history = json.loads((ROOT / 'outputs/runs' / row['run_id'] / 'trainer_history.json').read_text())
         points = [r for r in history if 'eval_macro_f1' in r]
-        axes[0].plot([r['step'] for r in points], [r['eval_macro_f1'] for r in points], label=f"LR={row['learning_rate']:g}")
-        axes[1].plot([r['step'] for r in points], [r['eval_loss'] for r in points], label=f"LR={row['learning_rate']:g}")
-    for ax in axes: ax.set_xlabel('Optimizer step'); ax.legend(); ax.grid(alpha=.2)
+        axes[0].plot([r[axis_key] for r in points], [r['eval_macro_f1'] for r in points], label=f"LR={row['learning_rate']:g}")
+        axes[1].plot([r[axis_key] for r in points], [r['eval_loss'] for r in points], label=f"LR={row['learning_rate']:g}")
+    for ax in axes: ax.set_xlabel('Epoch' if epoch_view else 'Optimizer step'); ax.legend(); ax.grid(alpha=.2)
     axes[0].set_ylabel('Validation macro F1'); axes[1].set_ylabel('Validation cross-entropy')
     finish(fig, out / 'candidate_validation_comparison.png')
     fig, ax = plt.subplots(figsize=(11, 4))

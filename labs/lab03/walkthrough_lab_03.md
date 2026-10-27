@@ -1462,3 +1462,11 @@ Official split sizes và effective split sizes được ghi riêng. Chỉ tập 
 Baseline TF-IDF fit trên cùng augmented train pool như DistilBERT; các candidate dùng cùng records và seed. Audit xác minh synthetic counts, transform positions, class balance, duplicate/collision và record checksum giữa baseline/candidates. Không dùng test metric để quyết định biến thể nào được giữ.
 
 Augmentation có thể thêm biến thiên từ vựng nhưng cũng có thể tạo label noise hoặc không đem lại cải thiện. Nó không thay thế dữ liệu người dùng thật và không bảo đảm khắc phục overfitting. Notebook 07 là template GPU mới chưa có measured result; các số study cũ vẫn giữ đúng nguồn riêng.
+
+### 3.17. Notebook 10 cell: tách giai đoạn để bảo vệ bài
+
+Notebook 07 có đúng 10 cell code và Markdown giải thích trước từng cell. Phần đầu có roadmap, đường dẫn module, artifact và quyết định của từng phase. Môi trường/config/tests là ba bước riêng; Exercise 1, EDA gốc và augmentation là ba bước tiếp theo. EDA lưu counts/độ dài/mẫu train thành PNG/JSON; không lấy ví dụ heldout để thiết kế mô hình.
+
+Cell 7 gọi pipeline training một lần, in 10 epoch/candidate và hiển thị từng bảng/learning curves ngay trong notebook. Do workflow chung bảo toàn protocol, lệnh này cũng khóa lựa chọn bằng validation rồi mới test. Cell 8 đọc các quyết định đã chốt và hiển thị threshold/validation; cell 9 đọc test/confusion/ROC/calibration/errors, không selection lại. Cell 10 audit và xuất ZIP. Tách code trình bày không làm thay đổi thứ tự học/evaluate thực tế.
+
+So sánh candidate trong profile đánh giá cuối epoch dùng Epoch làm trục, không dùng step làm trục chính. Dashboard step vẫn là artifact kỹ thuật riêng khi debug. Các số liệu/weights lịch sử không thay đổi chỉ vì bố cục mới. Việc hoàn thiện notebook không tự chứng minh profile augmented/regularized đã tốt hơn; cần kết quả GPU thật để kết luận.

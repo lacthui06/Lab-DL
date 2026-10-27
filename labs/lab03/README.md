@@ -84,7 +84,7 @@ cd ../..
 .venv-lab03/bin/python labs/lab03/scripts/audit_outputs.py
 ```
 
-- **93 tests đạt trên CPU** (phiên augmentation, xem `validation/augmentation_readiness.json`; bằng chứng study đã đo ở `validation/study_completion.json`): dataset contract, dynamic padding, pipeline/manual, checkpoint, sanity overfit, Trainer, run tracking, năm plots, recovery, metrics/artifact audit và phát hiện dữ liệu bị sửa.
+- **95 tests đạt trên CPU** (phiên notebook 10 cell, xem `validation/notebook_layout_readiness.json`; bằng chứng study đã đo ở `validation/study_completion.json`): dataset contract, dynamic padding, pipeline/manual, checkpoint, sanity overfit, Trainer, run tracking, năm plots, recovery, metrics/artifact audit và phát hiện dữ liệu bị sửa.
 - Audit kiểm tra 51 file khoa học hiện hành, tính lại validation sweep, test metrics và confusion matrices. Selection dùng validation phase trong training run. Báo cáo audit đầy đủ được lưu trong một run `artifact_audit` dưới `outputs/`, kèm bản tiện tra cứu tại `validation/`.
 - 30 file checkpoint không có trong Git được liệt kê rõ là thiếu có chủ đích, không coi là đã kiểm tra tại môi trường kiểm chứng.
 - Ba notebook chạy hết ở view, Hugging Face offline, không có cell lỗi. Xem `validation/notebook_execution.json`.
@@ -413,3 +413,11 @@ Augmentation thay một từ/cụm từ cùng cực tính, bỏ câu phủ đị
 Notebook hiện ảnh trước/sau và bảng ví dụ trước khi train. TF-IDF và DistilBERT dùng cùng augmented train pool; audit kiểm tra record checksum và tính nhất quán giữa baseline/candidates. Dropout, tokenization và TF-IDF unigram/bigram giữ vai trò khác nhau; không đưa TF-IDF vectors vào DistilBERT hoặc xóa phủ định/stopwords khỏi review.
 
 `config/augmented.json` và `config/augmented_study.json` cấu hình hai LR, mỗi LR đủ 10 epoch. Preview lưu vào `outputs/runs/<id>_augmentation_preview_*`; mỗi candidate giữ records và stats phân biệt official/effective sizes. Tăng mẫu không đảm bảo hết overfit hoặc tăng accuracy; chỉ kết luận sau khi chạy GPU. Chưa có benchmark thật cho profile augmented này.
+
+## 17. Bố cục notebook 07: 10 cell code để trình bày
+
+Notebook 07 được chia thành đúng 10 cell code, mỗi cell có Markdown giải thích: (1) repo/môi trường/GPU, (2) cấu hình/seed, (3) tests, (4) Exercise 1, (5) dataset EDA, (6) augmentation preview, (7) train và learning curves, (8) đọc quyết định checkpoint/threshold, (9) test và phân tích lỗi, (10) audit/ZIP. Bảng roadmap/module/artifact đặt ở đầu notebook.
+
+`run_study.py` trong cell 7 thực hiện workflow train -> validation selection -> test theo đúng thứ tự. Cell 8 và 9 chỉ trình bày các records đã lưu, không chọn lại model hoặc threshold sau khi thấy test. Lệnh training chỉ xuất hiện một lần. EDA trước augmentation xuất ba ảnh và bảng trong run dataset_preview; ZIP thu hồi cả EDA cùng dataset/tokenizer cohort.
+
+Cách chia cell không thay learning rate, epoch, augmentation hay kết quả. Training mới chỉ chạy khi thực thi cell 7 trên Kaggle GPU; notebook không chứa kết quả giả hoặc tự khẳng định đã giảm overfitting. Helper `kaggle_augmented_epoch_cells.py` có cùng 10 block code cho trường hợp copy/paste.

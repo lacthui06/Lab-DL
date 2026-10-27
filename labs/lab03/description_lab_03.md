@@ -324,3 +324,7 @@ Notebook 06 là template chạy mới; notebook 05 giữ bằng chứng đã đo
 Bổ sung train augmentation theo lexicon cùng cực tính, tối đa 25% dữ liệu gốc, một biến thể trên mỗi parent. Bỏ câu phủ định/tương phản, giữ nguyên punctuation/ngữ cảnh còn lại, loại trùng train/heldout và cân bằng số mẫu thêm giữa hai lớp. TF-IDF fit trên cùng effective train pool với Transformer; validation/test không tăng mẫu, không fit vocabulary trên heldout.
 
 Mọi biến thể kế thừa label từ parent nên có nguy cơ label noise khi ngữ cảnh làm thay đổi sắc thái. Có preview và records để review, không gọi đó là dữ liệu thật mới được gán nhãn. Không nhân đôi y nguyên mẫu rồi tuyên bố tăng thông tin. Phạm vi kiểm thử gồm chống trùng, bảo toàn heldout, tính xác định theo seed và pipeline dùng effective train size. Profile này chưa có kết quả GPU.
+
+## 13. Notebook trình bày theo 10 giai đoạn
+
+Chốt bố cục 10 cell code với Markdown trước mỗi cell, roadmap/module đầu notebook và hiển thị ảnh ngay tại phase tương ứng. Tách EDA dữ liệu gốc khỏi augmentation, training curves khỏi test diagnostics và phần đọc checkpoint/threshold khỏi phần đọc test metrics. Không chia workflow thành các lần chọn ngưỡng sau khi đã xem test: cell 7 thực thi đúng protocol, cell 8–9 giải thích records đã chốt.

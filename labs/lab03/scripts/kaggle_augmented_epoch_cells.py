@@ -1,4 +1,4 @@
-# Copy mỗi block # %% vào một cell Code Kaggle; bật GPU và Internet.
+# Copy mỗi block # %% vào một cell Code Kaggle, đúng 10 cell. Bật GPU + Internet.
 
 # %%
 import os
@@ -6,34 +6,31 @@ import sys
 import json
 import shutil
 import subprocess
+import importlib.util
 from pathlib import Path
 from IPython.display import display, Image, Markdown, FileLink
 
 REPO_URL = "https://github.com/lacthui06/Lab-DL.git"
 BRANCH = "lab03"
 REPO = Path("/kaggle/working/Lab-DL")
+LAB = REPO / "labs/lab03"
 ENV = Path("/kaggle/working/lab03-py312")
 PYTHON = str(ENV / "bin/python")
 
-if shutil.which("nvidia-smi") is None:
-    raise RuntimeError("Hãy bật Settings > Accelerator > GPU và chạy lại từ cell đầu.")
+assert shutil.which("nvidia-smi"), "Hãy bật Settings > Accelerator > GPU."
 subprocess.run(["nvidia-smi"], check=True)
-
 if not REPO.exists():
     subprocess.run(["git", "clone", "--single-branch", "--branch", BRANCH, REPO_URL, str(REPO)], check=True)
 else:
-    print("Repo đã tồn tại; giữ nguyên file và kết quả hiện có.")
-LAB = REPO / "labs/lab03"
-assert (LAB / "config/augmented.json").is_file(), "Repo chưa có cấu hình epoch mới; cập nhật branch lab03 trước khi chạy."
-print("Code revision:")
+    print("Giữ repo và các kết quả hiện có.")
+assert (LAB / "scripts/preview_dataset.py").is_file(), "Hãy cập nhật code lab03 phiên bản 10 cell."
 subprocess.run(["git", "rev-parse", "HEAD"], cwd=REPO, check=True)
 
 subprocess.run([sys.executable, "-m", "pip", "install", "-q", "uv==0.9.5"], check=True)
 def uv(*args):
-    subprocess.run([sys.executable, "-m", "uv", *map(str, args)], check=True)
+    subprocess.run([sys.executable, "-m", "uv", *map(str,args)], check=True)
 uv("python", "install", "3.12")
-if not Path(PYTHON).is_file():
-    uv("venv", "--python", "3.12", ENV)
+if not Path(PYTHON).is_file(): uv("venv", "--python", "3.12", ENV)
 uv("pip", "install", "--python", PYTHON, "--link-mode", "copy", "-r", LAB / "requirements.txt")
 uv("pip", "check", "--python", PYTHON)
 
@@ -41,97 +38,128 @@ RUN_ENV = os.environ.copy()
 RUN_ENV.update(CUDA_VISIBLE_DEVICES="0", TOKENIZERS_PARALLELISM="false", PYTHONUNBUFFERED="1",
                CUBLAS_WORKSPACE_CONFIG=":4096:8", MPLCONFIGDIR="/kaggle/working/.mpl-lab03")
 def run_python(*args, env=None):
-    return subprocess.run([PYTHON, "-u", *map(str, args)], cwd=REPO,
+    return subprocess.run([PYTHON,"-u",*map(str,args)], cwd=REPO,
                           env=RUN_ENV if env is None else env, check=True)
-run_python("-c", "import sys, torch, transformers; print(sys.version); print('torch', torch.__version__); print('transformers', transformers.__version__); assert torch.cuda.is_available(), 'GPU chưa khả dụng'; print(torch.cuda.get_device_name(0))")
-free_gib = shutil.disk_usage("/kaggle/working").free / 1024**3
+def selected_folder(kind):
+    state=json.loads((LAB / "config/workflow.json").read_text())
+    folder=(LAB / "outputs/runs" / state["active_runs"][kind]).resolve()
+    assert folder.parent==(LAB / "outputs/runs").resolve(), "Run path không hợp lệ."
+    return folder
+
+def show_figures(folder, names=None):
+    folder=Path(folder)
+    paths=[folder/name for name in names] if names else sorted(folder.glob("*.png"))
+    assert paths, f"Không có PNG trong {folder}"
+    for path in paths:
+        assert path.is_file(), f"Thiếu ảnh {path}"
+        display(Markdown(f"**{path.name}**"))
+        display(Image(filename=str(path)))
+
+run_python("-c", "import sys,torch,transformers; print(sys.version); print(torch.__version__,transformers.__version__); assert torch.cuda.is_available(), 'GPU chưa khả dụng'; print(torch.cuda.get_device_name(0))")
+free_gib=shutil.disk_usage("/kaggle/working").free/1024**3
 print(f"Dung lượng trống: {free_gib:.1f} GiB")
-if free_gib < 6:
-    raise RuntimeError("Cần ít nhất 6 GiB trống cho candidate checkpoints và ZIP. Hãy dùng session sạch.")
+assert free_gib>=6, "Cần ít nhất 6 GiB trống; hãy dùng session sạch."
+
+# %%
+import pandas as pd
+CONFIG_FILE = LAB / "config/augmented.json"
+STUDY_FILE = LAB / "config/augmented_study.json"
+config=json.loads(CONFIG_FILE.read_text())
+study_settings=json.loads(STUDY_FILE.read_text())
+assert config["exercise2"]["num_train_epochs"]==10
+assert study_settings["epochs_per_candidate"]==10
+assert config["exercise2"]["eval_strategy"]=="epoch"
+display(pd.DataFrame([{"seed":config["seed"], "backbone":config["exercise2"]["model_name"],
+    "epochs_each":10, "learning_rates":str(study_settings["learning_rates"]),
+    "batch_size":config["exercise2"]["batch_size"], "max_length":config["exercise2"]["max_length"],
+    "weight_decay":config["exercise2"]["weight_decay"]}]))
+display(config["exercise2"]["model_overrides"])
+display(config["exercise2"]["augmentation"])
 
 # %%
 from datetime import datetime, timezone
-validation_dir = LAB / "outputs/preflight" / datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
-validation_dir.mkdir(parents=True, exist_ok=False)
-TEST_ENV = RUN_ENV.copy()
-TEST_ENV["CUDA_VISIBLE_DEVICES"] = ""
-with (validation_dir / "pytest.log").open("w", encoding="utf-8") as log:
-    process = subprocess.Popen([PYTHON, "-u", "-m", "pytest", "labs/lab03/tests", "-q",
-                                f"--junitxml={validation_dir / 'pytest.xml'}"],
-                               cwd=REPO, env=TEST_ENV, stdout=subprocess.PIPE,
-                               stderr=subprocess.STDOUT, text=True)
+validation_dir=LAB / "outputs/preflight" / datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+validation_dir.mkdir(parents=True,exist_ok=False)
+TEST_ENV=RUN_ENV.copy(); TEST_ENV["CUDA_VISIBLE_DEVICES"]=""
+with (validation_dir/"pytest.log").open("w",encoding="utf-8") as log:
+    process=subprocess.Popen([PYTHON,"-u","-m","pytest","labs/lab03/tests","-q",
+        f"--junitxml={validation_dir/'pytest.xml'}"],cwd=REPO,env=TEST_ENV,
+        stdout=subprocess.PIPE,stderr=subprocess.STDOUT,text=True)
     for line in process.stdout:
-        print(line, end=""); log.write(line)
-    if process.wait() != 0:
-        raise RuntimeError("Preflight tests failed. Chưa chạy training; xem pytest.log.")
-print("Preflight passed:", validation_dir)
+        print(line,end="");log.write(line)
+    assert process.wait()==0, "Preflight failed; xem pytest.log, chưa chạy training."
+print("Preflight PASSED:",validation_dir)
 
 # %%
 run_python("labs/lab03/scripts/run_exercise1.py")
-run_python("-c", "from labs.lab03.src.analysis import ensure_exercise1_analysis; from labs.lab03.src.utils.runs import ROOT; import json; s=json.loads((ROOT/'config/workflow.json').read_text()); print(ensure_exercise1_analysis(ROOT/'outputs/runs'/s['active_runs']['exercise1']))")
-state = json.loads((LAB / "config/workflow.json").read_text())
-exercise1_run = LAB / "outputs/runs" / state["active_runs"]["exercise1"]
-display(json.loads((exercise1_run / "predictions.json").read_text()))
-exercise1_analysis = LAB / "outputs/runs" / state["active_runs"]["exercise1_analysis"]
-for image_path in sorted(exercise1_analysis.glob("*.png")):
-    display(Markdown(f"**{image_path.name}**"))
-    display(Image(filename=str(image_path)))
+EXERCISE1=selected_folder("exercise1")
+EXERCISE1_ANALYSIS=selected_folder("exercise1_analysis")
+display(pd.DataFrame(json.loads((EXERCISE1/"predictions.json").read_text())["manual"]))
+display(json.loads((EXERCISE1/"tokenizer_breakdown.json").read_text()))
+show_figures(EXERCISE1_ANALYSIS)
 
 # %%
-preview_source = """
-import json
-from labs.lab03.src.workflow import read_config
-from labs.lab03.src.datasets.loader import load_data
-from labs.lab03.src.datasets.augmentation import augment_train, export_augmentation
-from labs.lab03.src.utils.runs import ROOT, run_context
-cfg=read_config(ROOT / 'config/augmented.json')
-raw=load_data(cfg['exercise2'])
-_,summary=augment_train(raw,cfg['exercise2']['augmentation'],cfg['seed'])
-with run_context('augmentation_preview',cfg) as out:
-    export_augmentation(summary,out)
-    print(json.dumps({k:v for k,v in summary.items() if k!='records'},indent=2))
-"""
-run_python("-c", preview_source)
-state=json.loads((LAB / "config/workflow.json").read_text())
-PREVIEW=LAB / "outputs/runs" / state["active_runs"]["augmentation_preview"]
-for image_path in sorted(PREVIEW.glob("*.png")):
-    display(Markdown(f"**{image_path.name}**"))
-    display(Image(filename=str(image_path)))
-
+run_python("labs/lab03/scripts/preview_dataset.py","--config",CONFIG_FILE)
+EDA=selected_folder("dataset_preview")
+eda=json.loads((EDA/"data_preview.json").read_text())
+display(pd.DataFrame([{"split":k,"samples":v,"negative":eda["label_counts"][k]["0"],
+                      "positive":eda["label_counts"][k]["1"]} for k,v in eda["split_sizes"].items()]))
+display(pd.DataFrame([eda["train_token_lengths"]]))
+show_figures(EDA)
 
 # %%
-config = json.loads((LAB / "config/augmented.json").read_text())
-study_settings = json.loads((LAB / "config/augmented_study.json").read_text())
-assert config["exercise2"]["num_train_epochs"] == 10
-assert study_settings["epochs_per_candidate"] == 10
-print(json.dumps(study_settings, indent=2))
-
-# Chạy cell này đúng một lần cho mỗi thí nghiệm mới.
-# Chạy lại sẽ tạo study và candidate mới, không ghi đè hoặc resume run cũ.
-run_python("labs/lab03/scripts/run_study.py", "--config", LAB / "config/augmented.json", "--settings", LAB / "config/augmented_study.json")
-state = json.loads((LAB / "config/workflow.json").read_text())
-STUDY = LAB / "outputs/runs" / state["active_runs"]["study"]
-print("Study đã hoàn tất:", STUDY)
+run_python("labs/lab03/scripts/preview_augmentation.py","--config",CONFIG_FILE)
+PREVIEW=selected_folder("augmentation_preview")
+augmentation=json.loads((PREVIEW/"augmentation.json").read_text())
+display(pd.DataFrame([{"official_train":augmentation["original_train_size"],
+    "synthetic_added":augmentation["added_count"], "effective_train":augmentation["effective_train_size"],
+    "validation":eda["split_sizes"]["validation"], "test":eda["split_sizes"]["test"]}]))
+display(pd.DataFrame(augmentation["records"]).head(8))
+show_figures(PREVIEW)
 
 # %%
-import importlib.util
-spec = importlib.util.spec_from_file_location("lab03_display_study", LAB / "scripts/display_study.py")
-viewer = importlib.util.module_from_spec(spec)
-spec.loader.exec_module(viewer)
-shown_figures = viewer.display_study(STUDY, root=LAB)
-assert len(shown_figures) >= 10, "Thiếu hình trực quan; kiểm tra artifacts trước khi đóng gói."
+run_python("labs/lab03/scripts/run_study.py","--config",CONFIG_FILE,"--settings",STUDY_FILE)
+STUDY=selected_folder("study")
+candidates=json.loads((STUDY/"candidate_comparison.json").read_text())
+for candidate in candidates:
+    folder=LAB / "outputs/runs" / candidate["run_id"]
+    display(Markdown(f"### LR={candidate['learning_rate']:g} — đủ 10 epoch"))
+    epoch_rows=json.loads((folder/"epoch_history.json").read_text())
+    assert [r["epoch"] for r in epoch_rows]==list(range(1,11))
+    display(pd.DataFrame(epoch_rows))
+    show_figures(folder,["learning_curves.png"])
+print("Study:",STUDY)
 
 # %%
-run_python("labs/lab03/scripts/audit_study.py", "--study-run", STUDY)
-run_python("labs/lab03/scripts/package_study.py", "--study-run", STUDY)
-bundle = json.loads((LAB / "outputs/bundles/latest_bundle.json").read_text())
-for key in ["review", "checkpoint"]:
-    if not bundle.get(key):
-        continue
-    source = Path(bundle[key])
-    download = Path("/kaggle/working") / source.name
-    shutil.copy2(source, download)
-    print(key, ":", download, f"({download.stat().st_size / 1024**2:.1f} MB)")
+selection=json.loads((STUDY/"frozen_selection.json").read_text())
+policy=json.loads((STUDY/"decision_threshold.json").read_text())
+display(pd.DataFrame(candidates))
+display(selection)
+display(pd.DataFrame([{"policy":"Reference 0.5",**policy["baseline_metrics"]},
+                      {"policy":"Validation selected",**policy["selected_metrics"]}]))
+WINNER=LAB / "outputs/runs" / selection["winner"]["run_id"]
+show_figures(STUDY,["candidate_validation_comparison.png"])
+show_figures(WINNER,["validation_threshold/threshold_curves.png"])
+
+# %%
+display(pd.DataFrame(json.loads((STUDY/"test_comparison.json").read_text())))
+display(pd.DataFrame([json.loads((STUDY/"test_runtime_metrics.json").read_text())]))
+display(json.loads((STUDY/"probability_diagnostics.json").read_text()))
+show_figures(STUDY,["baseline_model_comparison.png","confusion_matrix.png",
+    "test_threshold/confusion_matrix.png","metrics_bar.png","roc_pr_curves.png",
+    "calibration_confidence.png","sample_predictions.png","inference_predictions.png"])
+display(pd.DataFrame(json.loads((STUDY/"sample_predictions.json").read_text())))
+display(pd.DataFrame(json.loads((STUDY/"inference_predictions.json").read_text())))
+
+# %%
+run_python("labs/lab03/scripts/audit_study.py","--study-run",STUDY)
+run_python("labs/lab03/scripts/package_study.py","--study-run",STUDY)
+bundle=json.loads((LAB / "outputs/bundles/latest_bundle.json").read_text())
+for kind in ["review","checkpoint"]:
+    if not bundle.get(kind):continue
+    source=Path(bundle[kind]);download=Path("/kaggle/working")/source.name
+    shutil.copy2(source,download)
+    print(kind,":",download,f"({download.stat().st_size/1024**2:.1f} MB)")
     display(FileLink(str(download.relative_to(Path.cwd())) if download.is_relative_to(Path.cwd()) else str(download)))
-print("SHA256 review:", bundle["review_sha256"])
-print("Nếu panel Output chưa hiện ZIP: nhấn refresh cạnh /kaggle/working.")
+print("SHA256 review:",bundle["review_sha256"])
+print("Tải review ZIP để kiểm chứng/report; giữ riêng checkpoint ZIP.")
