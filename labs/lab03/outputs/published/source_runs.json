@@ -13,7 +13,8 @@
     "candidate_lr_3e5": "20261026T185804Z_candidate_8308037d",
     "study_exercise1": "20261026T184202Z_exercise1_de76a80c",
     "study_exercise1_analysis": "20261026T184207Z_exercise1_analysis_5406bc6c",
-    "study_review": "20261026T191751Z_study_review_d66d4edb"
+    "study_review": "20261026T191751Z_study_review_d66d4edb",
+    "epoch_presentation": "20261027T061914Z_epoch_presentation_9a0cfccc"
   },
   "source_manifests": {
     "exercise1": "0df1428fafe25b5b1619baba8e82d6bab023aa87708832ad344f15dc04683ca8",
@@ -29,9 +30,10 @@
     "candidate_lr_3e5": "20b5707b2b344f8386f1e929460fd6824da7794ef575bb32ce6a94d093fff705",
     "study_exercise1": "262ed846faf6c71d1b776a7f7dccf6e1314d8abe066aba06cc925fc00c1376f4",
     "study_exercise1_analysis": "2bd5c6d0b8506e62bcb916dc311f2541c7f6d833c5a81a5f093419dee09db135",
-    "study_review": "9ea1be09736b64f3ec767e683fe2d237f0863526808361da84af7fb93ef7b069"
+    "study_review": "9ea1be09736b64f3ec767e683fe2d237f0863526808361da84af7fb93ef7b069",
+    "epoch_presentation": "8c2192dfba2da65358e84103dbfd9cc8f27b1cea081bc6869ee2fce2fa940b4d"
   },
-  "exporter_sha256": "9fee3fcbe3a1972595263b1e1c37ead92631bf7650c80896fd30ea1d3a484809",
+  "exporter_sha256": "4453eb2d9ad69938d1c40ce9175000a588e4665ef629924eef0a7f98d420ae95",
   "primary_result": "study",
   "weights_included": false,
   "raw_logs_included": false

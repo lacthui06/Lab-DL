@@ -6,6 +6,8 @@ Bài thực hành Deep Learning — UTH: sentiment analysis bằng mô hình pre
 
 **Study 10 epoch đã chạy và kiểm chứng:** [Notebook kết quả, hình và thảo luận](notebooks/05_study_results_and_discussion.ipynb). Ba LR đều hoàn thành 10 epoch; winner LR **3e-5**, best checkpoint **step 1700 / epoch 3,184**, threshold validation **0,5**. Test Accuracy **83,40%**, Macro-F1 **83,40%**, đúng **889/1.066**. Hơn baseline TF-IDF nhưng thấp hơn argmax lịch sử 6 mẫu; không tuyên bố chạy nhiều epoch luôn tốt hơn. [Notebook 04](notebooks/04_kaggle_10epoch_study.ipynb) là template để chạy thí nghiệm GPU mới.
 
+**Lượt train tiếp theo:** dùng [Notebook 06 — regularized epoch training](notebooks/06_kaggle_regularized_epoch_training.ipynb) để tổng kết đủ 10 epoch và thử giảm overfitting. Profile này chưa có kết quả GPU; xem Mục 15 trước khi chạy.
+
 ## 1. Xem bài và kết quả
 
 - [Notebook kết quả study 10 epoch](notebooks/05_study_results_and_discussion.ipynb): audit, đủ learning curves, threshold, baseline, test và thảo luận.
@@ -80,7 +82,7 @@ cd ../..
 .venv-lab03/bin/python labs/lab03/scripts/audit_outputs.py
 ```
 
-- **75 tests đạt trên CPU** (bản tích hợp kết quả, xem `validation/study_completion.json`; preflight trước training ở `validation/ten_epoch_readiness.json`): dataset contract, dynamic padding, pipeline/manual, checkpoint, sanity overfit, Trainer, run tracking, năm plots, recovery, metrics/artifact audit và phát hiện dữ liệu bị sửa.
+- **83 tests đạt trên CPU** (phiên epoch/regularization, xem `validation/epoch_training_readiness.json`; bằng chứng study đã đo ở `validation/study_completion.json`): dataset contract, dynamic padding, pipeline/manual, checkpoint, sanity overfit, Trainer, run tracking, năm plots, recovery, metrics/artifact audit và phát hiện dữ liệu bị sửa.
 - Audit kiểm tra 51 file khoa học hiện hành, tính lại validation sweep, test metrics và confusion matrices. Selection dùng validation phase trong training run. Báo cáo audit đầy đủ được lưu trong một run `artifact_audit` dưới `outputs/`, kèm bản tiện tra cứu tại `validation/`.
 - 30 file checkpoint không có trong Git được liệt kê rõ là thiếu có chủ đích, không coi là đã kiểm tra tại môi trường kiểm chứng.
 - Ba notebook chạy hết ở view, Hugging Face offline, không có cell lỗi. Xem `validation/notebook_execution.json`.
@@ -381,3 +383,21 @@ So với argmax lịch sử trên cùng 1.066 index/text/label, study sửa 42 l
 **Không cần train lại để hoàn thiện báo cáo.** Hình đã hiển thị ở notebook 05 và phần mở rộng của notebook tích hợp; `outputs/published/index.md` có bảng/ảnh cho report với `primary_result="study"`. Dữ liệu lịch sử giữ riêng theo role, không bị thay bằng số study.
 
 Raw logs của phiên này có đủ trong Git; checkpoint cố ý nằm ngoài Git. Review tại đây kiểm tra predictions/policy/manifest; không tải weights và không tuyên bố đã lặp lại GPU training. Giữ checkpoint ZIP để inference hoặc reload sau này.
+
+## 15. Train theo epoch và thử giảm overfitting
+
+Dùng [notebook 06](notebooks/06_kaggle_regularized_epoch_training.ipynb) cho lượt chạy mới theo cách trình bày của training loop Lab01: đủ train/validation mỗi epoch, một dòng tổng kết `Epoch 01/10` đến `Epoch 10/10`, bảng `epoch_history.json` có 10 dòng, hình loss/accuracy có đúng 10 điểm cuối epoch. Steps vẫn là đơn vị cập nhật nội bộ, không dùng làm trục chính của hình.
+
+Cấu hình mới nằm ở `config/regularized.json` và `config/regularized_study.json`: LR 5e-6/1e-5, weight decay 0.1, dropout encoder/attention 0.2, classifier dropout 0.3, đánh giá/lưu checkpoint cuối mỗi epoch. Hai candidate chạy đủ 10 epoch mỗi candidate, không early stopping. Vẫn chọn model bằng validation Macro-F1 và threshold từ validation; vẫn cross-entropy gốc, không label smoothing. Các giá trị này là phương án thử có lý do, chưa phải cấu hình đã được chứng minh tối ưu.
+
+**Trạng thái: chưa có kết quả GPU của cấu hình regularized.** Cần chạy notebook 06 để đo hiệu quả; không dùng số liệu study cũ làm kết quả của cấu hình mới. Nếu validation loss vẫn tăng, báo cáo đúng kết quả, không làm mượt/sửa ảnh để che overfitting. Đây là gói thay đổi LR/regularization, không phải thí nghiệm tách riêng nguyên nhân từng yếu tố.
+
+Notebook 05 và phần study của notebook tích hợp đã được trình bày lại: mỗi đường chính có đúng 10 mốc nguyên, dashboard step mặc định ẩn. PNG mới là artifact dẫn xuất trong run `epoch_presentation`; raw graphs/history/weights cũ giữ nguyên. Việc vẽ lại **không sửa overfitting** và không cần train lại.
+
+CLI từ gốc repo:
+
+```bash
+CUDA_VISIBLE_DEVICES=0 TOKENIZERS_PARALLELISM=false CUBLAS_WORKSPACE_CONFIG=:4096:8 .venv-lab03/bin/python labs/lab03/scripts/run_study.py --config labs/lab03/config/regularized.json --settings labs/lab03/config/regularized_study.json
+```
+
+Có thể copy từng block trong [kaggle_regularized_epoch_cells.py](scripts/kaggle_regularized_epoch_cells.py) nếu không dùng Import Notebook. Chạy full GPU training trong notebook rồi lấy review ZIP/checkpoint ZIP ở cell cuối như trước.

@@ -12,7 +12,7 @@ from .training.metrics import compute_metrics
 from .training.thresholds import export_threshold_analysis, binary_metrics_at_threshold
 from .decision import checkpoint_identity
 from .utils.runs import ROOT, run_context, save_json
-from .utils.plots import plot_lengths, plot_learning, plot_step_learning, plot_confusion, plot_metrics, plot_samples
+from .utils.plots import plot_lengths, plot_learning, plot_epoch_learning, plot_step_learning, plot_confusion, plot_metrics, plot_samples
 
 
 def read_config(path=None):
@@ -149,9 +149,11 @@ def finetune(config=None, allow_cpu=False, evaluate_test=True):
                   "train_token_lengths": {"mean": float(np.mean(lengths)), "max": max(lengths),
                   "truncated_fraction": float(np.mean(np.array(lengths) > cfg["max_length"]))}})
         plot_lengths(lengths, cfg["max_length"], out / "token_length_distribution.png")
-        model, _ = load_model(cfg["model_name"], cfg["model_revision"], finetuning=True)
+        model, _ = load_model(cfg["model_name"], cfg["model_revision"], finetuning=True,
+                              overrides=cfg.get("model_overrides"))
         save_json(out / "provenance.json", {"model_commit": getattr(model.config, "_commit_hash", None),
-                  "dataset_fingerprints": {k: raw[k]._fingerprint for k in ("train", "validation", "test")}})
+                  "dataset_fingerprints": {k: raw[k]._fingerprint for k in ("train", "validation", "test")},
+                  "effective_dropout": {key: getattr(model.config, key, None) for key in ("dropout", "attention_dropout", "seq_classif_dropout")}})
         trainer = make_trainer(model, tokenizer, tokenized, cfg, out)
         if torch.cuda.is_available(): torch.cuda.reset_peak_memory_stats()
         trained = trainer.train()
@@ -170,7 +172,7 @@ def finetune(config=None, allow_cpu=False, evaluate_test=True):
         })
         save_json(out / "train_metrics.json", trained.metrics)
         save_json(out / "trainer_history.json", trainer.state.log_history)
-        plot_learning(trainer.state.log_history, out / "learning_curves.png")
+        plot_epoch_learning(trainer.state.log_history, out / "learning_curves.png")
         plot_step_learning(trainer.state.log_history, out / "step_learning_curves.png",
             best_step=int(Path(trainer.state.best_model_checkpoint).name.split("-")[-1]))
         trainer.save_model(str(out / "best_model"))

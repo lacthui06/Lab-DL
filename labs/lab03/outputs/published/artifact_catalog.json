@@ -1024,5 +1024,59 @@
     "run": "20261026T191751Z_study_review_d66d4edb",
     "file": "study_review/tables.json",
     "sha256": "3ca1c982ba7cf45909a4fd9018b523e6304cc6fdb63367f2d882a9678fa26bcf"
+  },
+  {
+    "role": "epoch_presentation",
+    "run": "20261027T061914Z_epoch_presentation_9a0cfccc",
+    "file": "epoch_presentation/20261026T184223Z_candidate_4b1da858/epoch_metrics.json",
+    "sha256": "8c262662ea4d7b0dae7efdb40c78bc431f365310714c9eda2c7d2a3621322fc7"
+  },
+  {
+    "role": "epoch_presentation",
+    "run": "20261027T061914Z_epoch_presentation_9a0cfccc",
+    "file": "epoch_presentation/20261026T184223Z_candidate_4b1da858/learning_curves.png",
+    "sha256": "0f4ed95354078fb19e6b12e66abab3566d197556609d085a69bb9ac0f70aee12"
+  },
+  {
+    "role": "epoch_presentation",
+    "run": "20261027T061914Z_epoch_presentation_9a0cfccc",
+    "file": "epoch_presentation/20261026T185017Z_candidate_202c0434/epoch_metrics.json",
+    "sha256": "958c6a16e40d9b13cd3cb35fb9db4d414a74406539e1954ba2f4accb6b95e5fc"
+  },
+  {
+    "role": "epoch_presentation",
+    "run": "20261027T061914Z_epoch_presentation_9a0cfccc",
+    "file": "epoch_presentation/20261026T185017Z_candidate_202c0434/learning_curves.png",
+    "sha256": "0be46dc5f46b2959c30f9cfc46dc81c94ec83e7f8e8e25510ef13967cf61df21"
+  },
+  {
+    "role": "epoch_presentation",
+    "run": "20261027T061914Z_epoch_presentation_9a0cfccc",
+    "file": "epoch_presentation/20261026T185804Z_candidate_8308037d/epoch_metrics.json",
+    "sha256": "a0df0f3138460c78e01e6f77296f019ded9ff83207cd6206dedf60c16c0d1d49"
+  },
+  {
+    "role": "epoch_presentation",
+    "run": "20261027T061914Z_epoch_presentation_9a0cfccc",
+    "file": "epoch_presentation/20261026T185804Z_candidate_8308037d/learning_curves.png",
+    "sha256": "4836dc4013430ad152ebfe2aa4bd724115e0752e2b6a4155ce10067ae524bec1"
+  },
+  {
+    "role": "epoch_presentation",
+    "run": "20261027T061914Z_epoch_presentation_9a0cfccc",
+    "file": "epoch_presentation/config.json",
+    "sha256": "44fb1540ab2a2741ca28b175a0827ceb8cb19b9211233abc0bd85faa67699dc7"
+  },
+  {
+    "role": "epoch_presentation",
+    "run": "20261027T061914Z_epoch_presentation_9a0cfccc",
+    "file": "epoch_presentation/presentation_source.json",
+    "sha256": "44fb1540ab2a2741ca28b175a0827ceb8cb19b9211233abc0bd85faa67699dc7"
+  },
+  {
+    "role": "epoch_presentation",
+    "run": "20261027T061914Z_epoch_presentation_9a0cfccc",
+    "file": "epoch_presentation/summary.json",
+    "sha256": "d246c34335b577eed7b7800d18b62fe66433f41b8f726b2b6b78c348a3a973ab"
   }
 ]

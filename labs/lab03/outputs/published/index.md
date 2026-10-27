@@ -29,6 +29,7 @@ Bảng chính thuộc study 10 epoch; các role finetuning/evaluation/analysis c
 | study_exercise1 | `20261026T184202Z_exercise1_de76a80c` |
 | study_exercise1_analysis | `20261026T184207Z_exercise1_analysis_5406bc6c` |
 | study_review | `20261026T191751Z_study_review_d66d4edb` |
+| epoch_presentation | `20261027T061914Z_epoch_presentation_9a0cfccc` |
 
 ## Hình và bảng
 
@@ -289,3 +290,15 @@ Các PNG dưới đây là bản sao của hình đã lưu trong run nguồn. JS
 ### study_review/per_class_metrics.png
 
 ![study_review](study_review/per_class_metrics.png)
+
+### epoch_presentation/20261026T184223Z_candidate_4b1da858/learning_curves.png
+
+![epoch_presentation](epoch_presentation/20261026T184223Z_candidate_4b1da858/learning_curves.png)
+
+### epoch_presentation/20261026T185017Z_candidate_202c0434/learning_curves.png
+
+![epoch_presentation](epoch_presentation/20261026T185017Z_candidate_202c0434/learning_curves.png)
+
+### epoch_presentation/20261026T185804Z_candidate_8308037d/learning_curves.png
+
+![epoch_presentation](epoch_presentation/20261026T185804Z_candidate_8308037d/learning_curves.png)

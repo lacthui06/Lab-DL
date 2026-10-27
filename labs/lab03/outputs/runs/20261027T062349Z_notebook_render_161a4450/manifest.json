@@ -1,0 +1,11 @@
+{
+  "01_sentiment_analysis_pipeline.ipynb": "0241848cd0493e8d1233afea0e49da27d13bfbe7a0d901578f49677819505be5",
+  "02_finetuning_binary_classification.ipynb": "3ba837faba85d911d2d4cc1479101e990d558068e60e33b60cf30bb670dd6253",
+  "05_study_results_and_discussion.ipynb": "81b82175da37d36bccb0383ad05aa9c4b6563110e11449cdc06b5a564cdfaa9c",
+  "config.json": "fd21dfe66b1e603eaa9e13e7d966c491f89cc660a7688e1b8895735a3896d8b3",
+  "console.log": "1d912f8e2f75ae6ac1e8a0379df5ca328291ca10871f5533dff02de3b14a2a09",
+  "environment_snapshot.json": "fb928d2b1954c6ffbdf55e0e4111d8c78e583e949e9936679b78937927d87151",
+  "execution_summary.json": "60f613bc0230d1d72824249435f88655ac9c284af8d322f26cfd5299525dacb5",
+  "lab03_huggingface_complete.ipynb": "f1d18ae421523aa7e28cae04b27997f4b18382dcb1e6ec63964ce94d81147344",
+  "status.json": "7ccc76c79702d3036f1f73acdf5cc4c333fa7d9721df7437015a74558db32533"
+}

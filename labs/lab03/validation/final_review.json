@@ -119,5 +119,6 @@
     },
     "verification_run": "20261026T192814Z_verification_912ee7b9"
   },
-  "historical_three_epoch_review_file": "outputs/runs/20261026T163347Z_verification_641a8f92/review.json"
+  "historical_three_epoch_review_file": "outputs/runs/20261026T163347Z_verification_641a8f92/review.json",
+  "current_epoch_training_readiness_file": "validation/epoch_training_readiness.json"
 }

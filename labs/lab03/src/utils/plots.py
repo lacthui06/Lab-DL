@@ -90,3 +90,45 @@ def plot_step_learning(history, path, best_step=None):
             ax.axvline(best_step, ls="--", color="black", alpha=.6, label="Selected checkpoint")
         if ax.lines: ax.legend(fontsize=8)
     finish(fig, path)
+
+
+def epoch_metrics(history):
+    """Lấy đúng một mốc cuối mỗi epoch, bỏ mốc validation giữa epoch."""
+    rows = []
+    for train in history:
+        if 'train_accuracy' not in train or 'epoch' not in train:
+            continue
+        epoch = float(train['epoch'])
+        if not np.isclose(epoch, round(epoch), atol=1e-8, rtol=0):
+            continue
+        matches = [r for r in history if 'eval_loss' in r
+                   and np.isclose(float(r.get('epoch', -1)), epoch, atol=1e-8, rtol=0)
+                   and r.get('step') == train.get('step')]
+        if not matches:
+            raise ValueError(f'Missing end-of-epoch validation for epoch {epoch:g}')
+        validation = matches[-1]
+        row = {'epoch':int(round(epoch)), 'step':train.get('step'),
+               'train_loss_eval':train['train_loss'], 'train_accuracy':train['train_accuracy'],
+               'validation_loss':validation['eval_loss'], 'validation_accuracy':validation['eval_accuracy'],
+               'validation_macro_f1':validation.get('eval_macro_f1')}
+        rows = [r for r in rows if r['epoch'] != row['epoch']]
+        rows.append(row)
+    rows.sort(key=lambda r:r['epoch'])
+    if not rows or [r['epoch'] for r in rows] != list(range(1, rows[-1]['epoch']+1)):
+        raise ValueError('Expected complete consecutive end-of-epoch train/validation metrics')
+    return rows
+
+
+def plot_epoch_learning(history, path):
+    """Biểu đồ chính theo epoch nguyên, mỗi đường đúng một điểm mỗi epoch."""
+    rows = epoch_metrics(history)
+    fig, axes = plt.subplots(1, 2, figsize=(12, 4))
+    for key, label in [('train_loss_eval','Train loss (eval mode)'),('validation_loss','Validation loss')]:
+        axes[0].plot([r['epoch'] for r in rows],[r[key] for r in rows],marker='o',label=label)
+    for key, label in [('train_accuracy','Train accuracy (eval mode)'),('validation_accuracy','Validation accuracy')]:
+        axes[1].plot([r['epoch'] for r in rows],[r[key] for r in rows],marker='o',label=label)
+    for ax in axes:
+        ax.set(xlabel='Epoch',xticks=[r['epoch'] for r in rows]);ax.grid(alpha=.2);ax.legend()
+    axes[0].set_ylabel('Cross-entropy loss');axes[1].set(ylabel='Accuracy',ylim=(0,1.02))
+    finish(fig,path)
+    return rows

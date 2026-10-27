@@ -1430,3 +1430,21 @@ PNG inline giúp học và thảo luận trong notebook. File PNG phục vụ re
 
 **Nếu model mới kém hơn TF-IDF hoặc run cũ thì sao?**
 Báo cáo đúng kết quả, phân tích bias/variance, learning curves và giới hạn search. Không sửa test policy hoặc giấu baseline để làm kết luận đẹp hơn.
+
+### 3.15. Chỉnh cách trình bày epoch và thiết kế giảm overfitting tiếp theo
+
+Training loop của Lab01 trong repo chạy train và validation ở mỗi vòng epoch rồi ghi một dòng tổng kết. Cách tổng kết này phù hợp yêu cầu đọc đường học theo epoch. Lab03 tiếp tục dùng Hugging Face Trainer cho đề bài NLP, nhưng thêm callback tổng kết cùng cách nhìn thay vì dùng bảng step làm trình bày chính.
+
+Mỗi epoch của profile mới chạy đủ train và validation, không chia nhỏ dữ liệu. Console in `Epoch 01/10` đến `Epoch 10/10`, kèm Train Loss (eval), Train Accuracy, Validation Loss/Accuracy/Macro-F1 và LR. `epoch_history.json` lưu đúng 10 record sau mỗi epoch. Train loss trong bảng được đo ở eval mode để so cùng context với validation; optimization loss trong Trainer history vẫn giữ riêng khi cần debug.
+
+Biểu đồ chính lấy đúng một mốc cuối mỗi epoch, có trục 1–10 và mỗi đường 10 điểm. Dashboard step là thông tin bổ sung, mặc định ẩn trong notebook kết quả. Một step vẫn là batch/update nội bộ; đổi trục hiển thị không thay đổi thuật toán học.
+
+Với study đã đo, đồ thị mới là dẫn xuất từ original trainer_history.json. Raw PNG, predictions, policy, checkpoint selection và original manifests không bị chỉnh. Checkpoint đã chọn ở step 1700/epoch 3,184 vẫn được giữ theo protocol cũ; không chọn lại checkpoint tại epoch nguyên chỉ để hợp cách vẽ mới. Đây là thay đổi trình bày, không phải khắc phục overfitting của weights đã học.
+
+Để thử giảm overfitting, notebook 06 dùng profile regularized riêng: LR 5e-6 và 1e-5, weight decay 0.1, encoder dropout 0.2, attention dropout 0.2 và classifier dropout 0.3. Loader kiểm tra dropout hợp lệ trước khi tải model; provenance và saved model config ghi giá trị thực đã áp dụng. Hai candidate cùng seed/budget/full splits, mỗi candidate đủ 10 epoch, không early stopping.
+
+Dropout cao hơn làm nhiệm vụ train khó hơn và có thể giảm học thuộc; weight decay mạnh hơn tạo áp lực giảm độ lớn weights; LR thấp hơn hạn chế thay đổi backbone quá mạnh. Tuy nhiên regularization quá mạnh có thể gây underfit. Đây là gói can thiệp, không phải bằng chứng nhân quả tách riêng từng tham số. Không gọi cấu hình này là tối ưu khi chưa đo validation.
+
+Giữ công thức cross-entropy gốc, không label smoothing trong lượt này, để tránh so loss khác objective mà không ghi chú. Giữ validation Macro-F1 làm criterion checkpoint/model như trước; vẫn báo cáo validation loss để theo dõi confidence. Chỉ thay model/threshold bằng validation trước test, không sửa criterion theo test lịch sử.
+
+Trạng thái hiện tại: phần mềm/profile đã chuẩn bị và kiểm thử bằng mô hình nhỏ; full GPU result của profile regularized chưa có. Chỉ sau khi chạy Kaggle và thu hồi review ZIP mới cập nhật kết quả thực nghiệm mới. Kết quả 83,40% của study trước không được gán thành kết quả của profile này.

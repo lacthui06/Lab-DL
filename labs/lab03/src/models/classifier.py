@@ -4,11 +4,19 @@ from transformers import AutoModelForSequenceClassification, AutoTokenizer, pipe
 
 LABELS = {0: "NEGATIVE", 1: "POSITIVE"}
 
-def load_model(name, revision=None, finetuning=False):
+def load_model(name, revision=None, finetuning=False, overrides=None):
+    overrides = dict(overrides or {})
+    allowed = {"dropout", "attention_dropout", "seq_classif_dropout"}
+    if overrides and (not finetuning or not set(overrides) <= allowed):
+        raise ValueError("Only declared DistilBERT dropout overrides are allowed during finetuning")
+    for value in overrides.values():
+        if isinstance(value, bool) or not isinstance(value, (float, int)) or not 0 <= value < 1:
+            raise ValueError("Dropout must be a finite probability in [0, 1)")
     kwargs = {"revision": revision} if revision else {}
     tokenizer = AutoTokenizer.from_pretrained(name, **kwargs)
     model_kwargs = dict(num_labels=2, id2label=LABELS,
                         label2id={v: k for k, v in LABELS.items()}) if finetuning else {}
+    model_kwargs.update(overrides)
     model = AutoModelForSequenceClassification.from_pretrained(name, **kwargs, **model_kwargs)
     return model, tokenizer
 

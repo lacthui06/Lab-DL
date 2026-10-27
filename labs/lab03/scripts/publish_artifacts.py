@@ -18,6 +18,7 @@ JSON_FILES = {
     "summary.json", "analysis_summary.json", "tables.json", "threshold_scan.json", "selected_threshold.json",
     "predictions.json", "sample_predictions.json", "all_predictions.json", "validation_predictions.json",
     "roc_pr_coordinates.json", "reliability_bins.json", "tokenizer_breakdown.json",
+    "epoch_metrics.json", "epoch_history.json", "presentation_source.json",
     "study_summary.json", "candidate_comparison.json", "frozen_selection.json", "selection_summary.json",
     "test_comparison.json", "probability_diagnostics.json", "threshold_errors.json", "split_overlap_audit.json",
     "inference_predictions.json", "baseline_validation_candidates.json", "baseline_validation_policy.json", "checkpoint_reference.json",

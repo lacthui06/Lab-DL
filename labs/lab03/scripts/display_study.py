@@ -3,7 +3,7 @@ from pathlib import Path
 import json
 ROOT = Path(__file__).resolve().parents[1]
 
-def display_study(study, root=ROOT):
+def display_study(study, root=ROOT, show_step_diagnostics=False):
     """Render chính file PNG vào kernel notebook, không gọi qua subprocess."""
     import pandas as pd
     from IPython.display import display, Image, Markdown
@@ -26,8 +26,11 @@ def display_study(study, root=ROOT):
         display(Markdown(f"### Candidate LR={row['learning_rate']:g} — đủ 10 epoch"))
         display(json.loads((run / 'selection_summary.json').read_text()))
         history = json.loads((run / 'trainer_history.json').read_text())
-        display(pd.DataFrame([r for r in history if 'eval_macro_f1' in r]))
+        epoch_file = run / 'epoch_history.json'
+        display(pd.DataFrame(json.loads(epoch_file.read_text()) if epoch_file.is_file() else [r for r in history if 'eval_macro_f1' in r]))
         for name in ['learning_curves.png', 'step_learning_curves.png', 'token_length_distribution.png', 'validation_threshold/threshold_curves.png']:
+            if name == 'step_learning_curves.png' and not show_step_diagnostics:
+                continue
             path = run / name
             display(Markdown(f'**{name}**')); display(Image(filename=str(path))); shown.append(path)
     display(Markdown('## Test sau khi chốt cấu hình và threshold'))

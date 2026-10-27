@@ -308,3 +308,13 @@ Test winner đúng 889/1.066, Accuracy 83,3959%, Macro-F1 83,3952%, Binary-F1 83
 Notebook 05 và notebook tích hợp hiển thị hình thực; artifacts nhẹ, original manifests và logs được giữ để audit/report. Checkpoint không có trong review ZIP, vì vậy kiểm chứng local là kiểm toán records/hash, không phải chạy lại weights. Lượt chạy GPU có exact saved-weight verification ở mỗi candidate và study tải lại winner để đo test.
 
 Phiên này giải quyết yêu cầu đủ 10 epoch, step logging, baseline và threshold sweep. Nhiều seed, near-duplicate semantic audit, calibration fitting và đánh giá ngoài chưa quan sát vẫn chưa thực hiện. Không cần train lại chỉ để bổ sung trình bày/report.
+
+## 11. Yêu cầu trình bày epoch và phiên regularization tiếp theo
+
+Training loop Lab01 trong repo được tham chiếu cho cách tổng kết: mỗi epoch chạy hết train và validation, in một dòng kết quả, vẽ đường học theo epoch. Lab03 dùng cùng cách trình bày, giữ Hugging Face Trainer theo yêu cầu đề bài; không sao chép nguyên si learning rate hay kiến trúc MLP của Lab01 sang Transformer.
+
+Biểu đồ chính chỉ lấy cuối epoch 1–10. Các điểm validation giữa epoch của study cũ vẫn có trong raw history và dashboard phụ, không bị xóa. `epoch_presentation` xuất PNG mới từ đúng dữ liệu, không sửa source manifest/weights. Checkpoint đã chọn step 1700 của study cũ không đổi chỉ vì biểu đồ mới không vẽ điểm giữa epoch.
+
+Phiên tiếp theo: hai LR 5e-6/1e-5, weight decay 0.1 và dropout encoder/attention 0.2, classifier 0.3. Giữ full splits, seed 42, cross-entropy, 10 epoch và criterion validation Macro-F1. Không thêm label smoothing để tránh thay công thức loss trong lượt này. Có thể giảm học thuộc nhưng cũng có nguy cơ underfit; chưa chạy GPU thì không kết luận đã khắc phục overfitting hoặc tăng accuracy.
+
+Notebook 06 là template chạy mới; notebook 05 giữ bằng chứng đã đo của study trước. Hai trạng thái phải được phân biệt khi nộp bài và thảo luận.
