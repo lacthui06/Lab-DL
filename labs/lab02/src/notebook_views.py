@@ -15,9 +15,13 @@ from IPython.display import HTML, display
 
 def context() -> tuple[Path, Path, Path]:
     """Resolve the lab, explicitly selected run, and presentation destination."""
-    candidates = [Path(os.environ.get('LAB02_ROOT', '.')).resolve(),
-                  *Path.cwd().resolve().parents]
-    root = next(p for p in candidates if (p / 'src/notebook_views.py').exists())
+    configured = os.environ.get('LAB02_ROOT')
+    try:
+        root = Path(configured).expanduser().resolve() if configured else Path(__file__).resolve().parents[1]
+    except OSError as exc:
+        raise RuntimeError('Cannot resolve Lab02. Set LAB02_ROOT to an existing absolute Lab02 directory.') from exc
+    if not (root / 'src/notebook_views.py').is_file():
+        raise RuntimeError(f'Invalid Lab02 directory: {root}. Set LAB02_ROOT to the directory containing src/notebook_views.py.')
     selected = json.loads((root / 'outputs/selected_run.json').read_text(encoding='utf-8'))
     run = Path(os.environ.get('LAB02_RUN', selected['run']))
     run = run if run.is_absolute() else root / run
@@ -94,27 +98,39 @@ def epoch_budget(run: Path, root: Path) -> None:
     display(pd.DataFrame(rows))
 
 
+def _search_table(frame: pd.DataFrame, caption: str) -> None:
+    """Display styled HTML and a readable plain-text fallback from measured rows."""
+    formats = {column: '{:.0e}' for column in frame if column.endswith('LR')}
+    formats.update({'Val accuracy (%)': '{:.2f}', 'Val loss': '{:.4f}',
+                    'Fit (min)': '{:.2f}'})
+    style = (frame.style.hide(axis='index').format(formats, escape='html')
+             .set_caption(caption)
+             .apply(lambda row: ['background-color: #e6f4ea; color: #153d23; font-weight: 600'
+                                if row['Selected'] == 'Yes' else '' for _ in row], axis=1)
+             .set_table_styles([
+                 {'selector': 'caption', 'props': [('text-align', 'left'), ('font-weight', 'bold'), ('padding', '10px 0')]},
+                 {'selector': 'th', 'props': [('text-align', 'left'), ('padding', '8px 12px'), ('border-bottom', '2px solid #94a3b8')]},
+                 {'selector': 'td', 'props': [('padding', '8px 12px'), ('border-bottom', '1px solid #cbd5e1')]},
+             ]))
+    display({'text/html': style.to_html(), 'text/plain': frame.to_string(index=False, formatters={
+        column: fmt.format for column, fmt in formats.items() if column in frame})}, raw=True)
+
+
 def lr_search(run: Path, output: Path) -> None:
-    """Plot actual LR/batch search; optimizer was fixed to AdamW in this run."""
-    models = pd.read_csv(run / 'comparison.csv').model.unique()
-    fig, axes = plt.subplots(1, len(models), figsize=(10, 3.5), squeeze=False)
-    for name, ax in zip(models, axes.flat):
-        frame = pd.read_csv(run / name / 'search_results.csv')
-        for batch, rows in frame.groupby('batch_size'):
-            rows = rows.sort_values('lr')
-            ax.plot(rows.lr, rows.best_val_accuracy*100, '-o', label=f'batch={batch}')
-        ax.set(xscale='log', title=name, xlabel='Learning rate', ylabel='Best validation accuracy (%)')
-        ax.legend()
-        ax.grid(alpha=.2)
-    _save(fig, output, 'lr_search')
+    """Compare measured head trials, highlighting saved validation selections."""
     records = []
-    for name in models:
+    for name in pd.read_csv(run / 'comparison.csv').model.unique():
         frame = pd.read_csv(run/name/'search_results.csv')
         selected = json.loads((run/name/'selection.json').read_text(encoding='utf-8'))['head']
-        records.append({'model': name, 'measured_trials': len(frame), 'selected_lr': selected['lr'],
-                        'selected_batch': selected['batch_size'], 'selection': 'saved validation policy'})
-    display(pd.DataFrame(records))
-    display(HTML('Selected within the measured grid only; untested LR/batch settings have no measured score.'))
+        for row in frame.sort_values(['lr', 'batch_size']).itertuples():
+            records.append({'Model': name, 'Trial': row.trial, 'Head LR': row.lr,
+                            'Batch': row.batch_size, 'Best epoch': row.best_epoch,
+                            'Val accuracy (%)': row.best_val_accuracy * 100,
+                            'Val loss': row.best_val_loss, 'Fit (min)': row.train_seconds / 60,
+                            'Selected': 'Yes' if row.trial == selected['trial'] else 'No'})
+    _search_table(pd.DataFrame(records), 'Head search: measured trials; green = selected within each model')
+    display(HTML('<p>Selection uses the saved validation policy, not test. Loss is measured at the chosen checkpoint, '
+                 'not necessarily the minimum observed loss. Fit time excludes feature extraction.</p>'))
 
 
 def architecture_summary(run: Path) -> None:
@@ -250,8 +266,11 @@ def errors(run: Path, output: Path) -> None:
 
 
 def evidence(run: Path, kind: str) -> None:
-    """Display comparable fine-tune confusion or prediction grids side by side."""
-    fig, axes = plt.subplots(1, 2, figsize=(13, 6))
+    """Display count-only confusion labels or one prediction grid per row."""
+    if kind == 'prediction_examples':
+        fig, axes = plt.subplots(2, 1, figsize=(13, 16))
+    else:
+        fig, axes = plt.subplots(1, 2, figsize=(13, 6))
     for ax, name in zip(axes, ['resnet18', 'densenet121']):
         if kind == 'confusion_matrix':
             counts = pd.read_csv(run/name/'finetune/confusion_counts.csv', index_col=0)
@@ -260,11 +279,11 @@ def evidence(run: Path, kind: str) -> None:
             ax.imshow(fractions, vmin=0, vmax=1, cmap='Blues')
             for i in range(len(counts)):
                 for j in range(len(counts)):
-                    ax.text(j, i, f'{values[i,j]}\n{fractions[i,j]*100:.1f}%', ha='center', va='center',
-                            fontsize=6, color='white' if fractions[i,j] > .55 else 'black')
+                    ax.text(j, i, str(values[i,j]), ha='center', va='center',
+                            fontsize=8, color='white' if fractions[i,j] > .55 else 'black')
             ax.set(xticks=range(len(counts)), xticklabels=counts.columns,
                    yticks=range(len(counts)), yticklabels=counts.index, xlabel='Predicted', ylabel='Actual',
-                   title=f'{name}: count + % within actual class')
+                   title=f'{name}: image counts')
             ax.tick_params(axis='x', rotation=45, labelsize=8)
         else:
             ax.imshow(plt.imread(run / name / 'finetune' / f'{kind}.png'))
@@ -350,13 +369,18 @@ def fine_search(run: Path, output: Path, root: Path) -> None:
     paths = list(run.glob('*/finetune_search_results.csv'))
     if paths:
         table = pd.concat([pd.read_csv(p).assign(model=p.parent.name) for p in paths],ignore_index=True)
-        fig,axes=plt.subplots(1,2,figsize=(11,4))
-        for name, rows in table.groupby('model'):
-            axes[0].scatter(rows.train_seconds, rows.best_val_accuracy*100,label=name)
-            axes[1].scatter(rows.backbone_lr,rows.best_val_loss,label=name)
-        axes[0].set(xlabel='Fit seconds / candidate',ylabel='Validation accuracy (%)',title='Measured candidates')
-        axes[1].set(xscale='log',xlabel='Backbone LR',ylabel='Validation loss at chosen epoch')
-        for ax in axes: ax.legend(); ax.grid(alpha=.2)
+        records = []
+        for row in table.itertuples():
+            selection = json.loads((run/row.model/'selection.json').read_text(encoding='utf-8'))
+            records.append({'Model': row.model, 'Trial': row.trial,
+                            'Backbone LR': row.backbone_lr, 'Head LR': row.head_lr,
+                            'Batch': selection['head']['batch_size'], 'Unfreeze': row.unfreeze,
+                            'Best epoch': row.best_epoch, 'Val accuracy (%)': row.best_val_accuracy * 100,
+                            'Val loss': row.best_val_loss, 'Fit (min)': row.train_seconds / 60,
+                            'Selected': 'Yes' if row.trial == selection['finetune']['trial'] else 'No'})
+        _search_table(pd.DataFrame(records), 'Fine-tune: measured candidates; selection is within each model')
+        display(HTML('<p>Batch is inherited from the selected head. Loss is measured at the selected checkpoint. '
+                     'Fit time excludes head search and feature extraction. A single candidate per model does not establish an LR trend.</p>'))
     else:
         cfg=json.loads((root/'config/tuned.json').read_text(encoding='utf-8'))
         table=pd.DataFrame(cfg['finetune_candidates'])
@@ -372,4 +396,3 @@ def fine_search(run: Path, output: Path, root: Path) -> None:
             'Fine-tune minimum':cfg['early_stopping']['min_epochs'],
             'Stop rule':'validation loss: patience 7, min_delta 0.0001'}]))
         return
-    _save(fig,output,'finetune_search')

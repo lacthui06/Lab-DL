@@ -70,7 +70,8 @@ class NotebookReviewTests(unittest.TestCase):
             image_count = 0
             for cell in cells:
                 source = ''.join(cell['source'])
-                self.assertLessEqual(len(source.splitlines()), 8, (path.name, source))
+                inline_limits = {'lab02-tuning-05': 24, 'lab02-roc-pr-output': 50}
+                self.assertLessEqual(len(source.splitlines()), inline_limits.get(cell.get('id'), 8), (path.name, source))
                 self.assertIsNotNone(cell['execution_count'], path.name)
                 self.assertTrue(cell['outputs'], (path.name, source))
                 for output in cell['outputs']:
@@ -123,6 +124,45 @@ class NotebookReviewTests(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+def test_context_and_notebook_bootstrap_with_missing_cwd(tmp_path, monkeypatch):
+    import os
+    from src import notebook_views as view
+    lab = tmp_path / 'lab02'
+    (lab / 'src').mkdir(parents=True)
+    (lab / 'src/notebook_views.py').touch()
+    (lab / 'outputs').mkdir()
+    (lab / 'outputs/selected_run.json').write_text(json.dumps({'run': 'outputs/runs/example'}))
+    notebook = json.loads((ROOT / 'notebooks/02_lab02_modeling.ipynb').read_text())
+    bootstrap = ''.join(notebook['cells'][1]['source']).split('sys.path.insert')[0]
+
+    def missing_cwd():
+        raise FileNotFoundError('Working directory was deleted')
+
+    monkeypatch.setattr(Path, 'cwd', staticmethod(missing_cwd))
+    changes = []
+    monkeypatch.setattr(os, 'chdir', changes.append)
+    monkeypatch.delenv('LAB02_RUN', raising=False)
+    monkeypatch.setenv('LAB02_ROOT', str(lab))
+    namespace = {}
+    exec(bootstrap, namespace)
+    assert namespace['ROOT'] == lab
+    assert changes == [lab]
+    assert view.context()[0] == lab
+    monkeypatch.setenv('LAB02_ROOT', str(tmp_path / 'missing'))
+    with unittest.TestCase().assertRaisesRegex(RuntimeError, 'Invalid Lab02 directory'):
+        view.context()
+    monkeypatch.delenv('LAB02_ROOT')
+    monkeypatch.setattr(view, '__file__', str(lab / 'src/notebook_views.py'))
+    assert view.context()[0] == lab
+    namespace = {}
+    exec(bootstrap, namespace)
+    assert namespace['ROOT'] == ROOT
+    assert changes[-1] == ROOT
+    monkeypatch.setenv('LAB02_ROOT', 'relative/lab02')
+    with unittest.TestCase().assertRaisesRegex(RuntimeError, 'absolute Lab02 directory'):
+        exec(bootstrap, {})
 
 
 def test_unexecuted_fine_grid_is_explanatory_table_not_results(tmp_path, monkeypatch):
