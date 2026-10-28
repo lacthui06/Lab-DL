@@ -1,0 +1,21 @@
+{
+  "best_val_accuracy": 0.9284,
+  "best_val_loss": 0.31158207521438597,
+  "epochs_planned": 30,
+  "epochs_completed": 11,
+  "stop_reason": "validation_loss_patience",
+  "early_stopping": {
+    "min_epochs": 10,
+    "patience": 7,
+    "min_delta": 0.0001
+  },
+  "minimum_observed_val_loss": 0.23557790279388427,
+  "last_val_loss": 0.31158207521438597,
+  "convergence_claim": "not established; inspect validation trend and stopping evidence",
+  "train_seconds": 1938.219966904,
+  "train_pass_seconds": 1780.648574535,
+  "validation_seconds": 156.6704781669987,
+  "train_images_per_second": 277.9885975699976,
+  "peak_cuda_memory_mib": 1090.68212890625,
+  "best_epoch": 11
+}

@@ -329,3 +329,25 @@ Các hình CPU được giữ nguyên và ghi rõ lịch sử, không đổi nh�
 Phần đang chạy sẽ bổ sung sau: đủ 26 trial, kiểm tra cùng head khởi tạo giữa nhóm, gộp validation và chọn toàn grid, thu hồi notebook/artifact một đợt rồi nhúng biểu đồ GPU và phân tích lỗi theo lớp vào notebook. Không dừng/đổi job, không huấn luyện CPU, không commit/push Git trong đợt hoàn thiện trình bày này.
 
 Kiểm chứng đợt hoàn thiện local: hai notebook thực thi thành công, EDA 9 ảnh/modeling 12 ảnh PNG nhúng, tối đa 7 dòng/code cell, không output lỗi, không link Markdown. 25 test notebook/cleanup đạt trong 34,83 giây; diff không lỗi khoảng trắng. Kết quả kiểm chứng lưu tại `outputs/review/local_completion_validation.json` và `outputs/review/local_completion_tests.xml`. Các chỉ số này kiểm chứng trình bày/code local, không thay cho kết quả tuning đang chạy.
+
+
+### 28/10/2026 — Kết quả GPU hoàn tất và nhúng vào notebook
+
+Phạm vi cuối cùng theo quyết định giữ phiên hiện tại: **18 fine-tune trial, 9/model**, thuộc Versions 5, 6, 8. Không chạy nhóm 3/4; kế hoạch 26 trial và các cấu hình 16 trial phía trên đã được thay thế. Cả ba nhóm đã tải notebook thực thi, ZIP và giải nén đầy đủ; checksum/CRC được lưu trong manifest từng nhóm.
+
+| model | stage | accuracy | loss | macro_f1 | macro_precision | macro_recall |
+| --- | --- | --- | --- | --- | --- | --- |
+| resnet18 | head | 0.858600 | 0.402428 | 0.859006 | 0.861530 | 0.858600 |
+| resnet18 | finetune | 0.937100 | 0.305124 | 0.937085 | 0.937192 | 0.937100 |
+| densenet121 | head | 0.879000 | 0.344264 | 0.879111 | 0.879864 | 0.879000 |
+| densenet121 | finetune | 0.946100 | 0.204466 | 0.945915 | 0.946212 | 0.946100 |
+
+Chọn trên toàn bộ 9 cấu hình/model bằng validation accuracy tolerance 0,001, validation loss tolerance 0,005 rồi thời gian; không chọn bằng test. Cả hai winner là group 2 trial 0: AdamW, backbone LR 3e-5, head LR 3e-4, cosine, hai block cuối. Tensor hash head_selected khớp giữa ba nhóm: ResNet18 edc94d5400bef43c721ef2ad2c8ee82ac2b9ac22097f6ed72aac0b1b882d9e72; DenseNet121 5cfbffef1907d6eda5369b30670439bd4524db22d365ad25d001fd33b1a02b64.
+
+Head chạy 10/10 epoch; hai fine winner chạy 10/30 epoch, dừng validation_loss_patience. Checkpoint được chọn: ResNet epoch 10, DenseNet epoch 6. Fit winner 28,73 và 57,32 phút; đây không phải tổng chi phí search. DenseNet test accuracy cao hơn 0,90 điểm phần trăm nhưng fit gần gấp đôi. CPU run bị dừng được giữ riêng và không tính vào bảng GPU.
+
+Đọc trực tiếp đường cong cho thấy overfit: ResNet train cuối 99,98%/validation 94,06%, validation loss từ 0,2376 lên 0,2822; DenseNet train 99,82%/validation 94,70%, validation loss từ 0,1910 lên 0,2206. Không diễn giải dừng sớm là đã hội tụ hoàn toàn. Chưa có random augmentation hoặc dropout trong các run này.
+
+Confusion matrix cho thấy cat → dog / dog → cat là 82/70 ảnh ở ResNet và 54/43 ở DenseNet; recall cat 86,1%/86,8%. DenseNet vẫn sai rất tự tin: automobile → truck 0,961, ship → airplane 0,999, airplane → horse 0,989. Các metric Precision/Recall/TPR/F1/FPR đủ lớp nằm trực tiếp trong notebook. Một seed chưa đủ xác nhận ưu thế thống kê; không coi confidence cao là bảo đảm đúng.
+
+Notebook modeling đã nhúng 12 PNG, bảng 18 trial, metric và nhận xét; EDA giữ 9 PNG, chỉ raw/preprocess/features. Kiểm chứng nbformat hợp lệ, toàn bộ 10/8 code cell có execution count, không error output, tối đa 7 dòng/code cell, không hyperlink thay kết quả. Bằng chứng: outputs/review/merged_gpu/notebook_validation.json; bảng gộp: all_18_fine_trials.csv trong cùng thư mục. Không commit/push.

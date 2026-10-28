@@ -1,11 +1,9 @@
 {
   "date": "2026-10-27",
   "last_remote_check": {
-    "checked_at_utc": "2026-10-27T05:15:33.281Z",
-    "version_5": "Running",
-    "version_6": "Running",
-    "active_batch_gpu_sessions": 2,
-    "action": "No new submission: both batch slots occupied; no completed tuning output to harvest yet"
+    "checked_at_utc": "2026-10-27T14:00:16.289Z",
+    "version_8": "Running",
+    "action": "Group1 executed notebook and ZIP saved and CRC/SHA256 checked; local head search completed, suite still running"
   },
   "interactive_backup": {
     "kaggle_version": 7,
@@ -34,7 +32,7 @@
       ],
       "notebook": "outputs/cache/lab02_kaggle_tuning_group_00.ipynb",
       "kaggle_version": 5,
-      "status": "submitted_running",
+      "status": "completed_download_verified",
       "url": "https://www.kaggle.com/code/minhthnt/lab02cifar10?scriptVersionId=362699908"
     },
     {
@@ -46,7 +44,7 @@
       ],
       "notebook": "outputs/cache/lab02_kaggle_tuning_group_01.ipynb",
       "kaggle_version": 6,
-      "status": "submitted_running",
+      "status": "completed_download_verified",
       "url": "https://www.kaggle.com/code/minhthnt/lab02cifar10?scriptVersionId=362700105"
     },
     {
@@ -57,8 +55,11 @@
         "sgd_last_block_0.0003"
       ],
       "notebook": "outputs/cache/lab02_kaggle_tuning_group_02.ipynb",
-      "kaggle_version": null,
-      "status": "pending_batch_gpu_session_cap"
+      "kaggle_version": 8,
+      "status": "submitted_running",
+      "url": "https://www.kaggle.com/code/minhthnt/lab02cifar10?scriptVersionId=362852280",
+      "source_dataset": "minhthnt/lab02-cifar10-source",
+      "bootstrap_verified": true
     },
     {
       "group": 3,
@@ -82,5 +83,5 @@
     }
   ],
   "git_push_performed": false,
-  "note": "Running means remote execution has started; candidate training epochs and completion are not yet verified. Groups 2-4 were rejected by Kaggle batch GPU session cap and are not queued."
+  "note": "Groups0/1 completed; group2 Version8 uses private source Dataset, CUDA and bootstrap verified in logs. Local continuation also active; do not launch duplicate jobs."
 }

@@ -1,0 +1,19 @@
+{
+  "selected_counts": {
+    "train": 45000,
+    "val": 5000,
+    "test": 10000
+  },
+  "split_seed": 42,
+  "training_seed": 42,
+  "dataset": "CIFAR10",
+  "image_size": 224,
+  "full_counts": {
+    "train": 45000,
+    "val": 5000,
+    "test": 10000
+  },
+  "split_origin": "stratified official CIFAR10 training pool; independent official test",
+  "test_usage": "evaluation only after validation selection",
+  "class_counts": "balanced stratification; inspect indices for exact membership"
+}

@@ -1,0 +1,8 @@
+{
+  "weights": "ResNet18_Weights.IMAGENET1K_V1",
+  "dataset": "CIFAR10",
+  "channels": "RGB",
+  "image_size": 224,
+  "transform": "ImageClassification(\n    crop_size=[224]\n    resize_size=[256]\n    mean=[0.485, 0.456, 0.406]\n    std=[0.229, 0.224, 0.225]\n    interpolation=InterpolationMode.BILINEAR\n)",
+  "augmentation": "none; deterministic cached features and fair stage comparison"
+}

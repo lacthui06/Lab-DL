@@ -22,3 +22,17 @@ events.out.tfevents.*
 
 # Small locked index artifact, not image data or a learned feature cache.
 !labs/lab02/outputs/eda/split_indices.npz
+
+# Local training archives and process state; metrics and inline notebooks stay in Git.
+*.zip
+*.pid
+labs/lab02/outputs/delivery/
+labs/lab02/outputs/review/local_environment_packages.txt
+labs/lab02/outputs/runs/20261027T124127Z_cifar10_local_remaining224_f6b79d27/
+labs/lab02/outputs/kaggle/**/runtime_source/
+labs/lab02/outputs/kaggle/**/source/
+labs/lab02/outputs/kaggle/**/cache/
+labs/lab02/outputs/kaggle/**/report.html
+labs/lab02/outputs/kaggle/**/source_snapshot/
+labs/lab02/outputs/kaggle/**/delivery_source_snapshot/
+labs/lab02/outputs/kaggle/**/handcrafted_features.csv

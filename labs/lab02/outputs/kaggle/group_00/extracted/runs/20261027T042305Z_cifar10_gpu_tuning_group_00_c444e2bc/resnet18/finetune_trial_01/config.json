@@ -1,0 +1,24 @@
+{
+  "model": "resnet18",
+  "stage": "finetune",
+  "id": "adamw_last_block_3e-06",
+  "optimizer": "adamw",
+  "backbone_lr": 3e-06,
+  "head_lr": 3e-05,
+  "unfreeze": "last_block",
+  "scheduler": "cosine",
+  "lr": 3e-05,
+  "batch_size": 128,
+  "seed": 42,
+  "weights": "ResNet18_Weights.IMAGENET1K_V1",
+  "dataset": "CIFAR10",
+  "image_size": 224,
+  "initialization": "same selected head checkpoint for every fine-tune trial",
+  "batchnorm": "running statistics frozen",
+  "parameter_counts": {
+    "total": 11181642,
+    "trainable": 8398858
+  },
+  "data_sha256": "961b8fd1cf7ff9de6a9a4bbf6f4ba960df1f884b2e0d360007537cabaa6ada43",
+  "execution": "full_image_forward"
+}

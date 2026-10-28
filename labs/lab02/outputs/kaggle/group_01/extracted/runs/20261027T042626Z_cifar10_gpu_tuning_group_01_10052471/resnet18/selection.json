@@ -1,0 +1,57 @@
+{
+  "criterion": "validation accuracy band -> validation loss band -> fit time; no test input",
+  "head": {
+    "trial": 3,
+    "lr": 0.001,
+    "batch_size": 128,
+    "best_val_accuracy": 0.8704,
+    "best_val_loss": 0.37853620601892474,
+    "epochs_planned": 10,
+    "epochs_completed": 10,
+    "stop_reason": "epoch_budget_exhausted",
+    "early_stopping": {},
+    "minimum_observed_val_loss": 0.37853620601892474,
+    "last_val_loss": 0.37853620601892474,
+    "convergence_claim": "not established; inspect validation trend and stopping evidence",
+    "train_seconds": 9.60620368299999,
+    "train_pass_seconds": 8.87570987499987,
+    "validation_seconds": 0.6349258440003496,
+    "train_images_per_second": 50700.17005259611,
+    "peak_cuda_memory_mib": 60.31298828125,
+    "best_epoch": 10
+  },
+  "finetune_policy": {
+    "accuracy_tolerance": 0.001,
+    "loss_tolerance": 0.005
+  },
+  "finetune": {
+    "trial": 2,
+    "id": "adamw_last_two_blocks_1e-05",
+    "optimizer": "adamw",
+    "backbone_lr": 1e-05,
+    "head_lr": 0.0001,
+    "unfreeze": "last_two_blocks",
+    "scheduler": "cosine",
+    "best_val_accuracy": 0.9284,
+    "best_val_loss": 0.31158207521438597,
+    "epochs_planned": 30,
+    "epochs_completed": 11,
+    "stop_reason": "validation_loss_patience",
+    "early_stopping": {
+      "min_epochs": 10,
+      "patience": 7,
+      "min_delta": 0.0001
+    },
+    "minimum_observed_val_loss": 0.23557790279388427,
+    "last_val_loss": 0.31158207521438597,
+    "convergence_claim": "not established; inspect validation trend and stopping evidence",
+    "train_seconds": 1938.219966904,
+    "train_pass_seconds": 1780.648574535,
+    "validation_seconds": 156.6704781669987,
+    "train_images_per_second": 277.9885975699976,
+    "peak_cuda_memory_mib": 1090.68212890625,
+    "best_epoch": 11,
+    "trainable": 10498570,
+    "execution": "full_image_forward"
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "seed": 42,
+  "label_sha256": "f5cfe00b0f00968c0cc5ff3b1d2de51b10e33efa277c2986f4e0fa63e58c9f4f",
+  "indices_sha256": "961b8fd1cf7ff9de6a9a4bbf6f4ba960df1f884b2e0d360007537cabaa6ada43",
+  "split_version": "cifar10-stratified-42-45000-5000-v1",
+  "provenance": "New EDA split reconstructed from documented algorithm; original run indices unavailable"
+}

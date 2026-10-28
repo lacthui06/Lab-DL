@@ -1,0 +1,4 @@
+split,samples,shape,dtype,pixel_min,pixel_max,memory_mib
+train,45000,32 x 32 x 3,uint8,0,255,131.8359375
+val,5000,32 x 32 x 3,uint8,0,255,14.6484375
+test,10000,32 x 32 x 3,uint8,0,255,29.296875

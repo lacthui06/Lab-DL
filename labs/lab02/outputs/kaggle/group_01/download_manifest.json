@@ -1,0 +1,136 @@
+{
+  "version": 6,
+  "scriptVersionId": 362700105,
+  "run_id": "20261027T042626Z_cifar10_gpu_tuning_group_01_10052471",
+  "size_bytes": 633015679,
+  "sha256": "842c1b395449d48d95c89a5bbfd829f803481a2234645bd836f7f592f40b3af4",
+  "zip_crc": "passed",
+  "training_summaries": {
+    "runs/20261027T042626Z_cifar10_gpu_tuning_group_01_10052471/densenet121/finetune_trial_02/training_summary.json": {
+      "best_val_accuracy": 0.9464,
+      "best_val_loss": 0.22809758209744468,
+      "epochs_planned": 30,
+      "epochs_completed": 12,
+      "stop_reason": "validation_loss_patience",
+      "early_stopping": {
+        "min_epochs": 10,
+        "patience": 7,
+        "min_delta": 0.0001
+      },
+      "minimum_observed_val_loss": 0.1940655888170004,
+      "last_val_loss": 0.28850292349355294,
+      "convergence_claim": "not established; inspect validation trend and stopping evidence",
+      "train_seconds": 4012.460787408001,
+      "train_pass_seconds": 3717.0411056010034,
+      "validation_seconds": 294.47539813299954,
+      "train_images_per_second": 145.27684377401798,
+      "peak_cuda_memory_mib": 4647.84619140625,
+      "best_epoch": 8
+    },
+    "runs/20261027T042626Z_cifar10_gpu_tuning_group_01_10052471/densenet121/finetune_trial_01/training_summary.json": {
+      "best_val_accuracy": 0.9384,
+      "best_val_loss": 0.22203914518989623,
+      "epochs_planned": 30,
+      "epochs_completed": 15,
+      "stop_reason": "validation_loss_patience",
+      "early_stopping": {
+        "min_epochs": 10,
+        "patience": 7,
+        "min_delta": 0.0001
+      },
+      "minimum_observed_val_loss": 0.2059213150009513,
+      "last_val_loss": 0.22203914518989623,
+      "convergence_claim": "not established; inspect validation trend and stopping evidence",
+      "train_seconds": 5017.346550213,
+      "train_pass_seconds": 4647.5604062870025,
+      "validation_seconds": 367.7977091909979,
+      "train_images_per_second": 145.23748827167293,
+      "peak_cuda_memory_mib": 4648.34619140625,
+      "best_epoch": 15
+    },
+    "runs/20261027T042626Z_cifar10_gpu_tuning_group_01_10052471/densenet121/finetune_trial_00/training_summary.json": {
+      "best_val_accuracy": 0.9194,
+      "best_val_loss": 0.28592479851543906,
+      "epochs_planned": 30,
+      "epochs_completed": 12,
+      "stop_reason": "validation_loss_patience",
+      "early_stopping": {
+        "min_epochs": 10,
+        "patience": 7,
+        "min_delta": 0.0001
+      },
+      "minimum_observed_val_loss": 0.2696830591648817,
+      "last_val_loss": 0.32187925710082055,
+      "convergence_claim": "not established; inspect validation trend and stopping evidence",
+      "train_seconds": 3140.4468859380013,
+      "train_pass_seconds": 2844.592942186998,
+      "validation_seconds": 294.82588741200107,
+      "train_images_per_second": 189.83383948946798,
+      "peak_cuda_memory_mib": 1368.57373046875,
+      "best_epoch": 8
+    },
+    "runs/20261027T042626Z_cifar10_gpu_tuning_group_01_10052471/resnet18/finetune_trial_02/training_summary.json": {
+      "best_val_accuracy": 0.9284,
+      "best_val_loss": 0.31158207521438597,
+      "epochs_planned": 30,
+      "epochs_completed": 11,
+      "stop_reason": "validation_loss_patience",
+      "early_stopping": {
+        "min_epochs": 10,
+        "patience": 7,
+        "min_delta": 0.0001
+      },
+      "minimum_observed_val_loss": 0.23557790279388427,
+      "last_val_loss": 0.31158207521438597,
+      "convergence_claim": "not established; inspect validation trend and stopping evidence",
+      "train_seconds": 1938.219966904,
+      "train_pass_seconds": 1780.648574535,
+      "validation_seconds": 156.6704781669987,
+      "train_images_per_second": 277.9885975699976,
+      "peak_cuda_memory_mib": 1090.68212890625,
+      "best_epoch": 11
+    },
+    "runs/20261027T042626Z_cifar10_gpu_tuning_group_01_10052471/resnet18/finetune_trial_01/training_summary.json": {
+      "best_val_accuracy": 0.9202,
+      "best_val_loss": 0.2629612814843655,
+      "epochs_planned": 30,
+      "epochs_completed": 15,
+      "stop_reason": "validation_loss_patience",
+      "early_stopping": {
+        "min_epochs": 10,
+        "patience": 7,
+        "min_delta": 0.0001
+      },
+      "minimum_observed_val_loss": 0.2558209270119667,
+      "last_val_loss": 0.2645962305545807,
+      "convergence_claim": "not established; inspect validation trend and stopping evidence",
+      "train_seconds": 2639.650056263,
+      "train_pass_seconds": 2424.7962543060007,
+      "validation_seconds": 213.6692729550009,
+      "train_images_per_second": 278.3739041172312,
+      "peak_cuda_memory_mib": 1090.68212890625,
+      "best_epoch": 14
+    },
+    "runs/20261027T042626Z_cifar10_gpu_tuning_group_01_10052471/resnet18/finetune_trial_00/training_summary.json": {
+      "best_val_accuracy": 0.9272,
+      "best_val_loss": 0.26255777809023856,
+      "epochs_planned": 30,
+      "epochs_completed": 11,
+      "stop_reason": "validation_loss_patience",
+      "early_stopping": {
+        "min_epochs": 10,
+        "patience": 7,
+        "min_delta": 0.0001
+      },
+      "minimum_observed_val_loss": 0.25774344218373296,
+      "last_val_loss": 0.37099491971433163,
+      "convergence_claim": "not established; inspect validation trend and stopping evidence",
+      "train_seconds": 1740.970845056,
+      "train_pass_seconds": 1584.3039042449996,
+      "validation_seconds": 155.62122544699992,
+      "train_images_per_second": 312.4400556444329,
+      "peak_cuda_memory_mib": 1065.34033203125,
+      "best_epoch": 6
+    }
+  }
+}
