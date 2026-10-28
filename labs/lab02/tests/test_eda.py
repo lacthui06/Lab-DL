@@ -58,7 +58,7 @@ def test_split_is_reused_and_tampering_rejected(tmp_path):
 
 def test_raw_eda_matches_historical_training_split():
     root = Path(__file__).resolve().parents[1]
-    run = root / json.loads((root/'outputs/selected_run.json').read_text())['run']
+    run = root / json.loads((root/'outputs/selected_run.json').read_text())['historical_run']
     meta = json.loads((root/'outputs/eda/split_metadata.json').read_text())
     old = json.loads((run/'resnet18/head_trial_00/config.json').read_text())
     assert meta['indices_sha256'] == old['data_sha256']

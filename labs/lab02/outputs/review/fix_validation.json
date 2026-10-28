@@ -1,0 +1,41 @@
+{
+  "tests": {
+    "passed": 59,
+    "failed": 0,
+    "warnings": 2,
+    "seconds": 70.62,
+    "warnings_detail": "Existing torch.jit.trace deprecation warnings; not test failures."
+  },
+  "notebooks": {
+    "01_lab02_eda.ipynb": {
+      "code_cells": 8,
+      "executed": 8,
+      "png": 9,
+      "errors": 0,
+      "max_code_lines": 7,
+      "sha256": "4d1b4cfbcef0245f9277eef575abca25c23f0785baf8011c02b9759a831c2d9a"
+    },
+    "02_lab02_modeling.ipynb": {
+      "code_cells": 10,
+      "executed": 10,
+      "png": 12,
+      "errors": 0,
+      "max_code_lines": 7,
+      "sha256": "99d65fb867e0c93a69b640b579713a0b709e48d461edace9deebf7ada4bd3f49"
+    }
+  },
+  "explicit_run_execution": {
+    "group": 0,
+    "passed": true,
+    "expected_resnet_test_accuracy": 0.9137,
+    "default_notebook_not_overwritten": true
+  },
+  "default_gpu_metrics": {
+    "resnet18_accuracy": 0.9371,
+    "densenet121_accuracy": 0.9461
+  },
+  "split_membership": "EDA and all three GPU groups match train/val/test index arrays",
+  "training_restarted": false,
+  "git_push_performed": false,
+  "gpu_environment_reinstalled": false
+}

@@ -1,9 +1,9 @@
 {
   "date": "2026-10-27",
   "last_remote_check": {
-    "checked_at_utc": "2026-10-27T14:00:16.289Z",
-    "version_8": "Running",
-    "action": "Group1 executed notebook and ZIP saved and CRC/SHA256 checked; local head search completed, suite still running"
+    "checked_at_utc": "2026-10-28T03:14:00Z",
+    "version_8": "Successful",
+    "action": "All three groups downloaded; ZIP CRC/SHA verified; 18 fine trials merged locally."
   },
   "interactive_backup": {
     "kaggle_version": 7,
@@ -17,8 +17,8 @@
     "resnet18",
     "densenet121"
   ],
-  "grid_candidates_per_model": 13,
-  "total_fine_trials": 26,
+  "grid_candidates_per_model": 9,
+  "total_fine_trials": 18,
   "max_simultaneous_batch_gpu_sessions": 2,
   "global_selection": "validation accuracy/loss/time only after all groups complete",
   "source_payload_sha256": "3e95748f789764f0793211c4d4b4f7493a3506c14cada22dc9f9043e25022fca",
@@ -33,7 +33,8 @@
       "notebook": "outputs/cache/lab02_kaggle_tuning_group_00.ipynb",
       "kaggle_version": 5,
       "status": "completed_download_verified",
-      "url": "https://www.kaggle.com/code/minhthnt/lab02cifar10?scriptVersionId=362699908"
+      "url": "https://www.kaggle.com/code/minhthnt/lab02cifar10?scriptVersionId=362699908",
+      "local_run": "outputs/kaggle/group_00/extracted/runs/20261027T042305Z_cifar10_gpu_tuning_group_00_c444e2bc"
     },
     {
       "group": 1,
@@ -45,7 +46,8 @@
       "notebook": "outputs/cache/lab02_kaggle_tuning_group_01.ipynb",
       "kaggle_version": 6,
       "status": "completed_download_verified",
-      "url": "https://www.kaggle.com/code/minhthnt/lab02cifar10?scriptVersionId=362700105"
+      "url": "https://www.kaggle.com/code/minhthnt/lab02cifar10?scriptVersionId=362700105",
+      "local_run": "outputs/kaggle/group_01/extracted/runs/20261027T042626Z_cifar10_gpu_tuning_group_01_10052471"
     },
     {
       "group": 2,
@@ -56,10 +58,11 @@
       ],
       "notebook": "outputs/cache/lab02_kaggle_tuning_group_02.ipynb",
       "kaggle_version": 8,
-      "status": "submitted_running",
+      "status": "completed_download_verified",
       "url": "https://www.kaggle.com/code/minhthnt/lab02cifar10?scriptVersionId=362852280",
       "source_dataset": "minhthnt/lab02-cifar10-source",
-      "bootstrap_verified": true
+      "bootstrap_verified": true,
+      "local_run": "outputs/kaggle/group_02/extracted/runs/20261027T140405Z_cifar10_gpu_tuning_group_02_ec77fa72"
     },
     {
       "group": 3,
@@ -70,7 +73,7 @@
       ],
       "notebook": "outputs/cache/lab02_kaggle_tuning_group_03.ipynb",
       "kaggle_version": null,
-      "status": "pending_batch_gpu_session_cap"
+      "status": "not_run_out_of_final_scope"
     },
     {
       "group": 4,
@@ -79,9 +82,12 @@
       ],
       "notebook": "outputs/cache/lab02_kaggle_tuning_group_04.ipynb",
       "kaggle_version": null,
-      "status": "pending_batch_gpu_session_cap"
+      "status": "not_run_out_of_final_scope"
     }
   ],
-  "git_push_performed": false,
-  "note": "Groups0/1 completed; group2 Version8 uses private source Dataset, CUDA and bootstrap verified in logs. Local continuation also active; do not launch duplicate jobs."
+  "git_push_performed": true,
+  "note": "Final scope: groups 0/1/2, 18 completed fine trials. No additional jobs authorized. Later local fixes are not pushed yet.",
+  "original_planned_fine_trials": 26,
+  "local_training_status": "stopped; preserved; not included in GPU results",
+  "last_pushed_commit": "c1b2d24"
 }

@@ -1,55 +1,24 @@
 # Lab 02 — Transfer learning trên CIFAR-10
 
+**Đã hoàn tất 18 fine-tune trial (9/model), seed 42**, từ Kaggle Versions 5, 6, 8. So sánh ResNet18 và DenseNet121 pretrained ImageNet; head-only và fine-tune. Kết quả và nhận xét nằm trực tiếp trong hai notebook, không cần train lại để xem.
 
-So sánh ResNet18 và DenseNet121 pretrained, head-only và fine-tune. Hai notebook hiển thị bảng, hình và nhận xét trực tiếp, không cần mở link để đọc kết quả. Artifact chi tiết local hiện là CPU 64×64, seed 42; notebook modeling còn có bảng control GPU 224×224 đã kiểm tra trực tiếp trên Kaggle (ResNet18 91,37%, DenseNet121 91,11% test accuracy), tách rõ khỏi hình lịch sử. Grid tuning đầy đủ đang thực thi theo nhóm; kết quả cuối và artifact GPU sẽ bổ sung sau khi tất cả nhóm hoàn tất, theo yêu cầu tải một đợt của người dùng.
+| Model | Test accuracy | Test loss | Macro F1 | Fine epoch thực chạy / tối đa | Fit trial được chọn |
+|---|---:|---:|---:|---:|---:|
+| ResNet18 | 93,71% | 0,305124 | 0,937085 | 10/30 | 28,73 phút |
+| DenseNet121 | 94,61% | 0,204466 | 0,945915 | 10/30 | 57,32 phút |
 
-## Structure
+Winner được chọn bằng validation trên cả 9 candidate/model: AdamW, LR backbone 3e-5/head 3e-4, cosine, mở hai block cuối. DenseNet checkpoint epoch 6, ResNet epoch 10; cả hai dừng theo validation-loss patience. Có dấu hiệu overfit; một seed chưa chứng minh ưu thế thống kê. Fit trial được chọn không phải tổng chi phí search. Profile GPU đều full-image forward, tách khỏi run CPU 64×64 lịch sử.
 
-- [description_lab_02.md](description_lab_02.md): nội dung đối chiếu trực tiếp ảnh đề trang 23; phân biệt yêu cầu của đề với lựa chọn của bài làm.
-- [walkthrough_lab_02.md](walkthrough_lab_02.md): tài liệu sống duy nhất, theo [template](../../.agents/templates/walkthrough_template.md): Spec → Changelog → Report.
-- [01_lab02_eda.ipynb](notebooks/01_lab02_eda.ipynb): raw → integrity → pixel/spatial EDA → preprocessing → handcrafted features; chỉ dùng `src/eda.py`, không nạp mạng.
-- [02_lab02_modeling.ipynb](notebooks/02_lab02_modeling.ipynb): kiến trúc tóm tắt, LR search, đường cong, chất lượng/chi phí, phân tích lỗi và đề xuất.
-- [config/](config/): [full.json](config/full.json) cho GPU 224×224; [cpu_pilot.json](config/cpu_pilot.json) kiểm tra nhỏ; [cpu_full.json](config/cpu_full.json) mô tả run CPU lịch sử; [tuned.json](config/tuned.json) là cấu hình tuning chạy được; thiết kế và lý do nằm trong walkthrough.
-- [requirements.txt](requirements.txt): phiên bản cố định từ Windows; cài trên Linux/Kaggle chưa kiểm chứng.
-- [outputs/selected_run.json](outputs/selected_run.json): run được chọn; [outputs/label_update.json](outputs/label_update.json) lưu lịch sử sửa nhãn tài liệu. `outputs/runs/` là bằng chứng gốc; `outputs/review/` chứa biểu đồ trình bày mới, không ghi đè run gốc.
+## Đọc bài và kết quả
 
-### Tham chiếu source và CLI
+- [description_lab_02.md](description_lab_02.md): đề bài gốc và phạm vi lựa chọn.
+- [walkthrough_lab_02.md](walkthrough_lab_02.md): tài liệu sống Spec → Changelog → Report, giữ lịch sử riêng và kết luận GPU hiện hành ở Section 3.
+- [01_lab02_eda.ipynb](notebooks/01_lab02_eda.ipynb): raw → integrity → preprocess → handcrafted features; không modeling. Preview EDA 64×64 được ghi rõ; GPU dùng 224×224.
+- [02_lab02_modeling.ipynb](notebooks/02_lab02_modeling.ipynb): bảng, PNG, head/fine curves, actual epochs/stop reason, metric theo lớp, lỗi và TensorBoard nhúng inline.
+- [outputs/selected_run.json](outputs/selected_run.json): run GPU mặc định, các đường dẫn nhóm tường minh và registry CPU lịch sử.
+- [tuning_submissions.json](outputs/review/tuning_submissions.json): ba nhóm hoàn tất; nhóm 3/4 không chạy theo phạm vi cuối. Kế hoạch 26 trial đã được thay thế, không phải phần còn chờ chạy.
 
-| File | Nơi sử dụng / mục đích |
-|---|---|
-| [src/data.py](src/data.py) | experiment.py/infer.py: loader/transform; gọi eda.locked_split để tái sử dụng split |
-| [src/models.py](src/models.py) | experiment.py và infer.py: khởi tạo mạng, freeze, cached tail |
-| [src/tuning.py](src/tuning.py) | Validate grid, AdamW/SGD momentum, cosine và chọn bằng validation/loss/time |
-| [src/costs.py](src/costs.py) | Nguồn tính chi phí search/selected recipe và khuyến nghị validation |
-| [src/experiment.py](src/experiment.py) | run.py, resume_interrupted.py: train/validation, checkpoint |
-| [src/reporting.py](src/reporting.py) | experiment.py và delivery.finalize_run: xuất metric/hình, một writer Markdown/HTML |
-| [src/eda.py](src/eda.py) | analyze_data.py/notebook 01 và data/experiment: split, RGB statistics, per-run EDA; không import torch/model |
-| [src/notebook_views.py](src/notebook_views.py) | Chỉ notebook modeling: đọc bằng chứng thí nghiệm, hiển thị biểu đồ và bảng ngắn |
-| [src/delivery.py](src/delivery.py) | finalize.py [--all]; IO/path/hash dùng chung cho experiment, EDA, infer và resume; gọi reporting.write_final_report |
-| [src/__init__.py](src/__init__.py) | Khai báo package src |
-| [scripts/analyze_data.py](scripts/analyze_data.py) | Tái đo EDA raw; `--data-dir` trỏ thư mục chứa `cifar-10-batches-py` |
-| [scripts/run.py](scripts/run.py) | Điểm vào huấn luyện, dùng config/*.json |
-| [scripts/infer.py](scripts/infer.py) | Nạp checkpoint và dự đoán một ảnh |
-| [scripts/download_assets.py](scripts/download_assets.py) | README: CIFAR-10/weights; --chunked là fallback tải chia phần; --dataset-only bỏ weights |
-| [scripts/resume_interrupted.py](scripts/resume_interrupted.py) | Phục hồi tại ranh giới kiến trúc, không phải resume giữa epoch |
-| [scripts/execute_notebook.py](scripts/execute_notebook.py) | Thực thi notebook với interpreter hiện tại |
-| [scripts/finalize.py](scripts/finalize.py) | README: finalize run; --all còn chạy test/notebook/inference theo model được validation chọn |
-| [tests/test_contracts.py](tests/test_contracts.py) | Shape, freeze, split và một batch overfit |
-| [tests/test_cached_prefix.py](tests/test_cached_prefix.py) | Đối chiếu logits/gradient cache và forward đầy đủ |
-| [tests/test_tuning.py](tests/test_tuning.py) | LR groups, scheduler, gradient hai block, reset trial, không dùng test khi search, timing và smoke pipeline |
-| [tests/test_eda.py](tests/test_eda.py) | Chặn import training, kiểm tra feature/duplicate/split, đối chiếu hash và thống kê run cũ |
-| [tests/test_cleanup.py](tests/test_cleanup.py) | Graph tham chiếu production, CLI --help/import an toàn, split chung, CSV schema mới, đúng run/checkpoint và tải chia phần có checksum |
-| [tests/test_notebook_review.py](tests/test_notebook_review.py) | Đối chiếu metric, ranh giới EDA và liên kết tài liệu; không cần torch |
-
-Có 10 module `src/` và 7 CLI. Các file đang thực thi được nối bằng import/call thực hoặc lệnh CLI trong bảng trên. Snapshot trong `outputs/runs/` được manifest/hash tham chiếu, giữ riêng khỏi graph code hiện hành.
-
-Luồng chính: `run.py → experiment → data/models/tuning/reporting`; `data → eda.locked_split`; `reporting → costs`; `notebook 01 → eda`; `notebook 02 → notebook_views → costs`; `finalize.py → delivery → reporting`; `infer.py → data/models`.
-
-Test graph bắt module production bị bỏ rơi, public function không có tham chiếu tĩnh và file thiếu link README. Tham chiếu trong test hoặc snapshot không được tính làm caller production. Docstring giải thích vai trò; không thêm import giả để giữ file.
-
-## Reproduce
-
-Chạy từ `labs/lab02`. Để **xem kết quả**, không cần dataset/weights: mở hai notebook đã có output, hoặc chạy lại bằng interpreter có NumPy, pandas, matplotlib, Pillow, scikit-learn, IPython, nbformat, nbclient và ipykernel:
+Chạy từ `labs/lab02` với môi trường báo cáo đã cài:
 
 ```powershell
 python -X utf8 scripts/execute_notebook.py 01_lab02_eda.ipynb
@@ -57,64 +26,80 @@ python -X utf8 scripts/execute_notebook.py 02_lab02_modeling.ipynb
 python -X utf8 -m pytest tests -q
 ```
 
-Để **huấn luyện**, tạo môi trường từ requirements, rồi chạy trên GPU. Local chỉ chạy test/sanity nhỏ theo [rule Zero Waste](../../.agents/AGENTS.md):
+Notebook mặc định gộp các run trong registry, chọn theo validation accuracy tolerance 0,001, loss tolerance 0,005, rồi fit time. Không chọn bằng test. Khi yêu cầu một run riêng, notebook chỉ đọc run đó và nhận xét được tính từ chính history/metric của run:
 
 ```powershell
-python -m pip install -r requirements.txt
+$env:LAB02_RUN = "outputs/kaggle/group_00/extracted/runs/20261027T042305Z_cifar10_gpu_tuning_group_00_c444e2bc"
+python -X utf8 scripts/execute_notebook.py 02_lab02_modeling.ipynb
+Remove-Item Env:LAB02_RUN
+```
+
+`LAB02_ROOT` chọn thư mục lab; `LAB02_RUN` chọn run tuyệt đối hoặc tương đối với lab. `finalize.py --run <run> --all` truyền đúng run cho notebook và inference. Thiếu artifact phải báo lỗi, không tự lấy run đầu tiên trong thư mục. Hai notebook có output đã lưu vẫn xem được khi không có dataset/checkpoint.
+
+## Môi trường và tái lập
+
+- [requirements.txt](requirements.txt): lock **Windows/CPU**, Python yêu cầu `>=3.12, !=3.14.1`, interpreter đã kiểm chứng 3.13.3; Torch 2.14.1, torchvision 0.29.1.
+- [requirements-gpu.txt](requirements-gpu.txt): dependency trực tiếp lấy từ **Kaggle Version 8**, Linux Python 3.13.15, Torch 2.11.0+cu128/torchvision 0.26.0+cu128. Không dùng lock CPU để tuyên bố tái lập môi trường GPU. Lower-bound Requires-Python đầy đủ của profile GPU chưa được audit; 3.13.15 là bản đã chạy, không phải ngưỡng tối thiểu.
+- [environment_snapshot.json](outputs/logs/environment_snapshot.json): metadata local và môi trường GPU gốc. Full `requirements-freeze.txt` và `environment.json` được giữ trong từng run. Chưa cài thử một môi trường GPU mới trong đợt sửa báo cáo này.
+
+Để huấn luyện lại đúng **phạm vi 18 trial** trên GPU trong môi trường mới:
+
+```powershell
+python -m pip install -r requirements-gpu.txt
 python scripts/download_assets.py
 python -m pytest tests -q
-python scripts/run.py --config config/full.json --device cuda
-python scripts/finalize.py --run outputs/runs/<run_id> --all
-tensorboard --logdir outputs/runs
+python scripts/run.py --config config/completed.json --dry-run
+python scripts/run.py --config config/completed.json --device cuda
 ```
 
-EDA đã đo nằm trong `outputs/eda/`, tách khỏi `outputs/runs/`. Tái tạo từ raw bằng:
+[completed.json](config/completed.json) chứa đúng 9 candidate/model đã chạy. Head search 3 LR × batch 64/128, 10 epoch/trial; fine min 10/max 30, patience 7, min_delta 1e-4. Các nhóm cũ lặp lại head search; chạy config hợp nhất chỉ cần một head search/model. Split_seed=42 giữ nguyên tập khi đổi seed huấn luyện. Local chỉ test/sanity, không full train CPU theo quy tắc repo.
+
+Inference từ checkpoint tốt nhất (checkpoint phải có local, không đi cùng Git):
 
 ```powershell
-python scripts/analyze_data.py --data-dir "<thư mục chứa cifar-10-batches-py>"
+python scripts/infer.py --checkpoint outputs/kaggle/group_02/extracted/runs/20261027T140405Z_cifar10_gpu_tuning_group_02_ec77fa72/densenet121/finetune/best.pt --image "<anh_RGB>"
 ```
 
-Lệnh không tải model, không huấn luyện và không đổi dữ liệu. EDA và training dùng chung `outputs/eda/split_indices.npz`, có kiểm tra hash/seed; cấu hình EDA tại [config/eda.json](config/eda.json). Thống kê/feature chỉ đo trên train; test chỉ tham gia kiểm tra integrity. Split tái dựng đã được đối chiếu hash với run lịch sử.
+Mọi CLI dùng raw path: `--data-dir` nếu hỗ trợ → `LAB02_DATA` → `labs/lab02/data`. `python scripts/download_assets.py --chunked` là fallback có checksum; `--dataset-only` bỏ tải weights. EDA tái đo bằng `python scripts/analyze_data.py --data-dir <data>`; dùng chung split khóa seed 42. TensorBoard: `tensorboard --logdir outputs/kaggle`; events có local, được loại khỏi Git.
 
-Tên tài liệu theo template: `description_lab_02.md`, `walkthrough_lab_02.md`, `README.md`; hai notebook giữ tiền tố thứ tự `01_`/`02_`. `Lab02_CIFAR10.md` không tồn tại trong checkout đầu vào và không tạo lại tài liệu kỹ thuật song song.
+`finalize.py --run <run>` kiểm chứng báo cáo; `--all` còn chạy test/notebook/inference, cần raw/checkpoint/events. `resume_interrupted.py <run> --device cuda` chỉ hỗ trợ ranh giới kiến trúc, từ chối trial dở dang hoặc đổi thiết bị; không resume giữa epoch.
 
-Tải chia phần: `python scripts/download_assets.py --chunked`. Chỉ tải dữ liệu: thêm `--dataset-only`. Mọi CLI dùng cùng chính sách đường dẫn raw: `--data-dir` (khi CLI hỗ trợ) → `LAB02_DATA` → `labs/lab02/data`. Weights vẫn lưu riêng tại `data/pretrained` của lab.
+## Bản đồ code và CLI
 
-`finalize.py --run <run>` kiểm chứng/xuất report; `--all` còn chờ run, chạy test và hai notebook cho đúng run đó, rồi inference checkpoint được validation chọn. Muốn xem thủ công, dùng `LAB02_RUN`; vị trí source dùng `LAB02_ROOT`.
+| File | Caller và mục đích |
+|---|---|
+| [src/data.py](src/data.py) | experiment/infer: transforms và DataLoader, dùng eda.locked_split |
+| [src/models.py](src/models.py) | experiment/infer: ImageNet weights, classifier, freeze và cached tail |
+| [src/tuning.py](src/tuning.py) | experiment/merged_results: grid, optimizer, scheduler, validation-only selection |
+| [src/costs.py](src/costs.py) | reporting/notebook_views/merged_results: chi phí và khuyến nghị validation |
+| [src/experiment.py](src/experiment.py) | run/resume: train/validation, checkpoint và test sau lựa chọn |
+| [src/reporting.py](src/reporting.py) | experiment/delivery/notebook_views: metric và hình |
+| [src/eda.py](src/eda.py) | analyze_data/notebook 01/data: split, raw EDA, không import model |
+| [src/notebook_views.py](src/notebook_views.py) | modeling/merged_results: view run, quality_cost/efficiency dùng khi LAB02_RUN chọn run riêng |
+| [src/merged_results.py](src/merged_results.py) | modeling: đọc registry, gộp candidate, chọn winner động và nhận xét theo đúng run |
+| [src/delivery.py](src/delivery.py) | finalize/experiment/EDA/infer/resume: IO, đường dẫn, hash và kiểm chứng |
+| [src/__init__.py](src/__init__.py) | Khai báo package |
+| [scripts/analyze_data.py](scripts/analyze_data.py) | Tái đo EDA từ raw |
+| [scripts/run.py](scripts/run.py) | CLI huấn luyện/dry-run |
+| [scripts/infer.py](scripts/infer.py) | Dự đoán từ checkpoint |
+| [scripts/download_assets.py](scripts/download_assets.py) | Tải CIFAR-10/weights có checksum |
+| [scripts/resume_interrupted.py](scripts/resume_interrupted.py) | Tiếp tục tại ranh giới kiến trúc |
+| [scripts/execute_notebook.py](scripts/execute_notebook.py) | Thực thi notebook bằng interpreter hiện tại |
+| [scripts/finalize.py](scripts/finalize.py) | Kiểm chứng và hoàn tất run |
 
-Resume: `python scripts/resume_interrupted.py outputs/runs/<run_id> --device cuda`. Chỉ hỗ trợ ranh giới kiến trúc; từ chối kiến trúc đang có trial/checkpoint dở dang hoặc thiết bị khác run gốc, không ghi đè kết quả. Không resume giữa epoch/trial.
+Có 11 file trong `src/` gồm `__init__.py`, 7 CLI. Snapshot huấn luyện được bảo toàn trong ZIP local, không được tính làm caller production. Các view dùng thật trong báo cáo mặc định hoặc chế độ một run, không thêm import giả để giữ code.
 
-Python của run lịch sử: CPython 3.13.3; môi trường thực tế lưu trong `environment.json` của run. Ghim phiên bản không bảo đảm cài được trên mọi OS; chưa chạy lại full training trong đợt chỉnh trình bày này.
+## Config lịch sử và phạm vi
 
-## Results Summary
+[full.json](config/full.json) là control GPU; [cpu_pilot.json](config/cpu_pilot.json) là sanity nhỏ; [cpu_full.json](config/cpu_full.json) mô tả run CPU lịch sử; [eda.json](config/eda.json) là profile EDA. [tuned.json](config/tuned.json) là kế hoạch gốc 26 trial, không phải phạm vi hoàn tất. [local_remaining.json](config/local_remaining.json) thuộc run local đã dừng. [tuned_16.json](config/tuned_16.json) và [tuned_16_10epochs.json](config/tuned_16_10epochs.json) là đề xuất đã rút lại, không áp dụng vào kết quả; giữ để truy vết, không dùng làm lệnh tái lập mặc định.
 
-| Fine-tune | Test accuracy | Test loss | Pipeline train (s) |
-|---|---:|---:|---:|
-| ResNet18 | 81,49% | 0,547387 | 1414,15 |
-| DenseNet121 | 81,53% | 0,547715 | 741,18 |
+## Kiểm thử
 
-DenseNet dùng cache prefix, ResNet không dùng: thời gian chỉ mô tả hai run thực tế, chưa xếp hạng tốc độ kiến trúc. Kết luận và kế hoạch LR/optimizer/unfreeze nằm trong [walkthrough](walkthrough_lab_02.md).
-
-## Tuning LR, optimizer và độ sâu
-
-Chạy từ `labs/lab02`, sau khi cài môi trường có CUDA:
-
-```powershell
-python scripts/run.py --config config/tuned.json --dry-run
-python scripts/run.py --config config/tuned.json --device cuda
-python scripts/run.py --config config/tuned.json --device cuda --seed 43
-python scripts/run.py --config config/tuned.json --device cuda --seed 44
-```
-
-Mỗi seed có 6 head trials và 13 fine-tune trials **mỗi model**, fine-tune min 10/max 30 epoch/trial (validation-loss patience 7, min_delta=1e-4): đây là grid đầy đủ, cần dự trù thời gian GPU. `split_seed=42` giữ tập dữ liệu cố định khi đổi seed khởi tạo/shuffle. `LAB02_DATA` có thể trỏ tới raw CIFAR-10 đã tải. Không thay sang flower_photos trong lượt này.
-
-- AdamW: backbone LR `{3e-6,1e-5,3e-5}`; SGD momentum 0,9: `{1e-4,3e-4,1e-3}`. Head LR = 10× backbone LR.
-- ResNet mở `layer4` hoặc `layer3+layer4`; DenseNet mở `denseblock4+norm5` hoặc `denseblock3+transition3+denseblock4+norm5`; luôn học classifier. BatchNorm running statistics giữ cố định.
-- Có control LR cố định; các candidate grid dùng cosine. Mọi candidate bắt đầu lại từ cùng selected head. Mở hai block buộc tắt cache prefix; tuned tắt cho cả hai.
-- Chọn trong dải accuracy cách mức tốt nhất ≤0,1 điểm phần trăm, rồi loss cách mức thấp nhất trong dải ≤0,005, sau đó ưu tiên fit time nhỏ hơn. Đây là ngưỡng đánh đổi cấu hình, không phải kiểm định hai model tương đương thống kê. Test chỉ chạy sau khi khóa candidate.
-
-`finetune_search_results.csv` lưu toàn bộ grid; `selection.json` ghi winner; `finetune/` chứa checkpoint/history được chọn, không train lại thêm lần nữa. TensorBoard lưu LR từng nhóm, optimizer/depth/scheduler, train/val loss/accuracy. `cost_comparison.csv` tách tổng search với selected recipe, không cộng lặp selected trial. Full wall time của quá trình chọn model, throughput và peak CUDA memory cũng được ghi.
-
-Khi chất lượng gần nhau, xem thêm thời gian của selected recipe và test pass. Run cũ khác cache policy nên chưa xếp hạng tốc độ kiến trúc bằng train time. Xem [walkthrough](walkthrough_lab_02.md#15-loss-function-and-optimization-design) để biết giới hạn và kiểm thử.
-
-Batch active: **64/128**; head 10 epoch; fine-tune min 10/max 30, patience 7 theo val loss. Run lịch sử vẫn là head 5/fine 2. Notebook hiển thị hai giai đoạn ở hai hàng riêng, checkpoint và số epoch thực chạy; bảng NOT RUN không phải kết quả tuning.
+- [test_contracts.py](tests/test_contracts.py): shape, freeze, split, one-batch overfit.
+- [test_cached_prefix.py](tests/test_cached_prefix.py): logits/gradient tương đương cache.
+- [test_tuning.py](tests/test_tuning.py): optimizer/LR/depth, reset initialization, validation-only search, stopping/time và smoke pipeline.
+- [test_eda.py](tests/test_eda.py): EDA không import training, split và integrity.
+- [test_cleanup.py](tests/test_cleanup.py): module/caller graph, CLI, shared paths và finalize.
+- [test_notebook_review.py](tests/test_notebook_review.py): metric/counts, notebook output và link; test snapshot CPU lịch sử dùng registry riêng, không phụ thuộc run hiện hành.
+- [test_merged_results.py](tests/test_merged_results.py): LAB02_RUN, đường dẫn registry chính xác, winner không cố định và phạm vi completed config.
+- [conftest.py](tests/conftest.py): Matplotlib Agg cho Windows/CI, không yêu cầu Tcl/Tk.

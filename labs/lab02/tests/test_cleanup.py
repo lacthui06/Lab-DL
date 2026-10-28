@@ -144,7 +144,7 @@ def test_quality_cost_handles_new_csv_execution_column(tmp_path,monkeypatch):
     run=ROOT/json.loads((ROOT/'outputs/selected_run.json').read_text())['run']
     frame=pd.read_csv(run/'comparison.csv')
     costs=pd.read_csv(run/'cost_comparison.csv')
-    frame=frame.merge(costs[['model','stage','execution']],on=['model','stage'])
+    frame=frame.drop(columns=['execution'],errors='ignore').merge(costs[['model','stage','execution']],on=['model','stage'])
     frame.to_csv(tmp_path/'comparison.csv',index=False)
     for model in frame.model.unique():
         folder=tmp_path/model/'head_selected';folder.mkdir(parents=True)

@@ -1,5 +1,6 @@
 # Exact package versions recorded in the Windows experiment environment.
-# Linux/Kaggle compatibility has not been verified.
+# CPU/Windows profile only. GPU training profile: requirements-gpu.txt.
+# Requires-Python for this pinned profile: >=3.12, !=3.14.1; verified interpreter 3.13.3.
 absl-py==2.5.1
 asttokens==3.0.2
 attrs==26.1.0

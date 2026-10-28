@@ -1,7 +1,7 @@
 # Walkthrough & Full-Flow Technical Report — Lab 02
 
 > **Lab Title:** Lab 02 — Transfer learning trên CIFAR-10
-> **Status:** Kết quả lịch sử đã có; chỉnh trình bày local; tuning đã triển khai và kiểm thử; benchmark tuning đầy đủ chưa chạy.
+> **Status:** Đã hoàn tất phạm vi cuối: 18 fine-trial, seed 42, Kaggle Versions 5/6/8. Báo cáo hiện hành dùng GPU 224×224; CPU 64×64 chỉ là lịch sử. Chỉnh sửa local sau commit c1b2d24 chưa push.
 > **Primary Objective:** So sánh chất lượng và chi phí của hai pretrained architectures, với bằng chứng không trộn giữa profile.
 > **Workflow Playbook References:** [dl_flow](../../docs/dl_flow.md) | [dl_data](../../docs/dl_data.md) | [dl_training](../../docs/dl_training.md) | [eda](../../docs/eda.md) | [eda-image](../../docs/eda-image.md) | [feature](../../docs/feature.md) | [feature-image](../../docs/feature-image.md)
 
@@ -16,8 +16,8 @@ Dựa trên [walkthrough_template](../../.agents/templates/walkthrough_template.
 Theo [đề đang lưu](description_lab_02.md), cần nhiều pretrained architectures, thay classifier, freeze/fine-tune, train/evaluate, điều chỉnh LR/batch và TensorBoard. CIFAR-10 RGB là dataset đã chốt. File đề hiện tại ghi riêng nội dung ảnh và phạm vi triển khai; đã đối chiếu ảnh đề slide trang 23 trong lượt rà soát này; CIFAR-10 là lựa chọn của source, không phải ràng buộc trong ảnh.
 
 - Hai notebook tách trách nhiệm: EDA chỉ data raw → preprocess → feature engineering; modeling chứa kiến trúc/train/evaluation. Không in source code hoặc toàn bộ model vào notebook.
-- Chất lượng gần nhau cần so thêm thời gian, số tham số được học và điều kiện cache. Không chọn model chỉ từ chênh lệch test 0,04 điểm phần trăm.
-- Tuning LR/optimizer/mở thêm block là giả thuyết cần kiểm chứng; chưa có run mới. Không ghi chúng thành kết quả đã đạt.
+- So sánh chất lượng cùng thời gian, số tham số học và execution policy; không chọn kiến trúc dựa trên test. Chênh lệch CPU lịch sử không thay kết luận GPU hiện hành.
+- Tuning LR/optimizer/depth đã đo trong 18 fine-trial; không suy rộng sang optimizer × depth chưa thử. Không áp dụng các đề xuất 16 trial hoặc fine tối đa 10 epoch đã rút lại.
 - Dọn file theo phương án đã chốt: gom logic đóng gói, giữ CLI có chức năng; các snapshot nguồn có hash giữ nguyên.
 
 
@@ -30,13 +30,13 @@ Theo [đề đang lưu](description_lab_02.md), cần nhiều pretrained archite
 | Thay classifier, freeze/fine-tune | `build_model`, `configure_trainable`, BN statistics cố định | Đáp ứng; test gradient/frozen weights |
 | transforms + DataLoader | `data.image_transform`, `IndexedImages`, `image_loader` | Đáp ứng; RGB và normalization có test |
 | Loss, optimizer, loop | `experiment.pass_epoch/fit`: CrossEntropy + AdamW/SGD momentum | Đáp ứng về triển khai |
-| Điều chỉnh LR/batch | 2 LR × 2 batch mỗi kiến trúc, `search_results.csv` | Có kết quả đã lưu; chọn bằng validation |
+| Điều chỉnh LR/batch | 3 LR × batch 64/128, 10 epoch/head trial; 9 fine candidate/model | Có kết quả GPU; chọn bằng validation |
 | TensorBoard | SummaryWriter scalars/LR/histogram/graph; hình dựng từ event scalars đã lưu | Có code và artifact lịch sử; thiếu event files trong checkout để xác minh live mới |
 | Evaluate test | 4 condition, confusion counts và metric tính lại khớp | Đáp ứng ở mức bằng chứng đã lưu |
 | EDA tách modeling (yêu cầu người dùng) | `src/eda.py`, notebook 01 chỉ dùng outputs/eda; notebook 02 đọc kết quả model | Đã tách cả import và nguồn artifact |
 | Naming/template (quy định repo) | `description_lab_02.md`, `walkthrough_lab_02.md`, `README.md`, 01/02 notebook | Đúng tên template; không tạo Lab02_CIFAR10.md/REPORT.md thứ hai |
 
-Kết luận: code bao phủ các yêu cầu trong ảnh. Không chứng nhận tái lập toàn bộ training chỉ từ CSV/PNG: checkpoint, test predictions NPZ và event files của run cũ không có trong checkout. GPU 224×224 và tuning mở rộng vẫn chưa chạy. Run CPU lịch sử đã có trước lượt sửa và không tuân thủ Zero Waste hiện hành; lượt này chỉ đo EDA, kiểm thử và thực thi view.
+Kết luận hiện hành: code và artifact bao phủ các yêu cầu trong ảnh. Đã thu notebook, checkpoint, predictions và events của ba nhóm GPU về local; Git chỉ chứa source và artifact nhẹ. Phạm vi cuối 18 trial đã hoàn tất. Không chứng nhận tái lập full training từ CSV/PNG; báo cáo tách kiểm chứng metric từ predictions, roundtrip 8 mẫu và huấn luyện lại. CPU lịch sử được giữ riêng.
 
 ### 1.1. Master Flow Design
 
@@ -76,7 +76,7 @@ Baseline so sánh trong lab: head-only trên backbone pretrained. Chưa có base
 
 Run lịch sử: CrossEntropy, AdamW weight_decay=1e-4; head LR={1e-3,1e-2} × batch={32,64}, 5 epoch/trial. Fine-tune backbone LR=1e-5, head LR=1e-4, 2 epoch. Chưa có scheduler/optimizer ablation.
 
-Triển khai mới ngày 26/10/2026: [tuned.json](config/tuned.json) chạy trực tiếp bằng `scripts/run.py`; thiết kế đã hợp nhất trong mục này. Chưa có kết quả benchmark tuning đầy đủ.
+Kế hoạch gốc ngày 26/10/2026 ở [tuned.json](config/tuned.json): 26 trial. Phạm vi cuối đã chốt và hoàn tất là 18 trial trong [completed.json](config/completed.json); bảng dưới mô tả không gian kế hoạch, không phải mọi tổ hợp đều đã chạy.
 
 | Thành phần | Triển khai | Kiểm soát |
 |---|---|---|
@@ -104,7 +104,7 @@ Mở block cuối là giả thuyết transfer learning cần kiểm chứng: gi�
 
 Ví dụ candidate: AdamW, backbone LR=0,00001, head LR=0,0001, last_block, cosine. Đây là một recipe cần chạy, không phải điểm đo chất lượng. Grid có 13 candidate/model: 1 control + 3 LR × 2 depth với AdamW + 3 LR × 2 depth với SGD. Fine-tune giữ batch được head search chọn từ 64/128. Đổi batch có thể giảm số optimizer step mỗi epoch nhưng không bảo đảm thời gian giảm hoặc chất lượng tăng.
 
-Run đã đo dùng head 5/fine 2 epoch theo config trong run, không phải 10 hoặc 30. Cấu hình mới chưa chạy dùng head 10, fine min 10/max 30. Best checkpoint có thể sớm hơn số epoch thực chạy. Báo cáo tách planned/completed/best epoch và stop_reason; hết ngân sách không đồng nghĩa hội tụ. Không sửa history/metric cũ để khớp cấu hình mới.
+Run CPU lịch sử dùng head 5/fine 2 epoch. GPU đã chạy head 10, fine min 10/max 30; winner hai model đều dừng sau 10 epoch. Best checkpoint có thể sớm hơn số epoch thực chạy. Báo cáo tách planned/completed/best epoch và stop_reason; hết ngân sách không đồng nghĩa hội tụ. Không sửa history/metric cũ để khớp cấu hình mới.
 
 ### 1.5.1. Đo thời gian và chi phí
 
@@ -118,7 +118,9 @@ GPU 224×224 mới được so riêng với CPU 64×64 cũ; không đặt cạnh
 
 ### 1.6. Execution Environment Constraints
 
-Run cũ: Windows CPU, CPython 3.13.3, torch 2.14.1+cpu, torchvision 0.29.1+cpu, ảnh 64×64. [requirements.txt](requirements.txt) chứa phiên bản Windows đã ghi; không có dòng `python==...`. Chưa xác thực toàn bộ Requires-Python/khả năng cài trên Linux. Phiên bản của run nằm trong `environment.json`.
+GPU đã chạy: Linux/Python 3.13.15, Torch 2.11.0+cu128, torchvision 0.26.0+cu128. Profile cài đặt [requirements-gpu.txt](requirements-gpu.txt), full freeze nằm trong run. Lock Windows/CPU chỉ dùng cho profile local; không coi hai môi trường là giống nhau. [environment_snapshot.json](outputs/logs/environment_snapshot.json) lưu metadata. Requires-Python local >=3.12, !=3.14.1; GPU xác nhận interpreter đã chạy, chưa có audit lower-bound đầy đủ.
+
+Run cũ: Windows CPU, CPython 3.13.3, torch 2.14.1+cpu, torchvision 0.29.1+cpu, ảnh 64×64. [requirements.txt](requirements.txt) chứa phiên bản Windows đã ghi; không có dòng `python==...`. Metadata Requires-Python của profile local đã được ghi trong environment_snapshot; điều này không xác thực cài đặt lock CPU trên Linux. Phiên bản thực tế của từng run nằm trong `environment.json`.
 
 Đợt sửa này chỉ chạy lại các view từ artifact, không train full CPU theo [AGENTS 1.5](../../.agents/AGENTS.md). Thí nghiệm mới thực thi trên GPU sau sanity overfit và test gradient/shape. Profile CPU và GPU báo cáo riêng.
 
@@ -126,7 +128,17 @@ Run cũ: Windows CPU, CPython 3.13.3, torch 2.14.1+cpu, torchvision 0.29.1+cpu, 
 
 ### 2.1. Flow Comparison Matrix
 
-Run lịch sử `20261024T075133Z_cifar10_cpu_full64_71863a0e`; [registry](outputs/selected_run.json). Tất cả hàng dùng cùng CIFAR-10/split, RGB 64×64, không augmentation, ImageNet normalization.
+
+**GPU hiện hành:** Versions 5/6/8 hoàn tất, tổng 18 fine-trial (9/model); cùng seed/split/head initialization. Bảng trial đầy đủ nằm tại [all_18_fine_trials.csv](outputs/review/merged_gpu/all_18_fine_trials.csv); metric cuối tại Section 3. Các bảng CPU phía dưới giữ riêng để truy vết.
+
+| Nhóm | Candidate mỗi model | Đầu ra | Trạng thái |
+|---|---|---|---|
+| 0 / Version 5 | Control; AdamW last_block 3e-6/1e-5 | 6 fine-trial, head search riêng | Hoàn tất, tải và xác minh |
+| 1 / Version 6 | AdamW last_block 3e-5; last_two_blocks 3e-6/1e-5 | 6 fine-trial | Hoàn tất, tải và xác minh |
+| 2 / Version 8 | AdamW last_two_blocks 3e-5; SGD last_block 1e-4/3e-4 | 6 fine-trial; cả hai winner toàn phạm vi nằm ở đây | Hoàn tất, tải và xác minh |
+| 3/4 kế hoạch cũ | Các SGD bổ sung | Không có kết quả | Không chạy theo phạm vi cuối |
+
+Các bảng CPU dưới đây là lịch sử `20261024T075133Z_cifar10_cpu_full64_71863a0e`, trường `historical_run` trong [registry](outputs/selected_run.json); không phải kết quả GPU hiện hành. Tất cả hàng dùng cùng CIFAR-10/split, RGB 64×64, không augmentation, ImageNet normalization.
 
 | model | stage | loss | accuracy | macro_f1 | macro_precision | macro_recall | best_val_accuracy |
 |---|---|---|---|---|---|---|---|
@@ -199,68 +211,70 @@ Notebook modeling dùng [notebook_views.py](src/notebook_views.py); EDA dùng [e
 
 ## 3. COMPARATIVE RESULTS, ERROR DIAGNOSTICS & FINAL SUBMISSION REPORT
 
-### 3.1. Quantitative Evaluation & Comparison Matrix
+### 3.1. Quantitative Evaluation & Comparison Matrix — GPU hiện hành
 
-| model | stage | execution | pipeline_training_seconds | test_seconds |
-|---|---|---|---|---|
-| resnet18 | head | pooled_feature_cache | 329.45 | 64.0 |
-| resnet18 | finetune | full_image_forward | 1414.15 | 62.76 |
-| densenet121 | head | pooled_feature_cache | 521.51 | 100.4 |
-| densenet121 | finetune | cached_frozen_prefix | 741.18 | 92.39 |
+Phạm vi cuối: **18 fine-trial, 9/model**, seed 42, split 45.000/5.000/10.000, RGB 224×224. Cả ba nhóm đã hoàn tất và thu hồi; 26 trial là kế hoạch cũ, nhóm 3/4 không chạy. Nguồn: [registry](outputs/selected_run.json), [bảng 18 trial](outputs/review/merged_gpu/all_18_fine_trials.csv), [trạng thái nhóm](outputs/review/tuning_submissions.json).
 
-DenseNet fine-tune hơn accuracy **+0,04 điểm phần trăm** nhưng loss **+0,0003283** (cao hơn); Macro F1 **+0,0004746**. Một seed không đủ kết luận hơn có ý nghĩa thống kê. Validation của ResNet là **82,10%**, DenseNet **81,46%**; registry khuyến nghị ResNet theo validation, không đảo lựa chọn vì test DenseNet nhỉnh hơn.
+| model | stage | accuracy | loss | macro_f1 | macro_precision | macro_recall | best_val_accuracy |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| resnet18 | head | 0.858600 | 0.402428 | 0.859006 | 0.861530 | 0.858600 | 0.870400 |
+| resnet18 | finetune | 0.937100 | 0.305124 | 0.937085 | 0.937192 | 0.937100 | 0.940600 |
+| densenet121 | head | 0.879000 | 0.344264 | 0.879111 | 0.879864 | 0.879000 | 0.889000 |
+| densenet121 | finetune | 0.946100 | 0.204466 | 0.945915 | 0.946212 | 0.946100 | 0.947800 |
 
-Pipeline train ghi nhận: ResNet 1414,15 s; DenseNet 741,18 s (ít hơn khoảng 47,59%). Đây là thời gian thực tế gồm extraction+all head trials+fine-tune, **không phải kết luận kiến trúc DenseNet nhanh hơn**: DenseNet dùng cached frozen prefix, ResNet full_image_forward, số tham số học cũng khác. Test chạy toàn mạng: ResNet 62,76 s, DenseNet 92,39 s; test time bao gồm loader/chuyển thiết bị/forward, chưa phải latency per-image chuẩn hóa. Cần T0 cùng policy/hardware trước khi xếp hạng hiệu quả.
+DenseNet cao hơn ResNet **0,90 điểm phần trăm** test accuracy, loss thấp hơn 0,100658. Fit winner: ResNet 1723,90 giây (28,73 phút), DenseNet 3439,37 giây (57,32 phút); không phải tổng chi phí search. Cả hai full_image_forward trên Tesla T4; timing gồm loader, train/validation, logging và checkpoint I/O, không phải latency inference. Peak allocated GPU memory 1090,68/4648,35 MiB. Một seed chưa chứng minh ưu thế thống kê.
 
-![Quality and cost](outputs/review/20261024T075133Z_cifar10_cpu_full64_71863a0e/quality_cost.png)
+![GPU quality and selected fit time](outputs/review/merged_gpu/gpu_quality_time.png)
 
 ### 3.2. Confusion Matrix Diagnostics
 
-Đọc ảnh và đối chiếu counts: ResNet dog → cat **145/1000 = 14,5%**, cat → dog **108/1000 = 10,8%**; lớp cat có 699/1000 đúng. DenseNet dog → cat **144/1000 = 14,4%**. Bảng per-class ở 2.1 là số tính trực tiếp từ counts.
+Đọc ảnh và đối chiếu counts GPU: ResNet cat → dog **82/1000 = 8,2%**, dog → cat **70/1000 = 7,0%**; DenseNet giảm còn **54/1000 = 5,4%** và **43/1000 = 4,3%**. Cat có recall thấp nhất: 86,1%/86,8%. DenseNet bird recall 94,0%, ResNet 91,3%. Pixel raw 32×32 thiếu chi tiết, tương đồng hình dáng là giả thuyết thị giác, chưa phải nguyên nhân đã kiểm định. Precision/Recall/TPR/F1/FPR đủ lớp được nhúng trong notebook và lưu [class_metrics.csv](outputs/review/merged_gpu/class_metrics.csv).
 
-- resnet18: TPR thấp nhất cat = 69.90%; FPR cao nhất cat = 3.41%.
-- densenet121: TPR thấp nhất cat = 69.90%; FPR cao nhất cat = 3.61%.
-
-Ảnh RGB 32×32 có chi tiết hạn chế; tương đồng động vật là giả thuyết thị giác, chưa có kiểm định nguyên nhân.
+![GPU metric theo lớp](outputs/review/merged_gpu/class_metric_heatmaps.png)
 
 ### 3.3. Error Analysis Slices
 
-Lưới DenseNet fine-tune đã mở: dog → deer với p=0,819; horse → dog p=0,757; automobile → truck p=0,642; airplane → truck p=0,734. Confidence cao không bảo đảm đúng. Lưới cố ý chọn tối đa 8 đúng và 8 sai nên không đại diện phân phối lỗi. [Notebook modeling](notebooks/02_lab02_modeling.ipynb) hiển thị lưới và confusion của cả hai cạnh nhau.
+Lưới DenseNet GPU đã mở: automobile → truck p=0,961; ship → airplane p=0,999; airplane → horse p=0,989. Confidence cao không bảo đảm đúng. Lưới tối đa 8 đúng và 8 sai không đại diện accuracy. Hai model/ma trận/lưới nằm trực tiếp trong notebook; không thay kết quả bằng hyperlink.
 
 ### 3.4. Key Technical Findings
 
-Head search đã chọn LR=0,001/batch=64 cho cả hai. LR=0,01 kém hơn trên validation trong grid này; chưa chứng minh LR=0,001 là tối ưu toàn miền. Fine-tune đều cải thiện so với head nhưng có thêm ngân sách epoch; chưa cô lập tác động unfreeze dưới ngân sách ngang nhau. Đọc đường cong: ResNet fine-tune val loss giảm 0,5686 → 0,5301, val accuracy 80,62% → 82,10%; DenseNet val loss giảm 0,5701 → 0,5439, val accuracy 80,52% → 81,46%. Cuối fine-tune, train–val accuracy gap lần lượt khoảng 3,08 và 3,45 điểm phần trăm. DenseNet head có val loss tăng tạm ở epoch 3–4 rồi giảm ở epoch 5; không có bằng chứng tăng loss kéo dài. Chỉ 2 epoch fine-tune nên chưa đủ khẳng định đã hội tụ hoặc không overfit.
+Cả hai winner là AdamW, backbone LR 3e-5, head 3e-4, cosine, last_two_blocks. ResNet mở layer3+layer4+fc; DenseNet mở denseblock3+transition3+denseblock4+norm5+classifier. Weight decay 1e-4, BatchNorm running statistics cố định, không random augmentation/dropout. Head batch được chọn 128, head LR 0,001; head chạy 10 epoch. Mỗi trial fine bắt đầu từ cùng selected head: hash tensor của mỗi model khớp cả ba nhóm, được ghi ở nhật ký 28/10 phía dưới.
 
-![ResNet head và fine-tune tách biệt](outputs/review/20261024T075133Z_cifar10_cpu_full64_71863a0e/learning_curves_resnet18.png)
+Fine winner đều chạy **10/30 epoch**, dừng validation_loss_patience; ResNet checkpoint epoch 10, DenseNet epoch 6. ResNet train cuối 99,98%/validation 94,06%, val loss 0,2376 → 0,2822. DenseNet train 99,82%/validation 94,70%, val loss 0,1910 → 0,2206. Đây là dấu hiệu overfit; không tuyên bố hội tụ chỉ vì dừng sớm, không tăng epoch để giảm train loss. Có thể thử augmentation/regularization tiếp, nhưng chưa có bằng chứng hiệu quả từ thí nghiệm này.
 
-![DenseNet head và fine-tune tách biệt](outputs/review/20261024T075133Z_cifar10_cpu_full64_71863a0e/learning_curves_densenet121.png)
+![ResNet GPU curves](outputs/review/merged_gpu/learning_curves_resnet18.png)
+
+![DenseNet GPU curves](outputs/review/merged_gpu/learning_curves_densenet121.png)
 
 ### 3.5. Checkpoint Verification (Save/Load)
 
-Bốn `roundtrip.json` trong run ghi passed, max_probability_error=0 trên 8 mẫu; notebook chỉ hiển thị chứng cứ cũ. Chưa chạy inference mới vì checkpoint/dataset không nằm trong folder hiện tại. [infer.py](scripts/infer.py) là điểm vào kiểm chứng lại khi có checkpoint. Không khẳng định tái lập toàn test chỉ dựa trên kiểm tra 8 mẫu.
-
-Kiểm tra checkout local: 39 file source snapshot, 14 khớp SHA256 theo byte, 25 chỉ khác LF/CRLF do Git. Không có thay đổi nội dung khác. Các snapshot/hash gốc không bị sửa; `delivery.audit_snapshot` báo riêng byte-exact và newline-only, không coi chuyển đổi xuống dòng là bằng chứng khớp byte. Đợt này chưa chạy lại full finalize/inference.
+Bốn roundtrip của winner head/fine ghi passed, max_probability_error=0 trên 8 mẫu. Đã tính lại accuracy/loss/Macro F1/Precision/Recall và confusion counts từ predictions của cả ba nhóm, khớp report trên 10.000 mẫu test/condition. Đây là hai kiểm chứng khác nhau; không giả định roundtrip 8 mẫu đã chạy lại inference toàn test. Checkpoint và raw có local, không nằm trong Git; [README](README.md) có lệnh inference với đường dẫn checkpoint GPU rõ ràng.
 
 ### 3.6. Decision Traceability
 
-| Quyết định | Điểm 1.0 | Hướng giải quyết |
+| Quyết định | Điểm 1.0 | Thực hiện hiện hành |
 |---|---|---|
-| Hai notebook tách biệt | EDA không modeling | EDA chỉ nhập src.eda (NumPy/Pillow/sklearn), kiểm thử subprocess chặn torch/torchvision/src.models/src.experiment; không đọc bảng kết quả model |
-| Một tài liệu sống | Naming/template | Lab02_CIFAR10.md và RESULTS.md hợp nhất vào walkthrough_lab_02.md |
-| Không xóa snapshot | Chống deadfile | Snapshot là chứng cứ hash/manifest; CLI/module hiện hành có bản đồ tham chiếu trong README |
-| Gộp logic đóng gói | Dọn src/scripts đã trao đổi | finalize.py [--all] dùng src/delivery.py; CLI có một điểm vào |
-| Chưa chọn thắng theo test | Chất lượng gần nhau | Giữ validation recommendation; so chi phí kèm execution policy |
-| Mở thêm block | Đề xuất performance | T3 sau LR/optimizer, tắt cache cũ, chưa khẳng định cải thiện |
+| EDA tách modeling | Ranh giới dữ liệu | EDA chỉ src.eda; modeling đọc registry/artifact GPU |
+| Chọn bằng validation | So sánh công bằng | Accuracy band 0,001 → loss band 0,005 → fit time, không dùng test |
+| Mở hai block | Giả thuyết performance | Đã đo AdamW last_two_blocks; chưa thử toàn bộ SGD × depth |
+| Phạm vi cuối | Giới hạn thời gian đã chốt | 18 trial, không chạy nhóm 3/4; config completed.json |
+| Đúng run khi kiểm chứng | Tái lập | LAB02_RUN ưu tiên hơn registry; markdown/metric lấy từ run đó |
+| Gộp kết quả | Không hard-code winner | Dùng đường dẫn registry và select_trial; từ chối dữ liệu thiếu/trùng/policy khác |
+| Môi trường | CPU/GPU khác nhau | requirements Windows/CPU và requirements-gpu từ freeze Kaggle, metadata lưu riêng |
 
 ### 3.7. Conclusion & Lessons Learned
 
-Kết quả chất lượng hiện tại gần ngang nhau; chi phí đo được khác nhưng bị nhiễu bởi policy cache. Chưa có kết quả tuning mới. Pipeline đã hỗ trợ grid cùng chính sách, optimizer-specific LR và mở hai block; bước benchmark mới cần kiểm chứng trên GPU và nhiều seed. Hai notebook tập trung biểu đồ, bảng ngắn và link source; source snapshot và bằng chứng gốc giữ nguyên.
+DenseNet phù hợp khi ưu tiên validation/test quality; ResNet giảm fit time và bộ nhớ trong các điều kiện đã đo. Kết quả test cuối 94,61%/93,71%; không chọn model theo test. Báo cáo GPU hiện hành thay kết luận CPU gần ngang nhau; CPU giữ như lịch sử ở Section 2. Việc sửa registry, view và tài liệu không huấn luyện lại hoặc thay metric/checkpoint gốc. Mọi đề xuất 16 trial/10 epoch mới đã rút lại được đánh dấu trong README.
 
 ### Nguồn chính thức
 
 - [Torchvision ResNet18](https://docs.pytorch.org/vision/stable/models/generated/torchvision.models.resnet18.html) và [DenseNet121](https://docs.pytorch.org/vision/stable/models/generated/torchvision.models.densenet121.html): weights và preprocessing.
 - [PyTorch optim](https://docs.pytorch.org/docs/stable/optim.html): AdamW, SGD và LR scheduler; cấu hình đề xuất không phải kết quả đo.
 - [Transfer learning tutorial](https://docs.pytorch.org/tutorials/beginner/transfer_learning_tutorial.html): freeze/fine-tuning.
+
+### Nhật ký các đợt chỉnh trước khi GPU hoàn tất
+
+Các mục ngày 26–27/10 dưới đây là bản ghi tại thời điểm đó; không thay trạng thái và kết luận hiện hành ở đầu tài liệu/Section 3.
 
 ### Kiểm tra đợt chỉnh local
 
@@ -351,3 +365,14 @@ Head chạy 10/10 epoch; hai fine winner chạy 10/30 epoch, dừng validation_l
 Confusion matrix cho thấy cat → dog / dog → cat là 82/70 ảnh ở ResNet và 54/43 ở DenseNet; recall cat 86,1%/86,8%. DenseNet vẫn sai rất tự tin: automobile → truck 0,961, ship → airplane 0,999, airplane → horse 0,989. Các metric Precision/Recall/TPR/F1/FPR đủ lớp nằm trực tiếp trong notebook. Một seed chưa đủ xác nhận ưu thế thống kê; không coi confidence cao là bảo đảm đúng.
 
 Notebook modeling đã nhúng 12 PNG, bảng 18 trial, metric và nhận xét; EDA giữ 9 PNG, chỉ raw/preprocess/features. Kiểm chứng nbformat hợp lệ, toàn bộ 10/8 code cell có execution count, không error output, tối đa 7 dòng/code cell, không hyperlink thay kết quả. Bằng chứng: outputs/review/merged_gpu/notebook_validation.json; bảng gộp: all_18_fine_trials.csv trong cùng thư mục. Không commit/push.
+
+
+### 28/10/2026 — Sửa tính nhất quán và chọn run
+
+Registry mặc định chuyển sang GPU, giữ historical_run CPU riêng; trạng thái đã chốt 18 trial/3 nhóm hoàn tất. Notebook dùng LAB02_RUN khi được yêu cầu, không cố định group 2; đường dẫn gộp lấy tường minh từ registry, winner chọn theo validation, có kiểm tra trùng candidate/policy và test export. Khi winner hai model nằm ở hai nhóm khác nhau, chỉ tạo report view nhẹ có provenance, không thay checkpoint gốc. Nhận xét lấy trực tiếp từ metric/history của run đang xem.
+
+README, Section 3 và cấu hình completed.json phản ánh kết quả hiện hành; các config 16-trial/local đã dừng được ghi nhãn lịch sử. Lock Windows/CPU tách rõ khỏi direct pins GPU lấy từ full freeze Kaggle. Tests lịch sử dùng historical_run; kiểm tra chi phí GPU cộng toàn bộ fine-search, không chỉ fit winner. Membership train/val/test giữa EDA và ba nhóm GPU khớp từng index; NPZ khác byte archive không được diễn giải là split khác.
+
+Đã chạy notebook mặc định và kiểm chứng notebook với LAB02_RUN group 0 trong bộ nhớ: output đúng metric group 0, không ghi đè notebook mặc định. Không huấn luyện lại, không sửa metrics/history/checkpoints gốc; chưa commit/push các chỉnh sửa này. Kết quả kiểm thử cuối lưu ở outputs/review/fix_validation.json.
+
+Kiểm chứng sau sửa: **59/59 test đạt** trong 70,62 giây; hai cảnh báo deprecation TorchScript cũ. Notebook mặc định có 12 PNG/10 code cell, EDA 9 PNG/8 code cell, không output lỗi, tối đa 7 dòng/code cell. Notebook với LAB02_RUN group 0 cũng thực thi thành công trong bộ nhớ và hiển thị đúng test accuracy ResNet 91,37%. Báo cáo máy đọc: [fix_validation.json](outputs/review/fix_validation.json). Chưa cài lại môi trường GPU mới và chưa push.

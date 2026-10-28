@@ -1,3 +1,10 @@
 {
-  "run": "outputs/runs/20261024T075133Z_cifar10_cpu_full64_71863a0e"
+  "run": "outputs/kaggle/group_02/extracted/runs/20261027T140405Z_cifar10_gpu_tuning_group_02_ec77fa72",
+  "historical_run": "outputs/runs/20261024T075133Z_cifar10_cpu_full64_71863a0e",
+  "group_runs": {
+    "0": "outputs/kaggle/group_00/extracted/runs/20261027T042305Z_cifar10_gpu_tuning_group_00_c444e2bc",
+    "1": "outputs/kaggle/group_01/extracted/runs/20261027T042626Z_cifar10_gpu_tuning_group_01_10052471",
+    "2": "outputs/kaggle/group_02/extracted/runs/20261027T140405Z_cifar10_gpu_tuning_group_02_ec77fa72"
+  },
+  "completed_fine_trials": 18
 }

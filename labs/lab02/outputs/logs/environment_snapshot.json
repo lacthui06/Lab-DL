@@ -1,0 +1,386 @@
+{
+  "python": "3.13.3 (tags/v3.13.3:6280bb5, Apr  8 2025, 14:47:33) [MSC v.1943 64 bit (AMD64)]",
+  "platform": "Windows-10-10.0.19041-SP0",
+  "profile": "local_cpu_windows",
+  "requirements": "requirements.txt",
+  "torch": "2.14.1",
+  "torchvision": "0.29.1",
+  "requires_python": ">=3.12, !=3.14.1",
+  "package_metadata": {
+    "absl-py": {
+      "pinned": "2.5.1",
+      "installed": "2.5.1",
+      "requires_python": ">=3.10"
+    },
+    "asttokens": {
+      "pinned": "3.0.2",
+      "installed": "3.0.2",
+      "requires_python": ">=3.8"
+    },
+    "attrs": {
+      "pinned": "26.1.0",
+      "installed": "26.1.0",
+      "requires_python": ">=3.9"
+    },
+    "cloudpickle": {
+      "pinned": "3.1.2",
+      "installed": "3.1.2",
+      "requires_python": ">=3.8"
+    },
+    "colorama": {
+      "pinned": "0.4.6",
+      "installed": "0.4.6",
+      "requires_python": "!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*,!=3.5.*,!=3.6.*,>=2.7"
+    },
+    "comm": {
+      "pinned": "0.2.3",
+      "installed": "0.2.3",
+      "requires_python": ">=3.8"
+    },
+    "contourpy": {
+      "pinned": "1.4.0",
+      "installed": "1.4.0",
+      "requires_python": ">=3.12"
+    },
+    "cycler": {
+      "pinned": "0.12.1",
+      "installed": "0.12.1",
+      "requires_python": ">=3.8"
+    },
+    "debugpy": {
+      "pinned": "1.8.22",
+      "installed": "1.8.22",
+      "requires_python": ">=3.10"
+    },
+    "executing": {
+      "pinned": "2.3.0",
+      "installed": "2.3.0",
+      "requires_python": ">=3.8"
+    },
+    "fastjsonschema": {
+      "pinned": "2.22.2",
+      "installed": "2.22.2",
+      "requires_python": ">=3.10"
+    },
+    "filelock": {
+      "pinned": "4.2.4",
+      "installed": "4.2.4",
+      "requires_python": ">=3.11"
+    },
+    "fonttools": {
+      "pinned": "4.67.0",
+      "installed": "4.67.0",
+      "requires_python": ">=3.11"
+    },
+    "fsspec": {
+      "pinned": "2026.9.0",
+      "installed": "2026.9.0",
+      "requires_python": ">=3.10"
+    },
+    "grpcio": {
+      "pinned": "1.84.1",
+      "installed": "1.85.0",
+      "requires_python": ">=3.10"
+    },
+    "iniconfig": {
+      "pinned": "2.3.1",
+      "installed": "2.3.1",
+      "requires_python": ">=3.10"
+    },
+    "ipykernel": {
+      "pinned": "7.4.0",
+      "installed": "7.4.0",
+      "requires_python": ">=3.11"
+    },
+    "ipython": {
+      "pinned": "9.17.1",
+      "installed": "9.17.1",
+      "requires_python": ">=3.11"
+    },
+    "ipython_pygments_lexers": {
+      "pinned": "1.1.1",
+      "installed": "1.1.1",
+      "requires_python": ">=3.8"
+    },
+    "jedi": {
+      "pinned": "0.20.1",
+      "installed": "0.20.1",
+      "requires_python": ">=3.10"
+    },
+    "Jinja2": {
+      "pinned": "3.1.6",
+      "installed": "3.1.6",
+      "requires_python": ">=3.7"
+    },
+    "joblib": {
+      "pinned": "1.6.0",
+      "installed": "1.6.0",
+      "requires_python": ">=3.10"
+    },
+    "jsonschema": {
+      "pinned": "4.26.0",
+      "installed": "4.26.0",
+      "requires_python": ">=3.10"
+    },
+    "jsonschema-specifications": {
+      "pinned": "2025.9.1",
+      "installed": "2025.9.1",
+      "requires_python": ">=3.9"
+    },
+    "jupyter_client": {
+      "pinned": "8.10.0",
+      "installed": "8.10.0",
+      "requires_python": ">=3.10"
+    },
+    "jupyter_core": {
+      "pinned": "5.9.1",
+      "installed": "5.9.1",
+      "requires_python": ">=3.10"
+    },
+    "kiwisolver": {
+      "pinned": "1.5.1",
+      "installed": "1.5.1",
+      "requires_python": ">=3.10"
+    },
+    "Markdown": {
+      "pinned": "3.11.2",
+      "installed": "3.11.2",
+      "requires_python": ">=3.11"
+    },
+    "MarkupSafe": {
+      "pinned": "3.0.4",
+      "installed": "3.0.4",
+      "requires_python": ">=3.9"
+    },
+    "matplotlib": {
+      "pinned": "3.11.2",
+      "installed": "3.11.2",
+      "requires_python": ">=3.11"
+    },
+    "matplotlib-inline": {
+      "pinned": "0.2.2",
+      "installed": "0.2.2",
+      "requires_python": ">=3.9"
+    },
+    "mpmath": {
+      "pinned": "1.3.0",
+      "installed": "1.3.0",
+      "requires_python": null
+    },
+    "narwhals": {
+      "pinned": "2.27.1",
+      "installed": "2.28.0",
+      "requires_python": ">=3.10"
+    },
+    "nbclient": {
+      "pinned": "0.11.0",
+      "installed": "0.11.0",
+      "requires_python": ">=3.10.0"
+    },
+    "nbformat": {
+      "pinned": "5.11.1",
+      "installed": "5.11.1",
+      "requires_python": ">=3.10"
+    },
+    "nest-asyncio2": {
+      "pinned": "1.7.4",
+      "installed": "1.7.4",
+      "requires_python": ">=3.5"
+    },
+    "networkx": {
+      "pinned": "3.7",
+      "installed": "3.7",
+      "requires_python": "!=3.14.1,>=3.12"
+    },
+    "numpy": {
+      "pinned": "2.5.4",
+      "installed": "2.5.4",
+      "requires_python": ">=3.12"
+    },
+    "packaging": {
+      "pinned": "26.3",
+      "installed": "26.3",
+      "requires_python": ">=3.9"
+    },
+    "pandas": {
+      "pinned": "3.1.0",
+      "installed": "3.1.0",
+      "requires_python": ">=3.11"
+    },
+    "parso": {
+      "pinned": "0.8.7",
+      "installed": "0.8.7",
+      "requires_python": ">=3.6"
+    },
+    "pillow": {
+      "pinned": "13.0.0",
+      "installed": "13.0.0",
+      "requires_python": ">=3.11"
+    },
+    "platformdirs": {
+      "pinned": "4.13.5",
+      "installed": "4.13.6",
+      "requires_python": ">=3.11"
+    },
+    "pluggy": {
+      "pinned": "1.7.0",
+      "installed": "1.7.0",
+      "requires_python": ">=3.10"
+    },
+    "prompt_toolkit": {
+      "pinned": "3.0.53",
+      "installed": "3.0.53",
+      "requires_python": ">=3.10"
+    },
+    "protobuf": {
+      "pinned": "7.36.2",
+      "installed": "7.36.2",
+      "requires_python": ">=3.10"
+    },
+    "psutil": {
+      "pinned": "7.2.2",
+      "installed": "7.2.2",
+      "requires_python": ">=3.6"
+    },
+    "pure_eval": {
+      "pinned": "0.2.4",
+      "installed": "0.2.4",
+      "requires_python": null
+    },
+    "Pygments": {
+      "pinned": "2.21.0",
+      "installed": "2.21.0",
+      "requires_python": ">=3.9"
+    },
+    "pyparsing": {
+      "pinned": "3.3.3",
+      "installed": "3.3.3",
+      "requires_python": ">=3.9"
+    },
+    "pytest": {
+      "pinned": "9.1.1",
+      "installed": "9.1.1",
+      "requires_python": ">=3.10"
+    },
+    "python-dateutil": {
+      "pinned": "3.0.0",
+      "installed": "3.0.0",
+      "requires_python": "!=3.0.*,!=3.1.*,!=3.2.*,>=2.7"
+    },
+    "pyzmq": {
+      "pinned": "27.2.0",
+      "installed": "27.2.0",
+      "requires_python": ">=3.9"
+    },
+    "referencing": {
+      "pinned": "0.37.0",
+      "installed": "0.37.0",
+      "requires_python": ">=3.10"
+    },
+    "rpds-py": {
+      "pinned": "2026.9.1",
+      "installed": "2026.9.1",
+      "requires_python": ">=3.11"
+    },
+    "scikit-learn": {
+      "pinned": "1.9.1",
+      "installed": "1.9.1",
+      "requires_python": ">=3.11"
+    },
+    "scipy": {
+      "pinned": "1.18.1",
+      "installed": "1.18.1",
+      "requires_python": ">=3.12"
+    },
+    "setuptools": {
+      "pinned": "84.2.1",
+      "installed": "84.2.1",
+      "requires_python": ">=3.10"
+    },
+    "six": {
+      "pinned": "1.17.0",
+      "installed": "1.17.0",
+      "requires_python": ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*"
+    },
+    "stack-data": {
+      "pinned": "0.6.3",
+      "installed": "0.6.3",
+      "requires_python": null
+    },
+    "sympy": {
+      "pinned": "1.14.0",
+      "installed": "1.14.0",
+      "requires_python": ">=3.9"
+    },
+    "tensorboard": {
+      "pinned": "2.21.0",
+      "installed": "2.21.0",
+      "requires_python": ">=3.9"
+    },
+    "tensorboard-data-server": {
+      "pinned": "0.7.2",
+      "installed": "0.7.2",
+      "requires_python": ">=3.7"
+    },
+    "threadpoolctl": {
+      "pinned": "3.7.0",
+      "installed": "3.7.0",
+      "requires_python": ">=3.9"
+    },
+    "torch": {
+      "pinned": "2.14.1",
+      "installed": "2.14.1",
+      "requires_python": ">=3.10"
+    },
+    "torchvision": {
+      "pinned": "0.29.1",
+      "installed": "0.29.1",
+      "requires_python": ">=3.10,!=3.14.1"
+    },
+    "tornado": {
+      "pinned": "6.6",
+      "installed": "6.6",
+      "requires_python": ">= 3.11"
+    },
+    "traitlets": {
+      "pinned": "5.16.1",
+      "installed": "5.16.1",
+      "requires_python": ">=3.10"
+    },
+    "typing_extensions": {
+      "pinned": "4.16.0",
+      "installed": "4.16.0",
+      "requires_python": ">=3.9"
+    },
+    "tzdata": {
+      "pinned": "2026.5",
+      "installed": "2026.5",
+      "requires_python": ">=2"
+    },
+    "wcwidth": {
+      "pinned": "0.9.3",
+      "installed": "0.9.4",
+      "requires_python": ">=3.9"
+    },
+    "Werkzeug": {
+      "pinned": "3.1.9",
+      "installed": "3.1.9",
+      "requires_python": ">=3.9"
+    }
+  },
+  "gpu_environment": {
+    "python": "3.13.15 (main, Aug  6 2026, 11:06:22) [GCC 13.3.0]",
+    "torch": "2.11.0+cu128",
+    "torchvision": "0.26.0+cu128",
+    "device": "cuda",
+    "platform": "Linux-6.18.55+-x86_64-with-glibc2.39",
+    "cpu_count": 4,
+    "device_name": "Tesla T4",
+    "cuda": "12.8",
+    "cudnn": 91900,
+    "timing_policy": "synchronized train/validation passes; fit wall includes logging/checkpoint I/O"
+  },
+  "gpu_requirements": "requirements-gpu.txt",
+  "gpu_python_support": "3.13.15 verified in original run; complete GPU Requires-Python lower-bound audit not recorded",
+  "note": "GPU direct pins copied from actual freeze; full remote freeze preserved in each run. No new environment installation or training claimed."
+}

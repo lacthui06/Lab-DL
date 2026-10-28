@@ -50,10 +50,13 @@ class NotebookReviewTests(unittest.TestCase):
         for row in costs.itertuples():
             total = row.feature_extraction_seconds + row.all_head_trials_fit_seconds
             if row.stage == 'finetune':
-                total += row.selected_stage_fit_seconds
+                trials = self.run_dir/row.model/'finetune_search_results.csv'
+                total += (pd.read_csv(trials).train_seconds.sum() if trials.exists()
+                          else row.selected_stage_fit_seconds)
             self.assertAlmostEqual(row.pipeline_training_seconds, total, places=8)
         fine = costs[costs.stage == 'finetune']
-        self.assertEqual(set(fine.execution), {'full_image_forward', 'cached_frozen_prefix'})
+        expected = set(pd.read_csv(self.run_dir/'comparison.csv').query("stage == 'finetune'").execution)
+        self.assertEqual(set(fine.execution), expected)
 
     def test_views_import_without_training_dependencies(self):
         result = subprocess.run([sys.executable, '-X', 'utf8', '-c',
@@ -99,9 +102,10 @@ class NotebookReviewTests(unittest.TestCase):
                 self.assertTrue((path.parent/target).exists(), f'{path.name}: {target}')
 
     def test_historical_snapshots_have_no_changes_beyond_git_newlines(self):
+        historical = ROOT / json.loads((ROOT/'outputs/selected_run.json').read_text())['historical_run']
         for prefix in ['', 'resume_', 'delivery_']:
-            hashes = json.loads((self.run_dir / f'{prefix}source_hashes.json').read_text())
-            audit = audit_snapshot(self.run_dir / f'{prefix}source_snapshot', hashes)
+            hashes = json.loads((historical / f'{prefix}source_hashes.json').read_text())
+            audit = audit_snapshot(historical / f'{prefix}source_snapshot', hashes)
             self.assertEqual(audit['byte_exact_files'] + len(audit['newline_only_files']), len(hashes))
 
     def test_snapshot_audit_marks_newline_conversion_and_rejects_content_changes(self):
@@ -156,7 +160,8 @@ def test_learning_plot_separates_stages_and_preserves_original_histories(tmp_pat
     assert len(paths) == 2 and all(p.exists() for p in paths)
     for axes in inspected:
         assert len(axes) == 4
-        assert all('HEAD ONLY' in title and '5/5 epochs' in title for title, _ in axes[:2])
-        assert all('FINE-TUNE' in title and '2/2 epochs' in title for title, _ in axes[2:])
-        assert all(labels == ['Train', 'Validation'] for _, labels in axes)
+        cfg = json.loads((run/'config.json').read_text())
+        assert all('HEAD ONLY' in title and f"/{cfg['head_epochs']} epochs" in title for title, _ in axes[:2])
+        assert all('FINE-TUNE' in title and f"/{cfg['finetune_epochs']} epochs" in title for title, _ in axes[2:])
+        assert all(labels[:2] == ['Train', 'Validation'] for _, labels in axes)
     assert all(hashlib.sha256(p.read_bytes()).hexdigest() == h for p, h in histories.items())
