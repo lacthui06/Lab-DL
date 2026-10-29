@@ -124,6 +124,23 @@ Run cũ: Windows CPU, CPython 3.13.3, torch 2.14.1+cpu, torchvision 0.29.1+cpu, 
 
 Đợt sửa này chỉ chạy lại các view từ artifact, không train full CPU theo [AGENTS 1.5](../../.agents/AGENTS.md). Thí nghiệm mới thực thi trên GPU sau sanity overfit và test gradient/shape. Profile CPU và GPU báo cáo riêng.
 
+### 1.7. Roadmap tiếp tục — rà soát ngày 29/10/2026
+
+Mốc xuất phát: local và remote branch lab02 cùng commit 12171a4e1a5f471f81f1f6dd6b4a64e6da662d07, đã đối chiếu bằng git ls-remote ngày 29/10. Đã đọc lại đề, README, registry, config completed, model/data pipeline và logic gộp báo cáo. Bộ 59 test là bằng chứng lần chạy ngày 28/10, chưa được chạy lại trong lượt nghiên cứu này. Roadmap dưới đây là kế hoạch, không phải yêu cầu tự khởi động huấn luyện.
+
+| Giai đoạn | Đầu vào và việc thực hiện | Đầu ra | Tiêu chí nghiệm thu / trạng thái |
+|---|---|---|---|
+| 1. Dữ liệu và xác thực | Raw CIFAR-10, split khóa và manifest hiện có; giữ nguyên seed/split | Data contract và bằng chứng membership | Đã có: 45.000/5.000/10.000, các nhóm dùng cùng index; không cần tải hoặc train lại |
+| 2. Preprocess và features | Giữ preprocess 224×224 của GPU; nếu mở nghiên cứu overfit thì thiết kế augmentation chỉ cho train, val/test deterministic | Đặc tả transform và kiểm thử data/cache | Hiện tại đã có deterministic pipeline; nhánh augmentation là tùy chọn chưa thực hiện, không dùng cache cố định như thể augmentation được áp dụng mỗi epoch |
+| 3. Baseline và môi trường | Bảo toàn head-only cùng 18 fine-trial; audit Requires-Python GPU và kiểm chứng môi trường mới trước training tiếp | Môi trường cài đặt có kiểm chứng và baseline nguyên trạng | Ưu tiên tiếp theo: import/test/sanity đạt, ghi snapshot; không coi cài lock Windows là tái lập GPU |
+| 4. Mô hình và thí nghiệm tùy chọn | Chỉ khi tiếp tục nghiên cứu chất lượng: so control với một thay đổi augmentation, giữ LR/depth/seed/budget còn lại; chưa đổi đồng thời dropout/weight decay | Thí nghiệm nhỏ đã đặc tả và dự toán bằng đo runtime thực | Chưa chạy; phải chốt ngân sách trước khi gửi GPU; không mở lại grid 26 trial hoặc restart 18 trial mặc định |
+| 5. Đánh giá và phân tích lỗi | Chọn cấu hình bằng validation, kiểm tra train–val gap/loss, cat↔dog, fit time và VRAM; test sau khi khóa lựa chọn | So sánh có đối chứng và nhận xét inline | Không hứa accuracy tăng; một seed chưa đủ chứng minh ưu thế. Nếu nghiên cứu độ ổn định thì lập ngân sách seed riêng |
+| 6. Đóng gói và bàn giao | Chạy checklist nộp bài, kiểm chứng clone sạch xem được notebook và inference với checkpoint local | Notebook, walkthrough và hướng dẫn tái lập thống nhất | Đã có notebook inline/registry và 59 test ở mốc trước; cần kiểm chứng môi trường sạch trước khi tuyên bố tái lập hoàn toàn |
+
+Thứ tự: **bảo toàn dữ liệu/kết quả → kiểm chứng môi trường → đặc tả nhánh cải thiện tùy chọn → sanity → GPU nếu được yêu cầu → validation/test → cập nhật notebook/tài liệu**. Không cần tạo module mới trong bước nghiên cứu này; nếu triển khai, tái sử dụng src/data.py, models.py, experiment.py, tuning.py, reporting.py và merged_results.py cùng các test hiện có.
+
+Bản Lab02 hiện tại đáp ứng bài thực hành đã chốt; phần giảm overfit và nhiều seed là mở rộng nghiên cứu, không phải các trial còn thiếu. Không thay metric cũ, không tự train hoặc push từ roadmap này.
+
 ## 2. FULL-FLOW EXPERIMENT LINEAGE & CHANGELOG
 
 ### 2.1. Flow Comparison Matrix
