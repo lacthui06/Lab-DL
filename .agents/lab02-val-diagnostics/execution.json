@@ -1,0 +1,56 @@
+{
+  "run": "/Users/mac/Desktop/DEEP-V2/Lab-DL/labs/lab02/outputs/runs/20261027T083044Z_cifar10_macintel_cpu_control64_db231b28",
+  "split": "validation",
+  "device": "cpu",
+  "before_sha256": {
+    "labs/lab02/outputs/runs/20261027T083044Z_cifar10_macintel_cpu_control64_db231b28/config.json": "f542d6da28e4618e4b06e3cb65874a4d951adcc767ad273707246bc195ba34cc",
+    "labs/lab02/outputs/runs/20261027T083044Z_cifar10_macintel_cpu_control64_db231b28/selected_indices.npz": "961b8fd1cf7ff9de6a9a4bbf6f4ba960df1f884b2e0d360007537cabaa6ada43",
+    "labs/lab02/outputs/selected_run.json": "2bc088abe6cfaf83cb4a44ed0b6d68587bfd851ef0b335850e05b18002b66534",
+    "labs/lab02/outputs/runs/20261027T083044Z_cifar10_macintel_cpu_control64_db231b28/resnet18/finetune/best.pt": "73624df7555bb8018cdcbffbb32a876f3fd8132bd77f8a167b1a25a2747dc904",
+    "labs/lab02/outputs/runs/20261027T083044Z_cifar10_macintel_cpu_control64_db231b28/resnet18/finetune/history.csv": "16dab24df520dfca3e2f1fec0d63f4c9732f9bba91975fe568036cc4ef4e8239",
+    "labs/lab02/outputs/runs/20261027T083044Z_cifar10_macintel_cpu_control64_db231b28/resnet18/finetune/config.json": "f65934f9a802ad219c1604ffec384d6073d655f5370ebaf02770706d8991dd70",
+    "labs/lab02/outputs/runs/20261027T083044Z_cifar10_macintel_cpu_control64_db231b28/densenet121/finetune/best.pt": "72dc5153bf908d7d7f08b229f82022a130c15249a8b55a4c4752696b74744239",
+    "labs/lab02/outputs/runs/20261027T083044Z_cifar10_macintel_cpu_control64_db231b28/densenet121/finetune/history.csv": "4aa7d3085071f1234929885afdf3d26e878f4278369142e40b0c583d3caaa37f",
+    "labs/lab02/outputs/runs/20261027T083044Z_cifar10_macintel_cpu_control64_db231b28/densenet121/finetune/config.json": "4e034bbbad9cfb7bd1e6bd5f7064e857a4d5eab999315c59aa7db01f8af80d58"
+  },
+  "models": {
+    "resnet18": {
+      "samples": 5000,
+      "accuracy": 0.842,
+      "loss": 0.49228437809122916,
+      "macro_precision": 0.8413442904364168,
+      "macro_recall": 0.842,
+      "macro_f1": 0.8413609024275146,
+      "selected_epoch": 9,
+      "history_difference": {
+        "accuracy": 0.0,
+        "loss": 6.142986952450968e-09
+      },
+      "wrong_images": 790,
+      "wrong_mean_predicted_probability": 0.7111979126930237,
+      "wrong_median_predicted_probability": 0.7194895148277283,
+      "wrong_median_top2_margin": 0.5102726221084595
+    },
+    "densenet121": {
+      "samples": 5000,
+      "accuracy": 0.83,
+      "loss": 0.5180458510427328,
+      "macro_precision": 0.8321038070297625,
+      "macro_recall": 0.8299999999999998,
+      "macro_f1": 0.830635370815364,
+      "selected_epoch": 10,
+      "history_difference": {
+        "accuracy": 0.0,
+        "loss": 1.3379903851529207e-09
+      },
+      "wrong_images": 850,
+      "wrong_mean_predicted_probability": 0.6800530552864075,
+      "wrong_median_predicted_probability": 0.6715190410614014,
+      "wrong_median_top2_margin": 0.4268791079521179
+    }
+  },
+  "protected_inputs_unchanged": true,
+  "elapsed_seconds": 73.7651303790044,
+  "torch_version": "2.2.2",
+  "python_version": "3.12.7 (v3.12.7:0b05ead877f, Sep 30 2024, 23:18:00) [Clang 13.0.0 (clang-1300.0.29.30)]"
+}

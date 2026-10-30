@@ -1,0 +1,11 @@
+true_class,predicted_class,count,percent_true_class
+dog,cat,67,13.4
+cat,dog,61,12.2
+horse,deer,38,7.6
+ship,airplane,32,6.4
+bird,deer,30,6.0
+frog,cat,30,6.0
+horse,dog,28,5.6
+truck,automobile,28,5.6
+automobile,truck,27,5.4
+deer,cat,23,4.6

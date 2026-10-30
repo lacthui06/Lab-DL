@@ -1,0 +1,7 @@
+{
+  "model": "resnet18",
+  "stage": "finetune",
+  "batch_size": 64,
+  "lr": 0.0001,
+  "execution": "full_image_forward"
+}

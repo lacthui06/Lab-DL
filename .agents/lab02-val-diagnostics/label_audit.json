@@ -1,0 +1,41 @@
+{
+  "audited_indices": [
+    49425,
+    21538,
+    11562,
+    12210,
+    20178,
+    8922,
+    43123,
+    49472,
+    25869,
+    18566
+  ],
+  "official_train_batch_integrity": {
+    "data_batch_1": {
+      "expected_md5": "c99cafc152244af753f735de768cd75f",
+      "actual_md5": "c99cafc152244af753f735de768cd75f"
+    },
+    "data_batch_2": {
+      "expected_md5": "d4bba439e000b95fd0a9bffe97cbabec",
+      "actual_md5": "d4bba439e000b95fd0a9bffe97cbabec"
+    },
+    "data_batch_3": {
+      "expected_md5": "54ebc095f3ab1f0389bbae665268c751",
+      "actual_md5": "54ebc095f3ab1f0389bbae665268c751"
+    },
+    "data_batch_4": {
+      "expected_md5": "634d18415352ddfa80567beed471001a",
+      "actual_md5": "634d18415352ddfa80567beed471001a"
+    },
+    "data_batch_5": {
+      "expected_md5": "482c414d41f54cd18b22e5b47cb7c3cb",
+      "actual_md5": "482c414d41f54cd18b22e5b47cb7c3cb"
+    }
+  },
+  "class_names_match": true,
+  "split_sha256": "961b8fd1cf7ff9de6a9a4bbf6f4ba960df1f884b2e0d360007537cabaa6ada43",
+  "loader_and_prediction_labels_match_original": true,
+  "labels_modified": false,
+  "note": "Filename and label agree by source; semantic correctness requires human review."
+}

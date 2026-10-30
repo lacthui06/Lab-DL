@@ -1,0 +1,17 @@
+{
+  "samples": 5000,
+  "accuracy": 0.83,
+  "loss": 0.5180458510427328,
+  "macro_precision": 0.8321038070297625,
+  "macro_recall": 0.8299999999999998,
+  "macro_f1": 0.830635370815364,
+  "selected_epoch": 10,
+  "history_difference": {
+    "accuracy": 0.0,
+    "loss": 1.3379903851529207e-09
+  },
+  "wrong_images": 850,
+  "wrong_mean_predicted_probability": 0.6800530552864075,
+  "wrong_median_predicted_probability": 0.6715190410614014,
+  "wrong_median_top2_margin": 0.4268791079521179
+}

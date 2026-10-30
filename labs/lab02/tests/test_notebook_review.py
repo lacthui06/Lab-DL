@@ -165,6 +165,27 @@ def test_context_and_notebook_bootstrap_with_missing_cwd(tmp_path, monkeypatch):
         exec(bootstrap, {})
 
 
+def test_architecture_labels_match_each_saved_unfreeze_depth(tmp_path, monkeypatch):
+    from src import notebook_views as view
+    expected = {
+        'last_units': ('layer4.1 + fc', 'denseblock4.denselayer13–16 + norm5 + classifier'),
+        'last_block': ('layer4 + fc', 'denseblock4 + norm5 + classifier'),
+        'last_two_blocks': ('layer3 + layer4 + fc',
+                            'denseblock3 + transition3 + denseblock4 + norm5 + classifier'),
+    }
+    displayed = []
+    monkeypatch.setattr(view, 'display', displayed.append)
+    for depth, labels in expected.items():
+        pd.DataFrame([
+            dict(model=model, stage=stage, total=100, trainable=10, unfreeze=depth)
+            for model in ('resnet18', 'densenet121') for stage in ('head', 'finetune')
+        ]).to_csv(tmp_path / 'comparison.csv', index=False)
+        view.architecture_summary(tmp_path)
+        table = displayed.pop()
+        assert table.loc[table.stage == 'head', 'unfrozen_blocks'].tolist() == ['classifier'] * 2
+        assert table.loc[table.stage == 'finetune', 'unfrozen_blocks'].tolist() == list(labels)
+
+
 def test_unexecuted_fine_grid_is_explanatory_table_not_results(tmp_path, monkeypatch):
     from src import notebook_views as view
     tables = []

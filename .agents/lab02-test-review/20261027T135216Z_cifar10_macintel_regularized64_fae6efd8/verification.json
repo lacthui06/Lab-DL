@@ -1,0 +1,77 @@
+{
+  "run": "/Users/mac/Desktop/DEEP-V2/Lab-DL/labs/lab02/outputs/runs/20261027T135216Z_cifar10_macintel_regularized64_fae6efd8",
+  "results": [
+    {
+      "model": "resnet18",
+      "stage": "head_selected",
+      "metrics": {
+        "test_samples": 10000,
+        "accuracy": 0.7522,
+        "macro_f1": 0.7498787322077767,
+        "macro_precision": 0.7518667702263333,
+        "macro_recall": 0.7522,
+        "loss": 0.7151814699172974
+      },
+      "checkpoint_sha256": "ca825581e68661a6c0974349cf3a6419afe8898e5dd25894eb66d159dc8196cc",
+      "previous_probability_max_error": 6.854534149169922e-07,
+      "same_argmax_predictions": true,
+      "roundtrip_samples": 8,
+      "roundtrip_max_error": 0.0,
+      "roundtrip_passed": true
+    },
+    {
+      "model": "resnet18",
+      "stage": "finetune",
+      "metrics": {
+        "test_samples": 10000,
+        "accuracy": 0.8049,
+        "macro_f1": 0.8042630131168771,
+        "macro_precision": 0.8073570226631386,
+        "macro_recall": 0.8049,
+        "loss": 0.5632314085960388
+      },
+      "checkpoint_sha256": "ab6f265cbef47c8cca9e25896480fa462ee9ff6a8cac40291608b45ad599afb0",
+      "previous_probability_max_error": 9.5367431640625e-07,
+      "same_argmax_predictions": true,
+      "roundtrip_samples": 8,
+      "roundtrip_max_error": 0.0,
+      "roundtrip_passed": true
+    },
+    {
+      "model": "densenet121",
+      "stage": "head_selected",
+      "metrics": {
+        "test_samples": 10000,
+        "accuracy": 0.7824,
+        "macro_f1": 0.7821819136116955,
+        "macro_precision": 0.7855249631009247,
+        "macro_recall": 0.7824,
+        "loss": 0.6194360852241516
+      },
+      "checkpoint_sha256": "702df9bc733ed09d3773baabee68f6c7220baaaa3d69cf63069643730e0d9a9b",
+      "previous_probability_max_error": 1.2516975402832031e-06,
+      "same_argmax_predictions": true,
+      "roundtrip_samples": 8,
+      "roundtrip_max_error": 0.0,
+      "roundtrip_passed": true
+    },
+    {
+      "model": "densenet121",
+      "stage": "finetune",
+      "metrics": {
+        "test_samples": 10000,
+        "accuracy": 0.801,
+        "macro_f1": 0.7999832734764751,
+        "macro_precision": 0.8039401603428115,
+        "macro_recall": 0.8009999999999999,
+        "loss": 0.5624805092811584
+      },
+      "checkpoint_sha256": "a2eecacfd0c835508a1f5345884124281a7f2ecd5f4c24fd4990d076e613f19b",
+      "previous_probability_max_error": 7.748603820800781e-07,
+      "same_argmax_predictions": true,
+      "roundtrip_samples": 8,
+      "roundtrip_max_error": 0.0,
+      "roundtrip_passed": true
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+index,batch,row_zero_based,original_filename,source_label_id,source_label,pixel_sha256,loader_pixels_match,validation_member,resnet18_prediction,resnet18_p_predicted,densenet121_prediction,densenet121_p_predicted
+49425,data_batch_5,9425,dump_truck_s_000294.png,9,truck,7d5b60aa8ab3b6f9a92cccf6dfebde0f2c99ad07d3eca1b37a1ca66928c0cc06,True,True,bird,0.9999516,bird,0.99895096
+21538,data_batch_3,1538,automobile_s_001273.png,1,automobile,61dd2683858d1fc108e0d73c28c221b88a9b80f3c8d5ed7cde4d00aa6c9a2c08,True,True,cat,0.96422845,cat,0.63130265
+11562,data_batch_2,1562,muntjac_s_001378.png,4,deer,36c5920eb3883e04d7a382caed595a2eb4713f7690d291bacaceb213b07ad75e,True,True,dog,0.99990165,dog,0.9871055
+12210,data_batch_2,2210,automobile_s_000275.png,1,automobile,055763e04f038fe12ac7eeed1567533db12fc3ee099e941d70e98b19001b2b2f,True,True,airplane,0.65680325,frog,0.9196089
+20178,data_batch_3,178,maltese_s_001237.png,5,dog,afd877bc8c920b822e497741d6db830347f7b5d71d32e86a48fe2f77e067bab6,True,True,bird,0.99994624,bird,0.9992592
+8922,data_batch_1,8922,cargo_vessel_s_000864.png,8,ship,be2b89f40763ff4e85f0ce887a473b61152ff3a9e106b917aaf51a1e46b01702,True,True,deer,0.9856426,deer,0.9900199
+43123,data_batch_5,3123,house_cat_s_002050.png,3,cat,47eede2251257d101eabf4a41ddc35b7fa9776995568a373b4e677bee87226b1,True,True,truck,0.9994271,truck,0.9931172
+49472,data_batch_5,9472,mutt_s_000796.png,5,dog,2c2395ca839832e20661db2ffdf6c0f54302e8017e8d2110c4809a8e65b2e0cb,True,True,horse,0.5132976,airplane,0.99729806
+25869,data_batch_3,5869,cabin_cruiser_s_000050.png,8,ship,12ac71e2d72974fbec9561c29593fd4860a40d1bbd0bbb74dd052b5c583a0e8c,True,True,ship,0.9944463,dog,0.765787
+18566,data_batch_2,8566,rangifer_tarandus_s_000663.png,4,deer,73c377fdd7f1427c64db02596d66dbe6f4a65a645b38fe295ec51b6e216e1645,True,True,truck,0.5741294,truck,0.9492112

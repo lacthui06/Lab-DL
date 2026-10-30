@@ -160,6 +160,17 @@ def duplicate_audit(images: dict, labels: dict, indices: dict) -> tuple[pd.DataF
     return pd.DataFrame(checks), pd.DataFrame(suspects, columns=columns)
 
 
+def annotate_correlation(ax, values) -> None:
+    """Label each correlation cell with two decimals and readable text contrast."""
+    matrix = np.asarray(values)
+    heatmap = ax.images[-1]
+    for (row, col), value in np.ndenumerate(matrix):
+        red, green, blue, _ = heatmap.cmap(heatmap.norm(value))
+        luminance = .299 * red + .587 * green + .114 * blue
+        ax.text(col, row, f'{value:.2f}', ha='center', va='center',
+                color='white' if luminance < .5 else 'black', fontsize=8)
+
+
 def save(fig, output: Path, name: str) -> None:
     """Save artifact; notebook gallery displays it separately without duplicate output."""
     fig.tight_layout()
@@ -233,6 +244,7 @@ def build(root: Path, data_dir: Path | None = None) -> Path:
     fig, ax = plt.subplots(figsize=(7,4.8))
     corr = frame.select_dtypes('number').drop(columns=['original_index','label']).corr()
     im = ax.imshow(corr, vmin=-1, vmax=1, cmap='coolwarm')
+    annotate_correlation(ax, corr)
     ax.set(xticks=range(len(corr)), yticks=range(len(corr)), xticklabels=corr.columns, yticklabels=corr.columns)
     ax.tick_params(axis='x', rotation=70); fig.colorbar(im, ax=ax)
     save(fig, output, 'feature_correlation')
@@ -242,6 +254,7 @@ def build(root: Path, data_dir: Path | None = None) -> Path:
     pd.DataFrame(similarity, index=CLASSES, columns=CLASSES).to_csv(output / 'class_similarity_matrix.csv')
     fig, ax = plt.subplots(figsize=(8,5))
     im=ax.imshow(similarity, vmin=-1, vmax=1, cmap='coolwarm')
+    annotate_correlation(ax, similarity)
     ax.set(xticks=range(10),yticks=range(10),xticklabels=CLASSES,yticklabels=CLASSES,title='Correlation of class mean images (train only)')
     ax.tick_params(axis='x', rotation=50); fig.colorbar(im,ax=ax)
     save(fig,output,'class_similarity')

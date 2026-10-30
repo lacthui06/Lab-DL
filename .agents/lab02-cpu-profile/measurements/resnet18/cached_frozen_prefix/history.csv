@@ -1,0 +1,2 @@
+epoch,train_loss,train_accuracy,val_loss,val_accuracy,epoch_seconds,train_pass_seconds,validation_seconds,train_images_per_second,lr_group_0,lr_group_1
+1,1.727022409439087,0.384375,1.7362937450408935,0.3125,2.608860601991182,2.4810997640015557,0.1277539050206542,257.9501273128164,1e-05,0.0001
