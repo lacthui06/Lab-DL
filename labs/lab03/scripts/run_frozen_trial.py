@@ -201,7 +201,7 @@ def run(config, root=ROOT, allow_cpu_fixture=False, device='auto'):
             'checkpoint_selection': 'validation_loss', 'source_commit': json.loads((out/'source_commit.json').read_text())['commit']}, indent=2))
     with zipfile.ZipFile(destination/f'lab03_checkpoint_{out.name}.zip', 'w', zipfile.ZIP_DEFLATED) as z:
         for p in (out/'best_model').rglob('*'):
-            if p.is_file(): z.write(p, p.relative_to(out))
+            if p.is_file(): z.write(p, p.relative_to(out).as_posix())
     print('Review ZIP:', bundle)
     return out
 

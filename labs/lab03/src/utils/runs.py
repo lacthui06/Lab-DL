@@ -69,7 +69,8 @@ def run_context(kind, config, root=ROOT):
                     raise
     finally:
         save_json(path / "status.json", {"status": status})
-        manifest = {str(p.relative_to(path)): hash_file(p)
+        # Manifest key luôn dùng dấu '/' để đọc được ở cả Windows lẫn Linux/Kaggle.
+        manifest = {p.relative_to(path).as_posix(): hash_file(p)
                     for p in sorted(path.rglob("*")) if p.is_file() and p.name != "manifest.json"}
         save_json(path / "manifest.json", manifest)
         # Khóa cập nhật registry để các run đồng thời không làm mất bản ghi.
