@@ -1,0 +1,15 @@
+{
+  "model": "resnet18",
+  "stage": "finetune",
+  "lr": 1.28186559305949e-06,
+  "batch_size": 128,
+  "unfreeze": "last_block",
+  "optimizer": "adamw",
+  "scheduler": "cosine",
+  "parameter_counts": {
+    "total": 11181642,
+    "trainable": 8398858
+  },
+  "head_sha256": "75dfc13f266573dcfaee08d5f49b28b275bd2902fda1c9fa1f53105823245c32",
+  "weight_decay": 0.0001
+}

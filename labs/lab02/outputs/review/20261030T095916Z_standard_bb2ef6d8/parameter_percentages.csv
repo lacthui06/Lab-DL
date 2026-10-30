@@ -1,0 +1,5 @@
+model,stage,total,trainable,frozen,unfrozen_pct,unfrozen_parts
+densenet121,finetune,6964106,2170378,4793728,31.165206273425476,denseblock4 + norm5 + classifier
+densenet121,head,6964106,10250,6953856,0.14718328526303304,classifier
+resnet18,finetune,11181642,8398858,2782784,75.11292169790448,layer4 + fc
+resnet18,head,11181642,5130,11176512,0.04587877165088992,classifier

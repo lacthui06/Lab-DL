@@ -13,6 +13,17 @@ import pandas as pd
 from IPython.display import HTML, Image, display
 
 
+def standard_parameter_summary(root):
+    """Display verified post-training scope evidence; never instantiate a model."""
+    root=Path(root)
+    run=root/json.loads((root/'outputs/selected_standard.json').read_text())['run']
+    review=root/'outputs/review'/run.name
+    frame=pd.read_csv(review/'parameter_percentages.csv')
+    display(frame.round({'unfrozen_pct':4}))
+    display(Image(filename=str(review/'parameter_percentages.png')))
+    return frame
+
+
 def context() -> tuple[Path, Path, Path]:
     """Resolve the lab, explicitly selected run, and presentation destination."""
     candidates = [Path(os.environ.get('LAB02_ROOT', '.')).resolve(),

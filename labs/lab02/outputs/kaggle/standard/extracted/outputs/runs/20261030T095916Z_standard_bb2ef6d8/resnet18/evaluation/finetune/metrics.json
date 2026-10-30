@@ -1,0 +1,8 @@
+{
+  "test_samples": 10000,
+  "accuracy": 0.9108,
+  "macro_f1": 0.910767505938793,
+  "macro_precision": 0.9111505272668085,
+  "macro_recall": 0.9108,
+  "loss": 0.28450305818314964
+}

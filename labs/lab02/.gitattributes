@@ -1,0 +1,2 @@
+# Preserve downloaded artifact bytes so recorded SHA256 remains meaningful.
+outputs/kaggle/standard/extracted/** -text

@@ -25,3 +25,9 @@ events.out.tfevents.*
 
 # Local descriptors from the earlier raw audit; not input data or submission evidence.
 outputs/eda/spatial_features.csv
+
+# Full studies and original notebook backups remain local.
+*.sqlite3
+*.sqlite
+*.db
+outputs/kaggle/standard/04_lab02_standard_kaggle_executed_original.ipynb

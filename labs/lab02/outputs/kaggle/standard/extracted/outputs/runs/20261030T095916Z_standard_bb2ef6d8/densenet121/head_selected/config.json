@@ -1,0 +1,11 @@
+{
+  "model": "densenet121",
+  "stage": "head",
+  "lr": 0.001,
+  "batch_size": 128,
+  "parameter_counts": {
+    "total": 6964106,
+    "trainable": 10250
+  },
+  "cached_features": true
+}

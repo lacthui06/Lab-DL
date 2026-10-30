@@ -1,0 +1,9 @@
+{
+  "status": "passed",
+  "zip_sha256": "37e52330a89f6cd3ad8807a74eb33acc85fd90224122533360915396fdda5c34",
+  "manifest_files_verified": 231,
+  "conditions_verified": 4,
+  "prediction_metrics_recomputed": true,
+  "loaded_full_test_matches": true,
+  "source_run": "outputs\\kaggle\\standard\\extracted\\outputs\\runs\\20261030T095916Z_standard_bb2ef6d8"
+}

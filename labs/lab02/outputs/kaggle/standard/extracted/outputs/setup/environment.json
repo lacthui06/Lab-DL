@@ -1,0 +1,12 @@
+{
+  "python": "3.13.15",
+  "device": "Tesla T4",
+  "libraries": {
+    "torch": "2.11.0+cu128",
+    "torchvision": "0.26.0+cu128",
+    "numpy": "2.1.3",
+    "pandas": "2.3.3",
+    "optuna": "4.9.0",
+    "tensorboard": "2.20.0"
+  }
+}

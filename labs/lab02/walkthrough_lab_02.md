@@ -1,5 +1,43 @@
 # Walkthrough & Full-Flow Technical Report — Lab 02
 
+## Kết quả notebook chuẩn hiện hành — shared LR, 3 trial mỗi model
+
+Run `20261030T095916Z_standard_bb2ef6d8` được thu hồi từ Kaggle cùng notebook có output. Dữ liệu đầu vào, split 45.000/5.000/10.000 và preprocessing ImageNet RGB 224×224 giữ nguyên. Thiết kế hiện hành: head cache feature và train 10 epoch; fine-tune 3 trial mỗi kiến trúc, LR chung, weight decay 1e-4, AdamW/cosine, tối đa 10 epoch; early stopping theo validation loss với min_delta 0.001, patience 3, min_epochs 4. ResNet mở layer4+fc, DenseNet mở block4+norm5+classifier, không augmentation/dropout. Các phần nói về 18 trial và hai block bên dưới thuộc thí nghiệm lịch sử, không thay cho kết quả run này.
+
+| Model | Điều kiện | Test accuracy | Test loss | Macro F1 | Macro precision | Macro recall |
+|---|---|---:|---:|---:|---:|---:|
+| ResNet18 | Head | 85,80% | 0,402405 | 0,857751 | 0,858018 | 0,858000 |
+| ResNet18 | Fine-tune | 91,08% | 0,284503 | 0,910768 | 0,911151 | 0,910800 |
+| DenseNet121 | Head | 88,05% | 0,344923 | 0,880326 | 0,880442 | 0,880500 |
+| DenseNet121 | Fine-tune | 92,39% | 0,255533 | 0,923764 | 0,924034 | 0,923900 |
+
+Fine-tune cải thiện 5,28 điểm phần trăm với ResNet và 4,34 điểm với DenseNet. DenseNet fine-tune hơn ResNet fine-tune 1,31 điểm phần trăm trong run này. Cả hai có 3 trial, nhưng khác kiến trúc/số tham số mở; một seed và ngân sách nhỏ không đủ khẳng định ưu thế tổng quát. Không so mức cải thiện trực tiếp với 9 candidate/model cũ để quy nguyên nhân cho riêng LR hoặc độ mở.
+
+### Lựa chọn và hội tụ
+
+ResNet chọn trial 0, LR 1,329291894316217e-5, checkpoint epoch 6, validation loss 0,263888; dừng sau 9 epoch. Train loss giảm 0,321185 → 0,043307 trong khi validation loss chững rồi tăng nhẹ lên 0,272298. DenseNet chọn trial 2, LR 0,0008146824972620024, checkpoint epoch 5, validation loss 0,247510; dừng sau 8 epoch. Train loss giảm 0,452199 → 0,005378 nhưng validation loss tăng lại lên 0,316948 sau checkpoint. Cả hai vẫn có dấu hiệu overfit; checkpoint tốt nhất khác epoch cuối. Accuracy cao không phủ nhận vấn đề loss hoặc confidence.
+
+### Phạm vi tham số mở
+
+| Model | Điều kiện | Tổng tham số | Trainable | Frozen | Unfrozen |
+|---|---|---:|---:|---:|---:|
+| ResNet18 | Head | 11.181.642 | 5.130 | 11.176.512 | 0,0459% |
+| ResNet18 | Fine-tune | 11.181.642 | 8.398.858 | 2.782.784 | 75,1129% |
+| DenseNet121 | Head | 6.964.106 | 10.250 | 6.953.856 | 0,1472% |
+| DenseNet121 | Fine-tune | 6.964.106 | 2.170.378 | 4.793.728 | 31,1652% |
+
+Các tỷ lệ được tính từ CSV parameter scope gốc, không train lại và không phải tỷ lệ số layer. Bảng/biểu đồ được bổ sung trực tiếp vào notebook chuẩn sau training; toàn bộ output Kaggle trước đó được giữ nguyên.
+
+![Phần trăm tham số mở](outputs/review/20261030T095916Z_standard_bb2ef6d8/parameter_percentages.png)
+
+### Nhầm lẫn và kiểm chứng
+
+Confusion matrix fine-tune cho thấy cat/dog vẫn là cặp khó: ResNet dog → cat 102 ảnh và cat → dog 79 ảnh; DenseNet tương ứng 72 và 64. Recall cat là 83,2% với ResNet và 84,6% với DenseNet. Macro F1 vẫn cần đọc cùng các metric theo lớp, không chỉ dựa accuracy tổng.
+
+ZIP đã kiểm tra CRC, 231 file trong manifest khớp SHA256. Cả bốn điều kiện có đủ 10.000 prediction; accuracy, Macro F1, cross-entropy và confusion được tính lại khớp artifact. Xác suất sau load model độc lập trên full test khớp tolerance. Đây là kiểm tra từ artifact đã lưu, không phải một lần training mới. Raw CIFAR10 không nằm trong ZIP nên chưa xác minh lại nhãn từ dữ liệu gốc trong lượt nhập này.
+
+Nguồn hiện hành: `outputs/selected_standard.json`; artifact nhập được giữ riêng dưới `outputs/kaggle/standard/extracted/`, không ghi đè EDA/run lịch sử local. Bản notebook tải về nguyên gốc được lưu trong `outputs/kaggle/standard/04_lab02_standard_kaggle_executed_original.ipynb`. Báo cáo import ở `outputs/review/20261030T095916Z_standard_bb2ef6d8/import_verification.json`.
+
 > **Lab Title:** Lab 02 — Transfer learning trên CIFAR-10
 > **Status:** Đã hoàn tất phạm vi cuối: 18 fine-trial, seed 42, Kaggle Versions 5/6/8. Báo cáo hiện hành dùng GPU 224×224; CPU 64×64 chỉ là lịch sử. Chỉnh sửa local sau commit c1b2d24 chưa push.
 > **Primary Objective:** So sánh chất lượng và chi phí của hai pretrained architectures, với bằng chứng không trộn giữa profile.

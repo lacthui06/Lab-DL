@@ -1,0 +1,11 @@
+{
+  "model": "resnet18",
+  "stage": "head",
+  "lr": 0.001,
+  "batch_size": 128,
+  "parameter_counts": {
+    "total": 11181642,
+    "trainable": 5130
+  },
+  "cached_features": true
+}

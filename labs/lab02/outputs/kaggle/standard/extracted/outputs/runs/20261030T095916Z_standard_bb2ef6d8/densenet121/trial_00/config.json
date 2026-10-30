@@ -1,0 +1,15 @@
+{
+  "model": "densenet121",
+  "stage": "finetune",
+  "lr": 1.329291894316217e-05,
+  "batch_size": 128,
+  "unfreeze": "last_block",
+  "optimizer": "adamw",
+  "scheduler": "cosine",
+  "parameter_counts": {
+    "total": 6964106,
+    "trainable": 2170378
+  },
+  "head_sha256": "2d937e9253d56a2d22034ccff28f8a7b6de36144c65adfa5dc8ff61c1904c140",
+  "weight_decay": 0.0001
+}

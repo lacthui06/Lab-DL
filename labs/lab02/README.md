@@ -1,5 +1,7 @@
 # Lab 02 — Transfer learning trên CIFAR-10
 
+**Kết quả notebook chuẩn mới đã thu hồi:** run `20261030T095916Z_standard_bb2ef6d8`, 3 trial/model, LR chung. ResNet head/fine-tune đạt 85,80%/91,08%; DenseNet đạt 88,05%/92,39% trên 10.000 ảnh test. Xem notebook 04 có output và phần đầu walkthrough; các số liệu 18 trial bên dưới là lịch sử. Registry chuẩn là `outputs/selected_standard.json`, tách khỏi `selected_run.json` lịch sử. Bảng % unfrozen đã thêm sau training từ CSV gốc, không train lại.
+
 ## Cấu trúc module hiện hành
 
 ```text
