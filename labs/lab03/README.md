@@ -62,7 +62,7 @@ labs/lab03/
 
 ## 4. Chạy notebook trên Kaggle hoặc local
 
-**Kaggle:** import notebook cần dùng từ nhánh code hiện tại, dùng session mới và bật Internet. Với modeling chọn GPU nếu có. Cell đầu tự clone repo nếu chưa có và tạo Python 3.12 riêng bằng uv. Không cần upload checkpoint cũ.
+**Kaggle:** import notebook cần dùng từ nhánh code hiện tại, dùng session mới và bật Internet. Với modeling chọn GPU nếu có. Cell đầu tự clone repo nếu chưa có và tạo Python 3.12 riêng bằng uv. Không cần upload checkpoint cũ. Quy trình CLI đầy đủ (sinh gói kernel, push, thu hồi artifact) ở [KAGGLE_RUNBOOK](KAGGLE_RUNBOOK.md).
 
 **Local:** clone repo, cài requirements và dùng kernel Python 3.12 theo Mục 5. Mở notebook từ thư mục repo hoặc notebooks/.
 
