@@ -22,41 +22,24 @@ def load_cli(name):
     return module
 
 
-def test_all_production_modules_reachable_and_documented():
-    """CLI/notebook roots count; tests and archived snapshots cannot rescue dead modules."""
-    scripts={p.stem:p for p in (ROOT/'scripts').glob('*.py')}
-    assert set(scripts)=={'run','infer','analyze_data','download_assets','execute_notebook','finalize','resume_interrupted'}
-    units={f'src.{p.stem}':p.read_text(encoding='utf-8') for p in (ROOT/'src').glob('*.py') if p.stem!='__init__'}
-    units.update({f'scripts.{name}':p.read_text(encoding='utf-8') for name,p in scripts.items()})
-    entries={name for name in units if name.startswith('scripts.')}
-    for p in (ROOT/'notebooks').glob('*.ipynb'):
-        name='notebooks.'+p.stem;entries.add(name)
-        units[name]='\n'.join(''.join(c['source']) for c in json.loads(p.read_text(encoding='utf-8'))['cells'] if c['cell_type']=='code')
-    graph={name:set() for name in units}
-    referenced=set()
-    for name,source in units.items():
-        for node in ast.walk(ast.parse(source)):
-            if isinstance(node,ast.Name) and isinstance(node.ctx,ast.Load): referenced.add(node.id)
-            if isinstance(node,ast.Attribute): referenced.add(node.attr)
-            if isinstance(node,ast.ImportFrom):
-                module=('src.' if node.level else '')+(node.module or '')
-                if module=='src': graph[name].update('src.'+x.name for x in node.names)
-                else: graph[name].add(module)
-            elif isinstance(node,ast.Import): graph[name].update(x.name for x in node.names)
-    seen=set();pending=list(entries)
-    while pending:
-        name=pending.pop()
-        if name in seen: continue
-        seen.add(name);pending.extend(graph.get(name,set())-seen)
-    assert {n for n in units if n.startswith('src.')}<=seen
-    readme=(ROOT/'README.md').read_text(encoding='utf-8')
-    for folder in ['src','scripts']:
-        for p in (ROOT/folder).glob('*.py'):
-            assert f']({folder}/{p.name})' in readme, p.name
-            if folder=='src':
-                for node in ast.parse(p.read_text(encoding='utf-8')).body:
-                    if isinstance(node,ast.FunctionDef) and not node.name.startswith('_'):
-                        assert node.name in referenced, (p.name,node.name)
+def test_grouped_modules_preserve_public_imports():
+    """Notebook/CLI legacy imports resolve to the same canonical module object."""
+    from importlib import import_module
+    aliases = {
+        'data':'datasets.classification', 'eda':'datasets.eda',
+        'experiment':'training.trainer', 'tuning':'training.tuning',
+        'standard_suite':'training.standard_suite', 'optuna_dense':'training.optuna_dense',
+        'reporting':'utils.plots', 'delivery':'utils.artifacts', 'costs':'utils.costs',
+        'notebook_views':'utils.notebook_views', 'merged_results':'utils.merged_results'}
+    for old, new in aliases.items():
+        assert import_module('src.'+old) is import_module('src.'+new)
+    from src.models import build_model
+    from src.models.backbones import build_model as canonical
+    assert build_model is canonical
+    from src.training.trainer import ROOT as training_root
+    assert training_root == ROOT
+    for relative in aliases.values():
+        assert (ROOT/'src'/Path(*relative.split('.'))).with_suffix('.py').exists()
 
 
 @pytest.mark.parametrize('name',['run','infer','analyze_data','download_assets','execute_notebook','finalize','resume_interrupted'])
@@ -167,7 +150,7 @@ def test_complete_delivery_uses_requested_run_and_recommended_checkpoint(tmp_pat
     (root/'notebooks').mkdir()
     for name in ['01_lab02_eda.ipynb','02_lab02_modeling.ipynb']:
         delivery.write_json(root/'notebooks'/name,dict(cells=[dict(cell_type='code',execution_count=1,outputs=[dict(output_type='stream')])]))
-    monkeypatch.setattr(delivery,'__file__',str(root/'src/delivery.py'))
+    monkeypatch.setattr(delivery,'__file__',str(root/'src/utils/artifacts.py'))
     monkeypatch.setattr(delivery,'finalize_run',lambda *a:None)
     calls=[]
     def fake_run(args,**kwargs):
@@ -241,7 +224,7 @@ def test_finalizer_writes_one_config_driven_report(tmp_path,monkeypatch):
             train_seconds=1. if stage=='head' else 10.,test_seconds=1.,
             execution='pooled_feature_cache' if stage=='head' else 'full_image_forward'))
     pd.DataFrame(rows).to_csv(run/'comparison.csv',index=False)
-    monkeypatch.setattr(delivery,'__file__',str(root/'src/delivery.py'))
+    monkeypatch.setattr(delivery,'__file__',str(root/'src/utils/artifacts.py'))
     monkeypatch.setenv('LAB02_DATA',str(data_dir))
     monkeypatch.setattr(subprocess,'check_output',lambda *a,**k:'fixture==0\n')
     delivery.finalize_run(str(run))

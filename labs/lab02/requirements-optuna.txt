@@ -1,0 +1,2 @@
+# Install after the local or GPU base requirements.
+optuna>=4.0,<5

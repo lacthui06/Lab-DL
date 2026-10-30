@@ -393,3 +393,10 @@ README, Section 3 và cấu hình completed.json phản ánh kết quả hiện 
 Đã chạy notebook mặc định và kiểm chứng notebook với LAB02_RUN group 0 trong bộ nhớ: output đúng metric group 0, không ghi đè notebook mặc định. Không huấn luyện lại, không sửa metrics/history/checkpoints gốc; chưa commit/push các chỉnh sửa này. Kết quả kiểm thử cuối lưu ở outputs/review/fix_validation.json.
 
 Kiểm chứng sau sửa: **59/59 test đạt** trong 70,62 giây; hai cảnh báo deprecation TorchScript cũ. Notebook mặc định có 12 PNG/10 code cell, EDA 9 PNG/8 code cell, không output lỗi, tối đa 7 dòng/code cell. Notebook với LAB02_RUN group 0 cũng thực thi thành công trong bộ nhớ và hiển thị đúng test accuracy ResNet 91,37%. Báo cáo máy đọc: [fix_validation.json](outputs/review/fix_validation.json). Chưa cài lại môi trường GPU mới và chưa push.
+# Phạm vi cập nhật DenseNet Optuna — chưa có số liệu mới
+
+Triển khai mới tại `src/optuna_dense.py`, CLI `scripts/run_optuna.py`, cấu hình `config/optuna_dense.json`. Hai study LR chung/riêng, 5 trial mỗi study, tối đa 20 epoch/trial; AdamW và cosine. Mở toàn bộ denseblock4, norm5 và classifier; các phần trước đóng băng. Không thêm augmentation/dropout. BatchNorm running statistics giữ cố định.
+
+Objective, checkpoint và early stopping cùng theo validation loss: min_delta 0.001, patience 4, min_epochs 6. TPE có 2 startup trial, không pruning. Phạm vi LR log [1e-6, 1e-3], weight decay log [1e-7, 1e-3], batch 128; hai recipe dùng cùng checkpoint khởi tạo và split. Với ngân sách 5 trial, đây là khảo sát nhỏ, không khẳng định ưu thế thống kê.
+
+Roadmap mục tiêu nằm trong description. Notebook có cell đọc registry `outputs/selected_optuna.json`, không tự train. Run mới chỉ được chọn sau khi cả hai study và full-test/save-load hoàn tất. Các kết quả GPU/candidate trong phần lịch sử bên dưới chưa được thay bằng số liệu Optuna: chưa có lần chạy Kaggle mới hoàn tất; pipeline mặc định tự train head mới từ ImageNet pretrained. Không dùng số liệu cũ để tuyên bố kết quả mới hoặc giảm overfit.

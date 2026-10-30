@@ -1,5 +1,34 @@
 # Lab 02 — Transfer learning trên CIFAR-10
 
+## Cấu trúc module hiện hành
+
+```text
+src/
+├── datasets/
+│   ├── classification.py       # CIFAR10, transforms, DataLoader
+│   └── eda.py                  # Split, integrity, thống kê và hình EDA
+├── models/
+│   ├── __init__.py             # Public API: src.models
+│   └── backbones.py            # ResNet/DenseNet, freeze và feature extraction
+├── training/
+│   ├── trainer.py              # Loop chung, fit, predict; recipe lịch sử
+│   ├── tuning.py               # Optimizer, scheduler và selection utilities
+│   ├── standard_suite.py       # Bài chuẩn mới: 2 model, 3 trial/model, LR chung
+│   └── optuna_dense.py         # Thí nghiệm DenseNet shared/separate trước đó
+└── utils/
+    ├── artifacts.py            # IO, checksum, resolve path và handoff lịch sử
+    ├── plots.py                # Metrics, confusion, prediction và biểu đồ
+    ├── costs.py                # Bảng chi phí tính toán
+    ├── notebook_views.py       # Hiển thị notebook lịch sử
+    └── merged_results.py       # Gộp các nhóm GPU lịch sử
+```
+
+Các file `.py` tên cũ ngay dưới `src/` là alias tương thích vài dòng, không giữ bản sao logic. Ví dụ `src.standard_suite` và `src.training.standard_suite` trỏ cùng một module; notebook/CLI cũ vẫn import được. Module `src.models` nay là package nhưng public API giữ nguyên. Script trong `scripts/` vẫn là entry point, không di chuyển hoặc thay tên.
+
+Notebook chuẩn để chạy mới: [04_lab02_standard_kaggle.ipynb](notebooks/04_lab02_standard_kaggle.ipynb), dùng [standard.json](config/standard.json). Notebook 03 là thí nghiệm shared/separate trước đó; notebook 01/02 vẫn phục vụ EDA và kết quả GPU lịch sử. Xem [hướng dẫn outputs](outputs/README.md) để phân biệt các nhóm dữ liệu.
+
+Source ZIP đã upload là snapshot độc lập: sửa local không làm đổi phiên Kaggle đang chạy. Bộ ZIP đóng gói sau refactor có cả package mới và alias cũ. Không thay source giữa chừng một trial; dùng ZIP mới cho phiên mới. Bootstrap vẫn nhận các file alias `src/standard_suite.py`, `src/optuna_dense.py`, `src/notebook_views.py` để không gãy phép tìm source.
+
 **Đã hoàn tất 18 fine-tune trial (9/model), seed 42**, từ Kaggle Versions 5, 6, 8. So sánh ResNet18 và DenseNet121 pretrained ImageNet; head-only và fine-tune. Kết quả và nhận xét nằm trực tiếp trong hai notebook, không cần train lại để xem.
 
 | Model | Test accuracy | Test loss | Macro F1 | Fine epoch thực chạy / tối đa | Fit trial được chọn |
@@ -69,7 +98,7 @@ Mọi CLI dùng raw path: `--data-dir` nếu hỗ trợ → `LAB02_DATA` → `la
 | File | Caller và mục đích |
 |---|---|
 | [src/data.py](src/data.py) | experiment/infer: transforms và DataLoader, dùng eda.locked_split |
-| [src/models.py](src/models.py) | experiment/infer: ImageNet weights, classifier, freeze và cached tail |
+| [src/models/backbones.py](src/models/backbones.py) | experiment/infer: ImageNet weights, classifier, freeze và cached tail |
 | [src/tuning.py](src/tuning.py) | experiment/merged_results: grid, optimizer, scheduler, validation-only selection |
 | [src/costs.py](src/costs.py) | reporting/notebook_views/merged_results: chi phí và khuyến nghị validation |
 | [src/experiment.py](src/experiment.py) | run/resume: train/validation, checkpoint và test sau lựa chọn |
@@ -103,3 +132,21 @@ Có 11 file trong `src/` gồm `__init__.py`, 7 CLI. Snapshot huấn luyện đ�
 - [test_notebook_review.py](tests/test_notebook_review.py): metric/counts, notebook output và link; test snapshot CPU lịch sử dùng registry riêng, không phụ thuộc run hiện hành.
 - [test_merged_results.py](tests/test_merged_results.py): LAB02_RUN, đường dẫn registry chính xác, winner không cố định và phạm vi completed config.
 - [conftest.py](tests/conftest.py): Matplotlib Agg cho Windows/CI, không yêu cầu Tcl/Tk.
+# DenseNet Optuna update
+
+Kaggle entry point: `notebooks/03_lab02_optuna_kaggle.ipynb`. Upload the generated `outputs/kaggle_upload/lab02_optuna_source.zip` as a private Kaggle Dataset (no previous model output is required). Enable GPU and Internet. The notebook checks inputs, runs small tests, writes under `/kaggle/working`, executes the 10 trials and packages full/partial outputs. No credentials are embedded. Download the output ZIP and the executed notebook after saving the version. This entry point has been syntax-checked locally; end-to-end GPU execution is pending.
+
+The new fine-tuning scope compares shared versus separate backbone/head learning rates: 5 trials each, maximum 20 epochs, AdamW, cosine, full denseblock4 + norm5 + classifier. BatchNorm running statistics stay fixed. Selection, checkpoint saving and early stopping use validation loss with min_delta=0.001, patience=4, minimum 6 epochs. No augmentation, dropout or pruning is added.
+
+From the repository root:
+
+```powershell
+python -m pip install -r labs/lab02/requirements-optuna.txt
+python labs/lab02/scripts/run_optuna.py --dry-run
+python labs/lab02/scripts/run_optuna.py --device cuda
+```
+
+Install the base local/GPU requirements first. The default config trains a fresh head for 10 epochs at LR 0.001 from ImageNet pretrained weights, selecting by validation loss; provide CIFAR10 under data/ or LAB02_DATA. head_checkpoint=null enables this full pipeline. Execution fails before training when these inputs are missing. New results are not yet measured; the older results below must not be presented as Optuna evidence. Completed new runs register outputs/selected_optuna.json. Trials save SQLite studies, histories, checkpoints, TensorBoard and local logs; both winners are locked before test. Shared/separate evaluation includes OvR curves, count confusion matrices, prediction grids and full-test reload verification.
+# Canonical two-model notebook
+
+Use `notebooks/04_lab02_standard_kaggle.ipynb` for the latest agreed complete experiment: ResNet18 and DenseNet121 head/fine-tune (four conditions). Config is `config/standard.json`: cached-feature head training 10 epochs; 3 Optuna trials per model, shared LR only, fixed weight decay 1e-4, max 10 fine epochs, cosine, loss selection and patience=3/min_delta=0.001/min_epochs=4. Per-epoch live plots and per-trial tables are persisted. No augmentation/dropout/pruning. Source archive: `outputs/kaggle_upload/lab02_standard_source.zip`. Completed stages can be reused through `outputs/selected_standard.json`; interrupted trials do not support exact resume. Notebook 03 is the earlier DenseNet shared/separate experiment; do not restart an active run to switch recipes. Under-five-hour runtime is a target, not a measured guarantee.
