@@ -1,0 +1,9 @@
+{
+  "dataset": "CIFAR10",
+  "seed": 42,
+  "image_size": 64,
+  "normalization_mean": [0.485, 0.456, 0.406],
+  "normalization_std": [0.229, 0.224, 0.225],
+  "normalization_source": "ImageNet pretrained input contract; not estimated from CIFAR-10",
+  "augmentation": "none: deterministic transforms in the recorded experiment"
+}

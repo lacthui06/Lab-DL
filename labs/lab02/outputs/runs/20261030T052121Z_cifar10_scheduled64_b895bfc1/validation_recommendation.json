@@ -1,0 +1,13 @@
+{
+  "model": "densenet121",
+  "stage": "finetune",
+  "best_val_accuracy": 0.9186,
+  "best_val_loss": 0.2941300791978836,
+  "train_seconds": 20972.12507355398,
+  "execution": "full_image_forward",
+  "validation_accuracy": 0.9186,
+  "time_comparable": true,
+  "selection_policy": {},
+  "criterion": "validation accuracy/loss, selected-recipe cost only with matching execution policies",
+  "time_scope": "feature extraction + selected head + selected fine-tune; full search cost reported separately"
+}
