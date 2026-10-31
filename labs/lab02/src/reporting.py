@@ -162,21 +162,24 @@ def summarize_suite(run, cfg, selected):
         chosen=record.get('finetune',{})
         policies.append(f"- {name}: {chosen.get('optimizer','adamw')}; depth={chosen.get('unfreeze','last_block')}; backbone_lr={chosen.get('backbone_lr',cfg['finetune_backbone_lr'])}; head_lr={chosen.get('head_lr',cfg['finetune_head_lr'])}; scheduler={chosen.get('scheduler','none')}")
     fine_policy='\n'.join(policies)
+    augmentation = ('Fine-tune train dùng RandomCrop(32,padding=4,reflect), flip ngang p=0.5; '
+                    'head cache và validation/test không augmentation.' if cfg.get('train_augmentation') else
+                    'Không augmentation; preprocessing cố định.')
     report = f"""# Lab 02 — Transfer Learning trên CIFAR10
 
 ## 1. Mục tiêu
-Khảo sát ResNet18 và DenseNet121 pre-trained ImageNet, thay classifier thành 10 lớp, so sánh đóng băng backbone và fine-tune một/hai block cuối. Điều chỉnh learning rate/batch size, theo dõi bằng TensorBoard, đánh giá và lưu/tải model.
+Khảo sát ResNet18 và DenseNet121 pre-trained ImageNet, thay classifier thành 10 lớp, so sánh đóng băng backbone và fine-tune các module được cấu hình. Điều chỉnh learning rate/batch size, theo dõi bằng TensorBoard, đánh giá và lưu/tải model.
 
 ## 2. Dữ liệu và phạm vi thực nghiệm
 {scope}
 Profile: `{cfg['profile']}`. Train/validation/test thực tế: {len(selected['train']):,}/{len(selected['val']):,}/{len(selected['test']):,}. Seed: {cfg['seed']}.
 Split gốc 45.000/5.000 được tạo stratified; test giữ nguồn test chính thức. Khi chạy pilot, mỗi split được lấy tập con stratified riêng. Mỗi lớp có 4.500 train / 500 validation / 1.000 test khi dùng toàn bộ dữ liệu.
-Ảnh RGB gốc 32×32 được giữ màu. Đầu vào thực nghiệm là {cfg["image_size"]}×{cfg["image_size"]}; normalization dùng mean/std của weights IMAGENET1K_V1. Với 224×224, dùng trọn transforms chính thức; với 64×64, resize trực tiếp để phù hợp ngân sách CPU, không phải preprocessing mặc định của weights. Không augmentation trong thí nghiệm này để tái sử dụng feature đóng băng và giữ tiền xử lý nhất quán.
+Ảnh RGB gốc 32×32 được giữ màu. Đầu vào thực nghiệm là {cfg["image_size"]}×{cfg["image_size"]}; normalization dùng mean/std của weights IMAGENET1K_V1. Với 224×224, dùng trọn transforms chính thức; với 64×64, resize trực tiếp để phù hợp ngân sách CPU, không phải preprocessing mặc định của weights. {augmentation} Dropout classifier p={cfg.get('dropout', 0.)}.
 
 ## 3. Phương pháp
 Mỗi mô hình thay classifier bằng Linear 10 đầu ra. Head-only đóng băng backbone và cache feature train/val ở eval mode. Cache tương đương forward backbone cho đầu vào cố định; thời gian trích xuất được ghi riêng.
-Tìm learning rate {cfg['learning_rates']} và batch size {cfg['batch_sizes']}, {cfg['head_epochs']} epoch/candidate với {cfg.get('head_optimizer','adamw')}, weight_decay={cfg['weight_decay']}. Các candidate dùng cùng initial head và shuffle seed. Policy chọn candidate: {cfg.get('selection_policy', {'accuracy_tolerance':0,'loss_tolerance':0})}; accuracy band → validation loss band → fit time. Checkpoint trong mỗi trial chọn accuracy cao nhất, hòa chọn loss thấp hơn rồi epoch sớm hơn.
-Fine-tune: mọi candidate khởi tạo lại từ cùng selected head; cấu hình optimizer/LR/depth/scheduler được chọn chỉ bằng validation. Ngân sách tối đa {cfg['finetune_epochs']} epoch; stopping policy={cfg.get('early_stopping', 'fixed epoch budget')}. Số epoch thực chạy và stop_reason nằm trong training_summary.json; không suy ra hội tụ từ ngân sách. Trong mỗi trial, BatchNorm running statistics giữ cố định. Mở hai block DenseNet gồm denseblock3+transition3+denseblock4+norm5. Cache prefix chỉ hỗ trợ last block; cấu hình tuned tắt cache cho cả hai kiến trúc.
+Head dùng LR {cfg['learning_rates']} và batch size {cfg['batch_sizes']}, {cfg['head_epochs']} epoch/candidate với {cfg.get('head_optimizer','adamw')}, weight_decay={cfg['weight_decay']}; scheduler={cfg.get('head_scheduler','none')}. Một tổ hợp là một recipe, không tìm nhiều cấu hình. Các candidate dùng cùng initial head và shuffle seed. Policy chọn candidate: {cfg.get('selection_policy', {'accuracy_tolerance':0,'loss_tolerance':0})}; accuracy band → validation loss band → fit time. Checkpoint trong mỗi trial chọn accuracy cao nhất, hòa chọn loss thấp hơn rồi epoch sớm hơn.
+Fine-tune: mọi candidate khởi tạo lại từ cùng selected head; cấu hình optimizer/LR/depth/scheduler được chọn chỉ bằng validation. Ngân sách tối đa {cfg['finetune_epochs']} epoch; stopping policy={cfg.get('early_stopping', 'fixed epoch budget')}. Số epoch thực chạy và stop_reason nằm trong training_summary.json; không suy ra hội tụ từ ngân sách. BatchNorm running statistics giữ cố định. Depth và các LR thực chạy được ghi bên dưới; scheduled_tail của DenseNet mở block3 layer11–12,18–24, transition3, block4 layer1–4,13–16, norm5; ResNet mở layer4.1; cả hai mở classifier. Cosine_ratio giảm từng nhóm còn {cfg.get('scheduler_min_ratio',.1):.0%} LR đầu. Cache prefix chỉ hỗ trợ last block.
 {fine_policy}
 Toàn bộ fine-search: `finetune_search_results.csv`; xem `cost_comparison.csv` để phân biệt chi phí toàn search và selected recipe.
 

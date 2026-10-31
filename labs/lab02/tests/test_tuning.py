@@ -11,6 +11,54 @@ from src.models import build_model, configure_trainable, parameter_counts, train
 from src.tuning import fine_candidates, select_trial, make_optimizer, make_scheduler
 
 
+@pytest.mark.parametrize('name,expected', [('resnet18', 4725770), ('densenet121', 2921034)])
+def test_scheduled_recipe_parameters_and_backward(name, expected):
+    torch.set_num_threads(2)
+    torch.manual_seed(42)
+    model = build_model(name, pretrained=False, dropout=.2)
+    configure_trainable(model, name, 'finetune', 'scheduled_tail', max_fraction=.5)
+    assert parameter_counts(model)['trainable'] == expected
+    training_mode(model)
+    statistics = {n: b.clone() for n, b in model.named_buffers() if 'running_' in n}
+    output = model(torch.randn(2, 3, 64, 64))
+    assert output.shape == (2, 10) and torch.isfinite(output).all()
+    output.square().mean().backward()
+    for n, p in model.named_parameters():
+        assert (p.grad is not None) == p.requires_grad, n
+    for n, b in model.named_buffers():
+        if n in statistics:
+            assert torch.equal(b, statistics[n]), n
+    if name == 'densenet121':
+        assert model.features.denseblock3.denselayer11.conv1.weight.requires_grad
+        assert not model.features.denseblock3.denselayer10.conv1.weight.requires_grad
+        assert not model.features.denseblock3.denselayer13.conv1.weight.requires_grad
+    with pytest.raises(ValueError, match='limit'):
+        configure_trainable(model, name, 'finetune', 'scheduled_tail', max_fraction=.1)
+
+
+def test_ratio_schedule_and_resume_preserve_group_ratio():
+    parameters = [nn.Parameter(torch.ones(1)), nn.Parameter(torch.ones(1))]
+    optimizer = torch.optim.AdamW([{'params': [parameters[0]], 'lr': 1e-4},
+                                  {'params': [parameters[1]], 'lr': 1e-3}])
+    scheduler = make_scheduler(optimizer, 'cosine_ratio', 20)
+    for _ in range(10):
+        optimizer.step()
+        scheduler.step()
+    assert [g['lr'] for g in optimizer.param_groups] == pytest.approx([5.5e-5, 5.5e-4])
+    opt_state, sched_state = copy.deepcopy(optimizer.state_dict()), copy.deepcopy(scheduler.state_dict())
+    for _ in range(10):
+        optimizer.step()
+        scheduler.step()
+    expected = [g['lr'] for g in optimizer.param_groups]
+    assert expected == pytest.approx([1e-5, 1e-4])
+    optimizer.load_state_dict(opt_state)
+    scheduler.load_state_dict(sched_state)
+    for _ in range(10):
+        optimizer.step()
+        scheduler.step()
+    assert [g['lr'] for g in optimizer.param_groups] == pytest.approx(expected)
+
+
 @pytest.mark.parametrize('improves,expected,reason', [
     (False, 10, 'validation_loss_patience'),
     (True, 12, 'epoch_budget_exhausted'),
@@ -257,11 +305,12 @@ def test_one_batch_overfit_with_configurable_optimizer(name):
 
 
 @pytest.mark.parametrize('name', ['resnet18','densenet121'])
-def test_real_model_two_block_one_batch_overfit(name):
+@pytest.mark.parametrize('depth', ['last_two_blocks', 'scheduled_tail'])
+def test_real_model_two_block_one_batch_overfit(name, depth):
     torch.set_num_threads(2)
     torch.manual_seed(42)
     model=build_model(name,pretrained=False)
-    configure_trainable(model,name,'finetune','last_two_blocks')
+    configure_trainable(model,name,'finetune',depth)
     training_mode(model)
     x=torch.randn(2,3,64,64)
     y=torch.tensor([0,1])

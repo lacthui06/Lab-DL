@@ -1,7 +1,7 @@
 """Validated fine-tuning candidates and validation-only quality/cost selection."""
 import math
 
-DEPTHS = ('last_block', 'last_two_blocks', 'last_units')
+DEPTHS = ('last_block', 'last_two_blocks', 'last_units', 'scheduled_tail')
 OPTIMIZERS = ('adamw', 'sgd')
 
 
@@ -49,8 +49,8 @@ def fine_candidates(cfg: dict) -> list[dict]:
         ids.add(c['id'])
         if c['optimizer'] not in OPTIMIZERS or c['unfreeze'] not in DEPTHS:
             raise ValueError('Unsupported optimizer or unfreeze depth')
-        if c['scheduler'] not in ('none', 'cosine'):
-            raise ValueError('scheduler must be none or cosine')
+        if c['scheduler'] not in ('none', 'cosine', 'cosine_ratio'):
+            raise ValueError('scheduler must be none, cosine or cosine_ratio')
         for key in ('backbone_lr', 'head_lr'):
             if key not in c or not math.isfinite(c[key]) or c[key] <= 0:
                 raise ValueError(f'{key} must be positive and finite')
@@ -96,13 +96,19 @@ def make_optimizer(groups, name: str, weight_decay: float, momentum: float = .9)
     raise ValueError(f'Unsupported optimizer: {name}')
 
 
-def make_scheduler(optimizer, name: str, epochs: int):
+def make_scheduler(optimizer, name: str, epochs: int, min_ratio: float = .1):
     """Step cosine after each training epoch; log the LR used before stepping.
 
     https://docs.pytorch.org/docs/stable/generated/torch.optim.lr_scheduler.CosineAnnealingLR.html
     """
     if name == 'none':
         return None
+    if name == 'cosine_ratio':
+        if epochs < 1 or not math.isfinite(min_ratio) or not 0 <= min_ratio <= 1:
+            raise ValueError('Positive epochs and min_ratio in [0, 1] required')
+        from torch.optim.lr_scheduler import LambdaLR
+        return LambdaLR(optimizer, lambda step: min_ratio + (1-min_ratio) *
+                        (1 + math.cos(math.pi * min(step, epochs) / epochs)) / 2)
     if name == 'cosine':
         from torch.optim.lr_scheduler import CosineAnnealingLR
         return CosineAnnealingLR(optimizer, T_max=epochs)

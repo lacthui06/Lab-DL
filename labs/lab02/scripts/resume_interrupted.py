@@ -116,7 +116,8 @@ def _resume_trial(run, relative, cfg, device):
             raise ValueError(f'Source changed since training: {relative_source}; use original source')
     torch.set_num_threads(cfg['threads'])
     model = build_model(name, pretrained=False, dropout=meta.get('dropout', 0.)).to(device)
-    configure_trainable(model, name, stage, meta.get('unfreeze', 'last_block'))
+    configure_trainable(model, name, stage, meta.get('unfreeze', 'last_block'),
+                        max_fraction=cfg.get('max_trainable_fraction'))
     data_dir = resolve_data_dir(run.parents[2])
     with np.load(run/'selected_indices.npz', allow_pickle=False) as data:
         selected = {key: data[key] for key in data.files}
@@ -146,7 +147,8 @@ def _resume_trial(run, relative, cfg, device):
         target = CachedTail(model, name) if meta.get('execution') == 'cached_frozen_prefix' else model
     epochs = cfg['head_epochs'] if stage == 'head' else cfg['finetune_epochs']
     optimizer = make_optimizer(groups, meta['optimizer'], cfg['weight_decay'], cfg.get('momentum', .9))
-    scheduler = make_scheduler(optimizer, meta.get('scheduler', 'none'), epochs)
+    scheduler = make_scheduler(optimizer, meta.get('scheduler', 'none'), epochs,
+                               cfg.get('scheduler_min_ratio', .1))
     try:
         result = fit(target, *loaders, optimizer, epochs, device, folder, meta,
                      training_mode if stage == 'finetune' else None, scheduler=scheduler,

@@ -311,14 +311,17 @@ def search_finetune(model, name, cfg, selected, data_dir, run, device,
         seed_all(cfg['seed'])
         model.load_state_dict(initial)
         model.zero_grad(set_to_none=True)
-        configure_trainable(model, name, 'finetune', candidate['unfreeze'])
+        configure_trainable(model, name, 'finetune', candidate['unfreeze'],
+                            max_fraction=cfg.get('max_trainable_fraction'))
         head_ids = {id(p) for p in classifier(model, name).parameters()}
         backbone = [p for p in model.parameters() if p.requires_grad and id(p) not in head_ids]
         groups = [dict(params=backbone, lr=candidate['backbone_lr']),
                   dict(params=classifier(model, name).parameters(), lr=candidate['head_lr'])]
         optimizer = make_optimizer(groups, candidate['optimizer'], cfg['weight_decay'], cfg.get('momentum', .9))
-        scheduler = make_scheduler(optimizer, candidate['scheduler'], cfg['finetune_epochs'])
+        scheduler = make_scheduler(optimizer, candidate['scheduler'], cfg['finetune_epochs'],
+                                   cfg.get('scheduler_min_ratio', .1))
         meta = {'model':name, 'stage':'finetune', **candidate, 'lr':candidate['head_lr'],
+                'scheduler_min_ratio':cfg.get('scheduler_min_ratio', .1),
                 'batch_size':batch_size, 'seed':cfg['seed'], 'weights':str(SPECS[name][1]),
                 'dataset':'CIFAR10', 'image_size':cfg['image_size'],
                 'initialization':'same selected head checkpoint for every fine-tune trial',
@@ -412,10 +415,15 @@ def run_model(name, cfg, selected, data_dir, run, device):
                 'optimizer':cfg.get('head_optimizer', 'adamw'),
                 "data_sha256": file_hash(run / "selected_indices.npz")}
         trial = folder / f"head_trial_{number:02d}"
+        optimizer = make_optimizer([dict(params=head.parameters(), lr=lr)],
+            cfg.get('head_optimizer', 'adamw'), cfg['weight_decay'], cfg.get('momentum', .9))
+        scheduler = make_scheduler(optimizer, cfg.get('head_scheduler', 'none'),
+                                   cfg['head_epochs'], cfg.get('scheduler_min_ratio', .1))
+        meta['scheduler'] = cfg.get('head_scheduler', 'none')
+        meta['scheduler_min_ratio'] = cfg.get('scheduler_min_ratio', .1)
         result = fit(head, tensor_loader(train_features, bs, cfg["seed"], True),
                      tensor_loader(val_features, bs, cfg["seed"]),
-                     make_optimizer([dict(params=head.parameters(), lr=lr)], cfg.get('head_optimizer', 'adamw'), cfg['weight_decay'], cfg.get('momentum', .9)),
-                     cfg["head_epochs"], device, trial, meta)
+                     optimizer, cfg["head_epochs"], device, trial, meta, scheduler=scheduler)
         trials.append({"trial": number, "lr": lr, "batch_size": bs, **result})
         pd.DataFrame(trials).to_csv(folder / "search_results.csv", index=False)
     winner = select_trial(trials, cfg.get('selection_policy'))
@@ -523,6 +531,20 @@ def run_suite(config_path, work_dir=None, device_override="auto", seed_override=
     data_dir = resolve_data_dir(work)
     run = work / "outputs" / "runs" / (datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ") + "_" + cfg["profile"] + "_" + uuid.uuid4().hex[:8])
     run.mkdir(parents=True)
+    # Preserve the executed presentation before a later run changes its cell outputs.
+    previous = work / 'outputs' / 'selected_run.json'
+    if previous.exists():
+        previous_run = Path(json.loads(previous.read_text(encoding='utf-8'))['run'])
+        if not previous_run.is_absolute():
+            previous_run = work / previous_run
+        if not previous_run.is_dir():
+            raise ValueError(f'Previous selected run is missing: {previous_run}')
+        for notebook in (ROOT / 'notebooks').glob('*.ipynb'):
+            content = notebook.read_bytes()
+            snapshot = previous_run / 'notebook_snapshots' / file_hash(notebook) / notebook.name
+            snapshot.parent.mkdir(parents=True, exist_ok=True)
+            if not snapshot.exists():
+                snapshot.write_bytes(content)
     write_json(run / "config.json", cfg)
     write_json(run / "environment.json", {"python": sys.version, "torch": torch.__version__,
                "torchvision": __import__("torchvision").__version__, "device": str(device),
@@ -601,6 +623,8 @@ def main():
         print(json.dumps({'profile':cfg['profile'], 'models':cfg['models'],
             'head_batch_sizes':cfg['batch_sizes'], 'head_epochs_per_trial':cfg['head_epochs'],
             'head_trials_per_model':len(cfg['learning_rates'])*len(cfg['batch_sizes']),
+            'head_scheduler':cfg.get('head_scheduler', 'none'),
+            'scheduler_min_ratio':cfg.get('scheduler_min_ratio', .1),
             'fine_trials_per_model':len(candidates), 'fine_epochs_per_trial':cfg['finetune_epochs'],
             'early_stopping':stopping_policy(cfg),
             'dropout':cfg.get('dropout', 0.), 'fine_train_augmentation':cfg.get('train_augmentation',False),

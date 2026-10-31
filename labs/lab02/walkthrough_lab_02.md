@@ -183,6 +183,8 @@ Bộ metric theo lớp (FPR = FP/(FP+TN), one-vs-rest) tính lại từ confusio
 
 ### 2.3. Artifact Harvesting Log
 
+Ngày 30/10/2026: triển khai recipe [scheduled.json](config/scheduled.json) theo [description](description_lab_02.md): một recipe/model, batch 128, head 12 epoch, fine-tune tối đa 20 epoch; cosine theo tỷ lệ 1.0 → 0.1 cho mỗi nhóm LR, early stopping validation loss. ResNet mở layer4.1+fc (4.725.770; 42,26%); DenseNet mở block3 layer11–12,18–24, transition3, block4 layer1–4,13–16, norm5 và classifier (2.921.034; 41,94%). Runtime kiểm tra giới hạn 50%; giữ BN statistics cố định. Snapshot notebook theo hash lưu trước khi đổi presentation. Chưa chạy full training, không có metric mới; các bảng kết quả lịch sử bên dưới không đại diện recipe này.
+
 Nguồn số: [comparison.csv](outputs/runs/20261024T075133Z_cifar10_cpu_full64_71863a0e/comparison.csv), [cost_comparison.csv](outputs/runs/20261024T075133Z_cifar10_cpu_full64_71863a0e/cost_comparison.csv), [verification.json](outputs/runs/20261024T075133Z_cifar10_cpu_full64_71863a0e/verification.json). [Report HTML lịch sử](outputs/runs/20261024T075133Z_cifar10_cpu_full64_71863a0e/report_vi.html) giữ nguyên.
 
 Notebook modeling dùng [notebook_views.py](src/notebook_views.py); EDA dùng [eda.py](src/eda.py) và `outputs/eda/`. Modeling lưu hình mới ở `outputs/review/<run>/` để không làm lệch manifest gốc. Checkpoint/dataset/prediction NPZ và events không đi cùng Git; các view đọc bảng/hình vẫn chạy khi thiếu các file nặng.

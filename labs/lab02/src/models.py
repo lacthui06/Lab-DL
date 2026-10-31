@@ -42,8 +42,15 @@ def features(model, name, images):
 
 def trainable_blocks(name, depth='last_block'):
     """Include DenseNet transition3 when opening denseblock3 and later layers."""
-    if name not in SPECS or depth not in ('last_block', 'last_two_blocks', 'last_units'):
+    if name not in SPECS or depth not in ('last_block', 'last_two_blocks', 'last_units', 'scheduled_tail'):
         raise ValueError('Unsupported model or unfreeze depth')
+    if depth == 'scheduled_tail':
+        if name == 'resnet18':
+            return ['layer4.1']
+        return ([f'features.denseblock3.denselayer{i}' for i in [11, 12, *range(18, 25)]] +
+                ['features.transition3'] +
+                [f'features.denseblock4.denselayer{i}' for i in [1, 2, 3, 4, 13, 14, 15, 16]] +
+                ['features.norm5'])
     if depth == 'last_units':
         return (['layer4.1'] if name == 'resnet18' else
                 [f'features.denseblock4.denselayer{i}' for i in range(13, 17)] + ['features.norm5'])
@@ -53,7 +60,7 @@ def trainable_blocks(name, depth='last_block'):
             ['features.denseblock3', 'features.transition3', 'features.denseblock4', 'features.norm5'])
 
 
-def configure_trainable(model, name, stage, depth='last_block'):
+def configure_trainable(model, name, stage, depth='last_block', max_fraction=None):
     if stage not in ('head', 'finetune'):
         raise ValueError('stage must be head or finetune')
     blocks = trainable_blocks(name, depth)
@@ -65,6 +72,10 @@ def configure_trainable(model, name, stage, depth='last_block'):
         for block in blocks:
             for p in model.get_submodule(block).parameters():
                 p.requires_grad = True
+    if max_fraction is not None:
+        counts = parameter_counts(model)
+        if not 0 < max_fraction <= 1 or counts['trainable'] > counts['total'] * max_fraction:
+            raise ValueError(f'Trainable parameter limit exceeded: {counts}, limit={max_fraction}')
 
 
 def training_mode(model):

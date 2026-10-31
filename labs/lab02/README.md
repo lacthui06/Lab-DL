@@ -149,4 +149,28 @@ Mỗi seed có 6 head trials và 13 fine-tune trials **mỗi model**, fine-tune 
 
 Khi chất lượng gần nhau, xem thêm thời gian của selected recipe và test pass. Run cũ khác cache policy nên chưa xếp hạng tốc độ kiến trúc bằng train time. Xem [walkthrough](walkthrough_lab_02.md#15-loss-function-and-optimization-design) để biết giới hạn và kiểm thử.
 
-Batch active: **64/128**; head 10 epoch; fine-tune min 10/max 30, patience 7 theo val loss. Run lịch sử vẫn là head 5/fine 2. Notebook hiển thị hai giai đoạn ở hai hàng riêng, checkpoint và số epoch thực chạy; bảng NOT RUN không phải kết quả tuning.
+Các profile grid cũ dùng batch **64/128**. Recipe mới đã chốt nằm ở `config/scheduled.json`; chưa có kết quả full training cho recipe này. Run lịch sử và checkpoint được giữ riêng.
+
+## Recipe scheduled — tự chạy từ terminal Lab02
+
+Kích hoạt môi trường repo (terminal đang ở `labs/lab02`):
+
+```bash
+source ../../.venv/bin/activate
+python scripts/run.py --config config/scheduled.json --dry-run
+python scripts/run.py --config config/scheduled.json --device cpu
+```
+
+Lệnh train chạy lần lượt ResNet18 và DenseNet121; mỗi model head 12 epoch, fine-tune tối đa 20 epoch, batch 128, cosine LR và early stopping theo description. Test được đánh giá tự động sau khi khóa checkpoint bằng validation. Với máy có CUDA, thay `--device cpu` bằng `--device cuda`. Không đóng terminal khi đang chạy.
+
+Khi thấy `Completed: ...`, tạo ROC/PR, báo cáo bổ sung rồi cập nhật output notebook:
+
+```bash
+python scripts/finalize.py
+python scripts/execute_notebook.py 02_lab02_modeling.ipynb
+python scripts/execute_notebook.py 01_lab02_eda.ipynb
+```
+
+Không dùng `finalize.py --all` để chạy lại toàn bộ kiểm thử lịch sử. Mỗi run có thư mục timestamp/ID riêng ở `outputs/runs/`. Registry chỉ đổi khi suite hoàn tất; figure ở `outputs/review/<run_id>/`. Lệnh train lưu snapshot notebook hiện tại vào run cũ trước khi đổi registry; execute notebook lưu thêm bản trước/sau theo hash. Snapshot có thể có liên kết tương đối theo vị trí notebook gốc; dùng để giữ nội dung và output, không mặc định chạy lại trực tiếp từ thư mục snapshot.
+
+TensorBoard ở terminal thứ hai, cùng môi trường: `tensorboard --logdir outputs/runs --port 6006`. Lưu `Run: ...` in ở đầu log để truy vết. Dừng giữa chừng không tự hoàn tất selection/test; xem `scripts/resume_interrupted.py --help` trước khi resume, không tự đổi source/config của run đang dở.

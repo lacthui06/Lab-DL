@@ -142,6 +142,9 @@ def architecture_summary(run: Path) -> None:
         ('layer4 + fc' if row.model == 'resnet18' else 'denseblock4 + norm5 + classifier')
         for row in table.itertuples()]
     for i, row in table.iterrows():
+        if row.stage=='finetune' and depths[row.model+'_'+row.stage]=='scheduled_tail':
+            table.loc[i,'unfrozen_blocks'] = ('layer4.1 + fc' if row.model=='resnet18' else
+                'block3:11–12,18–24 + transition3 + block4:1–4,13–16 + norm5 + classifier')
         if row.stage=='finetune' and depths[row.model+'_'+row.stage]=='last_units':
             table.loc[i,'unfrozen_blocks'] = ('layer4.1 + fc' if row.model=='resnet18' else
                 'denseblock4.denselayer13–16 + norm5 + classifier')
