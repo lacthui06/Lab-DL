@@ -9,7 +9,7 @@ import sys
 
 ROOT=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT))
-from src.delivery import resolve_data_dir
+from src.utils.artifacts import resolve_data_dir
 
 
 def main(argv=None):
@@ -22,9 +22,9 @@ def main(argv=None):
     import torch
     from PIL import Image
     from torchvision.datasets import CIFAR10
-    from src.data import image_transform
-    from src.models import build_model
-    from src.eda import CLASSES
+    from src.datasets.classification import image_transform
+    from src.models.backbones import build_model
+    from src.datasets.eda import CLASSES
     torch.set_num_threads(4)
     saved=torch.load(args.checkpoint,map_location='cpu',weights_only=True)
     if saved['metadata'].get('dataset')!='CIFAR10':

@@ -1,15 +1,15 @@
-"""Datasets/loaders for experiment and infer; split math is owned by src.eda.
+"""Datasets/loaders for experiment and infer; split math is owned by src.datasets.eda.
 
 Caller map: experiment.prepare_indices/image_loader; infer.image_transform;
-tests/test_contracts.py. Artifact hashing and path resolution live in src.delivery.
+tests/test_contracts.py. Artifact hashing and path resolution live in src.utils.artifacts.
 """
 from pathlib import Path
 import numpy as np
 from sklearn.model_selection import train_test_split
 from torch.utils.data import Dataset, DataLoader
 from torchvision import datasets, transforms
-from .models import SPECS
-from .eda import locked_split
+from src.models.backbones import SPECS
+from src.datasets.eda import locked_split
 
 
 def image_transform(name, image_size=224):

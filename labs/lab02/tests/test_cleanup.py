@@ -26,7 +26,8 @@ def test_all_production_modules_reachable_and_documented():
     """CLI/notebook roots count; tests and archived snapshots cannot rescue dead modules."""
     scripts={p.stem:p for p in (ROOT/'scripts').glob('*.py')}
     assert set(scripts)=={'run','infer','analyze_data','download_assets','execute_notebook','finalize','resume_interrupted'}
-    units={f'src.{p.stem}':p.read_text(encoding='utf-8') for p in (ROOT/'src').glob('*.py') if p.stem!='__init__'}
+    units={'.'.join(p.relative_to(ROOT).with_suffix('').parts):p.read_text(encoding='utf-8')
+           for p in (ROOT/'src').rglob('*.py') if p.stem!='__init__'}
     units.update({f'scripts.{name}':p.read_text(encoding='utf-8') for name,p in scripts.items()})
     entries={name for name in units if name.startswith('scripts.')}
     for p in (ROOT/'notebooks').glob('*.ipynb'):
@@ -40,7 +41,8 @@ def test_all_production_modules_reachable_and_documented():
             if isinstance(node,ast.Attribute): referenced.add(node.attr)
             if isinstance(node,ast.ImportFrom):
                 module=('src.' if node.level else '')+(node.module or '')
-                if module=='src': graph[name].update('src.'+x.name for x in node.names)
+                if module in {'src', 'src.datasets', 'src.models', 'src.training', 'src.utils'}:
+                    graph[name].update(module+'.'+x.name for x in node.names)
                 else: graph[name].add(module)
             elif isinstance(node,ast.Import): graph[name].update(x.name for x in node.names)
     seen=set();pending=list(entries)
@@ -51,8 +53,8 @@ def test_all_production_modules_reachable_and_documented():
     assert {n for n in units if n.startswith('src.')}<=seen
     readme=(ROOT/'README.md').read_text(encoding='utf-8')
     for folder in ['src','scripts']:
-        for p in (ROOT/folder).glob('*.py'):
-            assert f']({folder}/{p.name})' in readme, p.name
+        for p in (ROOT/folder).rglob('*.py'):
+            assert f']({p.relative_to(ROOT).as_posix()})' in readme, p.name
             if folder=='src':
                 for node in ast.parse(p.read_text(encoding='utf-8')).body:
                     if isinstance(node,ast.FunctionDef) and not node.name.startswith('_'):
@@ -97,19 +99,19 @@ def test_chunked_download_verifies_headers_checksum_and_reuses_archive(tmp_path,
 
 
 def test_io_helpers_are_lightweight_and_data_paths_are_shared(tmp_path,monkeypatch):
-    from src.delivery import resolve_data_dir,resolve_run,write_json,file_hash
+    from src.utils.artifacts import resolve_data_dir,resolve_run,write_json,file_hash
     monkeypatch.setenv('LAB02_DATA',str(tmp_path/'external'))
     assert resolve_data_dir(tmp_path)==(tmp_path/'external').resolve()
     assert resolve_data_dir(tmp_path,tmp_path/'explicit')==(tmp_path/'explicit').resolve()
     write_json(tmp_path/'outputs/selected_run.json',dict(run='outputs/runs/a'))
     assert resolve_run(tmp_path)==(tmp_path/'outputs/runs/a').resolve()
     assert file_hash(tmp_path/'outputs/selected_run.json')==hashlib.sha256((tmp_path/'outputs/selected_run.json').read_bytes()).hexdigest()
-    result=subprocess.run([sys.executable,'-c',"import sys; import src.delivery; assert 'torch' not in sys.modules; assert 'src.experiment' not in sys.modules"],cwd=ROOT,capture_output=True,text=True)
+    result=subprocess.run([sys.executable,'-c',"import sys; import src.utils.artifacts; assert 'torch' not in sys.modules; assert 'src.training.trainer' not in sys.modules"],cwd=ROOT,capture_output=True,text=True)
     assert result.returncode==0,result.stderr
 
 
 def test_rgb_formula_matches_independent_population_statistics():
-    from src.eda import rgb_statistics
+    from src.datasets.eda import rgb_statistics
     rng=np.random.default_rng(42)
     raw=rng.integers(0,256,size=(5,32,32,3),dtype=np.uint8)
     ids=np.array([1,3])
@@ -121,7 +123,7 @@ def test_rgb_formula_matches_independent_population_statistics():
 
 
 def test_training_reuses_eda_locked_split(tmp_path,monkeypatch):
-    import src.data as data
+    import src.datasets.classification as data
     labels=np.repeat(np.arange(10),5000)
     class FakeCifar:
         def __init__(self,root,train=True,download=False): self.targets=labels if train else np.repeat(np.arange(10),1000)
@@ -140,7 +142,7 @@ def test_training_reuses_eda_locked_split(tmp_path,monkeypatch):
 
 def test_quality_cost_handles_new_csv_execution_column(tmp_path,monkeypatch):
     import matplotlib.pyplot as plt
-    from src import notebook_views as view
+    from src.utils import notebook_views as view
     run=ROOT/json.loads((ROOT/'outputs/selected_run.json').read_text())['run']
     frame=pd.read_csv(run/'comparison.csv')
     costs=pd.read_csv(run/'cost_comparison.csv')
@@ -156,7 +158,7 @@ def test_quality_cost_handles_new_csv_execution_column(tmp_path,monkeypatch):
 
 
 def test_complete_delivery_uses_requested_run_and_recommended_checkpoint(tmp_path,monkeypatch):
-    import src.delivery as delivery
+    import src.utils.artifacts as delivery
     import unittest.mock as mock
     root=tmp_path/'lab';(root/'outputs/runs/wanted').mkdir(parents=True)
     run=root/'outputs/runs/wanted'
@@ -167,7 +169,7 @@ def test_complete_delivery_uses_requested_run_and_recommended_checkpoint(tmp_pat
     (root/'notebooks').mkdir()
     for name in ['01_lab02_eda.ipynb','02_lab02_modeling.ipynb']:
         delivery.write_json(root/'notebooks'/name,dict(cells=[dict(cell_type='code',execution_count=1,outputs=[dict(output_type='stream')])]))
-    monkeypatch.setattr(delivery,'__file__',str(root/'src/delivery.py'))
+    monkeypatch.setattr(delivery,'__file__',str(root/'src/utils/artifacts.py'))
     monkeypatch.setattr(delivery,'finalize_run',lambda *a:None)
     calls=[]
     def fake_run(args,**kwargs):
@@ -189,8 +191,8 @@ def test_finalizer_writes_one_config_driven_report(tmp_path,monkeypatch):
     from sklearn.metrics import classification_report,log_loss
     from torch.utils.tensorboard import SummaryWriter
     from torchvision.datasets import CIFAR10
-    import src.delivery as delivery
-    from src.eda import CLASSES
+    import src.utils.artifacts as delivery
+    from src.datasets.eda import CLASSES
     data_dir=Path(os.environ.get('LAB02_DATA',str(ROOT/'data')))
     if not (data_dir/'cifar-10-batches-py').exists(): pytest.skip('Raw CIFAR-10 required')
     labels=np.asarray(CIFAR10(str(data_dir),train=False).targets)
@@ -241,7 +243,7 @@ def test_finalizer_writes_one_config_driven_report(tmp_path,monkeypatch):
             train_seconds=1. if stage=='head' else 10.,test_seconds=1.,
             execution='pooled_feature_cache' if stage=='head' else 'full_image_forward'))
     pd.DataFrame(rows).to_csv(run/'comparison.csv',index=False)
-    monkeypatch.setattr(delivery,'__file__',str(root/'src/delivery.py'))
+    monkeypatch.setattr(delivery,'__file__',str(root/'src/utils/artifacts.py'))
     monkeypatch.setenv('LAB02_DATA',str(data_dir))
     monkeypatch.setattr(subprocess,'check_output',lambda *a,**k:'fixture==0\n')
     delivery.finalize_run(str(run))

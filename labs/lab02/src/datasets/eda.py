@@ -14,7 +14,7 @@ import pandas as pd
 from IPython.display import Image, display
 from PIL import Image as PILImage
 from sklearn.model_selection import train_test_split
-from .delivery import resolve_data_dir, write_json
+from src.utils.artifacts import resolve_data_dir, write_json
 
 CLASSES = ['airplane', 'automobile', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck']
 CHECKSUMS = ['c99cafc152244af753f735de768cd75f', 'd4bba439e000b95fd0a9bffe97cbabec',

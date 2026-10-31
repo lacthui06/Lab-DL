@@ -217,3 +217,7 @@ Regression toàn suite lần đầu: 56 đạt, 5 lỗi. Một lỗi do mock loa
 `MPLBACKEND=Agg .venv/bin/python .agents/lab02-val-diagnostics/run_diagnostics.py`
 
 `MPLBACKEND=Agg .venv/bin/python -m pytest .agents/lab02-val-diagnostics/test_diagnostics.py -q`
+
+## Tổ chức lại regression test
+
+`test_regularization.py` đã chuyển sang `labs/lab02/tests/test_regularization.py` để được thu thập bởi `python -m pytest tests`. Nội dung kiểm tra giữ nguyên; bỏ bootstrap đường dẫn dành riêng cho thư mục task. Các script chẩn đoán và artifact ở đây tiếp tục lưu bằng chứng lịch sử.

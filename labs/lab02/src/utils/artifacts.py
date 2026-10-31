@@ -73,7 +73,7 @@ def finalize_run(run_path: str | None = None) -> None:
                                  precision_recall_curve, average_precision_score)
     from tensorboard.backend.event_processing.event_accumulator import EventAccumulator
 
-    root = Path(__file__).resolve().parents[1]
+    root = Path(__file__).resolve().parents[2]
     run = resolve_run(root,run_path)
     work = run.parents[2]
     data_dir = resolve_data_dir(work)
@@ -160,7 +160,7 @@ def finalize_run(run_path: str | None = None) -> None:
         search = pd.read_csv(run / name / "search_results.csv")
         chosen = json.loads((run / name / "selection.json").read_text(encoding="utf-8"))["head"]
         if 'best_val_loss' in search:
-            from .tuning import select_trial
+            from src.training.tuning import select_trial
             assert chosen['trial'] == select_trial(search.to_dict('records'),cfg.get('selection_policy'))['trial']
         else:
             assert chosen['trial'] == int(search.loc[search.best_val_accuracy.idxmax(),'trial'])
@@ -212,7 +212,7 @@ def finalize_run(run_path: str | None = None) -> None:
                 axes[row, column].set(title=f'{name}: {metric}', xlabel='Epoch within stage')
                 axes[row, column].legend(fontsize=8)
                 axes[row, column].grid(alpha=.2)
-    from .costs import cost_table, validation_recommendation
+    from src.utils.costs import cost_table, validation_recommendation
     costs = cost_table(run,comparison).to_dict('records')
     fig.suptitle('Monitoring evidence reconstructed from TensorBoard events (not a UI screenshot)')
     fig.tight_layout()
@@ -244,13 +244,13 @@ def finalize_run(run_path: str | None = None) -> None:
             notes.append(f"{name} fine-tune sử dụng cache đầu ra của prefix đóng băng; đã kiểm chứng tương đương trên {proof['samples']} ảnh thật, max logit error={proof['max_logit_error']:.3g}. Test vẫn forward toàn bộ model trên ảnh RGB. Kiểm thử riêng đối chiếu cả logits, gradients và schema checkpoint.")
     if any((run / name / 'prefix_equivalence.json').exists() for name in cfg['models']):
         notes.append('Chi phí giữa các kiến trúc chịu ảnh hưởng của cách thực thi: xem cột execution trong cost_comparison.csv. Trong run này, nếu một model dùng cache prefix còn model khác forward ảnh khi fine-tune, không dùng thời gian thô để kết luận riêng về tốc độ kiến trúc. Cache giữ nguyên bài toán tối ưu và số ảnh/epoch; mã hiện hành hỗ trợ cache prefix cho cả hai model ở profile CPU.')
-    from .reporting import write_final_report
+    from src.utils.plots import write_final_report
     write_final_report(run,cfg,selected,notes)
     lock = subprocess.check_output([sys.executable, "-m", "pip", "freeze"], text=True)
     (run / "requirements-freeze.txt").write_text(lock, encoding="utf-8")
     snapshot = run / "source_snapshot"
     for section in ("src", "config", "scripts", "tests"):
-        for source in (root / section).glob("*"):
+        for source in (root / section).rglob("*"):
             if source.is_file() and source.suffix in (".py", ".json"):
                 dest = snapshot / source.relative_to(root)
                 dest.parent.mkdir(parents=True, exist_ok=True)
@@ -268,7 +268,7 @@ def finalize_run(run_path: str | None = None) -> None:
         audits['resume_source_snapshot'] = audit_snapshot(run / 'resume_source_snapshot', resume_hashes)
     write_json(run / 'snapshot_checkout_audit.json', audits)
     delivery_hashes = {str(p.relative_to(root)): file_hash(p)
-        for section in ['src', 'scripts', 'tests', 'config'] for p in (root / section).glob('*') if p.is_file()}
+        for section in ['src', 'scripts', 'tests', 'config'] for p in (root / section).rglob('*') if p.is_file() and p.suffix in ('.py', '.json')}
     write_json(run / 'delivery_source_hashes.json', delivery_hashes)
     for relative in delivery_hashes:
         destination = run / 'delivery_source_snapshot' / relative
@@ -304,7 +304,7 @@ def complete_delivery(run_path: str | None = None) -> None:
     import subprocess
     import sys
     import time
-    root = Path(__file__).resolve().parents[1]
+    root = Path(__file__).resolve().parents[2]
 
     run = resolve_run(root,run_path)
     deadline = time.monotonic() + 14400

@@ -28,7 +28,7 @@ def cost_table(run: Path, comparison: pd.DataFrame) -> pd.DataFrame:
 
 def validation_recommendation(run: Path, comparison: pd.DataFrame, cfg: dict) -> dict:
     """Use validation only; avoid time ranking if execution policies differ."""
-    from .tuning import select_trial
+    from src.training.tuning import select_trial
     costs = cost_table(run,comparison)
     records = []
     for row in comparison.to_dict('records'):

@@ -12,11 +12,11 @@ import torch
 
 ROOT = Path(__file__).resolve().parents[2] / 'labs/lab02'
 sys.path.insert(0, str(ROOT))
-from src.data import image_loader
-from src.delivery import resolve_data_dir
-from src.experiment import predict, seed_all
-from src.models import build_model
-from src.reporting import export_evaluation
+from src.datasets.classification import image_loader
+from src.utils.artifacts import resolve_data_dir
+from src.training.trainer import predict, seed_all
+from src.models.backbones import build_model
+from src.utils.plots import export_evaluation
 
 
 def main():

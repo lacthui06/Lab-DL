@@ -1,6 +1,6 @@
 """Compact modeling artifact views; no training/model imports.
 
-EDA uses the separate src.eda module. These views consume saved experiment tables.
+EDA uses the separate src.datasets.eda module. These views consume saved experiment tables.
 New figures are saved under outputs/review/<run>/, preserving the original run.
 """
 import json
@@ -17,11 +17,11 @@ def context() -> tuple[Path, Path, Path]:
     """Resolve the lab, explicitly selected run, and presentation destination."""
     configured = os.environ.get('LAB02_ROOT')
     try:
-        root = Path(configured).expanduser().resolve() if configured else Path(__file__).resolve().parents[1]
+        root = Path(configured).expanduser().resolve() if configured else Path(__file__).resolve().parents[2]
     except OSError as exc:
         raise RuntimeError('Cannot resolve Lab02. Set LAB02_ROOT to an existing absolute Lab02 directory.') from exc
-    if not (root / 'src/notebook_views.py').is_file():
-        raise RuntimeError(f'Invalid Lab02 directory: {root}. Set LAB02_ROOT to the directory containing src/notebook_views.py.')
+    if not (root / 'src/utils/notebook_views.py').is_file():
+        raise RuntimeError(f'Invalid Lab02 directory: {root}. Set LAB02_ROOT to the directory containing src/utils/notebook_views.py.')
     selected = json.loads((root / 'outputs/selected_run.json').read_text(encoding='utf-8'))
     run = Path(os.environ.get('LAB02_RUN', selected['run']))
     run = run if run.is_absolute() else root / run
@@ -32,7 +32,7 @@ def context() -> tuple[Path, Path, Path]:
 
 def _save(fig, output: Path, name: str) -> None:
     """Persist and display the same figure, then release its memory."""
-    from .reporting import save_figure
+    from src.utils.plots import save_figure
     fig.tight_layout()
     save_figure(fig, output / f'{name}.png', dpi=130, bbox_inches='tight')
     display(fig)
@@ -42,7 +42,7 @@ def _save(fig, output: Path, name: str) -> None:
 def quality_cost(run: Path, output: Path) -> None:
     """Compare quality and recorded costs, retaining the execution caveat."""
     metrics = pd.read_csv(run / 'comparison.csv')
-    from .costs import cost_table
+    from src.utils.costs import cost_table
     costs = cost_table(run, metrics)
     table = metrics.drop(columns=['pipeline_training_seconds', 'execution'], errors='ignore').merge(
                           costs[['model', 'stage', 'pipeline_training_seconds', 'execution']],
@@ -79,7 +79,7 @@ def quality_cost(run: Path, output: Path) -> None:
 
 def learning_curves(run: Path, output: Path) -> None:
     """Display the exact per-stage plotting implementation used by training reports."""
-    from .reporting import plot_learning_curves
+    from src.utils.plots import plot_learning_curves
     plot_learning_curves(run, output, show=True)
 
 
@@ -350,7 +350,7 @@ def roundtrip(run: Path) -> None:
 
 def efficiency(run: Path, output: Path) -> None:
     """Separate search budget from the cost of retraining the selected recipe."""
-    from .costs import cost_table, validation_recommendation
+    from src.utils.costs import cost_table, validation_recommendation
     table = cost_table(run, pd.read_csv(run/'comparison.csv'))
     fine = table[table.stage=='finetune'].copy()
     fig, axes = plt.subplots(1,2,figsize=(11,3.7))

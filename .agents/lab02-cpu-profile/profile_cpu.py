@@ -20,11 +20,11 @@ import numpy as np
 import torch
 from torchvision.datasets import CIFAR10
 
-from src.data import balanced_subset, image_loader
-from src.delivery import write_json
-from src.eda import locked_split
-from src.experiment import cached_features, fit, pass_epoch, seed_all, tensor_loader
-from src.models import build_model, classifier, configure_trainable, training_mode, CachedTail
+from src.datasets.classification import balanced_subset, image_loader
+from src.utils.artifacts import write_json
+from src.datasets.eda import locked_split
+from src.training.trainer import cached_features, fit, pass_epoch, seed_all, tensor_loader
+from src.models.backbones import build_model, classifier, configure_trainable, training_mode, CachedTail
 
 
 def main():

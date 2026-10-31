@@ -7,13 +7,13 @@ import sys
 import numpy as np
 import pytest
 
-from src.eda import handcrafted, locked_split, duplicate_audit
+from src.datasets.eda import handcrafted, locked_split, duplicate_audit
 
 
 def test_eda_import_has_no_training_dependencies():
     result = subprocess.run([sys.executable, '-c',
-        "import sys; import src.eda; "
-        "assert not any(m in sys.modules for m in ['torch', 'torchvision', 'src.models', 'src.experiment', 'src.notebook_views'])"],
+        "import sys; import src.datasets.eda; "
+        "assert not any(m in sys.modules for m in ['torch', 'torchvision', 'src.models.backbones', 'src.training.trainer', 'src.utils.notebook_views'])"],
         cwd=Path(__file__).resolve().parents[1], capture_output=True, text=True)
     assert result.returncode == 0, result.stderr
 

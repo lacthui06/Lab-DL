@@ -7,25 +7,46 @@ So sánh ResNet18 và DenseNet121 pretrained, head-only và fine-tune. Kết qu�
 
 - [description_lab_02.md](description_lab_02.md): nội dung đối chiếu trực tiếp ảnh đề trang 23; phân biệt yêu cầu của đề với lựa chọn của bài làm.
 - [walkthrough_lab_02.md](walkthrough_lab_02.md): tài liệu sống duy nhất, theo [template](../../.agents/templates/walkthrough_template.md): Spec → Changelog → Report.
-- [01_lab02_eda.ipynb](notebooks/01_lab02_eda.ipynb): raw → integrity → pixel/spatial EDA → preprocessing → handcrafted features; chỉ dùng `src/eda.py`, không nạp mạng.
+- [01_lab02_eda.ipynb](notebooks/01_lab02_eda.ipynb): raw → integrity → pixel/spatial EDA → preprocessing → handcrafted features; chỉ dùng `src/datasets/eda.py`, không nạp mạng.
 - [02_lab02_modeling.ipynb](notebooks/02_lab02_modeling.ipynb): kiến trúc tóm tắt, LR search, đường cong, chất lượng/chi phí, phân tích lỗi và đề xuất.
 - [config/](config/): [full.json](config/full.json) cho GPU 224×224; [cpu_pilot.json](config/cpu_pilot.json) kiểm tra nhỏ; [cpu_full.json](config/cpu_full.json) mô tả run CPU lịch sử; [tuned.json](config/tuned.json) là cấu hình tuning chạy được; thiết kế và lý do nằm trong walkthrough.
 - [requirements.txt](requirements.txt): phiên bản cố định từ Windows; cài trên Linux/Kaggle chưa kiểm chứng.
 - [outputs/selected_run.json](outputs/selected_run.json): run được chọn; [outputs/label_update.json](outputs/label_update.json) lưu lịch sử sửa nhãn tài liệu. `outputs/runs/` là bằng chứng gốc; `outputs/review/` chứa biểu đồ trình bày mới, không ghi đè run gốc.
 
+Cấu trúc source theo template và Lab 1 trên `main`:
+
+```text
+src/
+    __init__.py
+    datasets/       # classification.py, eda.py
+    models/         # backbones.py
+    training/       # trainer.py, tuning.py
+    utils/          # artifacts.py, costs.py, notebook_views.py, plots.py
+scripts/            # Các điểm vào CLI
+notebooks/          # Gọi module, trình bày kết quả
+config/             # Giữ cấu hình JSON hiện hành
+tests/              # Regression và sanity
+```
+
+Các package `__init__.py` chỉ khai báo namespace, không tự import PyTorch khi xem EDA. Snapshot source mới được thu thập đệ quy để bao gồm các phân hệ; snapshot đã lưu giữ nguyên. Registry dùng đường dẫn tương đối để chạy được khi sao chép giữa máy.
+
 ### Tham chiếu source và CLI
 
 | File | Nơi sử dụng / mục đích |
 |---|---|
-| [src/data.py](src/data.py) | experiment.py/infer.py: loader/transform; gọi eda.locked_split để tái sử dụng split |
-| [src/models.py](src/models.py) | experiment.py và infer.py: khởi tạo mạng, freeze, cached tail |
-| [src/tuning.py](src/tuning.py) | Validate grid, AdamW/SGD momentum, cosine và chọn bằng validation/loss/time |
-| [src/costs.py](src/costs.py) | Nguồn tính chi phí search/selected recipe và khuyến nghị validation |
-| [src/experiment.py](src/experiment.py) | run.py, resume_interrupted.py: train/validation, checkpoint |
-| [src/reporting.py](src/reporting.py) | experiment.py và delivery.finalize_run: xuất metric/hình, một writer Markdown/HTML |
-| [src/eda.py](src/eda.py) | analyze_data.py/notebook 01 và data/experiment: split, RGB statistics, per-run EDA; không import torch/model |
-| [src/notebook_views.py](src/notebook_views.py) | Chỉ notebook modeling: đọc bằng chứng thí nghiệm, hiển thị biểu đồ và bảng ngắn |
-| [src/delivery.py](src/delivery.py) | finalize.py [--all]; IO/path/hash dùng chung cho experiment, EDA, infer và resume; gọi reporting.write_final_report |
+| [src/datasets/classification.py](src/datasets/classification.py) | training/trainer.py và infer.py: loader/transform; gọi eda.locked_split để tái sử dụng split |
+| [src/models/backbones.py](src/models/backbones.py) | training/trainer.py và infer.py: khởi tạo mạng, freeze, cached tail |
+| [src/training/tuning.py](src/training/tuning.py) | Validate grid, AdamW/SGD momentum, cosine và chọn bằng validation/loss/time |
+| [src/utils/costs.py](src/utils/costs.py) | Nguồn tính chi phí search/selected recipe và khuyến nghị validation |
+| [src/training/trainer.py](src/training/trainer.py) | run.py, resume_interrupted.py: train/validation, checkpoint |
+| [src/utils/plots.py](src/utils/plots.py) | training/trainer.py và utils.artifacts.finalize_run: xuất metric/hình, một writer Markdown/HTML |
+| [src/datasets/eda.py](src/datasets/eda.py) | analyze_data.py/notebook 01 và data/experiment: split, RGB statistics, per-run EDA; không import torch/model |
+| [src/utils/notebook_views.py](src/utils/notebook_views.py) | Chỉ notebook modeling: đọc bằng chứng thí nghiệm, hiển thị biểu đồ và bảng ngắn |
+| [src/utils/artifacts.py](src/utils/artifacts.py) | finalize.py [--all]; IO/path/hash dùng chung cho experiment, EDA, infer và resume; gọi utils.plots.write_final_report |
+| [src/datasets/__init__.py](src/datasets/__init__.py) | Khai báo package datasets |
+| [src/models/__init__.py](src/models/__init__.py) | Khai báo package models |
+| [src/training/__init__.py](src/training/__init__.py) | Khai báo package training |
+| [src/utils/__init__.py](src/utils/__init__.py) | Khai báo package utils |
 | [src/__init__.py](src/__init__.py) | Khai báo package src |
 | [scripts/analyze_data.py](scripts/analyze_data.py) | Tái đo EDA raw; `--data-dir` trỏ thư mục chứa `cifar-10-batches-py` |
 | [scripts/run.py](scripts/run.py) | Điểm vào huấn luyện, dùng config/*.json |
@@ -38,12 +59,13 @@ So sánh ResNet18 và DenseNet121 pretrained, head-only và fine-tune. Kết qu�
 | [tests/test_cached_prefix.py](tests/test_cached_prefix.py) | Đối chiếu logits/gradient cache và forward đầy đủ |
 | [tests/test_tuning.py](tests/test_tuning.py) | LR groups, scheduler, gradient hai block, reset trial, không dùng test khi search, timing và smoke pipeline |
 | [tests/test_eda.py](tests/test_eda.py) | Chặn import training, kiểm tra feature/duplicate/split, đối chiếu hash và thống kê run cũ |
+| [tests/test_regularization.py](tests/test_regularization.py) | Regression last_units, dropout/checkpoint, freeze gradient và augmentation chỉ trên train; chuyển từ thư mục chẩn đoán nội bộ để bộ test chuẩn tự thu thập |
 | [tests/test_cleanup.py](tests/test_cleanup.py) | Graph tham chiếu production, CLI --help/import an toàn, split chung, CSV schema mới, đúng run/checkpoint và tải chia phần có checksum |
 | [tests/test_notebook_review.py](tests/test_notebook_review.py) | Đối chiếu metric, ranh giới EDA và liên kết tài liệu; không cần torch |
 
-Có 10 module `src/` và 7 CLI. Các file đang thực thi được nối bằng import/call thực hoặc lệnh CLI trong bảng trên. Snapshot trong `outputs/runs/` được manifest/hash tham chiếu, giữ riêng khỏi graph code hiện hành.
+Có 9 module chức năng trong 4 phân hệ `src/`, 5 file khai báo package và 7 CLI. Các file đang thực thi được nối bằng import/call thực hoặc lệnh CLI trong bảng trên. Snapshot trong `outputs/runs/` được manifest/hash tham chiếu, giữ riêng khỏi graph code hiện hành.
 
-Luồng chính: `run.py → experiment → data/models/tuning/reporting`; `data → eda.locked_split`; `reporting → costs`; `notebook 01 → eda`; `notebook 02 → notebook_views → costs`; `finalize.py → delivery → reporting`; `infer.py → data/models`.
+Luồng chính: `run.py → training.trainer → datasets.classification/models.backbones/training.tuning/utils.plots`; `datasets.classification → datasets.eda.locked_split`; `utils.plots → utils.costs`; `notebook 01 → datasets.eda`; `notebook 02 → utils.notebook_views`; `finalize.py → utils.artifacts`; `infer.py → datasets.classification/models.backbones`.
 
 Test graph bắt module production bị bỏ rơi, public function không có tham chiếu tĩnh và file thiếu link README. Tham chiếu trong test hoặc snapshot không được tính làm caller production. Docstring giải thích vai trò; không thêm import giả để giữ file.
 

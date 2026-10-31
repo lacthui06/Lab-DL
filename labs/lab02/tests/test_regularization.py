@@ -1,16 +1,12 @@
 """Verify the approved smaller tail, dropout compatibility and data boundaries."""
-import sys
-from pathlib import Path
-
 import pytest
 import torch
 from PIL import Image
 import numpy as np
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[2] / 'labs/lab02'))
-from src.models import build_model, configure_trainable, parameter_counts, training_mode
-from src.data import IndexedImages
-from src.tuning import fine_candidates
+from src.models.backbones import build_model, configure_trainable, parameter_counts, training_mode
+from src.datasets.classification import IndexedImages
+from src.training.tuning import fine_candidates
 
 
 @pytest.mark.parametrize('name', ['resnet18', 'densenet121'])
@@ -50,7 +46,7 @@ def test_augmentation_train_only_and_stable_validation(monkeypatch):
             self.image = Image.fromarray(np.arange(32*32*3, dtype=np.uint8).reshape(32,32,3))
         def __getitem__(self, index):
             return self.image, 3
-    monkeypatch.setattr('src.data.datasets.CIFAR10', FakeCIFAR)
+    monkeypatch.setattr('src.datasets.classification.datasets.CIFAR10', FakeCIFAR)
     train = IndexedImages('unused', 'train', [0], 'resnet18', 64, True)
     val = IndexedImages('unused', 'val', [0], 'resnet18', 64)
     assert torch.equal(val[0][0], val[0][0])

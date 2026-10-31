@@ -15,10 +15,10 @@ from torchvision.datasets import CIFAR10
 ROOT = Path(__file__).resolve().parents[2]
 LAB = ROOT / 'labs/lab02'
 sys.path.insert(0, str(LAB))
-from src.data import image_loader  # noqa: E402
-from src.eda import CLASSES  # noqa: E402
-from src.experiment import predict, seed_all  # noqa: E402
-from src.models import build_model  # noqa: E402
+from src.datasets.classification import image_loader  # noqa: E402
+from src.datasets.eda import CLASSES  # noqa: E402
+from src.training.trainer import predict, seed_all  # noqa: E402
+from src.models.backbones import build_model  # noqa: E402
 
 RUN = LAB / 'outputs/runs/20261027T083044Z_cifar10_macintel_cpu_control64_db231b28'
 OUT = Path(__file__).resolve().parent

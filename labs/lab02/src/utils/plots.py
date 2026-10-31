@@ -6,7 +6,7 @@ import pandas as pd
 from sklearn.metrics import (accuracy_score, classification_report, confusion_matrix,
                              precision_recall_fscore_support, log_loss)
 
-from .eda import CLASSES
+from src.datasets.eda import CLASSES
 
 
 def save_figure(fig, path, **kwargs):
@@ -129,7 +129,7 @@ def plot_learning_curves(run, output=None, show=False, per_model_folders=False, 
 
 def summarize_suite(run, cfg, selected):
     comparison = pd.read_csv(run / "comparison.csv")
-    from .costs import cost_table, validation_recommendation
+    from src.utils.costs import cost_table, validation_recommendation
     cost_table(run, comparison).to_csv(run/'cost_comparison.csv', index=False)
     (run/'validation_recommendation.json').write_text(
         json.dumps(validation_recommendation(run,comparison,cfg), indent=2), encoding='utf-8')
