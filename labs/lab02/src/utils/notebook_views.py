@@ -42,7 +42,7 @@ def _save(fig, output: Path, name: str) -> None:
 def quality_cost(run: Path, output: Path) -> None:
     """Compare quality and recorded costs, retaining the execution caveat."""
     metrics = pd.read_csv(run / 'comparison.csv')
-    from .costs import cost_table
+    from ..training.costs import cost_table
     costs = cost_table(run, metrics)
     table = metrics.drop(columns=['pipeline_training_seconds', 'execution'], errors='ignore').merge(
                           costs[['model', 'stage', 'pipeline_training_seconds', 'execution']],
@@ -350,7 +350,7 @@ def roundtrip(run: Path) -> None:
 
 def efficiency(run: Path, output: Path) -> None:
     """Separate search budget from the cost of retraining the selected recipe."""
-    from .costs import cost_table, validation_recommendation
+    from ..training.costs import cost_table, validation_recommendation
     table = cost_table(run, pd.read_csv(run/'comparison.csv'))
     fine = table[table.stage=='finetune'].copy()
     fig, axes = plt.subplots(1,2,figsize=(11,3.7))

@@ -1,9 +1,9 @@
-"""CLI for the delivery workflow in src.delivery; see ../README.md."""
+"""CLI for the delivery workflow in src.utils.delivery; see ../README.md."""
 from pathlib import Path
 import sys
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from src.delivery import finalize_run, complete_delivery
+from src.utils.delivery import finalize_run, complete_delivery
 
 if __name__ == '__main__':
     import argparse

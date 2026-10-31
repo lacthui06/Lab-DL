@@ -24,10 +24,10 @@ def main(argv=None):
     import numpy as np
     import pandas as pd
     import torch
-    from src.experiment import run_model,Tee
-    from src.delivery import resolve_run,resolve_data_dir,write_json,file_hash
-    from src.reporting import summarize_suite
-    from src.tuning import fine_candidates
+    from src.training.experiment import run_model,Tee
+    from src.utils.delivery import resolve_run,resolve_data_dir,write_json,file_hash
+    from src.utils.reporting import summarize_suite
+    from src.training.tuning import fine_candidates
 
     run=resolve_run(ROOT,args.run)
     cfg=json.loads((run/'config.json').read_text(encoding='utf-8'))
@@ -95,11 +95,11 @@ def _resume_trial(run, relative, cfg, device):
     import json
     import numpy as np
     import torch
-    from src.data import image_loader
-    from src.delivery import file_hash, resolve_data_dir, write_json
-    from src.experiment import fit, tensor_loader
-    from src.models import build_model, classifier, configure_trainable, training_mode, CachedTail
-    from src.tuning import make_optimizer, make_scheduler, stopping_policy
+    from src.datasets.data import image_loader
+    from src.utils.delivery import file_hash, resolve_data_dir, write_json
+    from src.training.experiment import fit, tensor_loader
+    from src.models.models import build_model, classifier, configure_trainable, training_mode, CachedTail
+    from src.training.tuning import make_optimizer, make_scheduler, stopping_policy
 
     folder = (run/relative).resolve()
     if run.resolve() not in folder.parents or folder.parent.parent != run.resolve():

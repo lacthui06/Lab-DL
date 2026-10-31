@@ -17,8 +17,8 @@ import pandas as pd
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
-from src.notebook_views import class_metrics
-from src.delivery import audit_snapshot
+from src.utils.notebook_views import class_metrics
+from src.utils.delivery import audit_snapshot
 
 
 class NotebookReviewTests(unittest.TestCase):
@@ -57,7 +57,7 @@ class NotebookReviewTests(unittest.TestCase):
 
     def test_views_import_without_training_dependencies(self):
         result = subprocess.run([sys.executable, '-X', 'utf8', '-c',
-            "import sys; from src import notebook_views; "
+            "import sys; from src.utils import notebook_views; "
             "assert 'torch' not in sys.modules; assert 'src.models' not in sys.modules; "
             "assert 'src.experiment' not in sys.modules"], cwd=ROOT, capture_output=True, text=True)
         self.assertEqual(result.returncode, 0, result.stderr)
@@ -128,7 +128,7 @@ if __name__ == '__main__':
 
 def test_context_and_notebook_bootstrap_with_missing_cwd(tmp_path, monkeypatch):
     import os
-    from src import notebook_views as view
+    from src.utils import notebook_views as view
     lab = tmp_path / 'lab02'
     (lab / 'src').mkdir(parents=True)
     (lab / 'src/notebook_views.py').touch()
@@ -166,7 +166,7 @@ def test_context_and_notebook_bootstrap_with_missing_cwd(tmp_path, monkeypatch):
 
 
 def test_architecture_labels_match_each_saved_unfreeze_depth(tmp_path, monkeypatch):
-    from src import notebook_views as view
+    from src.utils import notebook_views as view
     expected = {
         'last_units': ('layer4.1 + fc', 'denseblock4.denselayer13–16 + norm5 + classifier'),
         'last_block': ('layer4 + fc', 'denseblock4 + norm5 + classifier'),
@@ -187,7 +187,7 @@ def test_architecture_labels_match_each_saved_unfreeze_depth(tmp_path, monkeypat
 
 
 def test_unexecuted_fine_grid_is_explanatory_table_not_results(tmp_path, monkeypatch):
-    from src import notebook_views as view
+    from src.utils import notebook_views as view
     tables = []
     monkeypatch.setattr(view, 'display', tables.append)
     monkeypatch.setattr(view, '_save', lambda *a: (_ for _ in ()).throw(AssertionError('No measured plot without results')))
@@ -200,7 +200,7 @@ def test_unexecuted_fine_grid_is_explanatory_table_not_results(tmp_path, monkeyp
 
 def test_learning_plot_separates_stages_and_preserves_original_histories(tmp_path, monkeypatch):
     from matplotlib.figure import Figure
-    from src.reporting import plot_learning_curves
+    from src.utils.reporting import plot_learning_curves
     run = ROOT/json.loads((ROOT/'outputs/selected_run.json').read_text())['run']
     histories = {p: hashlib.sha256(p.read_bytes()).hexdigest() for p in run.glob('*/*/history.csv')}
     inspected = []

@@ -14,12 +14,8 @@ import pandas as pd
 from IPython.display import Image, display
 from PIL import Image as PILImage
 from sklearn.model_selection import train_test_split
-from .delivery import resolve_data_dir, write_json
-
-CLASSES = ['airplane', 'automobile', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck']
-CHECKSUMS = ['c99cafc152244af753f735de768cd75f', 'd4bba439e000b95fd0a9bffe97cbabec',
-             '54ebc095f3ab1f0389bbae665268c751', '634d18415352ddfa80567beed471001a',
-             '482c414d41f54cd18b22e5b47cb7c3cb', '40351d587109b95175f43aff81a1287e']
+from ..utils.delivery import resolve_data_dir, write_json
+from ..utils.constants import CLASSES, CHECKSUMS
 
 
 def read_raw(data_dir: Path) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:

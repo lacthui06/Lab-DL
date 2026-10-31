@@ -7,7 +7,7 @@ So sánh ResNet18 và DenseNet121 pretrained, head-only và fine-tune. Kết qu�
 
 - [description_lab_02.md](description_lab_02.md): nội dung đối chiếu trực tiếp ảnh đề trang 23; phân biệt yêu cầu của đề với lựa chọn của bài làm.
 - [walkthrough_lab_02.md](walkthrough_lab_02.md): tài liệu sống duy nhất, theo [template](../../.agents/templates/walkthrough_template.md): Spec → Changelog → Report.
-- [01_lab02_eda.ipynb](notebooks/01_lab02_eda.ipynb): raw → integrity → pixel/spatial EDA → preprocessing → handcrafted features; chỉ dùng `src/eda.py`, không nạp mạng.
+- [01_lab02_eda.ipynb](notebooks/01_lab02_eda.ipynb): raw → integrity → pixel/spatial EDA → preprocessing → handcrafted features; chỉ dùng `src.datasets.eda`, không nạp mạng.
 - [02_lab02_modeling.ipynb](notebooks/02_lab02_modeling.ipynb): kiến trúc tóm tắt, LR search, đường cong, chất lượng/chi phí, phân tích lỗi và đề xuất.
 - [config/](config/): [full.json](config/full.json) cho GPU 224×224; [cpu_pilot.json](config/cpu_pilot.json) kiểm tra nhỏ; [cpu_full.json](config/cpu_full.json) mô tả run CPU lịch sử; [tuned.json](config/tuned.json) là cấu hình tuning chạy được; thiết kế và lý do nằm trong walkthrough.
 - [requirements.txt](requirements.txt): phiên bản cố định từ Windows; cài trên Linux/Kaggle chưa kiểm chứng.
@@ -17,16 +17,11 @@ So sánh ResNet18 và DenseNet121 pretrained, head-only và fine-tune. Kết qu�
 
 | File | Nơi sử dụng / mục đích |
 |---|---|
-| [src/data.py](src/data.py) | experiment.py/infer.py: loader/transform; gọi eda.locked_split để tái sử dụng split |
-| [src/models.py](src/models.py) | experiment.py và infer.py: khởi tạo mạng, freeze, cached tail |
-| [src/tuning.py](src/tuning.py) | Validate grid, AdamW/SGD momentum, cosine và chọn bằng validation/loss/time |
-| [src/costs.py](src/costs.py) | Nguồn tính chi phí search/selected recipe và khuyến nghị validation |
-| [src/experiment.py](src/experiment.py) | run.py, resume_interrupted.py: train/validation, checkpoint |
-| [src/reporting.py](src/reporting.py) | experiment.py và delivery.finalize_run: xuất metric/hình, một writer Markdown/HTML |
-| [src/eda.py](src/eda.py) | analyze_data.py/notebook 01 và data/experiment: split, RGB statistics, per-run EDA; không import torch/model |
-| [src/notebook_views.py](src/notebook_views.py) | Chỉ notebook modeling: đọc bằng chứng thí nghiệm, hiển thị biểu đồ và bảng ngắn |
-| [src/delivery.py](src/delivery.py) | finalize.py [--all]; IO/path/hash dùng chung cho experiment, EDA, infer và resume; gọi reporting.write_final_report |
-| [src/__init__.py](src/__init__.py) | Khai báo package src |
+| [src/datasets/](src/datasets/) | `data.py` loader/transform và `eda.py` split, thống kê, integrity; không phụ thuộc training |
+| [src/models/models.py](src/models/models.py) | Khởi tạo mạng, freeze, cached tail |
+| [src/training/](src/training/) | `experiment.py` train/validation/checkpoint; `tuning.py` search; `costs.py` chi phí |
+| [src/utils/](src/utils/) | `reporting.py`, `notebook_views.py`, `delivery.py`, constants và artifact IO |
+| [src/__init__.py](src/__init__.py) | Package nhẹ, chỉ khai báo namespace; dependency được nạp theo module cần dùng |
 | [scripts/analyze_data.py](scripts/analyze_data.py) | Tái đo EDA raw; `--data-dir` trỏ thư mục chứa `cifar-10-batches-py` |
 | [scripts/run.py](scripts/run.py) | Điểm vào huấn luyện, dùng config/*.json |
 | [scripts/infer.py](scripts/infer.py) | Nạp checkpoint và dự đoán một ảnh |
@@ -41,7 +36,7 @@ So sánh ResNet18 và DenseNet121 pretrained, head-only và fine-tune. Kết qu�
 | [tests/test_cleanup.py](tests/test_cleanup.py) | Graph tham chiếu production, CLI --help/import an toàn, split chung, CSV schema mới, đúng run/checkpoint và tải chia phần có checksum |
 | [tests/test_notebook_review.py](tests/test_notebook_review.py) | Đối chiếu metric, ranh giới EDA và liên kết tài liệu; không cần torch |
 
-Có 10 module `src/` và 7 CLI. Các file đang thực thi được nối bằng import/call thực hoặc lệnh CLI trong bảng trên. Snapshot trong `outputs/runs/` được manifest/hash tham chiếu, giữ riêng khỏi graph code hiện hành.
+Có 4 package chức năng trong `src/` và 7 CLI. Các file phẳng ở `src/` chỉ là compatibility shims để giữ lệnh cũ; logic duy nhất nằm trong package con. Snapshot trong `outputs/runs/` được manifest/hash tham chiếu, giữ riêng khỏi graph code hiện hành.
 
 Luồng chính: `run.py → experiment → data/models/tuning/reporting`; `data → eda.locked_split`; `reporting → costs`; `notebook 01 → eda`; `notebook 02 → notebook_views → costs`; `finalize.py → delivery → reporting`; `infer.py → data/models`.
 

@@ -24,15 +24,15 @@ from torch.utils.data import DataLoader, TensorDataset
 from torch.utils.tensorboard import SummaryWriter
 from torchvision.utils import make_grid
 
-from .data import image_loader, image_transform, prepare_indices
-from .eda import export_summary
-from .delivery import write_json, file_hash, resolve_data_dir
-from .models import (SPECS, build_model, classifier, features, configure_trainable,
-                     parameter_counts, training_mode, last_block, CachedTail)
+from ..datasets.data import image_loader, image_transform, prepare_indices
+from ..datasets.eda import export_summary
+from ..utils.delivery import write_json, file_hash, resolve_data_dir
+from ..models.models import (SPECS, build_model, classifier, features, configure_trainable,
+                             parameter_counts, training_mode, last_block, CachedTail)
 from .tuning import fine_candidates, select_trial, make_optimizer, make_scheduler, stopping_policy
-from .reporting import export_evaluation, summarize_suite
+from ..utils.reporting import export_evaluation, summarize_suite
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[2]
 
 
 def seed_all(seed):

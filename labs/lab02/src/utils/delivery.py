@@ -160,7 +160,7 @@ def finalize_run(run_path: str | None = None) -> None:
         search = pd.read_csv(run / name / "search_results.csv")
         chosen = json.loads((run / name / "selection.json").read_text(encoding="utf-8"))["head"]
         if 'best_val_loss' in search:
-            from .tuning import select_trial
+            from ..training.tuning import select_trial
             assert chosen['trial'] == select_trial(search.to_dict('records'),cfg.get('selection_policy'))['trial']
         else:
             assert chosen['trial'] == int(search.loc[search.best_val_accuracy.idxmax(),'trial'])
@@ -212,7 +212,7 @@ def finalize_run(run_path: str | None = None) -> None:
                 axes[row, column].set(title=f'{name}: {metric}', xlabel='Epoch within stage')
                 axes[row, column].legend(fontsize=8)
                 axes[row, column].grid(alpha=.2)
-    from .costs import cost_table, validation_recommendation
+    from ..training.costs import cost_table, validation_recommendation
     costs = cost_table(run,comparison).to_dict('records')
     fig.suptitle('Monitoring evidence reconstructed from TensorBoard events (not a UI screenshot)')
     fig.tight_layout()

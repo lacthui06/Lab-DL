@@ -26,3 +26,4 @@ events.out.tfevents.*
 # Local descriptors from the earlier raw audit; not input data or submission evidence.
 outputs/eda/spatial_features.csv
 .agents/kaggle-upload/*.zip
+.DS_Store

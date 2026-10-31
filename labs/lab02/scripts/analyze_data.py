@@ -5,7 +5,7 @@ import sys
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
-from src.eda import build
+from src.datasets.eda import build
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)

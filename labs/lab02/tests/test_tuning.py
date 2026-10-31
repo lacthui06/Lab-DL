@@ -7,8 +7,8 @@ import torch
 from torch import nn
 from torch.utils.data import DataLoader, TensorDataset
 
-from src.models import build_model, configure_trainable, parameter_counts, training_mode
-from src.tuning import fine_candidates, select_trial, make_optimizer, make_scheduler
+from src.models.models import build_model, configure_trainable, parameter_counts, training_mode
+from src.training.tuning import fine_candidates, select_trial, make_optimizer, make_scheduler
 
 
 @pytest.mark.parametrize('name,expected', [('resnet18', 4725770), ('densenet121', 2921034)])
@@ -64,7 +64,7 @@ def test_ratio_schedule_and_resume_preserve_group_ratio():
     (True, 12, 'epoch_budget_exhausted'),
 ])
 def test_stopping_respects_minimum_and_reports_actual_epochs(tmp_path, monkeypatch, improves, expected, reason):
-    from src import experiment
+    from src.training import experiment
     model = nn.Linear(2, 2)
     loader = DataLoader(TensorDataset(torch.ones(2, 2), torch.tensor([0, 1])), batch_size=2)
     state = {'epoch': 0}
@@ -160,7 +160,7 @@ def test_optimizer_groups_and_cosine_update(name):
 
 
 def test_fit_logs_validation_loss_lr_and_time_at_selected_checkpoint(tmp_path):
-    from src.experiment import fit
+    from src.training.experiment import fit
     torch.set_num_threads(2)
     torch.manual_seed(42)
     model = nn.Linear(8,2)
@@ -183,7 +183,7 @@ def test_fit_logs_validation_loss_lr_and_time_at_selected_checkpoint(tmp_path):
 
 def test_epoch_resume_matches_uninterrupted_training_and_events(tmp_path, monkeypatch):
     """An interrupted epoch is replayed with identical dropout, shuffle and LR."""
-    from src import experiment
+    from src.training import experiment
     from tensorboard.backend.event_processing.event_accumulator import EventAccumulator
     torch.set_num_threads(2)
     data = TensorDataset(torch.eye(8), torch.arange(8) % 2)
@@ -237,8 +237,9 @@ def test_resume_cli_restores_head_trial_without_finalizing_suite(tmp_path, monke
     import importlib.util
     from pathlib import Path
     import numpy as np
-    from src import experiment, models
-    from src.delivery import file_hash, write_json
+    from src.training import experiment
+    from src.models import models
+    from src.utils.delivery import file_hash, write_json
     root = Path(__file__).resolve().parents[1]
     spec = importlib.util.spec_from_file_location('resume_cli', root/'scripts/resume_interrupted.py')
     cli = importlib.util.module_from_spec(spec)
@@ -326,7 +327,7 @@ def test_real_model_two_block_one_batch_overfit(name, depth):
 
 
 def test_search_resets_same_head_and_does_not_touch_test(tmp_path,monkeypatch):
-    import src.experiment as exp
+    import src.training.experiment as exp
     import numpy as np
     torch.set_num_threads(2)
     torch.manual_seed(42)
@@ -369,7 +370,7 @@ def test_search_resets_same_head_and_does_not_touch_test(tmp_path,monkeypatch):
 
 
 def test_costs_count_entire_fine_search_once_and_selected_recipe_separately(tmp_path):
-    from src.costs import cost_table
+    from src.training.costs import cost_table
     import pandas as pd
     folder=tmp_path/'resnet18/head_selected'; folder.mkdir(parents=True)
     (folder/'training_summary.json').write_text(json.dumps(dict(feature_extraction_train_val_seconds=10,
@@ -384,10 +385,10 @@ def test_costs_count_entire_fine_search_once_and_selected_recipe_separately(tmp_
 @pytest.mark.parametrize('regularized', [False, True])
 def test_training_search_smoke_and_reporting_without_downloads(tmp_path,monkeypatch,regularized):
     """Exercise real fit/predict/promotion/cost reporting on a small synthetic batch."""
-    import src.experiment as exp
+    import src.training.experiment as exp
     import numpy as np
     import pandas as pd
-    from src.reporting import summarize_suite
+        from src.utils.reporting import summarize_suite
     torch.set_num_threads(2)
     torch.manual_seed(42)
     images=torch.randn(4,3,64,64)

@@ -97,19 +97,19 @@ def test_chunked_download_verifies_headers_checksum_and_reuses_archive(tmp_path,
 
 
 def test_io_helpers_are_lightweight_and_data_paths_are_shared(tmp_path,monkeypatch):
-    from src.delivery import resolve_data_dir,resolve_run,write_json,file_hash
+    from src.utils.delivery import resolve_data_dir,resolve_run,write_json,file_hash
     monkeypatch.setenv('LAB02_DATA',str(tmp_path/'external'))
     assert resolve_data_dir(tmp_path)==(tmp_path/'external').resolve()
     assert resolve_data_dir(tmp_path,tmp_path/'explicit')==(tmp_path/'explicit').resolve()
     write_json(tmp_path/'outputs/selected_run.json',dict(run='outputs/runs/a'))
     assert resolve_run(tmp_path)==(tmp_path/'outputs/runs/a').resolve()
     assert file_hash(tmp_path/'outputs/selected_run.json')==hashlib.sha256((tmp_path/'outputs/selected_run.json').read_bytes()).hexdigest()
-    result=subprocess.run([sys.executable,'-c',"import sys; import src.delivery; assert 'torch' not in sys.modules; assert 'src.experiment' not in sys.modules"],cwd=ROOT,capture_output=True,text=True)
+    result=subprocess.run([sys.executable,'-c',"import sys; import src.utils.delivery; assert 'torch' not in sys.modules; assert 'src.training.experiment' not in sys.modules"],cwd=ROOT,capture_output=True,text=True)
     assert result.returncode==0,result.stderr
 
 
 def test_rgb_formula_matches_independent_population_statistics():
-    from src.eda import rgb_statistics
+    from src.datasets.eda import rgb_statistics
     rng=np.random.default_rng(42)
     raw=rng.integers(0,256,size=(5,32,32,3),dtype=np.uint8)
     ids=np.array([1,3])
@@ -121,7 +121,7 @@ def test_rgb_formula_matches_independent_population_statistics():
 
 
 def test_training_reuses_eda_locked_split(tmp_path,monkeypatch):
-    import src.data as data
+    import src.datasets.data as data
     labels=np.repeat(np.arange(10),5000)
     class FakeCifar:
         def __init__(self,root,train=True,download=False): self.targets=labels if train else np.repeat(np.arange(10),1000)
@@ -140,7 +140,7 @@ def test_training_reuses_eda_locked_split(tmp_path,monkeypatch):
 
 def test_quality_cost_handles_new_csv_execution_column(tmp_path,monkeypatch):
     import matplotlib.pyplot as plt
-    from src import notebook_views as view
+    from src.utils import notebook_views as view
     run=ROOT/json.loads((ROOT/'outputs/selected_run.json').read_text())['run']
     frame=pd.read_csv(run/'comparison.csv')
     costs=pd.read_csv(run/'cost_comparison.csv')
@@ -156,7 +156,7 @@ def test_quality_cost_handles_new_csv_execution_column(tmp_path,monkeypatch):
 
 
 def test_complete_delivery_uses_requested_run_and_recommended_checkpoint(tmp_path,monkeypatch):
-    import src.delivery as delivery
+    import src.utils.delivery as delivery
     import unittest.mock as mock
     root=tmp_path/'lab';(root/'outputs/runs/wanted').mkdir(parents=True)
     run=root/'outputs/runs/wanted'
@@ -189,8 +189,8 @@ def test_finalizer_writes_one_config_driven_report(tmp_path,monkeypatch):
     from sklearn.metrics import classification_report,log_loss
     from torch.utils.tensorboard import SummaryWriter
     from torchvision.datasets import CIFAR10
-    import src.delivery as delivery
-    from src.eda import CLASSES
+    import src.utils.delivery as delivery
+    from src.datasets.eda import CLASSES
     data_dir=Path(os.environ.get('LAB02_DATA',str(ROOT/'data')))
     if not (data_dir/'cifar-10-batches-py').exists(): pytest.skip('Raw CIFAR-10 required')
     labels=np.asarray(CIFAR10(str(data_dir),train=False).targets)

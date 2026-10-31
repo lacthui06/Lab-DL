@@ -237,7 +237,7 @@ Kiểm tra checkout local: 39 file source snapshot, 14 khớp SHA256 theo byte, 
 
 | Quyết định | Điểm 1.0 | Hướng giải quyết |
 |---|---|---|
-| Hai notebook tách biệt | EDA không modeling | EDA chỉ nhập src.eda (NumPy/Pillow/sklearn), kiểm thử subprocess chặn torch/torchvision/src.models/src.experiment; không đọc bảng kết quả model |
+| Hai notebook tách biệt | EDA không modeling | EDA chỉ nhập src.datasets.eda (NumPy/Pillow/sklearn), kiểm thử subprocess chặn torch/torchvision/src.models.models/src.training.experiment; không đọc bảng kết quả model |
 | Một tài liệu sống | Naming/template | Lab02_CIFAR10.md và RESULTS.md hợp nhất vào walkthrough_lab_02.md |
 | Không xóa snapshot | Chống deadfile | Snapshot là chứng cứ hash/manifest; CLI/module hiện hành có bản đồ tham chiếu trong README |
 | Gộp logic đóng gói | Dọn src/scripts đã trao đổi | finalize.py [--all] dùng src/delivery.py; CLI có một điểm vào |
