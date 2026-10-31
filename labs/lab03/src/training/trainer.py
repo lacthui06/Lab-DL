@@ -19,7 +19,7 @@ def make_trainer(model, tokenizer, ds, config, run_path):
         num_train_epochs=config["num_train_epochs"],
         per_device_train_batch_size=config["batch_size"],
         per_device_eval_batch_size=config["eval_batch_size"],
-        weight_decay=config["weight_decay"], warmup_ratio=config["warmup_ratio"],
+        weight_decay=config["weight_decay"], warmup_steps=config.get("warmup_ratio", config.get("warmup_steps", 0.0)),
         eval_strategy=strategy, save_strategy=strategy,
         eval_steps=config.get("eval_steps", 100), save_steps=config.get("eval_steps", 100),
         logging_strategy="steps" if strategy == "steps" else "epoch",

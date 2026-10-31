@@ -18,7 +18,7 @@ SOURCE = ROOT / "notebooks/02_modeling.ipynb"
 DESTINATION = ROOT / "kaggle"
 CODE_FILE = "02_modeling_train.ipynb"
 SLUG = "lab03-frozen-distilbert-train"
-TITLE = "Lab03 - Frozen DistilBERT train (10 epoch, validation loss)"
+TITLE = "Lab03 Frozen DistilBERT train"
 
 
 def train_notebook(source=SOURCE):

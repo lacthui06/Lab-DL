@@ -17,7 +17,7 @@ if __name__=='__main__':
     with run_context('dataset_preview',cfg) as out:
         raw=load_data(settings)
         tokenizer=AutoTokenizer.from_pretrained(settings['model_name'],revision=settings['model_revision'])
-        lengths=[len(ids) for ids in tokenizer(raw['train']['text'],truncation=False)['input_ids']]
+        lengths=[len(ids) for ids in tokenizer(list(raw['train']['text']),truncation=False)['input_ids']]
         counts={split:{str(c):int(sum(int(y)==c for y in raw[split]['label'])) for c in (0,1)} for split in raw}
         examples=[]
         for label in (0,1):
