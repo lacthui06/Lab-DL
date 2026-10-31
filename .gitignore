@@ -20,5 +20,8 @@ events.out.tfevents.*
 .env
 .env.*
 
+# Downloaded Kaggle upload bundles are too large for GitHub.
+.agents/kaggle-upload/*.zip
+
 # Small locked index artifact, not image data or a learned feature cache.
 !labs/lab02/outputs/eda/split_indices.npz
