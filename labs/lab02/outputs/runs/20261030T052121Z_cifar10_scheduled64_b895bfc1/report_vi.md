@@ -47,3 +47,120 @@ Lưới ảnh chọn tối đa 8 đúng/8 sai để minh họa; xác suất soft
 - [Torchvision models và weights](https://docs.pytorch.org/vision/main/models)
 - [PyTorch transfer learning](https://docs.pytorch.org/tutorials/beginner/transfer_learning_tutorial)
 - [TensorBoard với PyTorch](https://docs.pytorch.org/tutorials/intermediate/tensorboard_tutorial)
+
+## 8. Khảo sát lỗi và hình bổ sung
+
+### Dữ liệu RGB và phân bố lớp
+
+![Ảnh train theo lớp](eda/training_examples.png)
+
+| Class | Train | Validation | Test |
+|---|---:|---:|---:|
+| airplane | 4500 | 500 | 1000 |
+| automobile | 4500 | 500 | 1000 |
+| bird | 4500 | 500 | 1000 |
+| cat | 4500 | 500 | 1000 |
+| deer | 4500 | 500 | 1000 |
+| dog | 4500 | 500 | 1000 |
+| frog | 4500 | 500 | 1000 |
+| horse | 4500 | 500 | 1000 |
+| ship | 4500 | 500 | 1000 |
+| truck | 4500 | 500 | 1000 |
+
+- resnet18/head_selected: cặp lỗi nhiều nhất cat → dog (137 ảnh trong tập test đã chọn).
+
+**Ba lớp F1 thấp nhất — resnet18/head_selected:**
+
+| Class | Precision | Recall | F1 |
+|---|---:|---:|---:|
+| cat | 0.6425 | 0.6200 | 0.6310 |
+| bird | 0.7184 | 0.6530 | 0.6841 |
+| deer | 0.6780 | 0.7180 | 0.6974 |
+
+- resnet18/finetune: cặp lỗi nhiều nhất dog → cat (117 ảnh trong tập test đã chọn).
+
+**Ba lớp F1 thấp nhất — resnet18/finetune:**
+
+| Class | Precision | Recall | F1 |
+|---|---:|---:|---:|
+| cat | 0.7359 | 0.7190 | 0.7274 |
+| dog | 0.7934 | 0.7910 | 0.7922 |
+| deer | 0.8454 | 0.7490 | 0.7943 |
+
+
+### resnet18
+
+![Learning curves](resnet18/learning_curves.png)
+
+![Hyperparameter search](resnet18/hyperparameter_search.png)
+
+![Confusion matrix](resnet18/finetune/confusion_matrix.png)
+
+![Prediction examples](resnet18/finetune/prediction_examples.png)
+
+![ROC và PR](resnet18/finetune/roc_pr.png)
+
+- densenet121/head_selected: cặp lỗi nhiều nhất dog → cat (180 ảnh trong tập test đã chọn).
+
+**Ba lớp F1 thấp nhất — densenet121/head_selected:**
+
+| Class | Precision | Recall | F1 |
+|---|---:|---:|---:|
+| cat | 0.6336 | 0.7210 | 0.6745 |
+| deer | 0.7338 | 0.7360 | 0.7349 |
+| bird | 0.7945 | 0.6880 | 0.7374 |
+
+- densenet121/finetune: cặp lỗi nhiều nhất cat → dog (106 ảnh trong tập test đã chọn).
+
+**Ba lớp F1 thấp nhất — densenet121/finetune:**
+
+| Class | Precision | Recall | F1 |
+|---|---:|---:|---:|
+| cat | 0.8599 | 0.8160 | 0.8374 |
+| dog | 0.8343 | 0.8910 | 0.8617 |
+| bird | 0.9117 | 0.8980 | 0.9048 |
+
+
+### densenet121
+
+![Learning curves](densenet121/learning_curves.png)
+
+![Hyperparameter search](densenet121/hyperparameter_search.png)
+
+![Confusion matrix](densenet121/finetune/confusion_matrix.png)
+
+![Prediction examples](densenet121/finetune/prediction_examples.png)
+
+![ROC và PR](densenet121/finetune/roc_pr.png)
+
+### TensorBoard và chi phí
+
+![TensorBoard scalars](tensorboard_evidence.png)
+
+Hình này dựng từ TensorBoard events thật; không phải ảnh chụp giao diện. Mở TensorBoard theo README để xem tương tác.
+
+Điều kiện được đề xuất bằng validation: **densenet121/finetune**, validation accuracy **91.86%**.
+
+Chi phí pipeline gồm feature extraction, toàn bộ head search và toàn bộ fine-tune search nếu có; chưa gồm EDA, ghi báo cáo và inference test. Xem cost_comparison.csv.
+
+| Model | Stage | Feature extraction (s) | All head search (s) | Pipeline search train (s) | Test (s) |
+|---|---|---:|---:|---:|---:|
+| resnet18 | head | 337.1 | 23.6 | 360.7 | 45.2 |
+| resnet18 | finetune | 337.1 | 23.6 | 6901.2 | 41.8 |
+| densenet121 | head | 630.2 | 18.6 | 648.8 | 207.7 |
+| densenet121 | finetune | 630.2 | 18.6 | 20972.1 | 141.5 |
+
+### Cấu hình head được chọn bằng validation
+
+| Model | LR | Batch | Best epoch | Validation accuracy |
+|---|---:|---:|---:|---:|
+| resnet18 | 0.001 | 128 | 10 | 76.94% |
+| densenet121 | 0.001 | 128 | 8 | 79.78% |
+
+### Diễn giải chỉ số và thiết kế
+
+Accuracy là số ảnh dự đoán đúng chia tổng số ảnh. Macro F1 tính F1 riêng cho từng lớp rồi lấy trung bình không trọng số; vì vậy mỗi lớp đóng góp ngang nhau. Macro Precision/Recall và cross-entropy test được lưu trong metrics.json. ROC-AUC và average precision tính one-vs-rest từng lớp, không phải cùng một đại lượng.
+
+ResNet dùng residual connections để cộng tín hiệu qua các block; DenseNet nối các feature maps từ nhiều lớp trong dense block. Thực nghiệm thay head và giữ cấu trúc backbone gốc, không thiết kế lại CNN từ đầu.
+
+Profile cifar10_scheduled64: ngân sách tối đa 20 epoch fine-tune, ảnh 64x64, seed 42. Kết quả chỉ đại diện cấu hình và ngân sách này; một seed chưa chứng minh ưu thế thống kê.

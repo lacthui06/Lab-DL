@@ -1,0 +1,150 @@
+{
+  "dataset": "CIFAR10",
+  "seed": 42,
+  "threads": 4,
+  "train_limit": 0,
+  "val_limit": 0,
+  "test_limit": 0,
+  "models": [
+    "resnet18",
+    "densenet121"
+  ],
+  "learning_rates": [
+    0.0001,
+    0.001,
+    0.01
+  ],
+  "batch_sizes": [
+    64,
+    128
+  ],
+  "head_epochs": 10,
+  "finetune_epochs": 30,
+  "finetune_backbone_lr": 1e-05,
+  "finetune_head_lr": 0.0001,
+  "weight_decay": 0.0001,
+  "feature_batch_size": 64,
+  "image_size": 224,
+  "profile": "cifar10_gpu_tuned224",
+  "notes": "Executable tuning grid; 6 head trials and 13 fine trials per architecture. Same maximum epoch budget and stopping policy; actual completed epochs may differ, same initial selected head, full image forward for both. No measured improvement claimed. Active batch grid 64/128; head 10 epochs; fine max 30, minimum 10 with validation-loss patience 7. New budget not executed.",
+  "split_seed": 42,
+  "require_cuda": true,
+  "cache_frozen_prefix": false,
+  "head_optimizer": "adamw",
+  "momentum": 0.9,
+  "selection_policy": {
+    "accuracy_tolerance": 0.001,
+    "loss_tolerance": 0.005
+  },
+  "finetune_candidates": [
+    {
+      "id": "control",
+      "optimizer": "adamw",
+      "backbone_lr": 1e-05,
+      "head_lr": 0.0001,
+      "unfreeze": "last_block",
+      "scheduler": "none"
+    },
+    {
+      "id": "adamw_last_block_3e-06",
+      "optimizer": "adamw",
+      "backbone_lr": 3e-06,
+      "head_lr": 3e-05,
+      "unfreeze": "last_block",
+      "scheduler": "cosine"
+    },
+    {
+      "id": "adamw_last_block_1e-05",
+      "optimizer": "adamw",
+      "backbone_lr": 1e-05,
+      "head_lr": 0.0001,
+      "unfreeze": "last_block",
+      "scheduler": "cosine"
+    },
+    {
+      "id": "adamw_last_block_3e-05",
+      "optimizer": "adamw",
+      "backbone_lr": 3e-05,
+      "head_lr": 0.0003,
+      "unfreeze": "last_block",
+      "scheduler": "cosine"
+    },
+    {
+      "id": "adamw_last_two_blocks_3e-06",
+      "optimizer": "adamw",
+      "backbone_lr": 3e-06,
+      "head_lr": 3e-05,
+      "unfreeze": "last_two_blocks",
+      "scheduler": "cosine"
+    },
+    {
+      "id": "adamw_last_two_blocks_1e-05",
+      "optimizer": "adamw",
+      "backbone_lr": 1e-05,
+      "head_lr": 0.0001,
+      "unfreeze": "last_two_blocks",
+      "scheduler": "cosine"
+    },
+    {
+      "id": "adamw_last_two_blocks_3e-05",
+      "optimizer": "adamw",
+      "backbone_lr": 3e-05,
+      "head_lr": 0.0003,
+      "unfreeze": "last_two_blocks",
+      "scheduler": "cosine"
+    },
+    {
+      "id": "sgd_last_block_0.0001",
+      "optimizer": "sgd",
+      "backbone_lr": 0.0001,
+      "head_lr": 0.001,
+      "unfreeze": "last_block",
+      "scheduler": "cosine"
+    },
+    {
+      "id": "sgd_last_block_0.0003",
+      "optimizer": "sgd",
+      "backbone_lr": 0.0003,
+      "head_lr": 0.003,
+      "unfreeze": "last_block",
+      "scheduler": "cosine"
+    },
+    {
+      "id": "sgd_last_block_0.001",
+      "optimizer": "sgd",
+      "backbone_lr": 0.001,
+      "head_lr": 0.01,
+      "unfreeze": "last_block",
+      "scheduler": "cosine"
+    },
+    {
+      "id": "sgd_last_two_blocks_0.0001",
+      "optimizer": "sgd",
+      "backbone_lr": 0.0001,
+      "head_lr": 0.001,
+      "unfreeze": "last_two_blocks",
+      "scheduler": "cosine"
+    },
+    {
+      "id": "sgd_last_two_blocks_0.0003",
+      "optimizer": "sgd",
+      "backbone_lr": 0.0003,
+      "head_lr": 0.003,
+      "unfreeze": "last_two_blocks",
+      "scheduler": "cosine"
+    },
+    {
+      "id": "sgd_last_two_blocks_0.001",
+      "optimizer": "sgd",
+      "backbone_lr": 0.001,
+      "head_lr": 0.01,
+      "unfreeze": "last_two_blocks",
+      "scheduler": "cosine"
+    }
+  ],
+  "early_stopping": {
+    "min_epochs": 10,
+    "patience": 7,
+    "min_delta": 0.0001
+  }
+}

@@ -73,7 +73,7 @@ def finalize_run(run_path: str | None = None) -> None:
                                  precision_recall_curve, average_precision_score)
     from tensorboard.backend.event_processing.event_accumulator import EventAccumulator
 
-    root = Path(__file__).resolve().parents[1]
+    root = Path(__file__).resolve().parents[2]
     run = resolve_run(root,run_path)
     work = run.parents[2]
     data_dir = resolve_data_dir(work)
@@ -304,7 +304,7 @@ def complete_delivery(run_path: str | None = None) -> None:
     import subprocess
     import sys
     import time
-    root = Path(__file__).resolve().parents[1]
+    root = Path(__file__).resolve().parents[2]
 
     run = resolve_run(root,run_path)
     deadline = time.monotonic() + 14400

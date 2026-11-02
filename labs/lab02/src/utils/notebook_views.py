@@ -17,11 +17,11 @@ def context() -> tuple[Path, Path, Path]:
     """Resolve the lab, explicitly selected run, and presentation destination."""
     configured = os.environ.get('LAB02_ROOT')
     try:
-        root = Path(configured).expanduser().resolve() if configured else Path(__file__).resolve().parents[1]
+        root = Path(configured).expanduser().resolve() if configured else Path(__file__).resolve().parents[2]
     except OSError as exc:
         raise RuntimeError('Cannot resolve Lab02. Set LAB02_ROOT to an existing absolute Lab02 directory.') from exc
-    if not (root / 'src/notebook_views.py').is_file():
-        raise RuntimeError(f'Invalid Lab02 directory: {root}. Set LAB02_ROOT to the directory containing src/notebook_views.py.')
+        if not (root / 'src/utils/notebook_views.py').is_file():
+            raise RuntimeError(f'Invalid Lab02 directory: {root}. Set LAB02_ROOT to the directory containing src/utils/notebook_views.py.')
     selected = json.loads((root / 'outputs/selected_run.json').read_text(encoding='utf-8'))
     run = Path(os.environ.get('LAB02_RUN', selected['run']))
     run = run if run.is_absolute() else root / run
@@ -84,17 +84,14 @@ def learning_curves(run: Path, output: Path) -> None:
 
 
 def epoch_budget(run: Path, root: Path) -> None:
-    """Contrast measured run history with the not-yet-executed active config."""
+    """Display the measured epoch budget for each recorded stage."""
     recorded = json.loads((run/'config.json').read_text(encoding='utf-8'))
-    active = json.loads((root/'config/tuned.json').read_text(encoding='utf-8'))
     rows = []
     for name in pd.read_csv(run/'comparison.csv').model.unique():
         for stage, folder, key in [('Head', 'head_selected', 'head_epochs'), ('Fine-tune', 'finetune', 'finetune_epochs')]:
             history = pd.read_csv(run/name/folder/'history.csv')
             rows.append({'Model':name, 'Stage':stage, 'Recorded epochs':len(history),
-                'Original configured budget':recorded[key],
-                'New budget (NOT RUN)':str(active[key]) if stage=='Head' else
-                    f"min {active['early_stopping']['min_epochs']}, max {active[key]}"})
+                'Configured budget':recorded[key]})
     display(pd.DataFrame(rows))
 
 

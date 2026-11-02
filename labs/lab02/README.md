@@ -36,7 +36,7 @@ So sánh ResNet18 và DenseNet121 pretrained, head-only và fine-tune. Kết qu�
 | [tests/test_cleanup.py](tests/test_cleanup.py) | Graph tham chiếu production, CLI --help/import an toàn, split chung, CSV schema mới, đúng run/checkpoint và tải chia phần có checksum |
 | [tests/test_notebook_review.py](tests/test_notebook_review.py) | Đối chiếu metric, ranh giới EDA và liên kết tài liệu; không cần torch |
 
-Có 4 package chức năng trong `src/` và 7 CLI. Các file phẳng ở `src/` chỉ là compatibility shims để giữ lệnh cũ; logic duy nhất nằm trong package con. Snapshot trong `outputs/runs/` được manifest/hash tham chiếu, giữ riêng khỏi graph code hiện hành.
+Có 4 package chức năng trong `src/` và 7 CLI.; logic duy nhất nằm trong package con. Snapshot trong `outputs/runs/` được manifest/hash tham chiếu, giữ riêng khỏi graph code hiện hành.
 
 Luồng chính: `run.py → experiment → data/models/tuning/reporting`; `data → eda.locked_split`; `reporting → costs`; `notebook 01 → eda`; `notebook 02 → notebook_views → costs`; `finalize.py → delivery → reporting`; `infer.py → data/models`.
 
