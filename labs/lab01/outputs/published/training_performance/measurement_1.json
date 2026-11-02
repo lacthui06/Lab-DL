@@ -1,0 +1,31 @@
+{
+  "name": "MainMLP",
+  "phase": "training",
+  "device": "cpu",
+  "device_name": "CPU",
+  "batch_size": 128,
+  "measured_samples": 1280,
+  "median_batch_ms": 6.633650000367197,
+  "ms_per_sample": 0.05182539062786873,
+  "samples_per_second": 19295.561266107605,
+  "batch_times_ms": [
+    7.454599999618949,
+    7.7023999992889,
+    7.421399999657297,
+    6.6463000002841,
+    6.165499999951862,
+    6.6210000004502945,
+    6.74909999997908,
+    6.487099999503698,
+    5.965199999991455,
+    6.290899999839894
+  ],
+  "ram_baseline_rss_mib": 394.484375,
+  "ram_peak_rss_mib": 402.828125,
+  "ram_peak_rss_mib_per_sample": 3.1470947265625,
+  "ram_increment_rss_mib_per_sample": 0.065185546875,
+  "vram_peak_allocated_mib": null,
+  "vram_peak_allocated_mib_per_sample": null,
+  "pid": 24104,
+  "torch_threads": 2
+}

@@ -6,7 +6,7 @@
 
 **Quy ước bằng chứng:** số liệu được đọc từ artifact của từng run. Kết quả kiến trúc cũ, K-fold và sweep chưa được xác minh cho pipeline hiện hành không được dùng để chứng minh kết luận. Nhật ký sửa phần mềm nằm trong internal_changes.md, ngoài báo cáo.
 
-**Bản nguồn để dàn trang:** 27 đơn vị nội dung với ngắt trang gợi ý cho A4, có hình và bảng. Dự kiến font 12–13 pt, giãn dòng 1,3–1,5, lề 20–25 mm. Chưa xuất PDF; số trang cuối phải xác nhận khi render. Không dùng số dòng Markdown thay cho số trang.
+**Bản nguồn để dàn trang:** 29 đơn vị nội dung với ngắt trang gợi ý cho A4, có hình và bảng. Dự kiến font 12–13 pt, giãn dòng 1,3–1,5, lề 20–25 mm. Chưa xuất PDF; số trang cuối phải xác nhận khi render. Không dùng số dòng Markdown thay cho số trang.
 
 ## Tóm tắt
 
@@ -45,6 +45,8 @@ Nhánh optimizer tách riêng trên MainMLP. Tuning cải thiện SGD so với c
 25. 3.7. Loss/accuracy với best parameters của đủ ba optimizer
 26. 3.8. Refit, save/load và full-test sau tải
 27. 3.9. Kết luận, giới hạn và hướng phát triển
+28. 3.10. Kiến trúc hiển thị và tài nguyên mỗi mẫu training
+29. 3.11. Đo training với đúng một mẫu
 
 ## 1. ĐẶC TẢ, CƠ SỞ VÀ THIẾT KẾ
 
@@ -740,7 +742,7 @@ Trong điều kiện đo, tăng dung lượng SmallMLP sang MainMLP cải thiệ
 
 Optimizer cho thấy cấu hình/ngân sách có vai trò lớn. SGD cùng LR chưa đạt mức adaptive, nhưng LR/momentum riêng tăng kết quả mạnh. RMSprop/Adam tuned chưa vượt baseline là kết quả hợp lệ, không phải lý do thay số hoặc bỏ baseline tốt hơn.
 
-Giới hạn gồm một seed, 10 epoch, 10 trial ở pha startup, không enqueue baseline và không chứa weight_decay=0 trong search. Chưa có ablation từng feature, kiểm định cặp, calibration, near-duplicate audit hoặc benchmark thời gian lặp có kiểm soát. Test đã được dùng cho nhiều so sánh mô tả; phiên bản sau không nên điều chỉnh cấu hình theo các kết quả đó rồi gọi cùng test là đánh giá hoàn toàn mới.
+Giới hạn gồm một seed, 10 epoch, 10 trial ở pha startup, không enqueue baseline và không chứa weight_decay=0 trong search. Chưa có ablation từng feature, kiểm định cặp, calibration, near-duplicate audit hoặc benchmark thời gian nhiều lượt độc lập. Phép đo bổ sung ở mục 3.10–3.11 có lặp bước trong một process/model, chưa thay thế nhiều lượt độc lập. Test đã được dùng cho nhiều so sánh mô tả; phiên bản sau không nên điều chỉnh cấu hình theo các kết quả đó rồi gọi cùng test là đánh giá hoàn toàn mới.
 
 Ưu tiên mở rộng là nhiều seed, protocol được chốt trước, search bao gồm baseline, ngân sách vượt startup, ablation nhóm cường độ/hình học/biên và CNN nhỏ. Kaggle cần một lượt end-to-end với snapshot/artifact trước khi được coi là đã kiểm chứng môi trường. Augmentation cần extractor đồng bộ với ảnh biến đổi.
 
@@ -785,3 +787,21 @@ SmallMLP phù hợp minh họa mạng gọn; MainMLP là mốc năng lực cao h
 - **Best optimizer curves:** [history của đủ ba optimizer](outputs/published/best_optimizer_curves/best_optimizer_history.csv).
 
 - **Full-test sau load:** [metric](outputs/published/loaded_model_test/test_metrics.json); [index/nhãn/xác suất mẫu](outputs/published/loaded_model_test/loaded_model_test_samples.csv).
+
+### 3.10. Kiến trúc hiển thị và tài nguyên mỗi mẫu training
+
+Kiến trúc từng model được in trực tiếp trong notebook trước khi đọc/chạy model và lưu TXT cùng bảng layer, không chỉ mô tả bằng tên mạng. Lý do chọn dung lượng nhỏ/lớn và đầu vào pixel/feature được bổ sung vào description. Các learning curves vẫn đọc history của thí nghiệm gốc; không thay đổi accuracy, loss hoặc thời gian train lịch sử.
+
+Phép đo bổ sung ngày 02/11/2026 dùng checkpoint của ba model, batch train cố định 128 mẫu, CPU, 2 thread, 3 warmup và 10 batch timed. Chỉ vài bước training trên checkpoint bản sao trong process riêng, không huấn luyện lại toàn bộ và không đánh giá thêm test. Đo forward, CrossEntropyLoss, backward, optimizer.step với batch đã ở thiết bị; thời gian chia batch size là mức chuẩn hóa theo batch, không phải single-image latency. Không gồm loading/transfer, FE, validation và ghi artifact.
+
+Kết quả nằm trong [CSV hiệu năng training](outputs/published/training_performance/training_performance.csv), kèm [times thô SmallMLP](outputs/published/training_performance/measurement_0.json), [MainMLP](outputs/published/training_performance/measurement_1.json) và [MainMLP_FE](outputs/published/training_performance/measurement_2.json). Mỗi phép đo lưu cấu hình và môi trường riêng, không gán số liệu này ngược vào run cũ.
+
+RAM/sample là sampled peak RSS cả process chia batch size; có cả giá trị baseline và phần tăng so baseline. Nó chứa interpreter, thư viện, model và vùng nhớ dùng chung, có thể bỏ lỡ đỉnh ngắn hơn chu kỳ lấy mẫu; không phải số byte độc lập của từng ảnh. VRAM/sample dùng peak tensor allocated của PyTorch, không phải reserved cache/tổng bộ nhớ card; phép đo CPU hiện tại không có số VRAM. Lượt đo bộ nhớ riêng gồm bước training đầu tiên để tính cấp phát optimizer state; timing đo sau warmup không bật sampler. Không so sánh RSS giữa các process như bằng chứng chính xác về riêng dung lượng kiến trúc hoặc kết luận thứ hạng tốc độ phổ quát từ một lượt đo ngắn.
+
+### 3.11. Đo training với đúng một mẫu
+
+Đo lại độc lập với batch size 1 thay vì suy từ batch 128. [CSV batch 1](outputs/published/training_performance_single_sample/training_performance.csv) và [biểu đồ tài nguyên](outputs/published/training_performance_single_sample/training_resources.png) được nhúng trực tiếp trong notebook ngay sau MainMLP_FE, trước phần ROC/PR. Cùng CPU, 2 thread, 3 warmup và 10 timed steps, cùng mẫu train đã chuẩn bị; mỗi model ở process riêng trên checkpoint bản sao. Không chạy lại full training, không thay benchmark batch 128.
+
+RAM process gồm Python/runtime khi batch size bằng 1; bảng và biểu đồ phân biệt peak RSS với phần tăng so baseline. RSS là sampled, không phải peak chính xác; CPU không có số VRAM. RESOURCE_MODE điều khiển benchmark riêng với MODE training của các cell model. Bảng HTML và hình PNG được nhúng trực tiếp, kể cả khi kernel dùng backend Agg.
+
+Trong phép đo batch size 1, thời gian lần lượt khoảng 0,4810 / 0,9142 / 1,0679 ms cho SmallMLP / MainMLP / MainMLP_FE. Phần tăng RSS lần lượt khoảng 4,7383 / 7,0078 / 7,0000 MiB. MainMLP_FE và MainMLP chỉ lệch khoảng 8 KiB ở sampled RSS tăng thêm; không dùng mức lệch này để kết luận FE tiết kiệm RAM. Chênh lệch thời gian quan sát được cũng chưa được quy hoàn toàn cho 10 feature khi chưa lặp nhiều lượt độc lập.

@@ -1,0 +1,4 @@
+name,phase,device,device_name,batch_size,measured_samples,median_batch_ms,ms_per_sample,samples_per_second,ram_baseline_rss_mib,ram_peak_rss_mib,ram_peak_rss_mib_per_sample,ram_increment_rss_mib_per_sample,vram_peak_allocated_mib,vram_peak_allocated_mib_per_sample,pid,torch_threads
+SmallMLP,training,cpu,CPU,128,1280,0.5591500002992689,0.004368359377338038,228918.89462843907,392.92578125,398.640625,3.1143798828125,0.044647216796875,,,15664,2
+MainMLP,training,cpu,CPU,128,1280,6.633650000367197,0.05182539062786873,19295.561266107605,394.484375,402.828125,3.1470947265625,0.065185546875,,,24104,2
+MainMLP_FE,training,cpu,CPU,128,1280,7.69815000012386,0.06014179687596766,16627.37151106961,394.0546875,402.35546875,3.143402099609375,0.064849853515625,,,17696,2

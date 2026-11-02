@@ -1,0 +1,21 @@
+{
+  "settings": {
+    "batch_size": 128,
+    "warmup": 3,
+    "repeats": 10,
+    "threads": 2,
+    "device": "cpu"
+  },
+  "source_runs": [
+    "<LAB>/outputs/runs/20261022T133355Z_SmallMLP_cdad89a5",
+    "<LAB>/outputs/runs/20261022T133406Z_MainMLP_8f90f1a2",
+    "<LAB>/outputs/runs/20261022T133425Z_MainMLP_FE_d8323126"
+  ],
+  "data_path": "<LAB>/outputs/runs/20261022T122157Z_preparation_dcaece7b/prepared.npz",
+  "phase": "training",
+  "memory_pass": "one first training step",
+  "time_scope": "forward + CrossEntropyLoss + backward + optimizer step; preloaded batch",
+  "ram_scope": "sampled process RSS at 1ms; peak / batch, includes interpreter and shared allocations",
+  "vram_scope": "peak PyTorch allocated tensors / batch; CPU is unavailable, not zero",
+  "limitations": "steady-state batch-normalized timing is not single-image latency; excludes IO, transfer, validation and FE"
+}

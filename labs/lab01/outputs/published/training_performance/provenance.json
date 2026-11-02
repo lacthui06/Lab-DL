@@ -1,0 +1,53 @@
+{
+  "source_run": "20261102T045736Z_training_performance_e7394840",
+  "files": [
+    {
+      "path": "training_performance/config.json",
+      "bytes": 914,
+      "source_sha256": "78cf507baaa89dbd3ee0189e874d1bd927ae242d4f9d0abe052091dfcf5a6382",
+      "sha256": "5b4c2346f4a907145a4bb0b7aad0fed724bdeb05a71456a0be151d7274014d9b"
+    },
+    {
+      "path": "training_performance/environment_snapshot.json",
+      "bytes": 464,
+      "source_sha256": "06eb65ab6c6622474e4a80bac0d955433ee4cb929a63b1f50d64fb7e57a763f0",
+      "sha256": "31926d27b257f6e8510621ec2d0f8e95e823fbc8fdedb67d23531c6eaf2bfa65"
+    },
+    {
+      "path": "training_performance/measurement_0.json",
+      "bytes": 862,
+      "source_sha256": "89d4a4b46912e2d28c03f2184e97f7fceb98950ad2c6d2ec221790b43158b68e",
+      "sha256": "dfd8d728482d0b889815e2d85a4254940e0639af9e3c4a34eb262312de63ece8"
+    },
+    {
+      "path": "training_performance/measurement_1.json",
+      "bytes": 841,
+      "source_sha256": "61ba656a52c184f3cd48b082d6157b19ba8c85d5adca07cb1a4520688f5aeaea",
+      "sha256": "cc1c10ca9db93987d1b0f6b160cd3eb4c2fb8fe423f849f6d77fdcf4867edc20"
+    },
+    {
+      "path": "training_performance/measurement_2.json",
+      "bytes": 855,
+      "source_sha256": "95eaab16954e27f6d45ae416878fab0a0a7f272f567f1d7a39bb6f04d4838c86",
+      "sha256": "42165b2db2730237ef1e300094bca430dd11fab91bc4d7302277f59e3a50d096"
+    },
+    {
+      "path": "training_performance/methodology.json",
+      "bytes": 914,
+      "source_sha256": "78cf507baaa89dbd3ee0189e874d1bd927ae242d4f9d0abe052091dfcf5a6382",
+      "sha256": "5b4c2346f4a907145a4bb0b7aad0fed724bdeb05a71456a0be151d7274014d9b"
+    },
+    {
+      "path": "training_performance/status.json",
+      "bytes": 156,
+      "source_sha256": "6e9717647733ebd4fc74dfebee3d14d1eab2305f4b3a718f30b10631ed5e49fc",
+      "sha256": "39a8180ab09f53a7914706dffbd971ee558ae6b34d8bb0d51578852e0d408707"
+    },
+    {
+      "path": "training_performance/training_performance.csv",
+      "bytes": 766,
+      "source_sha256": "ad9ddde5a22690cc8dd901c3cbe69d3b6b3375b3b784364b3b32665ad4f259a2",
+      "sha256": "ad9ddde5a22690cc8dd901c3cbe69d3b6b3375b3b784364b3b32665ad4f259a2"
+    }
+  ]
+}
