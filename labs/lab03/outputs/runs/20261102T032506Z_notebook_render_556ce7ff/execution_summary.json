@@ -6,17 +6,17 @@
     "errors": 0,
     "training_executed": false,
     "artifact": "notebooks/01_eda_preprocessing_feature_engineering.ipynb",
-    "notebook_sha256": "8d5321ca721949d9c8f0a755808d60397eecda2fc79ca3d4881f4f143b548621",
+    "notebook_sha256": "96c8ad7a5dfc90c51344b60698fba0e3a7c77ce1a61eaf68291a0211b1b5bc49",
     "inline_pngs": 6
   },
   {
     "notebook": "02_modeling.ipynb",
     "mode": "view",
-    "executed_code_cells": 10,
+    "executed_code_cells": 11,
     "errors": 0,
     "training_executed": false,
     "artifact": "notebooks/02_modeling.ipynb",
-    "notebook_sha256": "327965afac1c433ff2fd13f5a1c80c12b365f5191aac208b04dddd19e52acc60",
-    "inline_pngs": 11
+    "notebook_sha256": "1f4274351240319939e6a58130543d1afdfd749f24c1c4fe0a3e49591edac39b",
+    "inline_pngs": 13
   }
 ]

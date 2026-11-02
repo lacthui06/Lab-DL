@@ -61,6 +61,7 @@ def test_discriminative_optimizer_trainer_ten_tiny_epochs(tiny, tmp_path):
     groups = trainer.optimizer.param_groups
     assert groups[0]['initial_lr'] == 2e-6
     assert groups[-1]['initial_lr'] == 1e-5
+    assert trainer.args.get_warmup_steps(10)==1
 
 
 def test_frozen_trial_artifacts_and_review_zip(tiny, tmp_path, monkeypatch):
@@ -85,6 +86,11 @@ def test_frozen_trial_artifacts_and_review_zip(tiny, tmp_path, monkeypatch):
     assert (out/'sample_predictions.png').is_file()
     assert json.loads((out/'sample_predictions.json').read_text())
     assert (out/'best_model/decision_threshold.json').is_file()
+    resources=json.loads((out/'resource_history.json').read_text())
+    assert [r['epoch'] for r in resources]==list(range(1,11))
+    assert all(r['ms_per_sample']>0 and r['ram_peak_rss_mib']>0 for r in resources)
+    assert all(r['vram_peak_allocated_mib'] is None for r in resources)
+    assert (out/'performance.png').is_file() and (out/'model_architecture.png').is_file()
     bundle = tmp_path/'outputs'/f'lab03_review_{out.name}.zip'
     with zipfile.ZipFile(bundle) as z:
         manifest = json.loads(z.read('bundle_manifest.json'))

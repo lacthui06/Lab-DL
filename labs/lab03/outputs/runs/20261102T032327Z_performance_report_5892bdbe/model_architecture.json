@@ -1,0 +1,18 @@
+{
+  "architecture": "DistilBertForSequenceClassification",
+  "model_name": "distilbert/distilbert-base-uncased",
+  "revision": "12040accade4e8a0f71eabdb258fecc2e7e948be",
+  "layers": 6,
+  "hidden_size": 768,
+  "attention_heads": 12,
+  "intermediate_size": 3072,
+  "num_labels": 2,
+  "freeze_layers": 4,
+  "dropout": {
+    "dropout": 0.2,
+    "attention_dropout": 0.2,
+    "seq_classif_dropout": 0.4
+  },
+  "source": "declared pinned DistilBERT base architecture, not locally reloaded checkpoint",
+  "reference_url": "https://huggingface.co/distilbert/distilbert-base-uncased/blob/12040accade4e8a0f71eabdb258fecc2e7e948be/config.json"
+}

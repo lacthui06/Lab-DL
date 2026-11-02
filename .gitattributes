@@ -14,3 +14,6 @@ labs/lab03/outputs/preflight/** -text
 
 # Giữ byte báo cáo tự xuất trong run gốc, kể cả dòng trắng cuối file.
 labs/lab03/outputs/runs/*/study_report.md -whitespace
+
+# Raw logs đã publish giữ đúng byte/CR/ANSI theo source manifest.
+labs/lab03/outputs/published/logs/** -whitespace

@@ -13,6 +13,9 @@ def finalize():
     configuration = read_json(ROOT/'config/report.json')
     configuration['primary_result'] = 'frozen_trial'
     configuration['runs']['final_review'] = out.name
+    from labs.lab03.src.performance import ensure_performance_report
+    configuration['runs']['performance_report'] = ensure_performance_report(
+        ROOT/'outputs/runs'/configuration['runs']['frozen_trial']).name
     save_json(ROOT/'config/report.json', configuration)
     trial = ROOT/'outputs/runs'/configuration['runs']['frozen_trial']
     summary = read_json(out/'review_summary.json')

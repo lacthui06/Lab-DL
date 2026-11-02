@@ -22,6 +22,7 @@ from labs.lab03.src.training.thresholds import select_validation_threshold, bina
 from labs.lab03.src.utils.plots import plot_epoch_learning, plot_confusion, plot_samples
 from labs.lab03.src.study import fit_text_baseline, audit_split_texts, prediction_diagnostics
 from labs.lab03.src.evidence import verify_manifest
+from labs.lab03.src.performance import ResourceMonitor, write_performance
 
 
 def probabilities(logits):
@@ -93,11 +94,21 @@ def run(config, root=ROOT, allow_cpu_fixture=False, device='auto'):
             finetuning=True, overrides=e['model_overrides'])
         optimizer, freezing = configure_frozen_optimizer(model, e)
         save_json(out/'freezing_and_optimizer.json', freezing)
+        save_json(out/'model_architecture.json', {'architecture':type(model).__name__,
+            'model_name':e['model_name'],'revision':e['model_revision'],
+            'layers':model.config.n_layers,'hidden_size':model.config.dim,
+            'attention_heads':model.config.n_heads,'intermediate_size':model.config.hidden_dim,
+            'num_labels':model.config.num_labels,'freeze_layers':e['freeze_layers'],
+            'dropout':{k:getattr(model.config,k) for k in ['dropout','attention_dropout','seq_classif_dropout']},
+            'source':'actual loaded model.config; recorded before training'})
         print('Trainable parameters:', freezing['trainable_parameters'], '/', freezing['total_parameters'])
         ds = tokenize_data(effective, tokenizer, e['max_length'])
-        trainer = make_trainer(model, tokenizer, ds, {**e, 'seed': config['seed']}, out)
+        trainer = make_trainer(model, tokenizer, ds, {**e, 'seed': config['seed'], 'record_resources':True}, out)
         trainer.optimizer = optimizer
-        trainer.train()  # New model from pretrained base; no resume_from_checkpoint.
+        try:
+            trainer.train()  # New model from pretrained base; no resume_from_checkpoint.
+        finally:
+            trainer.resource_callback.close()
         history = json.loads((out/'epoch_history.json').read_text())
         assert [r['epoch'] for r in history] == list(range(1, 11))
         best = min(history, key=lambda r: r['validation_loss'])
@@ -133,7 +144,13 @@ def run(config, root=ROOT, allow_cpu_fixture=False, device='auto'):
             'test_used_for_selection': False,
             'prior_test_exposure': 'Historical test results have already been inspected.'})
         # Test được đo sau khi đã ghi cố định checkpoint và threshold.
-        prediction = trainer.predict(ds['test'], metric_key_prefix='test')
+        monitor = ResourceMonitor(trainer.args.device, len(raw['test']),
+                                  trainer.args.eval_batch_size, trainer.args.per_device_eval_batch_size).start()
+        try:
+            prediction = trainer.predict(ds['test'], metric_key_prefix='test')
+        finally:
+            test_resources = monitor.finish()
+        save_json(out/'test_resource_metrics.json',test_resources)
         tp = probabilities(prediction.predictions); labels = raw['test']['label']
         save_json(out/'test_predictions.json', records(raw['test'], tp))
         save_json(out/'test_runtime_metrics.json', prediction.metrics)
@@ -163,6 +180,7 @@ def run(config, root=ROOT, allow_cpu_fixture=False, device='auto'):
         save_json(out/'probability_diagnostics.json', diagnostics)
         summary = f"""# Frozen DistilBERT trial\n\nRun: `{out.name}`\n\nTrain completed 10 epochs. Best checkpoint: epoch {best['epoch']} (validation loss).\n\nEmbedding and first {e['freeze_layers']} encoder layers frozen.\nEncoder LR {e['learning_rate']}; head LR {e['head_learning_rate']}.\n\nThreshold: {policy['selected_threshold']} (validation Macro-F1).\n\nThis configuration is a hypothesis, not a guaranteed improvement.\nOne seed only; historical test exposure; no causal claim about individual changes.\n\n```json\n{json.dumps(comparison, indent=2)}\n```\n"""
         (out/'report.md').write_text(summary, encoding='utf-8')
+        write_performance(out,out)
         print(summary)
     audit = verify_manifest(out)
     save_json(out/'package_audit.json', audit)

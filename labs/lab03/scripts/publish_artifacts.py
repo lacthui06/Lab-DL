@@ -23,6 +23,8 @@ JSON_FILES = {
     "freezing_and_optimizer.json", "test_predictions.json", "baseline_test_predictions.json", "baseline_policy.json",
     "validation_threshold_scan.json", "comparison.json", "per_class_metrics.json", "generalization_gaps.json", "review_summary.json", "audit.json",
     "inference_predictions.json", "baseline_validation_candidates.json", "baseline_validation_policy.json", "checkpoint_reference.json",
+    "performance_history.json", "performance_summary.json", "performance_source.json", "resource_history.json",
+    "test_resource_metrics.json", "model_architecture.json", "environment_snapshot.json", "source_commit.json",
 }
 
 
@@ -44,8 +46,10 @@ def publish_artifacts(settings=None, output_dir=None, source_root=ROOT):
         if read_json(paths['threshold_selection']/'decision_threshold.json') != read_json(paths['evaluation']/'decision_threshold.json'):
             raise ValueError("Report selection and evaluation use different threshold policies")
     provenance = {"runs": selected, "source_manifests": {k: hash_file(p/'manifest.json') for k,p in paths.items()},
+                  "availability_sha256": {k:hash_file(p/'artifact_availability.json') for k,p in paths.items() if (p/'artifact_availability.json').is_file()},
                   "exporter_sha256": hash_file(Path(__file__)), "primary_result": configuration.get("primary_result", "historical"),
-                  "weights_included": False, "raw_logs_included": False}
+                  "weights_included": False,
+                  "raw_logs_included": any((p/name).is_file() for p in paths.values() for name in ('console.log','recovery.log'))}
     if (output/'source_runs.json').is_file() and read_json(output/'source_runs.json') == provenance:
         manifest = read_json(output/'manifest.json')
         if all((output/name).is_file() and hash_file(output/name) == value for name,value in manifest.items()):
@@ -60,14 +64,16 @@ def publish_artifacts(settings=None, output_dir=None, source_root=ROOT):
             for path in sorted(run.rglob('*')):
                 if not path.is_file() or any(p in {'best_model','checkpoints'} for p in path.relative_to(run).parts):
                     continue
-                if path.relative_to(run).as_posix() not in source_manifest:
+                if path.relative_to(run).as_posix() not in source_manifest and path.name != 'artifact_availability.json':
                     continue
-                if path.suffix != '.png' and path.name not in JSON_FILES:
+                is_log = path.name in {'console.log','recovery.log'}
+                if path.suffix != '.png' and path.name not in JSON_FILES and not is_log:
                     continue
-                relative = Path(role) / path.relative_to(run)
+                relative = Path('logs')/role/path.name if is_log else Path(role)/path.relative_to(run)
                 target = staged/relative;target.parent.mkdir(parents=True,exist_ok=True)
                 shutil.copyfile(path,target)
-                catalog.append({'role':role,'run':run.name,'file':relative.as_posix(),'sha256':hash_file(target)})
+                catalog.append({'role':role,'run':run.name,'file':relative.as_posix(),'sha256':hash_file(target),
+                                'kind':'log' if is_log else ('image' if path.suffix=='.png' else 'table')})
         evaluation = paths.get('evaluation',paths.get('finetuning'))
         rows=[];loss=None;policy=None
         if evaluation:
@@ -108,7 +114,8 @@ def publish_artifacts(settings=None, output_dir=None, source_root=ROOT):
         save_json(staged/'metrics_summary.json',{'primary_result':primary, 'source_run':paths[primary].name if primary in {'study','frozen_trial'} else evaluation.name,
             'test_comparison':rows, 'historical_three_epoch_test_comparison':historical_rows, 'measured_test_loss':loss,
             'selection_split':policy.get('split') if policy else None,
-            'selected_threshold':policy.get('selected_threshold') if policy else None})
+            'selected_threshold':policy.get('selected_threshold') if policy else None,
+            'performance':read_json(paths['performance_report']/'performance_summary.json') if 'performance_report' in paths else None})
         lines=['# Lab03 — Artifacts cho report','','Nguồn run được chọn tường minh trong `config/report.json`. Không huấn luyện hoặc chọn lại threshold khi xuất.','',
             '| Policy | Accuracy | Precision | Recall | Binary F1 | Macro F1 | Test loss |',
             '|---|---:|---:|---:|---:|---:|---:|']
@@ -123,6 +130,16 @@ def publish_artifacts(settings=None, output_dir=None, source_root=ROOT):
             lines += ['', 'Bảng chính thuộc frozen trial: checkpoint epoch 9 theo validation loss, threshold 0.45 theo validation Macro-F1. Ưu tiên giảm overfitting; không khẳng định accuracy cao nhất lịch sử. Các study khác giữ vai trò so sánh.']
         lines += ['','## Nguồn thí nghiệm','','| Vai trò | Run |','|---|---|']
         lines += [f'| {role} | `{run_id}` |' for role,run_id in selected.items()]
+        if 'performance_report' in paths:
+            perf=read_json(paths['performance_report']/'performance_summary.json')
+            lines += ['','## Hiệu năng và phạm vi đo','',
+                f"Test evaluation: **{perf['test_eval_ms_per_sample']:.6f} ms/mẫu**; {perf['test_eval_timing_scope']}.",
+                f"RAM/VRAM training: **{perf['historical_memory_status']}**.",
+                '[Bảng từng epoch](performance_report/performance_history.json) · [Phạm vi/đơn vị](performance_report/performance_summary.json)',
+                '', 'Peak/batch slots là bộ nhớ dùng chung được phân bổ theo batch, không phải bộ nhớ độc lập cho mỗi câu. Không thay số thiếu bằng 0.']
+        lines += ['','## Log nguồn đã publish','',
+            'Các log dưới đây được copy nguyên byte từ run nguồn và có SHA256 trong catalog/manifest. Log thiếu trong nguồn giữ khai báo artifact_availability; không sinh log thay thế.','']
+        lines += [f"- [{item['role']}: {Path(item['file']).name}]({item['file']})" for item in catalog if item['kind']=='log']
         lines += ['','## Hình và bảng','','Các PNG dưới đây là bản sao của hình đã lưu trong run nguồn. JSON giữ số liệu để tính lại.','']
         for item in catalog:
             if item['file'].endswith('.png'):

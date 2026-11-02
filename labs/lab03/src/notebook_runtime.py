@@ -108,6 +108,13 @@ class NotebookSession:
             display(Markdown(f'**{name}**'));display(Image(filename=str(path)));shown.append(path)
         return shown
 
+    def performance(self):
+        if (self.paths['model']/'performance_summary.json').is_file():
+            self.paths['performance'] = self.paths['model']
+        else:
+            self.paths['performance'] = self.paths['performance_report']
+        return self.read(self.paths['performance']/'performance_summary.json')
+
     def export(self):
         if self.mode == 'view':
             print('Artifact report có sẵn:',self.lab/'outputs/published/index.md')

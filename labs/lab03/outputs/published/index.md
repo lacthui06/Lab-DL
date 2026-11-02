@@ -38,6 +38,41 @@ Bảng chính thuộc frozen trial: checkpoint epoch 9 theo validation loss, thr
 | frozen_dataset_preview | `20261027T095637Z_dataset_preview_e2b4d582` |
 | frozen_augmentation_preview | `20261027T095647Z_augmentation_preview_acb26523` |
 | final_review | `20261027T112616Z_final_review_82e3f77d` |
+| performance_report | `20261102T032327Z_performance_report_5892bdbe` |
+
+## Hiệu năng và phạm vi đo
+
+Test evaluation: **0.466792 ms/mẫu**; Trainer.predict full test, includes batching/transfer/evaluation overhead; not single-request latency.
+RAM/VRAM training: **not logged; cannot reconstruct training peak from parameter count or saved weights**.
+[Bảng từng epoch](performance_report/performance_history.json) · [Phạm vi/đơn vị](performance_report/performance_summary.json)
+
+Peak/batch slots là bộ nhớ dùng chung được phân bổ theo batch, không phải bộ nhớ độc lập cho mỗi câu. Không thay số thiếu bằng 0.
+
+## Log nguồn đã publish
+
+Các log dưới đây được copy nguyên byte từ run nguồn và có SHA256 trong catalog/manifest. Log thiếu trong nguồn giữ khai báo artifact_availability; không sinh log thay thế.
+
+- [exercise1_analysis: console.log](logs/exercise1_analysis/console.log)
+- [analysis: console.log](logs/analysis/console.log)
+- [threshold_analysis: console.log](logs/threshold_analysis/console.log)
+- [study: console.log](logs/study/console.log)
+- [candidate_lr_1e5: console.log](logs/candidate_lr_1e5/console.log)
+- [candidate_lr_2e5: console.log](logs/candidate_lr_2e5/console.log)
+- [candidate_lr_3e5: console.log](logs/candidate_lr_3e5/console.log)
+- [study_exercise1: console.log](logs/study_exercise1/console.log)
+- [study_exercise1_analysis: console.log](logs/study_exercise1_analysis/console.log)
+- [study_review: console.log](logs/study_review/console.log)
+- [epoch_presentation: console.log](logs/epoch_presentation/console.log)
+- [frozen_trial: console.log](logs/frozen_trial/console.log)
+- [augmented_study: console.log](logs/augmented_study/console.log)
+- [augmented_lr_5e6: console.log](logs/augmented_lr_5e6/console.log)
+- [augmented_lr_1e5: console.log](logs/augmented_lr_1e5/console.log)
+- [frozen_exercise1: console.log](logs/frozen_exercise1/console.log)
+- [frozen_exercise1_analysis: console.log](logs/frozen_exercise1_analysis/console.log)
+- [frozen_dataset_preview: console.log](logs/frozen_dataset_preview/console.log)
+- [frozen_augmentation_preview: console.log](logs/frozen_augmentation_preview/console.log)
+- [final_review: console.log](logs/final_review/console.log)
+- [performance_report: console.log](logs/performance_report/console.log)
 
 ## Hình và bảng
 
@@ -482,3 +517,11 @@ Các PNG dưới đây là bản sao của hình đã lưu trong run nguồn. JS
 ### final_review/sample_predictions.png
 
 ![final_review](final_review/sample_predictions.png)
+
+### performance_report/model_architecture.png
+
+![performance_report](performance_report/model_architecture.png)
+
+### performance_report/performance.png
+
+![performance_report](performance_report/performance.png)

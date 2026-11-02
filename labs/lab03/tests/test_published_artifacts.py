@@ -1,4 +1,4 @@
-"""Bộ report tái dùng hình thật, chọn run tường minh và không mang weights/log."""
+"""Bộ report tái dùng hình và log thật, chọn run tường minh, không mang weights."""
 import importlib.util
 import json
 import pytest
@@ -26,7 +26,14 @@ def test_report_export_uses_saved_visuals_and_preserves_scientific_sources(tmp_p
     assert len(list(out.rglob('*.png')))>=25
     manifest=json.loads((out/'manifest.json').read_text())
     assert all(hash_file(out/name)==digest for name,digest in manifest.items())
-    assert not any(p.suffix in {'.log','.safetensors','.bin','.pt','.zip'} for p in out.rglob('*') if p.is_file())
+    assert not any(p.suffix in {'.safetensors','.bin','.pt','.zip'} for p in out.rglob('*') if p.is_file())
+    log=out/'logs/finetuning/console.log'
+    source=ROOT/'outputs/runs'/configuration['runs']['finetuning']/'console.log'
+    if source.is_file():
+        assert log.read_bytes()==source.read_bytes()
+    else:
+        assert not log.exists()
+        assert 'console.log' in json.loads((out/'finetuning/artifact_availability.json').read_text())['omitted_raw_logs']
     original_index=hash_file(out/'index.md')
     assert module.publish_artifacts(historical_settings, output_dir=out)==out
     assert hash_file(out/'index.md')==original_index
@@ -67,3 +74,5 @@ def test_primary_frozen_trial_uses_its_measured_metrics_and_saved_figures(tmp_pa
     assert summary['measured_test_loss']==pytest.approx(.41256004571914673)
     assert (out/'frozen_trial/learning_curves.png').is_file()
     assert (out/'frozen_trial/validation_threshold_curves.png').is_file()
+    assert (out/'logs/frozen_trial/console.log').read_bytes()==(ROOT/'outputs/runs'/summary['source_run']/'console.log').read_bytes()
+    assert summary['performance']['training_ram_complete'] is False

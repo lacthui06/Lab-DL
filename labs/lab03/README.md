@@ -108,3 +108,13 @@ Chạy toàn bộ 112 bài kiểm thử tự động để xác nhận tính to�
 ```powershell
 pytest labs/lab03/tests/ -q
 ```
+
+## Performance và bằng chứng dùng ngay
+
+Model architecture và lý do chọn: [description Mục 16](description_lab_03.md). Notebook modeling hiện accuracy/loss theo epoch, time/sample và RAM/VRAM theo batch slots; ảnh và JSON cùng được lưu để dùng lại.
+
+- [Sơ đồ kiến trúc](outputs/published/performance_report/model_architecture.png).
+- [Biểu đồ performance](outputs/published/performance_report/performance.png) và [phạm vi/đơn vị đo](outputs/published/performance_report/performance_summary.json).
+- [Log frozen đã publish](outputs/published/logs/frozen_trial/console.log); catalog/manifest giữ SHA256 để đối chiếu.
+
+Lượt frozen cũ có test evaluation khoảng 0.466792 ms/mẫu nhưng chưa ghi RAM/VRAM training, nên hiển thị NOT LOGGED thay vì số giả. Lượt MODE=train mới tự ghi resource_history theo epoch, test_resource_metrics, PNG/JSON và đưa vào review ZIP. Chỉ cần pull để mở bằng chứng đã commit; không cần chạy finalize hoặc notebook để lấy lại hình/log cũ. Muốn số peak training GPU phải có một lượt đo mới; CPU fixture tests không thay thế phép đo đó.

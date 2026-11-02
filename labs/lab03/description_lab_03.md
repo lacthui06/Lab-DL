@@ -82,7 +82,7 @@ Các phần bổ sung phải phục vụ giải thích bài và truy vết kết
 **Lý do:** không ép mọi câu ngắn thành chuỗi 128 token trong từng phép tính.
 **Bằng chứng hiện có:** train của run Kaggle có độ dài token tối đa 78; tỉ lệ truncation train bằng 0%, không suy rộng con số này sang split chưa thống kê.
 
-### D05 — Thiết kế huấn luyện và chọn checkpoint ra sao?
+### D05 — Thiết kế huấn luyện và chọn checkpoint ra sao? (lịch sử 3 epoch)
 
 **Thảo luận:** cần cấu hình ngắn gọn, dễ tái lập và vừa tài nguyên Tesla T4.
 **Quyết định:** seed 42, ba epochs, train/eval batch 16/32, AdamW, LR `2e-5`, weight decay `0.01`, warmup ratio `0.1`.
@@ -370,3 +370,43 @@ Gom toàn bộ EDA → preprocessing → feature engineering vào 01_eda_preproc
 Modeling hỗ trợ view/train trên cùng notebook, chọn device auto/cuda/cpu; training gọi cùng script/module với CLI. Local CPU được hỗ trợ khi chủ động chạy; kiểm thử phần mềm dùng fixture nhỏ, không full CPU training. Mọi hình hiển thị ngay trên notebook và có artifact trong outputs/.
 
 Các mục mô tả notebook 04–08 ở phần lịch sử là diễn tiến trước khi gom, không phải các file cần chạy hiện tại. Run kết quả gốc và cấu hình khoa học vẫn giữ nguyên. Chỉ bỏ snapshot notebook/render và proof phần mềm cũ bị lặp; không phá manifests khoa học.
+
+## 16. Model architecture và lý do chọn kiến trúc
+
+### 16.1. Kiến trúc được dùng cho Exercise 2
+
+Backbone là `distilbert/distilbert-base-uncased`, revision được cố định trong `config/frozen_trial.json`. Mô hình phân loại là `DistilBertForSequenceClassification`; Exercise 1 dùng sentiment model SST-2 khác với backbone base này.
+
+| Khối | Cấu trúc / kích thước | Trạng thái khi fine-tune |
+|---|---|---|
+| Input | input_ids và attention_mask `[B,L]`, `L <= 128` | Không phải tham số học |
+| Embedding | WordPiece + positional embedding, đầu ra `[B,L,768]` | Frozen |
+| Encoder 1–4 | Mỗi block: multi-head self-attention + feed-forward + residual/LayerNorm | Frozen |
+| Encoder 5–6 | 12 attention heads, hidden 768, FFN intermediate 3072 | Trainable |
+| Pooling | Lấy hidden state token đầu `[CLS]`, `[B,768]` | Không có average pooling toàn câu |
+| Pre-classifier | Linear 768→768, ReLU | Trainable |
+| Classification dropout | p=0.4 trong lúc train | Tắt khi eval/inference |
+| Classifier | Linear 768→2, đầu ra hai logits `[B,2]` | Trainable |
+| Objective / inference | Cross-entropy; softmax rồi policy threshold Positive | Threshold chọn bằng validation |
+
+![Model architecture](outputs/published/performance_report/model_architecture.png)
+
+Dropout encoder và attention đều 0.2. Freeze chỉ ngăn cập nhật weights, không tự chuyển các block frozen sang eval mode. Optimizer chỉ chứa tham số trainable: LR encoder 2e-6, head 1e-5; weight decay 0.1, không decay bias/LayerNorm. Lượt đã đo ghi 14.767.874/66.955.010 tham số trainable.
+
+Các kích thước của lượt lịch sử là cấu trúc khai báo của backbone base đã pin, không phải kết quả load checkpoint ở môi trường review. Lượt train mới ghi `model_architecture.json` từ model.config thực tế trước training.
+
+### 16.2. Vì sao chọn kiến trúc này?
+
+- **Transfer learning:** 8.530 review gốc là tập nhỏ so với nhu cầu học một Transformer từ đầu; pretrained representation cung cấp kiến thức ngôn ngữ sẵn có.
+- **Ngân sách thực hành:** backbone sáu tầng phù hợp hơn mô hình lớn cho Kaggle/local; không tuyên bố hệ số tăng tốc hoặc tiết kiệm RAM khi chưa đo.
+- **Phù hợp dữ liệu:** review tiếng Anh, ngắn, hai nhãn; uncased WordPiece và head hai logits tạo pipeline rõ ràng cho tokenizer/forward/loss trong đề Hugging Face.
+- **Head đơn giản:** dùng `[CLS] → Linear → ReLU → dropout → Linear 2` để hạn chế thêm nhiều tham số hoặc một kiến trúc phụ không cần thiết; không nối TF-IDF vào Transformer.
+- **Giảm học thuộc:** đóng băng embedding/bốn block đầu giữ phần lớn representation và giảm phần weights cập nhật. Đây là lựa chọn định trước, không có ablation chứng minh bốn block tối ưu hơn mọi lựa chọn khác.
+- **Có đối chứng:** TF-IDF + Logistic Regression là baseline độc lập, fit train-only trên cùng augmented pool. Không coi Transformer tốt hơn chỉ vì phức tạp hơn.
+- **Đánh đổi được báo cáo:** frozen gap accuracy cuối khoảng 0.47 điểm phần trăm nhưng test accuracy thấp hơn full augmented fine-tuning 1.31 điểm phần trăm. Không gọi đây là kiến trúc tốt nhất tuyệt đối.
+
+### 16.3. Tiêu chí performance và bằng chứng hoàn thành
+
+Modeling phải hiển thị accuracy/loss theo epoch, time/sample có phạm vi đo và RAM/VRAM peak kèm batch size. RAM dùng RSS sampled của process; VRAM dùng PyTorch peak allocated/reserved. Peak chia batch slots chỉ là bộ nhớ dùng chung phân bổ theo batch, không phải bộ nhớ độc lập của từng câu.
+
+Lượt frozen cũ có timing/curves nhưng **không ghi RAM/VRAM training**, nên báo cáo giữ null/NOT LOGGED. Lượt train mới tự đo từng epoch và đưa PNG/JSON/log vào review ZIP; chưa có số GPU mới thì không đánh dấu đạt phần đo tài nguyên. Published phải có ảnh/bảng và bản sao log có SHA256 để pull về dùng trực tiếp, không buộc chạy notebook hoặc train lại để lấy bằng chứng đã có.

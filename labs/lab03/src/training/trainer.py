@@ -19,7 +19,8 @@ def make_trainer(model, tokenizer, ds, config, run_path):
         num_train_epochs=config["num_train_epochs"],
         per_device_train_batch_size=config["batch_size"],
         per_device_eval_batch_size=config["eval_batch_size"],
-        weight_decay=config["weight_decay"], warmup_steps=config.get("warmup_ratio", config.get("warmup_steps", 0.0)),
+        weight_decay=config["weight_decay"], warmup_ratio=config.get("warmup_ratio", 0.0),
+        warmup_steps=config.get("warmup_steps", 0),
         eval_strategy=strategy, save_strategy=strategy,
         eval_steps=config.get("eval_steps", 100), save_steps=config.get("eval_steps", 100),
         logging_strategy="steps" if strategy == "steps" else "epoch",
@@ -104,6 +105,10 @@ def make_trainer(model, tokenizer, ds, config, run_path):
     if config.get("epoch_console_summary", False):
         from transformers.trainer_callback import PrinterCallback
         trainer.remove_callback(PrinterCallback)
+    if config.get('record_resources', False):
+        from ..performance import EpochResources
+        trainer.resource_callback = EpochResources(trainer, len(ds['train']), run_path)
+        trainer.add_callback(trainer.resource_callback)
     trainer.add_callback(TrainingMetrics())
     return trainer
 

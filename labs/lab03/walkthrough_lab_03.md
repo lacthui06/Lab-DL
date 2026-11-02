@@ -1634,3 +1634,52 @@ Cell notebook gọi NotebookSession và module chung; không chứa một traini
 Tám notebook cũ và bốn helper copy-cell được bỏ sau khi gom; wrapper train.py và các CLI training/audit/recovery cũ không còn dùng được bỏ, thay bằng run_frozen_trial.py và finalize_results.py. Source/dataset/model/metrics modules, test chức năng và raw artifacts khoa học còn cần kiểm toán được giữ. Các run render/proof phần mềm cũ không thuộc bundle/report khoa học được loại bỏ, bằng chứng kiểm tra mới thay thế chúng. Git history giữ khả năng phục hồi các bố cục cũ.
 
 Ảnh hiển thị trong notebook vẫn lấy từ outputs/ và bộ published để làm report nhanh. Renderer lưu execution_summary và SHA256 của notebook đã thực thi, không lưu thêm bản notebook ảnh base64 vào mỗi run. Kết quả học đã đo không thay đổi chỉ vì tinh gọn bố cục; không cần full training mới để xác nhận hai notebook view.
+
+### 3.23. Model architecture và performance có bằng chứng
+
+#### 3.23.1. Kiến trúc và lý do
+
+Description Mục 16 ghi tensor contract, sáu encoder blocks, 12 attention heads, hidden 768, FFN 3072 và classification head `[CLS] → Linear 768 → ReLU → dropout 0.4 → Linear 2`. Embedding/bốn block đầu frozen, hai block cuối/head trainable. Chọn DistilBERT để tận dụng pretrained representation trên dataset nhỏ, phù hợp ngân sách thực hành và giữ ví dụ Hugging Face dễ truy vết. Không có benchmark kiến trúc khác để khẳng định đây là tối ưu tuyệt đối.
+
+![Architecture](outputs/published/performance_report/model_architecture.png)
+
+Lượt lịch sử dùng cấu trúc khai báo của backbone base đã pin; reviewer không load checkpoint. Lượt mới lưu model.config thực tế thành model_architecture.json. Shapes/number of parameters không được dùng để giả lập RAM/VRAM peak.
+
+#### 3.23.2. Những gì đọc được ngay sau khi pull
+
+| Bằng chứng | File |
+|---|---|
+| Accuracy/loss đủ 10 epoch | `outputs/published/frozen_trial/learning_curves.png`, `epoch_history.json` |
+| Time/sample, trạng thái đo RAM/VRAM | `outputs/published/performance_report/performance_summary.json` |
+| Bảng performance từng epoch | `outputs/published/performance_report/performance_history.json` |
+| Hình timing/memory | `outputs/published/performance_report/performance.png` |
+| Log train/evaluate gốc | `outputs/published/logs/frozen_trial/console.log` |
+| Catalog và SHA256 | `outputs/published/artifact_catalog.json`, `manifest.json` |
+
+![Performance](outputs/published/performance_report/performance.png)
+
+[Log frozen gốc đã publish](outputs/published/logs/frozen_trial/console.log) được copy nguyên byte và có hash đối chiếu. Các log nguồn bị thiếu trong lịch sử giữ khai báo thiếu, không tạo log giả. Pull repo có thể mở PNG, JSON và log ngay; finalize_results.py chỉ dùng để tái xuất khi nguồn/cấu hình thay đổi, không phải điều kiện để đọc kết quả đã commit.
+
+#### 3.23.3. Định nghĩa time/sample
+
+- `train_ms_per_sample`: thời gian train phase của epoch × 1000 / số mẫu train. Timer bắt đầu trước các batch và dừng trước evaluate(train)/validation; gồm data loading/logging trong train, không gồm epoch evaluation hoặc checkpoint save.
+- `epoch_pipeline_ms_per_train_sample`: thời gian từ bắt đầu epoch tới validation callback × 1000 / số mẫu train. Bao gồm train và các bước evaluate; không gọi là pure training latency.
+- `test_eval_ms_per_sample`: runtime Trainer.predict × 1000 / số mẫu test, gồm batching/transfer/evaluation overhead, không phải latency một request đơn lẻ.
+
+Frozen cũ có test_runtime=0.4976 giây và 1.066 mẫu, tương đương khoảng **0.466792 ms/mẫu** theo throughput toàn test. Epoch đầu có pipeline runtime 18.811370 giây trên 8.804 train, khoảng **2.136684 ms/train-sample** gồm evaluate. Không so trực tiếp hai giá trị như hai phép đo cùng phạm vi. Lượt cũ không có pure train timer nên trường đó để null.
+
+#### 3.23.4. Định nghĩa RAM/VRAM và điều chưa có
+
+RAM là peak RSS của process training, sampled mỗi 20 ms; gồm interpreter, dataset, baseline và model dùng chung, không gồm mọi process trên máy. Đây là peak quan sát qua sampling, không đảm bảo bắt mọi đỉnh dưới 20 ms. VRAM dùng torch.cuda.max_memory_allocated/reserved trên selected device; không phải toàn bộ VRAM của mọi ứng dụng GPU.
+
+`ram_mib_per_batch_slot = RAM peak MiB / nominal total batch slots`; `vram_mib_per_batch_slot = selected-device allocated peak MiB / per-device batch slots`. Không chia peak cho 8.804 hoặc 1.066 để gọi đó là bộ nhớ riêng một câu. Batch size và device đi kèm; dynamic padding và cached reserved memory có thể ảnh hưởng kết quả.
+
+**Trạng thái lượt frozen đã đo:** chưa có resource_history nên RAM/VRAM training là NOT LOGGED, không phải 0. CPU chạy mới có RAM RSS nhưng VRAM là N/A. Số RAM từ fixture CPU không được gán cho Kaggle T4. Muốn có số training peak cho chính lượt GPU cần chạy telemetry mới; thông tin này không khôi phục được chỉ từ saved weights hoặc số tham số.
+
+#### 3.23.5. Lượt train tiếp theo và tiêu chí Done
+
+Trainer đăng ký EpochResources trước callback evaluate để tách đúng train phase. Mỗi epoch lưu resource_history.json; bước test có test_resource_metrics.json riêng. Cuối run xuất performance PNG/JSON và sơ đồ kiến trúc; tất cả nằm trong manifest/review ZIP. Không đổi early-stopping policy: vẫn đủ 10 epoch và chọn minimum validation loss.
+
+Kiểm thử xác nhận warmup_ratio=0.1 được truyền đúng API Transformers 4.48.3; warmup_steps là số nguyên riêng. Không truyền 0.1 vào warmup_steps vì API pin sẽ từ chối trước training. Đây là sửa tương thích, không sửa lại byte/kết quả run cũ.
+
+Nghiệm thu phần source/published: đủ hai notebook, sơ đồ/giải thích kiến trúc, accuracy/loss, timing có nguồn, log published và SHA256. Nghiệm thu **đủ số RAM/VRAM training GPU** vẫn chờ resource_history của một lượt mới. Không đánh dấu hoàn tất phép đo chỉ vì code telemetry đã pass tests.
