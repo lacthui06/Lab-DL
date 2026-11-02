@@ -14,6 +14,8 @@ if __name__ == "__main__":
     args = parser.parse_args()
     if not args.model_path.is_dir(): parser.error("Fine-tuned checkpoint directory not found")
     saved_config = args.model_path.resolve().parent / "config.json"
+    if (args.model_path/'training_config.json').is_file():
+        saved_config = args.model_path/'training_config.json'
     cfg = read_config(saved_config if saved_config.is_file() else None)
     seed_all(cfg["seed"])
     cfg["evaluated_checkpoint"] = str(args.model_path.resolve())

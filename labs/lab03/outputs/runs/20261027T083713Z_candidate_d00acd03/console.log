@@ -1,0 +1,14 @@
+Run: 20261027T083713Z_candidate_d00acd03
+Map:   0%|          | 0/1066 [00:00<?, ? examples/s]Map: 100%|##########| 1066/1066 [00:00<00:00, 10312.62 examples/s]Map: 100%|##########| 1066/1066 [00:00<00:00, 10153.30 examples/s]
+Epoch 01/10 | Train Loss (eval): 0.3418 - Acc: 85.56% | Val Loss: 0.3829 - Acc: 83.21% | Val Macro-F1: 0.8321 | LR: 0.0000100
+Epoch 02/10 | Train Loss (eval): 0.2385 - Acc: 90.94% | Val Loss: 0.3525 - Acc: 84.52% | Val Macro-F1: 0.8452 | LR: 0.0000089
+Epoch 03/10 | Train Loss (eval): 0.1756 - Acc: 93.55% | Val Loss: 0.3959 - Acc: 84.43% | Val Macro-F1: 0.8441 | LR: 0.0000078
+Epoch 04/10 | Train Loss (eval): 0.1167 - Acc: 96.26% | Val Loss: 0.4266 - Acc: 83.58% | Val Macro-F1: 0.8358 | LR: 0.0000067
+Epoch 05/10 | Train Loss (eval): 0.1083 - Acc: 96.48% | Val Loss: 0.5450 - Acc: 84.15% | Val Macro-F1: 0.8410 | LR: 0.0000056
+Epoch 06/10 | Train Loss (eval): 0.0761 - Acc: 97.81% | Val Loss: 0.5849 - Acc: 84.90% | Val Macro-F1: 0.8489 | LR: 0.0000045
+Epoch 07/10 | Train Loss (eval): 0.0650 - Acc: 98.19% | Val Loss: 0.6447 - Acc: 84.33% | Val Macro-F1: 0.8431 | LR: 0.0000033
+/kaggle/working/Lab-DL/labs/lab03/src/training/trainer.py:87: RuntimeWarning: AMP nonfinite gradient norm recorded; inspect skipped optimizer steps
+  warnings.warn("AMP nonfinite gradient norm recorded; inspect skipped optimizer steps", RuntimeWarning)
+Epoch 08/10 | Train Loss (eval): 0.0505 - Acc: 98.84% | Val Loss: 0.6770 - Acc: 84.15% | Val Macro-F1: 0.8414 | LR: 0.0000022
+Epoch 09/10 | Train Loss (eval): 0.0482 - Acc: 98.90% | Val Loss: 0.7288 - Acc: 83.96% | Val Macro-F1: 0.8396 | LR: 0.0000011
+Epoch 10/10 | Train Loss (eval): 0.0463 - Acc: 98.98% | Val Loss: 0.7379 - Acc: 84.52% | Val Macro-F1: 0.8452 | LR: 0.0000000

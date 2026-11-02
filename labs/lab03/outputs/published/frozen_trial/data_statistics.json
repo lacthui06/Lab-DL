@@ -1,0 +1,18 @@
+{
+  "official_sizes": {
+    "train": 8530,
+    "validation": 1066,
+    "test": 1066
+  },
+  "effective_sizes": {
+    "train": 8804,
+    "validation": 1066,
+    "test": 1066
+  },
+  "validation_and_test_augmented": false,
+  "official_fingerprints": {
+    "train": "0346a9d2308d9056",
+    "validation": "4d310508c191379e",
+    "test": "23aa2ff3ad95b6f5"
+  }
+}

@@ -17,6 +17,8 @@ if __name__ == "__main__":
     if args.model_path and not args.model_path.is_dir():
         parser.error("Checkpoint directory does not exist; refusing to fall back to an untuned model")
     saved_config = args.model_path.resolve().parent / "config.json" if args.model_path else None
+    if args.model_path and (args.model_path/'training_config.json').is_file():
+        saved_config = args.model_path/'training_config.json'
     cfg = read_config(saved_config if saved_config and saved_config.is_file() else None)
     ex1 = cfg["exercise1"]
     model, tok = load_model(str(args.model_path) if args.model_path else ex1["model_name"],

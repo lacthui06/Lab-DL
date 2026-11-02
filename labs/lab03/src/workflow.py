@@ -152,7 +152,7 @@ def finetune(config=None, allow_cpu=False, evaluate_test=True):
             # Chỉ tokenize lại train sau augmentation; val/test giữ nguyên.
             from datasets import DatasetDict
             tokenized["train"] = tokenize_data(DatasetDict(train=raw["train"]), tokenizer, cfg["max_length"])["train"]
-        lengths = [len(ids) for ids in tokenizer(raw["train"]["text"], truncation=False)["input_ids"]]
+        lengths = [len(ids) for ids in tokenizer(list(raw["train"]["text"]), truncation=False)["input_ids"]]
         save_json(out / "data_statistics.json", {"split_sizes": official_sizes,
                   "effective_split_sizes": {k:len(raw[k]) for k in ("train","validation","test")},
                   "label_counts": {k: {str(label): int(sum(int(v) == label for v in raw[k]["label"])) for label in (0, 1)} for k in ("train", "validation", "test")},

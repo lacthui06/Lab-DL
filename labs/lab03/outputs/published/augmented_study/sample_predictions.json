@@ -1,0 +1,58 @@
+[
+  {
+    "index": 714,
+    "text": "lacks the spirit of the previous two , and makes all those jokes about hos and even more unmentionable subjects seem like mere splashing around in the muck .",
+    "true_label": 0,
+    "predicted_label": 0,
+    "confidence": 0.9974639415740967
+  },
+  {
+    "index": 821,
+    "text": "it should be interesting , it should be poignant , it turns out to be affected and boring .",
+    "true_label": 0,
+    "predicted_label": 0,
+    "confidence": 0.9974639415740967
+  },
+  {
+    "index": 436,
+    "text": "an energetic and engaging film that never pretends to be something it isn't .",
+    "true_label": 1,
+    "predicted_label": 1,
+    "confidence": 0.9985979199409485
+  },
+  {
+    "index": 399,
+    "text": "a brutal and funny work . nicole holofcenter , the insightful writer/director responsible for this illuminating comedy doesn't wrap the proceedings up neatly but the ideas tie together beautifully .",
+    "true_label": 1,
+    "predicted_label": 1,
+    "confidence": 0.9985951781272888
+  },
+  {
+    "index": 1014,
+    "text": "hey arnold ! is now stretched to barely feature length , with a little more attention paid to the animation . still , the updated dickensian sensibility of writer craig bartlett's story is appealing .",
+    "true_label": 0,
+    "predicted_label": 1,
+    "confidence": 0.9983611702919006
+  },
+  {
+    "index": 607,
+    "text": "though its rather routine script is loaded with familiar situations , the movie has a cinematic fluidity and sense of intelligence that makes it work more than it probably should .",
+    "true_label": 0,
+    "predicted_label": 1,
+    "confidence": 0.9983025789260864
+  },
+  {
+    "index": 470,
+    "text": "the wild thornberrys movie has all the sibling rivalry and general family chaos to which anyone can relate .",
+    "true_label": 1,
+    "predicted_label": 0,
+    "confidence": 0.9974139928817749
+  },
+  {
+    "index": 219,
+    "text": "a movie where story is almost an afterthought amidst a swirl of colors and inexplicable events .",
+    "true_label": 1,
+    "predicted_label": 0,
+    "confidence": 0.99703049659729
+  }
+]

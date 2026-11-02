@@ -1,0 +1,8 @@
+{
+  "source_manifests": {
+    "frozen_trial": "56734dd1fee40a2f015da3b96c13e898961b60b0a46b5211e94d6c9299e0581f",
+    "augmented_study": "39229fe5b5d12dc97cc6e5713faa812e43fa8742c11e893b17d12a89a86fbd10",
+    "unregularized_study": "d303edfc5d1781d47c80d3d2cc5c79e12ea2e5b0da9b09b10e4283a284f27da7"
+  },
+  "analysis_code_sha256": "419f951b3537b51de2eb6b9186e195dc3f5ca402ed2a0b50c7a9f18046a6905e"
+}

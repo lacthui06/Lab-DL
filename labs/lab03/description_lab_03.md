@@ -2,6 +2,8 @@
 
 **Môn học:** Deep Learning — UTH.
 **Nguồn đề:** ảnh Practice 3 do giảng viên cung cấp trong phiên làm việc.
+**Trạng thái hiện hành:** frozen trial đã chạy đủ 10 epoch; kết quả và quyết định cuối ở Mục 14. Các mục 10–13 ghi diễn tiến thiết kế trước lượt này.
+
 **Vai trò tài liệu:** ghi đề nhận vào, nội dung đã thảo luận, quyết định hiện hành và điều kiện nghiệm thu.
 
 Đề gốc được giữ riêng tại Mục 1, không trộn các yêu cầu mở rộng vào lời giảng viên.
@@ -30,7 +32,7 @@ Các thảo luận, quyết định và bằng chứng thực nghiệm được 
 
 Đề gốc không chỉ định dataset, backbone, số epochs hoặc cấu trúc thư mục.
 Đề gốc không đặt ngưỡng Accuracy tối thiểu 85%.
-Phạm vi bài gồm roadmap, ba notebook, isolated runs, hình trực quan và quét threshold.
+Phạm vi bài gồm roadmap, hai notebook theo luồng dữ liệu/modeling, isolated runs, hình trực quan và quét threshold.
 Các phần bổ sung phải phục vụ giải thích bài và truy vết kết quả, không được dùng để gán ngược một tiêu chí chưa có cho đề giảng viên.
 
 ## 2. Phạm vi đã thống nhất
@@ -38,7 +40,7 @@ Các phần bổ sung phải phục vụ giải thích bài và truy vết kết
 1. Thực hiện đủ hai Exercise bằng Hugging Face và PyTorch.
 2. Exercise 1 dùng mô hình sentiment pretrained SST-2, đối chiếu pipeline và forward thủ công trên cùng câu.
 3. Exercise 2 fine-tune DistilBERT nền trên toàn bộ Rotten Tomatoes với các split chính thức.
-4. Có ba notebook: Exercise 1, Exercise 2 và bản tích hợp.
+4. Có hai notebook: EDA/preprocessing/feature engineering và modeling (bao gồm cả hai Exercise).
 5. Mỗi notebook bắt đầu bằng roadmap có phase, mục tiêu, module/file tham chiếu và artifact.
 6. Các phase trình bày theo dòng xử lý thực tế; hình và bảng xuất hiện ngay sau phần giải thích tương ứng.
 7. Notebook ưu tiên trực quan hóa và diễn giải thay vì in các khối JSON dài.
@@ -323,4 +325,48 @@ Notebook 06 là template chạy mới; notebook 05 giữ bằng chứng đã đo
 
 Bổ sung train augmentation theo lexicon cùng cực tính, tối đa 25% dữ liệu gốc, một biến thể trên mỗi parent. Bỏ câu phủ định/tương phản, giữ nguyên punctuation/ngữ cảnh còn lại, loại trùng train/heldout và cân bằng số mẫu thêm giữa hai lớp. TF-IDF fit trên cùng effective train pool với Transformer; validation/test không tăng mẫu, không fit vocabulary trên heldout.
 
-Mọi biến thể kế thừa label từ parent nên có nguy cơ label noise khi ngữ cảnh làm thay đổi sắc thái. Có preview và records để review, không gọi đó là dữ liệu thật mới được gán nhãn. Không nhân đôi y nguyên mẫu rồi tuyên bố tăng thông tin. Phạm vi kiểm thử gồm chống trùng, bảo toàn heldout, tính xác định theo seed và pipeline dùng effective train size. Profile này chưa có kết quả GPU.
+Mọi biến thể kế thừa label từ parent nên có nguy cơ label noise khi ngữ cảnh làm thay đổi sắc thái. Có preview và records để review, không gọi đó là dữ liệu thật mới được gán nhãn. Không nhân đôi y nguyên mẫu rồi tuyên bố tăng thông tin. Phạm vi kiểm thử gồm chống trùng, bảo toàn heldout, tính xác định theo seed và pipeline dùng effective train size. Profile augmented đã có kết quả GPU; xem Mục 14 để phân biệt với frozen trial mới nhất.
+
+## 13. Notebook trình bày theo 10 giai đoạn
+
+Chốt bố cục 10 cell code với Markdown trước mỗi cell, roadmap/module đầu notebook và hiển thị ảnh ngay tại phase tương ứng. Tách EDA dữ liệu gốc khỏi augmentation, training curves khỏi test diagnostics và phần đọc checkpoint/threshold khỏi phần đọc test metrics. Không chia workflow thành các lần chọn ngưỡng sau khi đã xem test: cell 7 thực thi đúng protocol, cell 8–9 giải thích records đã chốt.
+
+
+## 14. Thảo luận và quyết định cuối sau hai lượt regularization
+
+### D20 — Mục tiêu ưu tiên: giảm overfitting hay accuracy cao nhất lịch sử?
+
+**Thảo luận:** lượt full fine-tuning có augmentation chạy đủ 10 epoch vẫn đạt train accuracy 98.98%, validation 84.52% ở cuối; validation loss tăng từ 0.3525 lên 0.7379. Tăng dropout/decay và thêm mẫu không bảo đảm hết học thuộc.
+
+**Quyết định:** thử đóng băng embedding và bốn tầng encoder đầu; LR riêng encoder 2e-6, head 1e-5; dropout 0.2/0.2/0.4, decay 0.1. Giữ augmentation hiện tại để không ép thêm mẫu nhiễu. Chấp nhận accuracy có thể giảm, không gọi regularization mạnh nhất là tối ưu mặc định.
+
+**Bằng chứng:** frozen trial `20261027T095655Z_frozen_trial_d8d09116` hoàn thành 10 epoch; train/validation accuracy cuối 84.25%/83.77%, loss 0.3581/0.3696. Có 274 synthetic samples, train 8.804; heldout giữ nguyên 1.066/1.066.
+
+### D21 — Chọn checkpoint theo loss hay Macro-F1?
+
+**Thảo luận:** mô hình có thể dự đoán cùng số nhãn đúng nhưng tự tin hơn khi sai, làm loss tăng. Chỉ theo Macro-F1 có thể giữ checkpoint xác suất kém hơn.
+
+**Quyết định:** profile frozen công bố trước criterion minimum validation loss; chạy đủ 10 epoch rồi reload checkpoint tốt nhất. Tiêu chí này khác study lịch sử chọn Macro-F1; không đổi nhãn protocol cũ. Epoch 9 được chọn, không thay bằng epoch 10 vì accuracy của epoch 10 cao hơn.
+
+### D22 — Threshold có cần khác 0.5 không?
+
+**Quyết định:** không ép khác 0.5. Quét validation theo grid/tie-break có sẵn sau checkpoint selection. Frozen chọn 0.45; full augmented chọn 0.65; các thí nghiệm có thể chọn 0.5. Test không tham gia chọn.
+
+### D23 — Kết luận nghiệm thu nào được phép?
+
+Frozen test accuracy 82.83%, Binary F1 83.23%, Macro-F1 82.82%, loss 0.412560. So với augmented full fine-tuning: accuracy giảm 1.31 điểm phần trăm, test loss/ECE thấp hơn. Đây là kết quả cả cấu hình, không chứng minh riêng freeze hay augmentation tạo ra cải thiện. Một seed, test đã được quan sát và synthetic label noise là giới hạn bắt buộc nêu.
+
+**Tiêu chí hoàn thành:** đủ hai Exercise, full splits, 10 epoch thực, roadmap/module, ảnh inline đồng thời lưu outputs/, threshold validation-only, báo cáo có decisions/error analysis, manifest/source verification và checkpoint lưu riêng. Không đặt điều kiện accuracy >=85% hoặc tuyệt đối không overfit vốn không có trong đề gốc.
+
+### D24 — Notebook và artifact phải phục vụ report thế nào?
+
+Bản tích hợp và Exercise 2 đọc frozen trial làm kết quả chính; notebook study cũ có nhãn lịch sử. Ảnh hiển thị từ artifact nguồn hoặc run phân tích dẫn xuất đã kiểm toán. `outputs/published/index.md` và `artifact_catalog.json` cung cấp hình/bảng dùng ngay cho report; không cần sinh lại đồ thị mỗi lần.
+
+
+## 15. Quyết định tinh gọn còn hai notebook
+
+Gom toàn bộ EDA → preprocessing → feature engineering vào 01_eda_preprocessing_feature_engineering.ipynb. Gom pretrained sentiment, baseline, training, threshold, evaluation và lỗi vào 02_modeling.ipynb. Không tạo notebook hoặc helper copy-cell riêng theo từng LR/phiên train.
+
+Modeling hỗ trợ view/train trên cùng notebook, chọn device auto/cuda/cpu; training gọi cùng script/module với CLI. Local CPU được hỗ trợ khi chủ động chạy; kiểm thử phần mềm dùng fixture nhỏ, không full CPU training. Mọi hình hiển thị ngay trên notebook và có artifact trong outputs/.
+
+Các mục mô tả notebook 04–08 ở phần lịch sử là diễn tiến trước khi gom, không phải các file cần chạy hiện tại. Run kết quả gốc và cấu hình khoa học vẫn giữ nguyên. Chỉ bỏ snapshot notebook/render và proof phần mềm cũ bị lặp; không phá manifests khoa học.

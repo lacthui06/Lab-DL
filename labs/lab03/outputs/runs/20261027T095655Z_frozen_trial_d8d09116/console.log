@@ -1,0 +1,88 @@
+Run: 20261027T095655Z_frozen_trial_d8d09116
+Trainable parameters: 14767874 / 66955010
+Map:   0%|          | 0/8804 [00:00<?, ? examples/s]Map:  11%|#1        | 1000/8804 [00:00<00:00, 8728.99 examples/s]Map:  34%|###4      | 3000/8804 [00:00<00:00, 10032.46 examples/s]Map:  57%|#####6    | 5000/8804 [00:00<00:00, 10397.60 examples/s]Map:  80%|#######9  | 7000/8804 [00:00<00:00, 10245.23 examples/s]Map: 100%|##########| 8804/8804 [00:00<00:00, 10380.99 examples/s]Map: 100%|##########| 8804/8804 [00:00<00:00, 10230.16 examples/s]
+Map:   0%|          | 0/1066 [00:00<?, ? examples/s]Map:  94%|#########3| 1000/1066 [00:00<00:00, 3234.71 examples/s]Map: 100%|##########| 1066/1066 [00:01<00:00, 1051.91 examples/s]
+Map:   0%|          | 0/1066 [00:00<?, ? examples/s]Map:  94%|#########3| 1000/1066 [00:00<00:00, 9746.69 examples/s]Map: 100%|##########| 1066/1066 [00:00<00:00, 9517.90 examples/s]
+Epoch 01/10 | Train Loss (eval): 0.6121 - Acc: 76.72% | Val Loss: 0.6121 - Acc: 77.58% | Val Macro-F1: 0.7750 | LR: 0.0000020
+Epoch 02/10 | Train Loss (eval): 0.4000 - Acc: 81.87% | Val Loss: 0.4018 - Acc: 81.99% | Val Macro-F1: 0.8199 | LR: 0.0000018
+Epoch 03/10 | Train Loss (eval): 0.3849 - Acc: 82.74% | Val Loss: 0.3871 - Acc: 82.46% | Val Macro-F1: 0.8246 | LR: 0.0000016
+Epoch 04/10 | Train Loss (eval): 0.3745 - Acc: 83.39% | Val Loss: 0.3810 - Acc: 83.40% | Val Macro-F1: 0.8338 | LR: 0.0000013
+Epoch 05/10 | Train Loss (eval): 0.3699 - Acc: 83.36% | Val Loss: 0.3767 - Acc: 83.40% | Val Macro-F1: 0.8339 | LR: 0.0000011
+Epoch 06/10 | Train Loss (eval): 0.3631 - Acc: 83.95% | Val Loss: 0.3733 - Acc: 83.49% | Val Macro-F1: 0.8348 | LR: 0.0000009
+Epoch 07/10 | Train Loss (eval): 0.3629 - Acc: 83.85% | Val Loss: 0.3717 - Acc: 83.58% | Val Macro-F1: 0.8358 | LR: 0.0000007
+Epoch 08/10 | Train Loss (eval): 0.3615 - Acc: 83.96% | Val Loss: 0.3712 - Acc: 83.77% | Val Macro-F1: 0.8377 | LR: 0.0000004
+Epoch 09/10 | Train Loss (eval): 0.3576 - Acc: 84.21% | Val Loss: 0.3693 - Acc: 83.58% | Val Macro-F1: 0.8358 | LR: 0.0000002
+Epoch 10/10 | Train Loss (eval): 0.3581 - Acc: 84.25% | Val Loss: 0.3696 - Acc: 83.77% | Val Macro-F1: 0.8377 | LR: 0.0000000
+# Frozen DistilBERT trial
+
+Run: `20261027T095655Z_frozen_trial_d8d09116`
+
+Train completed 10 epochs. Best checkpoint: epoch 9 (validation loss).
+
+Embedding and first 4 encoder layers frozen.
+Encoder LR 2e-06; head LR 1e-05.
+
+Threshold: 0.45 (validation Macro-F1).
+
+This configuration is a hypothesis, not a guaranteed improvement.
+One seed only; historical test exposure; no causal claim about individual changes.
+
+```json
+[
+  {
+    "model": "TF-IDF",
+    "threshold": 0.5,
+    "accuracy": 0.7898686679174484,
+    "precision": 0.7920604914933838,
+    "recall": 0.7861163227016885,
+    "specificity": 0.7936210131332082,
+    "FPR": 0.20637898686679174,
+    "binary_f1": 0.7890772128060264,
+    "macro_f1": 0.7898657092067516,
+    "TN": 423,
+    "FP": 110,
+    "FN": 114,
+    "TP": 419,
+    "negative_support": 533,
+    "positive_support": 533,
+    "sample_count": 1066
+  },
+  {
+    "model": "Frozen DistilBERT threshold 0.5",
+    "threshold": 0.5,
+    "accuracy": 0.8283302063789869,
+    "precision": 0.8252788104089219,
+    "recall": 0.8330206378986866,
+    "specificity": 0.8236397748592871,
+    "FPR": 0.17636022514071295,
+    "binary_f1": 0.8291316526610645,
+    "macro_f1": 0.8283264295350563,
+    "TN": 439,
+    "FP": 94,
+    "FN": 89,
+    "TP": 444,
+    "negative_support": 533,
+    "positive_support": 533,
+    "sample_count": 1066
+  },
+  {
+    "model": "Frozen DistilBERT validation threshold",
+    "threshold": 0.45,
+    "accuracy": 0.8283302063789869,
+    "precision": 0.8136200716845878,
+    "recall": 0.851782363977486,
+    "specificity": 0.8048780487804879,
+    "FPR": 0.1951219512195122,
+    "binary_f1": 0.8322639780018332,
+    "macro_f1": 0.8282357353986112,
+    "TN": 429,
+    "FP": 104,
+    "FN": 79,
+    "TP": 454,
+    "negative_support": 533,
+    "positive_support": 533,
+    "sample_count": 1066
+  }
+]
+```
+

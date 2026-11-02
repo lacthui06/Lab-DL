@@ -1,0 +1,55 @@
+{
+  "seed": 42,
+  "exercise1": {
+    "model_name": "distilbert/distilbert-base-uncased-finetuned-sst-2-english",
+    "revision": "714eb0fa89d2f80546fda750413ed43d93601a13",
+    "sample_sentences": [
+      "I love this wonderful movie!",
+      "This movie was terrible and boring.",
+      "The acting was good, but the story was disappointing."
+    ]
+  },
+  "exercise2": {
+    "dataset_name": "cornell-movie-review-data/rotten_tomatoes",
+    "dataset_revision": "aa13bc287fa6fcab6daf52f0dfb9994269ffea28",
+    "model_name": "distilbert/distilbert-base-uncased",
+    "model_revision": "12040accade4e8a0f71eabdb258fecc2e7e948be",
+    "max_length": 128,
+    "batch_size": 16,
+    "eval_batch_size": 32,
+    "learning_rate": 2e-06,
+    "num_train_epochs": 10,
+    "weight_decay": 0.1,
+    "warmup_ratio": 0.1,
+    "fp16": true,
+    "threshold_selection": {
+      "enabled": true,
+      "selection_metric": "macro_f1",
+      "split": "validation",
+      "grid": "0.05 to 0.95, step 0.05",
+      "tie_break": "closest to 0.5, then smaller threshold"
+    },
+    "eval_strategy": "epoch",
+    "eval_steps": 100,
+    "logging_steps": 25,
+    "metric_for_best_model": "loss",
+    "gradient_accumulation_steps": 1,
+    "max_grad_norm": 1.0,
+    "dataloader_num_workers": 0,
+    "save_only_model": true,
+    "epoch_console_summary": true,
+    "model_overrides": {
+      "dropout": 0.2,
+      "attention_dropout": 0.2,
+      "seq_classif_dropout": 0.4
+    },
+    "augmentation": {
+      "enabled": true,
+      "max_ratio": 0.25,
+      "require_added": true
+    },
+    "head_learning_rate": 1e-05,
+    "freeze_layers": 4
+  },
+  "experiment_name": "frozen_four_layers_validation_loss"
+}
