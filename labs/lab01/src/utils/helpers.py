@@ -4,7 +4,6 @@ import json
 import os
 import platform
 import random
-import warnings
 from pathlib import Path
 from typing import Any, Dict, Optional, Tuple
 
@@ -15,23 +14,20 @@ import torch.nn as nn
 # ---------------------------------------------------------------------------
 # Project Base Directories & Device Configuration
 # ---------------------------------------------------------------------------
-if os.path.exists("/kaggle/working"):
-    BASE_DIR = Path("/kaggle/working")
-else:
-    BASE_DIR = Path(__file__).resolve().parent.parent.parent
+SOURCE_DIR = Path(__file__).resolve().parent.parent.parent
+BASE_DIR = Path(os.environ.get(
+    "LAB01_WORK_DIR",
+    "/kaggle/working" if os.path.exists("/kaggle/working") else str(SOURCE_DIR),
+)).resolve()
 
 DATA_DIR = BASE_DIR / "data"
 OUTPUTS_DIR = BASE_DIR / "outputs"
-CHECKPOINTS_DIR = OUTPUTS_DIR / "checkpoints"
 LOGS_DIR = OUTPUTS_DIR / "logs"
-PREDICTIONS_DIR = OUTPUTS_DIR / "predictions"
 EDA_DIR = OUTPUTS_DIR / "eda"
 
 # Ensure output directories exist
 OUTPUTS_DIR.mkdir(parents=True, exist_ok=True)
-CHECKPOINTS_DIR.mkdir(parents=True, exist_ok=True)
 LOGS_DIR.mkdir(parents=True, exist_ok=True)
-PREDICTIONS_DIR.mkdir(parents=True, exist_ok=True)
 EDA_DIR.mkdir(parents=True, exist_ok=True)
 
 # Device Configuration
@@ -40,14 +36,11 @@ DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 # Dataset & Split Constants
 RANDOM_SEED = 42
 IMAGE_SIZE = 28
-NUM_CHANNELS = 1
-NUM_CLASSES = 10
 VAL_SPLIT = 0.1
 SPLIT_VERSION = "split_v2_stratified"
 PREPROC_VERSION = "preproc_v2_train_global_std"
 
-CONFIG_DIR = BASE_DIR / "config"
-AUGMENTATIONS_CONFIG_PATH = CONFIG_DIR / "augmentations.yaml"
+CONFIG_DIR = SOURCE_DIR / "config"
 PREPROCESSING_CONFIG_PATH = EDA_DIR / "preprocessing_config.json"
 
 
@@ -76,10 +69,8 @@ def resolve_normalization_stats(
     return tuple(float(m) for m in mean), tuple(float(s) for s in std), f"artifact:{path}"
 
 
-# Alias for backward compatibility in internal handoff verification
-_resolve_normalization = resolve_normalization_stats
 
-FASHION_MNIST_MEAN, FASHION_MNIST_STD, NORMALIZATION_SOURCE = resolve_normalization_stats()
+
 
 # Class Label Mapping
 CLASS_NAMES = [
@@ -108,19 +99,6 @@ def set_seed(seed: int = 42) -> None:
         torch.cuda.manual_seed_all(seed)
         torch.backends.cudnn.deterministic = True
         torch.backends.cudnn.benchmark = False
-
-
-def load_yaml_config(config_path: Path) -> Dict[str, Any]:
-    """Loads a YAML configuration file safely."""
-    path = Path(config_path)
-    if not path.exists():
-        raise FileNotFoundError(f"Configuration file not found at: {path}")
-    try:
-        import yaml
-        with open(path, "r", encoding="utf-8") as f:
-            return yaml.safe_load(f)
-    except ImportError:
-        raise ImportError("Package 'pyyaml' is required to load YAML config. Install with: pip install pyyaml")
 
 
 def save_checkpoint(

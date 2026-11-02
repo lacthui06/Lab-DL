@@ -1,15 +1,9 @@
-"""Datasets package initialization: base subsets, classification dataloaders, and EDA."""
+"""Datasets package initialization: stratified split, features, preparation, and EDA."""
 
 from .base import (
-    TransformedSubset,
     load_split,
     make_stratified_split,
     save_split,
-)
-from .classification import (
-    get_dataloaders,
-    get_transforms,
-    resolve_normalization_stats,
 )
 from .eda import (
     FOREGROUND_THRESHOLD,
@@ -26,20 +20,17 @@ from .eda import (
     run_eda_and_fe_pipeline,
     spatial_features,
     to_scaled,
-    verify_pipeline_handoff,
 )
+from .features import FEATURE_NAMES, extract_features
+from .preparation import prepare_data
 
 __all__ = [
-    # Base
-    "TransformedSubset",
     "load_split",
     "make_stratified_split",
     "save_split",
-    # Classification
-    "get_dataloaders",
-    "get_transforms",
-    "resolve_normalization_stats",
-    # EDA
+    "FEATURE_NAMES",
+    "extract_features",
+    "prepare_data",
     "FOREGROUND_THRESHOLD",
     "to_scaled",
     "compute_normalization_stats",
@@ -54,5 +45,4 @@ __all__ = [
     "most_similar_pairs",
     "lock_eda_fe_artifacts",
     "run_eda_and_fe_pipeline",
-    "verify_pipeline_handoff",
 ]

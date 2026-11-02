@@ -1,0 +1,17 @@
+{
+  "seed": 42,
+  "foreground_threshold": 0.1,
+  "feature_names": [
+    "mean",
+    "std",
+    "foreground_ratio",
+    "bbox_width",
+    "bbox_height",
+    "aspect_ratio",
+    "centroid_x",
+    "centroid_y",
+    "symmetry",
+    "edge_density"
+  ],
+  "augmentation": false
+}

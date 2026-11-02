@@ -1,0 +1,59 @@
+{
+  "source_run": "20261102T052421Z_training_performance_2ccbc171",
+  "files": [
+    {
+      "path": "training_performance_single_sample/config.json",
+      "bytes": 912,
+      "source_sha256": "0b2e4003aec2e7de233291cc3f5cfb6df268b17f1c80395ce8497a4620008976",
+      "sha256": "2fecf55dd4b66fa6272b8b90fd7bba4c2d612beac77cc772f4514a795dbf5b71"
+    },
+    {
+      "path": "training_performance_single_sample/environment_snapshot.json",
+      "bytes": 464,
+      "source_sha256": "06eb65ab6c6622474e4a80bac0d955433ee4cb929a63b1f50d64fb7e57a763f0",
+      "sha256": "31926d27b257f6e8510621ec2d0f8e95e823fbc8fdedb67d23531c6eaf2bfa65"
+    },
+    {
+      "path": "training_performance_single_sample/measurement_0.json",
+      "bytes": 852,
+      "source_sha256": "cbba8f6a2802d0b98f1940aee8276a65b602faff11343ce0b4f5357c7d61aacc",
+      "sha256": "877216d4939c9dce2ac9f64ce070094e7fabc2161fdf45ba61b4a5297f215437"
+    },
+    {
+      "path": "training_performance_single_sample/measurement_1.json",
+      "bytes": 835,
+      "source_sha256": "85493769b3b0cfd072896853aea417605bfa44d8ec84e6b6b7e1b7f9565c9c1c",
+      "sha256": "eeeaf82de587cb5eb9f7b9361e1d2246e6d604b641fec734875ed3c4ad355eb9"
+    },
+    {
+      "path": "training_performance_single_sample/measurement_2.json",
+      "bytes": 842,
+      "source_sha256": "c9d4e7b9f87b62441cd1b011a64bb46c0493ac71cbcd2f8e00fa00f085a3fe4c",
+      "sha256": "ac4ec7edf157889feb00b14d0992e91c18746c16b464b26449f149cf1c153cb1"
+    },
+    {
+      "path": "training_performance_single_sample/methodology.json",
+      "bytes": 912,
+      "source_sha256": "0b2e4003aec2e7de233291cc3f5cfb6df268b17f1c80395ce8497a4620008976",
+      "sha256": "2fecf55dd4b66fa6272b8b90fd7bba4c2d612beac77cc772f4514a795dbf5b71"
+    },
+    {
+      "path": "training_performance_single_sample/status.json",
+      "bytes": 156,
+      "source_sha256": "8ec64c759922356ca0b48f5f972648233d350a88d641c54e74a32f68b0c9f2a8",
+      "sha256": "55a6b4821b601140513c806a58679790356c06482f70a1c253f1149ca97ad2b8"
+    },
+    {
+      "path": "training_performance_single_sample/training_performance.csv",
+      "bytes": 710,
+      "source_sha256": "05e47179f2d6113d0d9c722dee27c64c794334ac3923aef695d5b2917403ff04",
+      "sha256": "05e47179f2d6113d0d9c722dee27c64c794334ac3923aef695d5b2917403ff04"
+    },
+    {
+      "path": "training_performance_single_sample/training_resources.png",
+      "bytes": 69514,
+      "source_sha256": "43f81f7bff16d717f62fe11d41da674c85498de3db478f17388104db27f79b09",
+      "sha256": "43f81f7bff16d717f62fe11d41da674c85498de3db478f17388104db27f79b09"
+    }
+  ]
+}

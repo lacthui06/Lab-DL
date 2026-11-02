@@ -1,0 +1,35 @@
+{
+  "source_run": "20261102T045843Z_architecture_MainMLP_FE_73fa19a9",
+  "files": [
+    {
+      "path": "architectures/MainMLP_FE/config.json",
+      "bytes": 98,
+      "source_sha256": "418d725d1c1f40f8e4340ea430fd513542e47fdd42e1a272baec2eae6997f6c0",
+      "sha256": "c7ea410935b13108d50131fab0c303b10a452a77f5efb5feaa18f7dc5818e347"
+    },
+    {
+      "path": "architectures/MainMLP_FE/environment_snapshot.json",
+      "bytes": 464,
+      "source_sha256": "06eb65ab6c6622474e4a80bac0d955433ee4cb929a63b1f50d64fb7e57a763f0",
+      "sha256": "31926d27b257f6e8510621ec2d0f8e95e823fbc8fdedb67d23531c6eaf2bfa65"
+    },
+    {
+      "path": "architectures/MainMLP_FE/layers.csv",
+      "bytes": 176,
+      "source_sha256": "ec3b039b41528bab419446cc5ea5b9d3115cd82986e438e2589f3c3adf7acace",
+      "sha256": "ec3b039b41528bab419446cc5ea5b9d3115cd82986e438e2589f3c3adf7acace"
+    },
+    {
+      "path": "architectures/MainMLP_FE/model_architecture.txt",
+      "bytes": 306,
+      "source_sha256": "b3a9ef3c5766cf6b2502666a3e6c1a6d1ed4401ccc7b899aa59c886e5b476ccb",
+      "sha256": "b3a9ef3c5766cf6b2502666a3e6c1a6d1ed4401ccc7b899aa59c886e5b476ccb"
+    },
+    {
+      "path": "architectures/MainMLP_FE/status.json",
+      "bytes": 156,
+      "source_sha256": "952887cca7720d2766de7aba548e281334f8651100d8580a1921371e57ba9c5d",
+      "sha256": "5457639f4d03c374f2d4966da3483b2404d1caf301e1ba939cf9a7a2822c932c"
+    }
+  ]
+}

@@ -66,7 +66,7 @@ Ghi cả hai dạng comment trong `requirements.txt`. Chỉ ghi mỗi "bản đ�
 So sánh phiên bản thư viện giữa máy cục bộ và Kaggle. Ghi nhận mọi khác biệt có thể ảnh hưởng đến hành vi mô hình. Nếu có khác biệt lớn, điều chỉnh để hai môi trường gần nhau nhất có thể, hoặc ghi rõ khác biệt đó trong tài liệu.
 
 ### Bước 6: Ghi snapshot cấu hình cho từng run
-Với mỗi lần huấn luyện, ghi lại đầy đủ: seed, hyperparameter, phiên bản thư viện, **phiên bản trình thông dịch Python**, và cấu hình thiết bị. Snapshot này được lưu cùng artifact của run để bất kỳ ai cũng có thể tái tạo lại đúng điều kiện; artifact chuẩn là `outputs/environment_snapshot.json` (hàm `collect_environment_snapshot()` trong `src/utils.py`).
+Với mỗi lần huấn luyện, ghi lại đầy đủ: seed, hyperparameter, phiên bản thư viện, **phiên bản trình thông dịch Python**, và cấu hình thiết bị. Snapshot này được lưu cùng artifact của run để bất kỳ ai cũng có thể tái tạo lại đúng điều kiện; artifact nằm tại `outputs/runs/<run_id>/environment_snapshot.json` (Lab01 dùng `collect_environment_snapshot()` trong `src/utils/helpers.py`); ghi đúng module và đường dẫn thực tế của lab.
 
 ### Bước 7: Kiểm chứng tái lập
 Chạy lại pipeline hai lần với cùng cấu hình và so sánh kết quả. Nếu loss và metric khớp nhau (trong sai số cho phép của phép toán dấu phẩy động), tính tái lập đã được xác lập. Nếu không khớp, quay lại Bước 1 để tìm nguồn ngẫu nhiên chưa được cố định.

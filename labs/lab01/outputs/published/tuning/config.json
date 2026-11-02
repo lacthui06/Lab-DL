@@ -1,0 +1,31 @@
+{
+  "trials_per_optimizer": 10,
+  "epochs": 10,
+  "seed": 42,
+  "batch_size": 128,
+  "data_sha256": "5e494e2c2d2188ede476a9803f16dd30598fcc92282a73118de4920aaf17de82",
+  "selection": "best validation accuracy",
+  "search": {
+    "SGD_lr": [
+      0.001,
+      0.1
+    ],
+    "adaptive_lr": [
+      0.0001,
+      0.01
+    ],
+    "weight_decay": [
+      1e-07,
+      0.01
+    ],
+    "SGD_momentum": [
+      0.8,
+      0.95
+    ]
+  },
+  "pruner": {
+    "name": "MedianPruner",
+    "startup_trials": 3,
+    "warmup_steps": 2
+  }
+}

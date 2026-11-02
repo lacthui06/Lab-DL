@@ -1,0 +1,7 @@
+{
+  "name": "SmallMLP",
+  "in_features": 784,
+  "hidden_dims": [
+    128
+  ]
+}

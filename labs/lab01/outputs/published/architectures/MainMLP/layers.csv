@@ -1,0 +1,7 @@
+layer,type,input_width,output_width,parameters
+0,Flatten,784,784,0
+1,Linear,784,256,200960
+2,ReLU,256,256,0
+3,Linear,256,128,32896
+4,ReLU,128,128,0
+5,Linear,128,10,1290
