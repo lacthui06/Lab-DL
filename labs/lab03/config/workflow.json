@@ -24,7 +24,8 @@
     "notebook_render": "20261103T080738Z_notebook_render_2e623fea",
     "requirements_verification": "20261103T080841Z_requirements_verification_71110eb1",
     "readiness_verification": "20261103T085020Z_readiness_verification_ca0f37ff",
-    "preflight_verification": "20261103T105221Z_preflight_verification_8634cda5"
+    "preflight_verification": "20261103T105221Z_preflight_verification_8634cda5",
+    "notebook_preflight_verification": "20261103T105724Z_notebook_preflight_verification_e24f260d"
   },
   "runs": [
     {
@@ -325,6 +326,11 @@
     {
       "id": "20261103T105221Z_preflight_verification_8634cda5",
       "kind": "preflight_verification",
+      "status": "completed"
+    },
+    {
+      "id": "20261103T105724Z_notebook_preflight_verification_e24f260d",
+      "kind": "notebook_preflight_verification",
       "status": "completed"
     }
   ]

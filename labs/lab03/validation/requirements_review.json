@@ -1,6 +1,6 @@
 {
   "status": "ready_for_kaggle_training",
-  "tests_passed": 123,
+  "tests_passed": 125,
   "profile_max_epochs": 5,
   "early_stopping": {
     "enabled": true,
@@ -36,12 +36,13 @@
       "code_cells": 11,
       "execution_status": "not_executed",
       "cached_outputs": 0,
-      "sha256": "915896687f6aa037dd19d4609d0a1141c409b44c4ca430a29739d7237c403bd3"
+      "sha256": "d7f9d7a5ae235c2bb10bf1f72c46408156ca2d072fe8641222fe553c3973c5b9"
     }
   ],
   "relative_document_links_verified": 5,
   "gpu_training_executed": false,
   "gpu_metrics_recorded": false,
-  "artifact_run": "20261103T105221Z_preflight_verification_8634cda5",
-  "preflight_session_isolation_verified": true
+  "artifact_run": "20261103T105724Z_notebook_preflight_verification_e24f260d",
+  "preflight_session_isolation_verified": true,
+  "notebook_preflight_verified": true
 }
