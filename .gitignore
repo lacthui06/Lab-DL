@@ -1,5 +1,7 @@
 .venv/
-data/
+**/data/*
+!**/data/.gitkeep
+!**/data/README.md
 __pycache__/
 .pytest_cache/
 .ipynb_checkpoints/
@@ -22,6 +24,20 @@ events.out.tfevents.*
 
 # Downloaded Kaggle upload bundles are too large for GitHub.
 .agents/kaggle-upload/*.zip
+
+# Local benchmark upload inputs; publish reviewed evidence under the lab outputs.
+.agents/single-image-benchmark/
+
+# Raw runs and technical journals stay local; publish selected report evidence.
+**/outputs/runs/
+**/internal_changes.md
+*.zip
+*.tar
+*.tar.gz
+
+# Lab01 evidence restored from main, including small split/prediction arrays.
+!labs/lab01/outputs/eda/split_indices.npz
+!labs/lab01/outputs/published/**/*.npz
 
 # Small locked index artifact, not image data or a learned feature cache.
 !labs/lab02/outputs/eda/split_indices.npz

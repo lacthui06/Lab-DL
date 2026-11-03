@@ -1,0 +1,41 @@
+{
+  "source_run": "20261022T151640Z_best_optimizer_learning_curves_cbe88b2e",
+  "files": [
+    {
+      "path": "best_optimizer_curves/best_optimizer_history.csv",
+      "bytes": 3051,
+      "source_sha256": "916acd3584494500a2702d6ee465d79fa08f7dae5ba7130ac03c9afa2151f66c",
+      "sha256": "916acd3584494500a2702d6ee465d79fa08f7dae5ba7130ac03c9afa2151f66c"
+    },
+    {
+      "path": "best_optimizer_curves/best_optimizer_learning_curves.png",
+      "bytes": 247068,
+      "source_sha256": "bccc85f4304c0627fc4849bdf13e54fa966e73b463e5179e5f99db884f0f8a30",
+      "sha256": "bccc85f4304c0627fc4849bdf13e54fa966e73b463e5179e5f99db884f0f8a30"
+    },
+    {
+      "path": "best_optimizer_curves/best_parameters.csv",
+      "bytes": 597,
+      "source_sha256": "e7c27ac0140e864cd07769777dc48fee520a5126267ff2be08fbefa544d5b7fa",
+      "sha256": "f2962122db82313ab3c2b1c497b1993a3508b22db03e2cff0826cba697a266cd"
+    },
+    {
+      "path": "best_optimizer_curves/config.json",
+      "bytes": 153,
+      "source_sha256": "7b11d0ddbad1dc3cf53ed7a476ce424197bbdc9be392c9457b1e4adeb3301ee6",
+      "sha256": "546c367f07851445c502d5319999e4ce998cbf231f30887472a5d8f7b6e30828"
+    },
+    {
+      "path": "best_optimizer_curves/environment_snapshot.json",
+      "bytes": 464,
+      "source_sha256": "06eb65ab6c6622474e4a80bac0d955433ee4cb929a63b1f50d64fb7e57a763f0",
+      "sha256": "31926d27b257f6e8510621ec2d0f8e95e823fbc8fdedb67d23531c6eaf2bfa65"
+    },
+    {
+      "path": "best_optimizer_curves/status.json",
+      "bytes": 156,
+      "source_sha256": "5f047192d3b635c77d9cc6eb4217cc0b13e768b50f3230f4c9c2981207071ec0",
+      "sha256": "8d795475c71f3fb9a1a00c04eee06edb3de734271d648bd8378f5e59fcd54b82"
+    }
+  ]
+}

@@ -1,23 +1,46 @@
 # Deep Learning Labs
 
-Source code, notebooks, results, and reference documentation for Deep Learning coursework.
+Repository containing source code, engineering workflows, and practical lab exercises for Deep Learning coursework.
+
+---
 
 ## Directory Structure
 
-- `.agents/`: Agent skills, workflows, and checklists.
-- `docs/`: Shared reference documentation.
-- `labs/`: Practical lab implementations.
+- `.agents/`: Skill framework and operational rules for AI Coding Agents.
+- `docs/`: Consolidated reference documentation (EDA, Feature Engineering, Deep Learning pipeline, Data Augmentation, Training and Optimization).
+- `labs/`: Course practical lab implementations.
+
+---
+
+## Environment
+
+- **Python and dependencies:** use the selected lab's requirements and README. Record the interpreter and installed libraries actually used in each run; do not assume the same environment across labs or between local and Kaggle.
+- **Dependency specifications:** see [Lab01 requirements](labs/lab01/requirements.txt) and [Lab02 requirements](labs/lab02/requirements.txt). The root requirements are shared guidance, not proof that every lab has been verified in one environment.
+- **Run-time evidence:** current Lab01 runs write `outputs/runs/<run_id>/environment_snapshot.json` (legacy snapshots remain in `outputs/logs/`) with the interpreter version, platform, library versions, and the resolved compute device. The Kaggle interpreter is logged per run rather than assumed equal to local.
+
+---
 
 ## Lab Directory
 
-- [Lab 02: CIFAR-10 Transfer Learning](labs/lab02/README.md): ResNet18 and DenseNet121, notebooks, experiments, and results.
+- **Lab 01**: [FashionMNIST Classification with PyTorch](labs/lab01/README.md) — local experiments available; final PDF pending.
+- **Lab 02**: [CIFAR-10 Transfer Learning](labs/lab02/README.md) — ResNet18 and DenseNet121, EDA/modeling notebooks, experiments and saved results.
+- **Lab 03**: Upcoming
+- **Lab 04**: Upcoming
 
-## Run Lab 02
+---
 
-Open `labs/lab02/` and follow its README. Install the lab dependencies with:
+## Lab Architecture (`labs/lab0X/`)
 
-```powershell
-python -m pip install -r requirements.txt
-```
+Each practical lab is organized into modular directories and a single living documentation file:
 
-Datasets, virtual environments, model checkpoints, and feature caches are excluded from Git.
+- `config/`: JSON or YAML configurations matching the actual pipeline; Lab01 uses `workflow.json` and `publication.json`, while Lab02 provides experiment profiles.
+- `data/`: Experimental datasets (ignored by git).
+- `notebooks/`: Jupyter Notebooks for interactive execution, analysis, and visualization.
+- `src/`: Modular, production-ready Python subpackages (`datasets/`, `models/`, `training/`, `utils/`).
+- `scripts/`: Actual command-line entry points; see each lab README for supported train, evaluation, inference and artifact commands.
+- `tests/`: Mandatory TDD test suites (`test_datasets.py`, `test_models.py`, `test_training.py`).
+- `outputs/`: Current per-run artifacts in `runs/<run_id>/` (config, logs, metrics, tables, figures, checkpoints); historical `checkpoints/`, `logs/`, `eda/`, and `predictions/` remain as evidence.
+- `description_lab_0X.md`: Original assignment brief from instructor (input, kept verbatim).
+- `walkthrough_lab_0X.md`: Single Living Walkthrough unifying 3 Core Rules (Section 1: Spec with brief interpretation (Mục 1.0) from `spec-driven-development`, Section 2: experiment methods and artifact-backed evidence from `walkthrough-and-experiment-tracking`, Section 3: Final Report with decision traceability from `documentation-and-adrs`).
+
+Lab01 keeps software change journals and troubleshooting logs local, outside Git and the report. See the Lab01 README for the two-notebook workflow and published report evidence.

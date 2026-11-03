@@ -1,0 +1,4 @@
+optimizer,run_path,best_val_acc,best_epoch,seconds,epochs_completed
+SGD,<LAB>/outputs/runs/20261022T130020Z_optimizer_fixed_lr_dbe789e0/candidates/20261022T130020Z_SGD_3443c05c,85.08333333333333,9,10.36877440000535,10
+RMSprop,<LAB>/outputs/runs/20261022T130020Z_optimizer_fixed_lr_dbe789e0/candidates/20261022T130032Z_RMSprop_5ecfe976,90.73333333333333,10,12.454700000002049,10
+Adam,<LAB>/outputs/runs/20261022T130020Z_optimizer_fixed_lr_dbe789e0/candidates/20261022T130045Z_Adam_65ff2992,90.93333333333334,10,14.972535799999605,10

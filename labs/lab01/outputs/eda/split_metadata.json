@@ -1,0 +1,11 @@
+{
+  "version": "split_v2_stratified",
+  "split_version": "split_v2_stratified",
+  "val_split": 0.1,
+  "seed": 42,
+  "train_size": 54000,
+  "train_count": 54000,
+  "val_size": 6000,
+  "val_count": 6000,
+  "total_count": 60000
+}

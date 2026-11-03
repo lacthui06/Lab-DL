@@ -20,11 +20,11 @@ Luôn cố định random seed (`random`, `numpy`, `torch.manual_seed`, `torch.c
 ### 1.4. Kiểm tra 1-Batch Sanity Overfit bắt buộc
 Trước khi đẩy job huấn luyện lên môi trường GPU từ xa (ví dụ Kaggle), mô hình bắt buộc phải vượt qua bài test overfit 1 batch chạy cục bộ, kéo loss về sát 0 (khoảng 5 giây). Bài test này là "chốt chặn" cuối cùng phát hiện lỗi kiến trúc, lỗi loss hoặc lỗi optimizer trước khi đốt GPU quota.
 
-### 1.5. Giao thức Zero Waste
-Nghiêm cấm chạy huấn luyện full nhiều epoch trên máy CPU cục bộ. Làm vậy vừa tốn thời gian vừa đốt token quota của người dùng. Thực thi cục bộ chỉ dừng ở mức: hoàn thiện module trong `src/`, dựng notebook tương tác trong `notebooks/`, và chạy test 1-batch sanity. Huấn luyện đầy đủ được thực thi trên Kaggle GPU (Tesla T4) hoặc compute tương đương.
+### 1.5. Lựa chọn môi trường theo workload
+Cho phép huấn luyện đầy đủ trên local CPU/GPU hoặc Kaggle theo cấu hình và ngân sách đã thống nhất. Chạy sanity/smoke test trước; chọn thiết bị theo kích thước dữ liệu, mô hình và thời gian dự kiến. Không chặn full training chỉ vì thiếu CUDA, không tự chuyển sang Kaggle hay chạy thêm thí nghiệm ngoài phạm vi. Ghi thiết bị và thời gian thực tế vào artifact; chỉ tuyên bố môi trường đã được kiểm chứng.
 
 ### 1.6. Tái lập nghiêm ngặt và ghi nhận môi trường
-Mọi kết quả phải tái lập được. Cố định seed cho toàn bộ thư viện tại một điểm vào duy nhất, bật chế độ deterministic khi cần, ghi nhận phiên bản thư viện chính, **yêu cầu Python thật** (suy ra từ `Requires-Python` của các pin, ví dụ `>=3.12, !=3.14.1`) **và bản trình thông dịch đã kiểm chứng**, rồi đồng bộ môi trường giữa local và Kaggle. Phiên bản thực tế của mỗi lần chạy phải được ghi vào `outputs/logs/environment_snapshot.json`; phiên bản Python không được ghi thành dòng `python==x.y.z` trong `requirements.txt` vì đó không phải cú pháp pip hợp lệ. Một kết quả không tái lập được thì không phải là kết quả khoa học. Skill chịu trách nhiệm: `environment-and-reproducibility`.
+Mọi kết quả phải tái lập được. Cố định seed cho toàn bộ thư viện tại một điểm vào duy nhất, bật chế độ deterministic khi cần, ghi nhận phiên bản thư viện chính, **yêu cầu Python thật** (suy ra từ `Requires-Python` của các pin, ví dụ `>=3.12, !=3.14.1`) **và bản trình thông dịch đã kiểm chứng**, rồi đồng bộ môi trường giữa local và Kaggle. Phiên bản thực tế của mỗi lần chạy phải được ghi vào `outputs/runs/<run_id>/environment_snapshot.json`; phiên bản Python không được ghi thành dòng `python==x.y.z` trong `requirements.txt` vì đó không phải cú pháp pip hợp lệ. Một kết quả không tái lập được thì không phải là kết quả khoa học. Skill chịu trách nhiệm: `environment-and-reproducibility`.
 
 ### 1.7. Cổng kiểm tra bắt buộc (Checklist Gates)
 Các cổng quan trọng phải vượt qua checklist tương ứng trong `.agents/checklists/` trước khi đi tiếp: `new_lab_bootstrap.md` khi bắt đầu lab mới, `pre_commit.md` trước khi commit, `pre_kaggle_upload.md` trước khi lên Kaggle GPU, và `pre_submission.md` trước khi nộp bài. Checklist biến quy tắc "nên làm" thành bước "phải đủ mới đi tiếp".
@@ -33,12 +33,14 @@ Các cổng quan trọng phải vượt qua checklist tương ứng trong `.agen
 Khi bắt đầu lab mới, agent phải dùng khung mẫu trong `.agents/templates/` (`walkthrough_template.md`, `description_lab_template.md`, `lab_readme_template.md`) thay vì tự phát minh lại cấu trúc. Mọi lab phải có cùng cấu trúc để đảm bảo tính đồng nhất và giảm công rà soát.
 
 ### 1.9. Tài liệu sống duy nhất (Hợp nhất 3 Rule)
-Toàn bộ tài liệu kỹ thuật của một lab phải được hợp nhất vào đúng MỘT tài liệu sống duy nhất: `walkthrough_lab_0X.md`. File này duy trì liên kết tường minh với 3 rule cốt lõi:
+Nội dung báo cáo của một lab có đúng MỘT nguồn biên tập: `walkthrough_lab_0X.md`. File này duy trì liên kết tường minh với 3 rule cốt lõi:
 - **Section 1 (Spec & Baseline Setup):** Chịu sự điều phối của `spec-driven-development` (Mục 1.0 tóm tắt cách hiểu đề bài; problem statement, data contract, mô hình baseline, ngưỡng chấp nhận).
-- **Section 2 (Full-Flow Experiment Changelog):** Chịu sự điều phối của `walkthrough-and-experiment-tracking` (dòng chảy vòng lặp, chênh lệch qua 5 giai đoạn pipeline, lý do điều chỉnh hyperparameter).
+- **Section 2 (Methods & Experiment Design):** Chịu sự điều phối của `walkthrough-and-experiment-tracking` (EDA, preprocessing, feature engineering, thiết kế thí nghiệm và lý do điều chỉnh hyperparameter).
 - **Section 3 (Results & Final Technical Report):** Chịu sự điều phối của `documentation-and-adrs` (ma trận so sánh, chẩn đoán confusion matrix, phân tích lỗi, truy vết quyết định về Mục 1.0, kết luận).
 
-Không được tạo file `SPEC.md` hay `REPORT.md` riêng biệt.
+Không tạo bản sao `SPEC.md` hay `REPORT.md`. README hướng dẫn sử dụng; description giữ đề gốc và yêu cầu đã thống nhất. Nhật ký sửa code, lỗi môi trường và kiểm thử kỹ thuật nằm trong `internal_changes.md` hoặc log local được Git ignore, không chèn vào báo cáo/PDF. Phân tích nhầm lẫn của mô hình vẫn là nội dung đánh giá khoa học. Section 2 trình bày phương pháp; bảng kết quả đầy đủ đặt ở Section 3 và dẫn chiếu để tránh lặp.
+
+Mỗi lần chạy lưu artifact/log vào `outputs/runs/<run_id>/`. Bộ `outputs/published/` chỉ xuất bằng script từ các run đã chọn tường minh; gồm toàn bộ ảnh của các run đó, bảng, lịch sử, metrics, predictions và provenance cần cho báo cáo. Không tự lấy run mới nhất. Log thô, checkpoint, prepared data và database lưu local hoặc phân phối riêng sau khi rà riêng tư. Chỉ claim PDF đủ số trang khi đã render và kiểm tra.
 
 ### 1.10. Chính sách không Emoji/Icon
 Nghiêm cấm emoji hoặc icon đồ họa trong mọi source code (`.py`, `.sh`), câu lệnh `print()`, log formatter, docstring, comment code, hoặc markdown cell trong Jupyter Notebook (`.ipynb`). Mọi tiêu đề và chỉ báo trạng thái phải dùng text kỹ thuật thuần ASCII/UTF-8 sạch, tương thích trên mọi môi trường terminal và pipeline CI/CD.
@@ -58,7 +60,7 @@ Bảng dưới đây ánh xạ ý định của người dùng sang skill tươn
 | Xác thực API PyTorch 2.x / Hugging Face | `source-driven-development` | Tài liệu chính thức PyTorch |
 | GPU CUDA OOM, loss NaN, lỗi môi trường Kaggle | `debugging-and-error-recovery` | `docs/dl_training.md` |
 | Tối ưu tốc độ huấn luyện, AMP FP16 | `performance-optimization` | `docs/dl_training.md` |
-| Độ chính xác mô hình cao bất thường (> 98%) | `doubt-driven-development` | Kiểm toán Data Leakage |
+| Metric cao bất thường so với dataset, baseline và giai đoạn huấn luyện | `doubt-driven-development` | Kiểm toán Data Leakage |
 | Đóng gói mô hình thành dịch vụ inference | `api-and-interface-design` | `docs/dl_flow.md` Stage 7 |
 | Refactor code, tách module trong `src/` | `code-simplification` | Hướng dẫn Clean Architecture |
 | Ghi log các lần chạy, so sánh chênh lệch thí nghiệm | `walkthrough-and-experiment-tracking` | Section 2 trong `walkthrough_lab_0X.md` |
@@ -78,7 +80,7 @@ Bảng dưới đây ánh xạ ý định của người dùng sang skill tươn
 - [X] *"Cứ code trực tiếp, không cần viết spec"* -> **Bác bỏ:** Vi phạm giao thức kỹ thuật; không để lại baseline hay tiêu chí chấp nhận nào cho việc phân tích so sánh về sau.
 - [X] *"Tách thành file SPEC.md và REPORT.md riêng"* -> **Bác bỏ:** Gây phân mảnh tài liệu và trùng lặp nội dung kỹ thuật. Hợp nhất cả 3 thành phần (Spec, Changelog, Report) vào `walkthrough_lab_0X.md`.
 - [X] *"Bỏ qua test overfit 1 batch, train thẳng trên Kaggle"* -> **Bác bỏ:** Đốt GPU quota và hàng giờ compute nếu tồn tại lỗi dimension hoặc lỗi loss âm thầm.
-- [X] *"Chạy huấn luyện full nhiều epoch trên CPU cục bộ"* -> **Bác bỏ:** Bào mòn tài nguyên máy cục bộ và token quota. Dừng sau khi xác thực 1-batch sanity và chuyển thực thi sang Kaggle GPU.
+- [X] *"Không có GPU thì không được full training"* -> **Bác bỏ:** Chọn local CPU/GPU hoặc Kaggle theo workload và ngân sách đã chốt; ghi rõ thiết bị thực tế.
 - [X] *"Dán log terminal thô vào chat thay vì ghi tài liệu"* -> **Bác bỏ:** Phải cập nhật đủ 5 giai đoạn pipeline và các chênh lệch metric định lượng trong `walkthrough_lab_0X.md`.
 - [X] *"Thêm emoji hoặc icon vào notebook hay script cho đẹp"* -> **Bác bỏ:** Vi phạm chuẩn chuyên nghiệp và gây lỗi mã hóa ký tự trên nhiều môi trường runtime khác nhau. Chỉ dùng text kỹ thuật thuần túy.
 - [X] *"Đặt seed là đủ để tái lập rồi"* -> **Bác bỏ:** Còn nhiều nguồn ngẫu nhiên khác (NumPy, DataLoader worker, thuật toán GPU không xác định). Phải cố định toàn bộ và ghi nhận phiên bản môi trường.
