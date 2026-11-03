@@ -22,8 +22,8 @@ class NotebookSession:
                         CUBLAS_WORKSPACE_CONFIG=':4096:8')
         self.paths = {role:self.lab/'outputs/runs'/run_id
                       for role,run_id in self.read(self.lab/'config/report.json')['runs'].items()}
-        self.paths.update(data=self.paths['frozen_dataset_preview'],
-            augmentation=self.paths['frozen_augmentation_preview'],model=self.paths['frozen_trial'],
+        self.paths.update(data=self.paths.get('data_preparation',self.paths['frozen_dataset_preview']),
+            augmentation=self.paths.get('feature_augmentation',self.paths['frozen_augmentation_preview']),model=self.paths['frozen_trial'],
             exercise1_current=self.paths['frozen_exercise1'],
             exercise1_visuals=self.paths['frozen_exercise1_analysis'])
 

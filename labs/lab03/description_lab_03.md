@@ -2,7 +2,7 @@
 
 **Môn học:** Deep Learning — UTH.
 **Nguồn đề:** ảnh Practice 3 do giảng viên cung cấp trong phiên làm việc.
-**Trạng thái hiện hành:** frozen trial đã chạy đủ 10 epoch; kết quả và quyết định cuối ở Mục 14. Các mục 10–13 ghi diễn tiến thiết kế trước lượt này.
+**Trạng thái hiện hành:** profile mới tối đa5 epoch + early stopping, chờ đo GPU. Kết quả frozen10epoch ở Mục14 là lịch sử. Quyết định mới nhất ở Mục17 thay thế yêu cầu chạy đủ10epoch cho lượt tiếp theo.
 
 **Vai trò tài liệu:** ghi đề nhận vào, nội dung đã thảo luận, quyết định hiện hành và điều kiện nghiệm thu.
 
@@ -410,3 +410,49 @@ Các kích thước của lượt lịch sử là cấu trúc khai báo của ba
 Modeling phải hiển thị accuracy/loss theo epoch, time/sample có phạm vi đo và RAM/VRAM peak kèm batch size. RAM dùng RSS sampled của process; VRAM dùng PyTorch peak allocated/reserved. Peak chia batch slots chỉ là bộ nhớ dùng chung phân bổ theo batch, không phải bộ nhớ độc lập của từng câu.
 
 Lượt frozen cũ có timing/curves nhưng **không ghi RAM/VRAM training**, nên báo cáo giữ null/NOT LOGGED. Lượt train mới tự đo từng epoch và đưa PNG/JSON/log vào review ZIP; chưa có số GPU mới thì không đánh dấu đạt phần đo tài nguyên. Published phải có ảnh/bảng và bản sao log có SHA256 để pull về dùng trực tiếp, không buộc chạy notebook hoặc train lại để lấy bằng chứng đã có.
+
+## 17. Profile hiện hành: tối đa 5 epoch, early stopping và EDA đầy đủ
+
+Mục này là quyết định mới nhất cho lần train tiếp theo. Các số 10 epoch, checkpoint epoch 9 và threshold 0.45 trong Mục 14–16 mô tả run lịch sử; không phải kết quả profile mới.
+
+### D25 — Ngân sách 5 epoch và early stopping
+
+**Thảo luận:** ép chạy đủ một ngân sách khi validation loss không cải thiện làm tốn compute và có thể tăng overfitting. Ngược lại, chỉ cắt biểu đồ còn 5 điểm không tạo thành một thí nghiệm 5 epoch vì scheduler/optimizer đã đi theo ngân sách khác.
+
+**Quyết định:** train mới từ pretrained base với `num_train_epochs=5`, evaluate/save mỗi epoch, early stopping patience 2, min_delta 0.001 theo validation loss. Không resume checkpoint cũ; không dùng test cho quyết định dừng. Có thể hoàn thành ít hơn 5 epoch. Checkpoint tốt nhất vẫn là minimum validation loss thực tế; min_delta chỉ điều khiển bộ đếm patience.
+
+**Kiểm chứng phần mềm:** fixture có validation plateau dừng ở epoch 3, giữ checkpoint epoch 1; callbacks evaluate(train) không làm tăng patience. Đây là kiểm tra cơ chế, không phải kết quả Rotten Tomatoes GPU.
+
+### D26 — Regularization và lựa chọn learning rate
+
+| Thành phần | Profile mới | Discussion / quyết định |
+|---|---|---|
+| Frozen representation | Embedding + 4/6 blocks | Hạn chế số weights được cập nhật, giữ pretrained representation |
+| Encoder LR | 5e-6 | Thấp hơn full fine-tuning lịch sử 1e-5; cao hơn frozen cũ 2e-6 vì ngân sách ngắn hơn |
+| Head LR | 2e-5 | Head khởi tạo mới cần thích nghi nhanh hơn encoder |
+| Dropout encoder / attention / head | 0.2 / 0.2 / 0.4 | Giảm phụ thuộc vào feature riêng; không tăng tiếp tùy tiện vì có thể underfit |
+| AdamW weight decay | 0.1 | Decay weights >=2D; bias/LayerNorm không decay |
+| Warmup / scheduler | 10% / linear decay | Tránh update lớn đầu train, giảm LR dần theo ngân sách 5 epoch |
+| Gradient clipping | Norm 1.0 | Hạn chế gradient quá lớn, không thay thế việc kiểm tra NaN |
+| Augmentation | Train-only, trần 25% | Thêm diversity cùng cực tính, dedup và cân bằng; weak labels có thể nhiễu |
+| Checkpoint / stopping | Validation loss / patience 2 | Không dùng test chọn cấu hình hoặc dừng |
+
+Các lựa chọn được định trước, không có ablation đủ để nói từng kỹ thuật tạo ra cải thiện. Không bảo đảm hết overfit hoặc đạt metric cao nhất. Nếu validation loss tăng và gap lớn, đọc resource/history/error artifacts trước khi quyết định thêm thử nghiệm; không tăng mẫu giả chỉ để đủ quota.
+
+### D27 — EDA và feature engineering phải có nội dung thực chất
+
+**Thảo luận:** một histogram token và JSON output chưa giải thích được chất lượng dữ liệu, lựa chọn cutoff hoặc feature contract.
+
+**Quyết định:** notebook 01 bổ sung audit missing/blank/duplicate/overlap, label balance, độ dài words/tokens theo lớp, quantiles/cutoff sensitivity, negation/contrast, token/ID/mask của câu train thật và sparse TF-IDF unigram/bigram. Mỗi bước có hình/bảng inline và giải thích quyết định. Baseline modeling fit lại vectorizer trên effective train, không dùng vocabulary fit trên heldout.
+
+**Bằng chứng EDA hiện có:** train median/p90/p95/p99/max token là 27/43/47/56/78; cutoff 64 cắt 6/8.530 câu, cutoff 96/128 không cắt. TF-IDF original train có shape 8.530×24.083, 207.847 nonzeros. Array footprint 2.528.288 bytes không phải process RAM peak. Tăng mẫu hợp lệ 274 (137/lớp), không thay validation/test.
+
+**Nguồn và giới hạn:** EDA bổ sung dùng bản RT polarity corpus công khai phục dựng theo split builder Hugging Face cũ do CDN bị chặn trong môi trường kiểm tra. Đã đối chiếu 1.066 validation + 1.066 test và 274 parent/variant augmentation với run Kaggle đã lưu; chưa đối chiếu toàn bộ train hoặc HF dataset fingerprints. Run lưu URL, commit/hash nguồn, encoding conversion và content hashes. Không gọi đây là download trực tiếp pinned HF Parquet. MODE=prepare/train tiếp theo vẫn dùng loader HF chính thức đã pin.
+
+### D28 — Hai notebook, artifact và tiêu chí Done
+
+Giữ đúng hai notebook có roadmap/module ở đầu: EDA→preprocessing→feature engineering và modeling. Ảnh phải hiện ngay trên notebook và lưu cùng PNG vào outputs/. Modeling mới có full train/validation accuracy/loss mỗi epoch, time/sample và RAM/VRAM peak theo batch slots với phạm vi/đơn vị rõ ràng. Không đồng nhất peak/batch-slot với bộ nhớ riêng một câu.
+
+Sau train tự publish hình/bảng/raw log, catalog/manifest và latest_report selection; review ZIP chứa artifact nhẹ. Checkpoint ZIP riêng không đưa lên Git. Khi pull bản có kết quả đã publish, đọc report không cần train lại.
+
+**Trạng thái:** source, CPU fixture tests, EDA và notebook view có thể kiểm chứng ngay. Kết quả 5 epoch/early stopping và số tài nguyên GPU của profile mới chờ review ZIP thực tế; không lấy số lịch sử hoặc CPU fixture gán cho GPU mới.

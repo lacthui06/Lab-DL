@@ -1,0 +1,9 @@
+Run: 20261103T080841Z_requirements_verification_71110eb1
+{
+  "tests_passed": 118,
+  "raw_logs_published": 23,
+  "published_files_verified": 403,
+  "selected_run_manifests_verified": 27,
+  "relative_links_verified": 75,
+  "overall": "source/view/published ready for Kaggle; GPU result verification pending returned review ZIP"
+}

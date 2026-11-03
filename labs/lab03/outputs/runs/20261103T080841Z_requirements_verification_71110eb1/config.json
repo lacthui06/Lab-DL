@@ -1,0 +1,5 @@
+{
+  "purpose": "5-epoch early stopping, EDA, inline notebooks and published evidence verification; no full neural CPU/GPU training",
+  "planned_profile_sha256": "237e9e6576e6ff9e9c2b3c5e4bb628eedb05652149e967c8106380e3cfd1c3dc",
+  "source_base_commit": "72005a9a6babc9ae3e582f7fe1642b1d63985f22"
+}

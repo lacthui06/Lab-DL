@@ -1,0 +1,37 @@
+{
+  "splits": [
+    {
+      "split": "train",
+      "samples": 8530,
+      "missing_or_nonstring": 0,
+      "empty_or_whitespace": 0,
+      "exact_duplicate_rows": 0,
+      "normalized_duplicate_rows": 0,
+      "invalid_binary_labels": 0
+    },
+    {
+      "split": "validation",
+      "samples": 1066,
+      "missing_or_nonstring": 0,
+      "empty_or_whitespace": 0,
+      "exact_duplicate_rows": 0,
+      "normalized_duplicate_rows": 0,
+      "invalid_binary_labels": 0
+    },
+    {
+      "split": "test",
+      "samples": 1066,
+      "missing_or_nonstring": 0,
+      "empty_or_whitespace": 0,
+      "exact_duplicate_rows": 0,
+      "normalized_duplicate_rows": 0,
+      "invalid_binary_labels": 0
+    }
+  ],
+  "normalized_cross_split_overlap": {
+    "train__validation": 0,
+    "train__test": 0,
+    "validation__test": 0
+  },
+  "action": "audit only; official splits unchanged; no fitting with heldout text/labels"
+}

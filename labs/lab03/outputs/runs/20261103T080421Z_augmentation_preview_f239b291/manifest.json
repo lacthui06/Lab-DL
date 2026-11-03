@@ -1,0 +1,11 @@
+{
+  "augmentation.json": "9f62fefbe5b34aac625909a264341852fb55af846d0587bd8f880c92317668d8",
+  "augmentation_counts.png": "dc5fbb42713dbdf071ea6c4b2dfa9e75ca04d9f509ffe47acb9aec006eaa3918",
+  "augmentation_diagnostics.png": "dbb0855ba826962f6bd622bb5b6c16b93e81cea80dac889f28f74365f9c503fa",
+  "augmentation_examples.png": "5fa122ffbd307438e090b9279748bb14d64d1f3efb1b82e857eeb22e3287afef",
+  "config.json": "05f405c66380780a607192232af5fcc6eeb16f2bbd2ac3aade20622d8558dadd",
+  "console.log": "892e5583b2e61660437b821d766ceb6e8b5bcf82ed876fe1e5869746d8a45c9a",
+  "data_source_provenance.json": "f9a2b4c95fb35f3eef77eb9a02e4da83f50126c354aab94385809de99ce8de5e",
+  "environment_snapshot.json": "bcf0d01e2586b4625a96504b6da40ca423cc190b0c9789f7749cdb3a7245ff29",
+  "status.json": "7ccc76c79702d3036f1f73acdf5cc4c333fa7d9721df7437015a74558db32533"
+}

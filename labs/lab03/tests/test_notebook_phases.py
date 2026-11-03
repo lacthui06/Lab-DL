@@ -42,4 +42,5 @@ def test_dataset_preview_persists_original_counts_and_three_figures(tiny,tmp_pat
     assert preview['split_sizes']=={'train':4,'validation':4,'test':4}
     assert preview['examples_split']=='train' and preview['augmentation_applied'] is False
     assert preview['label_counts']['train']=={'0':2,'1':2}
-    assert len(list(out.glob('*.png')))==3
+    assert len(list(out.glob('*.png')))>=9
+    assert json.loads((out/'feature_summary.json').read_text())['fitted_split']=='train'

@@ -25,6 +25,7 @@ JSON_FILES = {
     "inference_predictions.json", "baseline_validation_candidates.json", "baseline_validation_policy.json", "checkpoint_reference.json",
     "performance_history.json", "performance_summary.json", "performance_source.json", "resource_history.json",
     "test_resource_metrics.json", "model_architecture.json", "environment_snapshot.json", "source_commit.json",
+    "data_source_provenance.json", "data_quality.json", "preprocessing_statistics.json", "text_signals.json", "tokenization_examples.json", "feature_summary.json",
 }
 
 
@@ -111,12 +112,14 @@ def publish_artifacts(settings=None, output_dir=None, source_root=ROOT):
                     for r in read_json(trial/'test_comparison.json')]
         save_json(staged/'source_runs.json',provenance)
         save_json(staged/'artifact_catalog.json',catalog)
+        performance_role = 'performance_report' if 'performance_report' in paths else (
+            'frozen_trial' if 'frozen_trial' in paths and (paths['frozen_trial']/'performance_summary.json').is_file() else None)
         save_json(staged/'metrics_summary.json',{'primary_result':primary, 'source_run':paths[primary].name if primary in {'study','frozen_trial'} else evaluation.name,
             'test_comparison':rows, 'historical_three_epoch_test_comparison':historical_rows, 'measured_test_loss':loss,
             'selection_split':policy.get('split') if policy else None,
             'selected_threshold':policy.get('selected_threshold') if policy else None,
-            'performance':read_json(paths['performance_report']/'performance_summary.json') if 'performance_report' in paths else None})
-        lines=['# Lab03 — Artifacts cho report','','Nguồn run được chọn tường minh trong `config/report.json`. Không huấn luyện hoặc chọn lại threshold khi xuất.','',
+            'performance':read_json(paths[performance_role]/'performance_summary.json') if performance_role else None})
+        lines=['# Lab03 — Artifacts cho report','','Nguồn run được chọn tường minh trong source_runs.json (report.json hoặc latest_report.json). Không huấn luyện hoặc chọn lại threshold khi xuất.','',
             '| Policy | Accuracy | Precision | Recall | Binary F1 | Macro F1 | Test loss |',
             '|---|---:|---:|---:|---:|---:|---:|']
         for row in rows:
@@ -127,15 +130,16 @@ def publish_artifacts(settings=None, output_dir=None, source_root=ROOT):
         if primary == 'study':
             lines += ['', 'Bảng chính thuộc study 10 epoch; các role finetuning/evaluation/analysis cũ giữ bằng chứng lịch sử 3 epoch. Không gán số liệu hai protocol cho cùng một run.']
         if primary == 'frozen_trial':
-            lines += ['', 'Bảng chính thuộc frozen trial: checkpoint epoch 9 theo validation loss, threshold 0.45 theo validation Macro-F1. Ưu tiên giảm overfitting; không khẳng định accuracy cao nhất lịch sử. Các study khác giữ vai trò so sánh.']
+            selection=read_json(paths['frozen_trial']/'selection_summary.json')
+            lines += ['', f"Bảng chính thuộc frozen trial: hoàn thành {selection['completed_epochs']:g} epoch, checkpoint epoch {selection['selected_epoch']} theo validation loss; threshold {policy['selected_threshold']:g} theo validation Macro-F1. Các study khác là lịch sử; không khẳng định accuracy cao nhất."]
         lines += ['','## Nguồn thí nghiệm','','| Vai trò | Run |','|---|---|']
         lines += [f'| {role} | `{run_id}` |' for role,run_id in selected.items()]
-        if 'performance_report' in paths:
-            perf=read_json(paths['performance_report']/'performance_summary.json')
+        if performance_role:
+            perf=read_json(paths[performance_role]/'performance_summary.json')
             lines += ['','## Hiệu năng và phạm vi đo','',
                 f"Test evaluation: **{perf['test_eval_ms_per_sample']:.6f} ms/mẫu**; {perf['test_eval_timing_scope']}.",
                 f"RAM/VRAM training: **{perf['historical_memory_status']}**.",
-                '[Bảng từng epoch](performance_report/performance_history.json) · [Phạm vi/đơn vị](performance_report/performance_summary.json)',
+                f'[Bảng từng epoch]({performance_role}/performance_history.json) · [Phạm vi/đơn vị]({performance_role}/performance_summary.json)',
                 '', 'Peak/batch slots là bộ nhớ dùng chung được phân bổ theo batch, không phải bộ nhớ độc lập cho mỗi câu. Không thay số thiếu bằng 0.']
         lines += ['','## Log nguồn đã publish','',
             'Các log dưới đây được copy nguyên byte từ run nguồn và có SHA256 trong catalog/manifest. Log thiếu trong nguồn giữ khai báo artifact_availability; không sinh log thay thế.','']

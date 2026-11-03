@@ -1,4 +1,4 @@
-"""Thử regularization có kiểm soát; đủ 10 epoch, chọn checkpoint bằng val loss."""
+"""Fine-tuning regularized với ngân sách epoch và early stopping theo cấu hình."""
 from pathlib import Path
 import argparse
 import hashlib
@@ -60,14 +60,22 @@ def resolve_device(device):
     return ('cuda' if torch.cuda.is_available() else 'cpu') if device == 'auto' else device
 
 
+def publish_completed_trial(out,root=ROOT):
+    from labs.lab03.scripts.publish_artifacts import publish_artifacts
+    selection=Path(root)/'outputs/latest_report.json'
+    save_json(selection,{'primary_result':'frozen_trial','runs':{'frozen_trial':Path(out).name}})
+    return publish_artifacts(selection,output_dir=Path(root)/'outputs/published',source_root=root)
+
+
 def run(config, root=ROOT, allow_cpu_fixture=False, device='auto'):
     config = deepcopy(config)
     config['exercise2']['device'] = 'cpu' if allow_cpu_fixture else resolve_device(device)
     if config['exercise2']['device'] == 'cpu' and not allow_cpu_fixture:
         print('Device: CPU. Full training is supported but can be slow; CUDA is recommended.', flush=True)
     e = config['exercise2']
-    if e['num_train_epochs'] != 10 or e['metric_for_best_model'] != 'loss':
-        raise ValueError('This trial requires 10 epochs and validation-loss checkpoint selection')
+    budget = e['num_train_epochs']
+    if isinstance(budget,bool) or not isinstance(budget,int) or budget < 1 or e['metric_for_best_model'] != 'loss':
+        raise ValueError('This trial requires a positive epoch budget and validation-loss selection')
     set_seed(config['seed'])
     with run_context('frozen_trial', config, root=root) as out:
         sources = {p.relative_to(ROOT).as_posix(): hash_file(p)
@@ -92,6 +100,8 @@ def run(config, root=ROOT, allow_cpu_fixture=False, device='auto'):
         save_json(out/'baseline_policy.json', baseline_policy)
         model, tokenizer = load_model(e['model_name'], e['model_revision'],
             finetuning=True, overrides=e['model_overrides'])
+        from labs.lab03.src.data_preparation import export_data_review
+        export_data_review(raw,tokenizer,e,out)
         optimizer, freezing = configure_frozen_optimizer(model, e)
         save_json(out/'freezing_and_optimizer.json', freezing)
         save_json(out/'model_architecture.json', {'architecture':type(model).__name__,
@@ -110,12 +120,15 @@ def run(config, root=ROOT, allow_cpu_fixture=False, device='auto'):
         finally:
             trainer.resource_callback.close()
         history = json.loads((out/'epoch_history.json').read_text())
-        assert [r['epoch'] for r in history] == list(range(1, 11))
+        completed = len(history)
+        assert [r['epoch'] for r in history] == list(range(1, completed+1)) and 1 <= completed <= budget
         best = min(history, key=lambda r: r['validation_loss'])
         assert best['step'] == int(Path(trainer.state.best_model_checkpoint).name.split('-')[-1])
         save_json(out/'trainer_history.json', trainer.state.log_history)
         save_json(out/'selection_summary.json', {
-            'completed_epochs': float(trainer.state.epoch), 'early_stopping': False,
+            'requested_epochs':budget, 'completed_epochs': float(trainer.state.epoch),
+            'early_stopping':bool(e.get('early_stopping',{}).get('enabled',False)),
+            'stopped_early':completed < budget, 'early_stopping_settings':e.get('early_stopping',{}),
             'checkpoint_selection_metric': 'validation_loss', 'selected_epoch': best['epoch'],
             'best_step': best['step'], 'best_validation_loss': best['validation_loss'],
             'global_step': trainer.state.global_step,
@@ -178,17 +191,21 @@ def run(config, root=ROOT, allow_cpu_fixture=False, device='auto'):
         plot_samples(shown, out/'sample_predictions.png')
         diagnostics = prediction_diagnostics(labels, tp, out, policy['selected_threshold'], config['seed'])
         save_json(out/'probability_diagnostics.json', diagnostics)
-        summary = f"""# Frozen DistilBERT trial\n\nRun: `{out.name}`\n\nTrain completed 10 epochs. Best checkpoint: epoch {best['epoch']} (validation loss).\n\nEmbedding and first {e['freeze_layers']} encoder layers frozen.\nEncoder LR {e['learning_rate']}; head LR {e['head_learning_rate']}.\n\nThreshold: {policy['selected_threshold']} (validation Macro-F1).\n\nThis configuration is a hypothesis, not a guaranteed improvement.\nOne seed only; historical test exposure; no causal claim about individual changes.\n\n```json\n{json.dumps(comparison, indent=2)}\n```\n"""
+        summary = f"""# Frozen DistilBERT trial\n\nRun: `{out.name}`\n\nTrain completed {completed}/{budget} epochs. Best checkpoint: epoch {best['epoch']} (validation loss).\n\nEmbedding and first {e['freeze_layers']} encoder layers frozen.\nEncoder LR {e['learning_rate']}; head LR {e['head_learning_rate']}.\n\nThreshold: {policy['selected_threshold']} (validation Macro-F1).\n\nThis configuration is a hypothesis, not a guaranteed improvement.\nOne seed only; historical test exposure; no causal claim about individual changes.\n\n```json\n{json.dumps(comparison, indent=2)}\n```\n"""
         (out/'report.md').write_text(summary, encoding='utf-8')
         write_performance(out,out)
         print(summary)
     audit = verify_manifest(out)
+    published = publish_completed_trial(out,root) if not allow_cpu_fixture else None
     save_json(out/'package_audit.json', audit)
     # package_audit is a derived packaging record, not part of the original run manifest.
     destination = archive_destination(root, allow_cpu_fixture)
     bundle = destination/f'lab03_review_{out.name}.zip'
     files = [p for p in out.rglob('*') if p.is_file() and not
              {'best_model', 'checkpoints'}.intersection(p.relative_to(out).parts)]
+    if published:
+        files.extend(p for p in published.rglob('*') if p.is_file())
+        files.append(Path(root)/'outputs/latest_report.json')
     workflow = root/'config/workflow.json'
     if workflow.is_file():
         active = json.loads(workflow.read_text()).get('active_runs', {})

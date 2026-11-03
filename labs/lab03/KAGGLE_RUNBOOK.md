@@ -1,7 +1,21 @@
 # Đưa Lab 03 lên Kaggle GPU
 
-Hướng dẫn vận hành để train frozen DistilBERT (10 epoch, chọn checkpoint theo validation loss)
+Hướng dẫn vận hành để train frozen DistilBERT (tối đa5 epoch, early stopping và chọn checkpoint theo validation loss)
 trên Kaggle. Gói kernel được sinh từ notebook modeling gốc, không sửa tay hai lần.
+
+## 0. Import notebook trực tiếp từ GitHub
+
+Kaggle: New Notebook → File → Import Notebook → GitHub, dán URL:
+
+```text
+https://github.com/lacthui06/Lab-DL/blob/lab03/labs/lab03/notebooks/02_modeling.ipynb
+```
+
+Bật GPU và Internet trong Settings. Đổi `MODE = "view"` thành `MODE = "train"`, chọn `DEVICE = "cuda"`, rồi Run All từ đầu. Không cần upload checkpoint cũ: pipeline bắt đầu từ pretrained base. Nếu repo cũ còn trong session, dùng phiên Kaggle mới để clone đúng code đã cập nhật.
+
+Max5epoch là ngân sách tối đa; early stopping patience2/min_delta0.001 có thể kết thúc sớm. Bảng/đường học có đúng số epoch đã chạy, không điền thêm điểm. Run view hiện có là bằng chứng10epoch lịch sử; không dùng số đó làm kết quả profile mới.
+
+Các bước CLI dưới đây là lựa chọn khác; không bắt buộc cài Kaggle CLI khi import bằng giao diện.
 
 ## 1. Điều kiện tiên quyết
 
@@ -64,7 +78,7 @@ ML chạy bằng interpreter con đó; kernel cha chỉ hiển thị ảnh.
 Sau khi chạy xong, `/kaggle/working` có hai ZIP:
 
 - `lab03_review_<run>.zip` — config, log, predictions, epoch history, ảnh, manifest SHA256.
-  Không chứa weights.
+  Không chứa weights; có cả published hình/bảng/log và nguồn selection mới.
 - `lab03_checkpoint_<run>.zip` — `best_model` (weights, tokenizer, `decision_threshold.json`).
 
 Tải về:
@@ -85,7 +99,9 @@ Notebook** rồi chép vào `labs/lab03/notebooks/` nếu cần lưu bản có o
    `probability_diagnostics.json`.
 2. Cập nhật Section 2 của `walkthrough_lab_03.md` với run ID mới và chênh lệch metric so với
    `20261027T095655Z_frozen_trial_d8d09116`.
-3. Không commit ZIP, weights, hay dataset thô. Chỉ commit source, notebook có output và figure nhẹ.
+3. Review ZIP chứa `outputs/runs/<run>/`, `outputs/published/`, `outputs/latest_report.json` và manifest. Kiểm tra hash trước khi nhập. Dùng run mới cập nhật report selection/báo cáo sau khi kiểm toán, không đổi nhãn run cũ.
+4. Không commit ZIP, weights, hay dataset thô. Giữ checkpoint ZIP riêng để reload/evaluate/infer; commit figure, bảng, log nhẹ và notebook có output. Có thể gửi review ZIP để kiểm tra, hoặc giải nén và commit các artifact nhẹ trong `labs/lab03/`.
+5. Accuracy/loss/time/RAM/VRAM mới phải đọc từ run mới. CPU tests không thay phép đo GPU; nếu một trường chưa đo thì ghi rõ thiếu.
 
 ## 8. Lỗi thường gặp
 

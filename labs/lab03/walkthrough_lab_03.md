@@ -2,7 +2,7 @@
 
 **Môn học:** Deep Learning — UTH.
 
-**Kết quả chính hiện hành:** frozen DistilBERT `20261027T095655Z_frozen_trial_d8d09116`, đủ 10 epoch, chọn epoch 9 theo validation loss, threshold validation 0.45; test Accuracy 82.83%, Macro-F1 82.82%, loss 0.412560. Phần kết quả cuối và quyết định nghiệm thu ở **Mục 3.19–3.21**. Các phần ba epoch/study full fine-tuning giữ như lịch sử có nguồn, không coi các số đó là metric frozen hiện tại.
+**Bằng chứng kết quả lịch sử được chọn cho view:** frozen DistilBERT `20261027T095655Z_frozen_trial_d8d09116`, đủ 10 epoch, chọn epoch 9 theo validation loss, threshold validation 0.45; test Accuracy 82.83%, Macro-F1 82.82%, loss 0.412560. Phần kết quả cuối và quyết định nghiệm thu ở **Mục 3.19–3.21**. Các phần ba epoch/study full fine-tuning giữ như lịch sử có nguồn, không coi các số đó là metric frozen hiện tại.
 
 **Bố cục notebook hiện hành:** chỉ có `01_eda_preprocessing_feature_engineering.ipynb` và `02_modeling.ipynb`. Những tên/số notebook cũ trong diễn tiến là lịch sử trước khi gom, không phải file cần chạy thêm.
 
@@ -1678,8 +1678,177 @@ RAM là peak RSS của process training, sampled mỗi 20 ms; gồm interpreter,
 
 #### 3.23.5. Lượt train tiếp theo và tiêu chí Done
 
-Trainer đăng ký EpochResources trước callback evaluate để tách đúng train phase. Mỗi epoch lưu resource_history.json; bước test có test_resource_metrics.json riêng. Cuối run xuất performance PNG/JSON và sơ đồ kiến trúc; tất cả nằm trong manifest/review ZIP. Không đổi early-stopping policy: vẫn đủ 10 epoch và chọn minimum validation loss.
+Trainer đăng ký EpochResources trước callback evaluate để tách đúng train phase. Mỗi epoch lưu resource_history.json; bước test có test_resource_metrics.json riêng. Cuối run xuất performance PNG/JSON và sơ đồ kiến trúc; tất cả nằm trong manifest/review ZIP. Đây là mô tả profile10epoch trước đây. Profile hiện hành ở Mục3.24 chuyển sang tối đa5epoch, early stopping và chọn minimum validation loss.
 
 Kiểm thử xác nhận warmup_ratio=0.1 được truyền đúng API Transformers 4.48.3; warmup_steps là số nguyên riêng. Không truyền 0.1 vào warmup_steps vì API pin sẽ từ chối trước training. Đây là sửa tương thích, không sửa lại byte/kết quả run cũ.
 
 Nghiệm thu phần source/published: đủ hai notebook, sơ đồ/giải thích kiến trúc, accuracy/loss, timing có nguồn, log published và SHA256. Nghiệm thu **đủ số RAM/VRAM training GPU** vẫn chờ resource_history của một lượt mới. Không đánh dấu hoàn tất phép đo chỉ vì code telemetry đã pass tests.
+
+### 3.24. Profile train mới: ngân sách 5 epoch và early stopping
+
+#### 3.24.1. Phân biệt thiết kế mới với kết quả đã đo
+
+Cấu hình hiện hành trong `config/frozen_trial.json` chuyển từ 10 epoch không dừng sớm sang **tối đa 5 epoch với early stopping**. Bảng kết quả đã kiểm toán ở các mục trước vẫn là số đo lịch sử, không sửa epoch history, log, manifest hoặc tên run để biến chúng thành kết quả mới.
+
+`config/report.json` tiếp tục chọn frozen10epoch để notebook MODE=view mở được hình/bảng ngay sau pull. Trường planned_training_status ghi rõ profile mới chờ GPU. MODE=train dùng config hiện hành, khởi tạo từ pretrained base, không resume weights đã fine-tune trước đó.
+
+Không huấn luyện full mạng neural trên CPU trong quá trình kiểm tra phần mềm. CPU fixtures chỉ xác nhận cơ chế train/evaluate/save/reload/early stopping, không cung cấp metric GPU thật.
+
+#### 3.24.2. Vì sao 5 epoch không chỉ là cắt nửa biểu đồ?
+
+Epoch là một lượt đi qua effective train, step là một lần cập nhật optimizer sau gradient accumulation. Với effective train 8.804, batch16 và accumulation1 trên một GPU, có ceil(8.804/16)=551 updates/epoch. Ngân sách 5 epoch là tối đa2.755 updates nếu không dừng sớm; số thực tế lấy từ global_step, không hard-code vào hình.
+
+Scheduler linear decay được tạo theo ngân sách mới, warmup_ratio0.1 ứng với số steps của lượt mới. Vì vậy chạy mới 5 epoch khác lấy 5 dòng đầu của run10epoch. Đường học dùng trục epoch và đúng số điểm đã chạy; step được giữ để truy vết checkpoint, không thay cho trục epoch trình bày.
+
+Nếu early stopping dừng epoch3 thì có3điểm thật. Không padding/interpolate để biểu đồ nhìn đủ5điểm. Selected checkpoint có thể nằm trước epoch dừng; pipeline reload checkpoint đó trước predict validation và test.
+
+#### 3.24.3. Early stopping vận hành cụ thể
+
+1. Sau mỗi epoch, callback đo full effective train trong eval mode để có train loss/accuracy.
+2. Sau đó Trainer evaluate validation và lưu checkpoint theo lịch epoch.
+3. EarlyStoppingCallback chỉ nhận metric có `eval_loss`; metric prefix `train_*` không tăng patience.
+4. Validation loss phải thấp hơn best loss với mức chênh vượt0.001 để reset patience; hai lần liên tiếp không đủ cải thiện thì đặt should_training_stop.
+5. Best checkpoint vẫn cập nhật theo loss thấp nhất thực tế. Min_delta dùng cho patience, không đổi criterion checkpoint thành một metric khác.
+6. Sau train, epoch_history phải liên tiếp1..completed, completed<=5; selection_summary lưu requested_epochs, completed_epochs, early_stopping, stopped_early và selected_epoch.
+7. Pipeline reload/save/reload-check bằng logits trên mẫu validation; test không quyết định dừng hoặc chọn weights.
+
+Fixture plateau đã xác nhận: loss validation giữ nguyên, dừng epoch3, checkpoint1 được giữ. Đây là bằng chứng chức năng early stopping; không dự đoán trước epoch tốt nhất của dữ liệu thật.
+
+#### 3.24.4. Regularization và LR của lượt mới
+
+| Thành phần | Giá trị mới | Lý do / giới hạn |
+|---|---|---|
+| Freeze | Embedding +4blocks đầu | Giảm số tham số học; có nguy cơ hạn chế adaptation |
+| Encoder/head LR | 5e-6 / 2e-5 | Encoder nhỏ hơn full-tune1e-5; head mới học nhanh hơn |
+| Dropout | Encoder0.2, attention0.2, head0.4 | Giảm đồng thích nghi; eval/inference tắt dropout |
+| AdamW decay | 0.1 cho weights>=2D | Bias/LayerNorm không decay; thực tế lưu optimizer groups |
+| Warmup | 10% tổng updates | Giảm update đầu train; linear decay sau warmup |
+| Clipping | max_grad_norm1 | Chặn gradient norm lớn; lỗi NaN vẫn phải phát hiện |
+| Augmentation | Same-polarity train-only, tối đa25% | Không lấy heldout sinh variant; nhãn kế thừa có noise |
+| Early stopping | Patience2, min_delta0.001 | Hạn chế train tiếp khi validation plateau |
+| Model selection | Min validation loss | Không dùng test để chọn checkpoint |
+
+LR encoder mới cao hơn frozen10epoch cũ2e-6 do ngân sách ngắn hơn, nhưng thấp hơn full fine-tuning lịch sử1e-5. Đây là lựa chọn định trước, chưa benchmark5epoch GPU và không phải kết quả tìm kiếm tối ưu toàn cục. Không tăng dropout hoặc thêm800synthetic bất kỳ chỉ để cố ép gap bằng0: có thể tạo underfitting hoặc label noise.
+
+Một kết luận giảm overfitting cần so cả train/validation loss và accuracy, mức performance baseline và confidence/calibration. Gap nhỏ không đủ nếu cả hai accuracy đều thấp. Nếu muốn chứng minh hiệu ứng của từng kỹ thuật cần ablation cùng seed/split/budget và nhiều seed; các study cũ chỉ hỗ trợ so sánh mô tả.
+
+### 3.25. EDA → preprocessing → feature engineering có bằng chứng trực quan
+
+#### 3.25.1. Nguồn dữ liệu và phạm vi kiểm chứng
+
+Run EDA bổ sung: `20261103T080418Z_dataset_preview_69a6efd5`.
+Run augmentation bổ sung: `20261103T080421Z_augmentation_preview_f239b291`.
+Hai run chỉ chuẩn bị/khảo sát dữ liệu trên CPU, không train DistilBERT.
+
+Môi trường kiểm tra không truy cập được CDN chứa pinned HF Parquet. Nguồn bổ sung là RT polarity corpus công khai trên GitHub, commit18762b459e21d9c70e5c242f8d43fc4e6db37a0d và legacy official builder tag1.18.0 của Hugging Face datasets. Mỗi lớp5.331 câu, boundaries4.265/4.798/5.331, positive rồi negative trong mỗi split, giữ thứ tự.
+
+Mirror là UTF-8 chuyển từ CP1252. Để khớp cách legacy builder decode Latin-1, tách dòng UTF-8 trước, encodeCP1252/decodeLatin-1 rồi strip. Không dùng biến đổi encoding này như preprocessing mô hình; nó chỉ phục dựng bản corpus nguồn cho EDA đã ghi provenance.
+
+Đã so khớp chính xác toàn bộ1.066validation và1.066test text/labels/order với predictions lưu từ Kaggle.274augmentation records/parent indices khớp đầy đủ, SHA256 records là `3ffde3728d5f4049094bfe146ee92005cd672566ec9aab861a6b4637ee9c2d2b`. Chưa đối chiếu toàn bộ train với pinned Parquet hoặc HF fingerprints; không tuyên bố byte-identical toàn bộ dataset.
+
+[Provenance EDA](outputs/published/data_preparation/data_source_provenance.json) lưu URL, source commit, SHA file tải, builder SHA, encoding conversion, số record đã đối chiếu và hashes nội dung từng split. Training/prepare mới trên Kaggle vẫn tải **pinned HF official dataset** bằng loader hiện có. Không thêm dataset thô hoặc công cụ download ad-hoc vào repository.
+
+#### 3.25.2. Chất lượng và leakage
+
+![EDA quality](outputs/published/data_preparation/data_quality.png)
+
+Cả ba split không có nonstring/blank/invalid binary label hoặc normalized duplicate trong corpus EDA. Normalized intersections train–validation, train–test, validation–test đều0; train không có nhóm cùng normalized text nhưng khác label. Đây là kiểm tra exact/normalized overlap, không chứng minh không có mọi semantic near-duplicate.
+
+Không tự xóa câu test hoặc chia lại benchmark. Normalize dùng cho audit/dedup, không làm biến đổi chuỗi train đầu vào. Mỗi split có đúng hai lớp cân bằng: train4.265/lớp; validation/test533/lớp. Vì vậy accuracy đáng đọc, nhưng vẫn báo Macro-F1, precision/recall và confusion để thấy đánh đổi theo lớp.
+
+#### 3.25.3. Độ dài, cutoff và tín hiệu ngôn ngữ
+
+![Train lengths by class](outputs/published/data_preparation/lengths_by_class.png)
+
+Mean WordPiece negative27.4626, positive27.2741; phân bố độ dài hai lớp gần nhau. Không có căn cứ coi chiều dài là bộ phân loại sentiment độc lập. Token count có `[CLS]`/`[SEP]`, khác số từ split theo whitespace.
+
+| Quantile train | Tokens |
+|---|---:|
+| p50 | 27 |
+| p90 | 43 |
+| p95 | 47 |
+| p99 | 56 |
+| Max | 78 |
+
+![Cutoff and negation audit](outputs/published/data_preparation/preprocessing_diagnostics.png)
+
+Cutoff64 cắt6/8.530 câu (~0.0703%), cutoff96/128 không cắt corpus EDA này. Giữ128 làm trần an toàn cho biến thể; dynamic padding tránh việc mọi câu đều pad128. FP16 GPU pad tới bội8 để thuận tiện tính toán. Không claim128 nhanh nhất khi chưa benchmark latency/VRAM theo cutoff.
+
+Negation/contrast regex xuất hiện38.12% negative và28.65% positive, gộp2.848/8.530 câu bị bảo vệ khỏi lexical augmentation. Những từ như not/but có vai trò ngữ nghĩa; xóa stopwords/punctuation một cách máy móc có thể đổi sentiment. Regex chỉ là signal heuristic, không phải nhãn hay causal explanation.
+
+#### 3.25.4. Tokenization trên câu train thật
+
+![Token IDs examples](outputs/published/data_preparation/preprocessing_examples.png)
+
+![Attention masks](outputs/published/data_preparation/attention_mask.png)
+
+Bảng lấy hai câu đầu mỗi lớp trong train, không lấy câu test để điều chỉnh tokenizer. PNG rút gọn12token/ID đầu để đọc được; JSON giữ đủ input_ids/attention_mask và toàn văn. Mask1 là token hợp lệ; mask0 là padding; labels nằm riêng để cross-entropy tính loss. Tokenizer revision và max_length giống modeling.
+
+Lowercasing/WordPiece là quy tắc của pretrained tokenizer, không tự xây vocabulary Transformer trên corpus nhỏ. TF-IDF baseline có vocabulary riêng, hai nhánh không nối feature trực tiếp vào nhau.
+
+#### 3.25.5. TF-IDF unigram/bigram và sparse footprint
+
+![TF-IDF train features](outputs/published/data_preparation/tfidf_features.png)
+
+Vectorizer EDA fit trên8.530original train, shape8.530×24.083;207.847nonzeros; density0.10118%. Sparse arrays chiếm2.528.288bytes, không gồm Python/vocabulary/model overhead và không phải RAM RSS peak.
+
+Top mean TF-IDF theo lớp giải thích biểu diễn corpus, không phải classifier coefficient hoặc causal feature importance. Unigram biểu diễn từ sentiment; bigram có thể giữ cụm như not good. min_df2 bỏ term chỉ xuất hiện ở một câu; max_features50.000 là trần; sublinear_tf giảm ảnh hưởng term lặp nhiều.
+
+Trong modeling, baseline fit lại vectorizer trên **effective augmented train** với cùng cấu hình, chọn C trong0.1/1/10 bằng validation Macro-F1 rồi threshold validation. Không reuse fitted EDA vocabulary như thể nó đã bao gồm synthetic pool. Transformers dùng contextual embeddings từ pretrained base, không input TF-IDF.
+
+#### 3.25.6. Augmentation có kiểm soát
+
+![Augmentation diagnostics](outputs/published/feature_augmentation/augmentation_diagnostics.png)
+
+![Augmentation examples](outputs/published/feature_augmentation/augmentation_examples.png)
+
+Bộ lọc cùng cực tính tìm được137negative và276positiveeligible variants; để cân bằng chỉ giữ137mỗi lớp, tổng274. Effective train8.804; giữ tất cả8.530original samples. Trần25% tương đương tối đa2.132mẫu thêm nhưng không ép đủ bằng duplicate.
+
+Parent text, parent_index, replacement, nhãn và synthetic text đều được lưu. Bảng ví dụ cần đọc trước khi train; cùng cực tính từ vựng không đảm bảo giữ nghĩa trong mọi ngữ cảnh. Label kế thừa là weak supervision, không tuyên bố đã được người gán nhãn lại.
+
+Loại câu có negation/contrast để giảm nguy cơ đảo nghĩa; chặn trùng normalized text với train/heldout. Việc đọc heldout text chỉ phục vụ collision exclusion, không fit hoặc tối ưu theo nhãn heldout. Không sửa dữ liệu validation/test.
+
+### 3.26. Notebook, performance và artifact sau lượt GPU mới
+
+#### 3.26.1. Hai notebook và đường đi đọc report
+
+Notebook01 có các phase chất lượng, phân bố, cutoff, token/mask, TF-IDF, augmentation và chốt contract. Notebook02 có setup/preflight, pretrained sentiment, architecture/config, baseline/train, performance, threshold, evaluation/calibration, lỗi và export.
+
+Mỗi phase có giải thích vì sao lựa chọn đó, module tham chiếu và artifact tương ứng. `session.show` hiện trực tiếp cùng PNG đã lưu, không chỉ in tên file hoặc JSON. Bản view được thực thi để giữ ảnh inline trong Git; số epoch thực tế của run view không bị sửa vì đổi config training.
+
+Bộ `outputs/published` là bản sao ảnh/bảng/log được chọn, có catalog/hash và index nhúng hình. Người viết report có thể lấy trực tiếp mà không rerun hoặc yêu cầu trích xuất lại từ raw outputs. Không tạo thêm notebook riêng cho từng LR hoặc từng phiên Kaggle.
+
+#### 3.26.2. Performance của lượt mới
+
+| Đại lượng | Phạm vi / file |
+|---|---|
+| Full train/validation loss/accuracy | End-epoch eval mode, epoch_history và learning_curves |
+| Train ms/sample | Train-phase wall time / effective train size; không gồm end-epoch eval/save |
+| Epoch pipeline ms/train-sample | Có train + end-epoch evaluation, tách khỏi pure train |
+| Test eval ms/sample | Predict runtime /1.066, batch throughput, không phải single-request latency |
+| RAM peak | Parent training process RSS sampled20ms; có thể bỏ lỡ peak ngắn |
+| VRAM peak | PyTorch allocated/reserved trên selected GPU, khác toàn bộ GPU process memory |
+| RAM/VRAM per batch slot | Peak/batch slots cùng batch/device; shared-memory normalization |
+
+Đơn vị và batch size được lưu kèm theo. CPU không có CUDA thì VRAM là N/A, không phải0. Historical frozen run thiếu training memory được giữ NOT LOGGED. Số mới chỉ được điền từ resource_history và test_resource_metrics của lượt GPU thật.
+
+#### 3.26.3. Publish và ZIP
+
+Kết thúc run thành công, pipeline kiểm manifest và audit cohort/checkpoint/threshold trước khi tự publish. `outputs/latest_report.json` trỏ đúng run mới; không ghi đè `config/report.json` đang chọn bằng chứng lịch sử. Published chứa learning curves, quality/feature/augmentation figures, threshold sweep, confusion/calibration/errors, performance, architecture, bảng và raw console log.
+
+Review ZIP chứa các artifact nhẹ, published catalog/manifest, nguồn selection và preflight log nếu có. Checkpoint ZIP riêng chứa best_model, tokenizer, training_config và decision policy gắn hash weights. Review ZIP gửi để kiểm tra; checkpoint giữ riêng để đánh giá lại/infer. Không commit ZIP hoặc weights vào Git.
+
+Interactive notebook của phiên Kaggle không tự nằm trên disk container: tải riêng qua File → Download Notebook nếu muốn commit cell outputs của chính lượt train. Bản view nguồn dùng artifacts đã kiểm toán để xem nhanh mà không cần GPU.
+
+#### 3.26.4. Những gì cần kiểm tra khi nhận review ZIP5epoch
+
+- Requested epochs đúng5; completed liên tiếp1..N vớiN<=5; early_stopping enabled và policy patience2/min_delta0.001.
+- Nếu dừng sớm, log/validation history phải giải thích được bộ đếm; không bỏ epoch lỗi rồi vẫn gắn completed.
+- Best checkpoint có min validation loss, weights hash/policy/reload khớp.
+- Official splits và labels giữ đúng; effective train/augmentation count/digest có nguồn.
+- Threshold sweep đủ19điểm, chọn bằng validation Macro-F1/tie-break đã định trước; test không dùng chọn.
+- Test predictions đúng1.066mẫu theo thứ tự; recompute accuracy/F1/confusion/loss phù hợp.
+- Telemetry có đủ các epoch thực chạy, RAM/VRAM đúng device và unit, không lấy CPU fixture thay GPU.
+- PNG/bảng/log/published có manifest; inline notebook hiển thị được và không ghi kết quả mới thành lịch sử cũ.
+
+Hiện tại đã có source, fixture tests và EDA/view evidence. Chưa có kết quả GPU của profile5epoch, vì vậy chưa kết luận đã giảm overfit hoặc đạt performance tốt nhất. Nghiệm thu cuối về metric/tài nguyên chờ review ZIP của lượt mới; tài liệu không điền số dự đoán vào chỗ số đo.

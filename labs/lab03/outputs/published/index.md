@@ -1,6 +1,6 @@
 # Lab03 — Artifacts cho report
 
-Nguồn run được chọn tường minh trong `config/report.json`. Không huấn luyện hoặc chọn lại threshold khi xuất.
+Nguồn run được chọn tường minh trong source_runs.json (report.json hoặc latest_report.json). Không huấn luyện hoặc chọn lại threshold khi xuất.
 
 | Policy | Accuracy | Precision | Recall | Binary F1 | Macro F1 | Test loss |
 |---|---:|---:|---:|---:|---:|---:|
@@ -8,7 +8,7 @@ Nguồn run được chọn tường minh trong `config/report.json`. Không hu�
 | Frozen DistilBERT threshold 0.5 | 82.8330% | 82.5279% | 83.3021% | 82.9132% | 82.8326% | 0.412560 |
 | Frozen DistilBERT validation threshold | 82.8330% | 81.3620% | 85.1782% | 83.2264% | 82.8236% | 0.412560 |
 
-Bảng chính thuộc frozen trial: checkpoint epoch 9 theo validation loss, threshold 0.45 theo validation Macro-F1. Ưu tiên giảm overfitting; không khẳng định accuracy cao nhất lịch sử. Các study khác giữ vai trò so sánh.
+Bảng chính thuộc frozen trial: hoàn thành 10 epoch, checkpoint epoch 9 theo validation loss; threshold 0.45 theo validation Macro-F1. Các study khác là lịch sử; không khẳng định accuracy cao nhất.
 
 ## Nguồn thí nghiệm
 
@@ -37,8 +37,10 @@ Bảng chính thuộc frozen trial: checkpoint epoch 9 theo validation loss, thr
 | frozen_exercise1_analysis | `20261027T095630Z_exercise1_analysis_dc3ef4d7` |
 | frozen_dataset_preview | `20261027T095637Z_dataset_preview_e2b4d582` |
 | frozen_augmentation_preview | `20261027T095647Z_augmentation_preview_acb26523` |
-| final_review | `20261027T112616Z_final_review_82e3f77d` |
+| final_review | `20261103T080217Z_final_review_5e9d39f4` |
 | performance_report | `20261102T032327Z_performance_report_5892bdbe` |
+| data_preparation | `20261103T080418Z_dataset_preview_69a6efd5` |
+| feature_augmentation | `20261103T080421Z_augmentation_preview_f239b291` |
 
 ## Hiệu năng và phạm vi đo
 
@@ -73,6 +75,8 @@ Các log dưới đây được copy nguyên byte từ run nguồn và có SHA25
 - [frozen_augmentation_preview: console.log](logs/frozen_augmentation_preview/console.log)
 - [final_review: console.log](logs/final_review/console.log)
 - [performance_report: console.log](logs/performance_report/console.log)
+- [data_preparation: console.log](logs/data_preparation/console.log)
+- [feature_augmentation: console.log](logs/feature_augmentation/console.log)
 
 ## Hình và bảng
 
@@ -525,3 +529,51 @@ Các PNG dưới đây là bản sao của hình đã lưu trong run nguồn. JS
 ### performance_report/performance.png
 
 ![performance_report](performance_report/performance.png)
+
+### data_preparation/attention_mask.png
+
+![data_preparation](data_preparation/attention_mask.png)
+
+### data_preparation/class_distribution.png
+
+![data_preparation](data_preparation/class_distribution.png)
+
+### data_preparation/data_quality.png
+
+![data_preparation](data_preparation/data_quality.png)
+
+### data_preparation/lengths_by_class.png
+
+![data_preparation](data_preparation/lengths_by_class.png)
+
+### data_preparation/preprocessing_diagnostics.png
+
+![data_preparation](data_preparation/preprocessing_diagnostics.png)
+
+### data_preparation/preprocessing_examples.png
+
+![data_preparation](data_preparation/preprocessing_examples.png)
+
+### data_preparation/tfidf_features.png
+
+![data_preparation](data_preparation/tfidf_features.png)
+
+### data_preparation/token_length_distribution.png
+
+![data_preparation](data_preparation/token_length_distribution.png)
+
+### data_preparation/train_examples.png
+
+![data_preparation](data_preparation/train_examples.png)
+
+### feature_augmentation/augmentation_counts.png
+
+![feature_augmentation](feature_augmentation/augmentation_counts.png)
+
+### feature_augmentation/augmentation_diagnostics.png
+
+![feature_augmentation](feature_augmentation/augmentation_diagnostics.png)
+
+### feature_augmentation/augmentation_examples.png
+
+![feature_augmentation](feature_augmentation/augmentation_examples.png)

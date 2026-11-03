@@ -23,8 +23,12 @@
     "frozen_exercise1_analysis": "20261027T095630Z_exercise1_analysis_dc3ef4d7",
     "frozen_dataset_preview": "20261027T095637Z_dataset_preview_e2b4d582",
     "frozen_augmentation_preview": "20261027T095647Z_augmentation_preview_acb26523",
-    "final_review": "20261027T112616Z_final_review_82e3f77d",
-    "performance_report": "20261102T032327Z_performance_report_5892bdbe"
+    "final_review": "20261103T080217Z_final_review_5e9d39f4",
+    "performance_report": "20261102T032327Z_performance_report_5892bdbe",
+    "data_preparation": "20261103T080418Z_dataset_preview_69a6efd5",
+    "feature_augmentation": "20261103T080421Z_augmentation_preview_f239b291"
   },
-  "primary_result": "frozen_trial"
+  "primary_result": "frozen_trial",
+  "planned_training_profile": "config/frozen_trial.json",
+  "planned_training_status": "5 epoch maximum with early stopping; pending GPU run. Report metrics remain historical."
 }

@@ -11,6 +11,8 @@ def load_data(config):
     for name in EXPECTED_SIZES:
         if set(ds[name]["label"]) != {0, 1}:
             raise ValueError(f"Invalid binary labels in {name}")
+        if any(not isinstance(text,str) or not text.strip() for text in ds[name]['text']):
+            raise ValueError(f"Missing/empty text in {name}; inspect data quality before training")
     return ds
 
 def tokenize_data(ds, tokenizer, max_length):

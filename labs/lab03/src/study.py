@@ -6,7 +6,7 @@ from pathlib import Path
 import time
 import numpy as np
 import torch
-from sklearn.feature_extraction.text import TfidfVectorizer
+from .data_preparation import make_tfidf
 from sklearn.linear_model import LogisticRegression
 from sklearn.pipeline import Pipeline
 from sklearn.metrics import log_loss, roc_auc_score, average_precision_score, brier_score_loss
@@ -37,8 +37,7 @@ def fit_text_baseline(train, validation, settings, seed):
     best_key = None
     for C in settings['C_values']:
         model = Pipeline([
-            ('tfidf', TfidfVectorizer(ngram_range=tuple(settings['ngram_range']),
-                min_df=settings['min_df'], max_features=settings['max_features'], sublinear_tf=True)),
+            ('tfidf', make_tfidf(settings)),
             ('classifier', LogisticRegression(C=C, max_iter=2000, solver='liblinear', random_state=seed)),
         ])
         model.fit(train['text'], train['label'])

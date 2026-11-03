@@ -76,3 +76,21 @@ def test_primary_frozen_trial_uses_its_measured_metrics_and_saved_figures(tmp_pa
     assert (out/'frozen_trial/validation_threshold_curves.png').is_file()
     assert (out/'logs/frozen_trial/console.log').read_bytes()==(ROOT/'outputs/runs'/summary['source_run']/'console.log').read_bytes()
     assert summary['performance']['training_ram_complete'] is False
+
+
+def test_training_autopublish_accepts_one_completed_run_and_keeps_log_bytes(tmp_path):
+    import shutil
+    from labs.lab03.scripts.run_frozen_trial import publish_completed_trial
+    source=ROOT/'outputs/runs/20261027T095655Z_frozen_trial_d8d09116'
+    destination=tmp_path/'outputs/runs'/source.name
+    shutil.copytree(source,destination)
+    before={p.relative_to(destination).as_posix():hash_file(p) for p in destination.rglob('*') if p.is_file()}
+    out=publish_completed_trial(destination,tmp_path)
+    assert (out/'frozen_trial/learning_curves.png').is_file()
+    assert (out/'logs/frozen_trial/console.log').read_bytes()==(source/'console.log').read_bytes()
+    selection=json.loads((tmp_path/'outputs/latest_report.json').read_text())
+    assert selection['runs']=={'frozen_trial':source.name}
+    assert not (tmp_path/'config/report.json').exists()
+    assert {p.relative_to(destination).as_posix():hash_file(p) for p in destination.rglob('*') if p.is_file()}==before
+    manifest=json.loads((out/'manifest.json').read_text())
+    assert all(hash_file(out/name)==digest for name,digest in manifest.items())

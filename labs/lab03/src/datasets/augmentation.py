@@ -90,3 +90,15 @@ def export_augmentation(summary, output):
     finish(fig,output/'augmentation_counts.png')
     _table_image(records[:8],['original_text','text','label','source_word','replacement'],output/'augmentation_examples.png',
         'Synthetic train variants: inherited labels need semantic review',widths=[.35,.35,.06,.12,.12])
+    from collections import Counter
+    counts=Counter(f"{r['source_word']} -> {r['replacement']}" for r in records)
+    fig,axes=plt.subplots(1,2,figsize=(13,4))
+    added=[summary['added_per_class'][str(c)] for c in (0,1)]
+    original=summary['original_train_size']//2
+    axes[0].bar(['Negative','Positive'],[original,original],label='Original')
+    axes[0].bar(['Negative','Positive'],added,bottom=[original,original],label='Synthetic')
+    axes[0].set(ylabel='Train examples',title='Original + synthetic balance');axes[0].legend()
+    common=counts.most_common(8)[::-1]
+    axes[1].barh([k for k,v in common],[v for k,v in common])
+    axes[1].set(xlabel='Synthetic examples',title='Actual substitutions, train only')
+    finish(fig,output/'augmentation_diagnostics.png')

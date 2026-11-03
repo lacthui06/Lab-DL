@@ -15,11 +15,14 @@
     "study_review": "20261026T191751Z_study_review_d66d4edb",
     "epoch_presentation": "20261027T061914Z_epoch_presentation_9a0cfccc",
     "frozen_trial": "20261027T095655Z_frozen_trial_d8d09116",
-    "final_review": "20261027T112616Z_final_review_82e3f77d",
-    "notebook_render": "20261102T032506Z_notebook_render_556ce7ff",
+    "final_review": "20261103T080217Z_final_review_5e9d39f4",
     "verification": "20261027T121218Z_verification_ff365b79",
     "performance_report": "20261102T032327Z_performance_report_5892bdbe",
-    "performance_verification": "20261102T033506Z_performance_verification_c13c662a"
+    "performance_verification": "20261102T033506Z_performance_verification_c13c662a",
+    "dataset_preview": "20261103T080418Z_dataset_preview_69a6efd5",
+    "augmentation_preview": "20261103T080421Z_augmentation_preview_f239b291",
+    "notebook_render": "20261103T080738Z_notebook_render_2e623fea",
+    "requirements_verification": "20261103T080841Z_requirements_verification_71110eb1"
   },
   "runs": [
     {
@@ -285,6 +288,31 @@
     {
       "id": "20261102T033506Z_performance_verification_c13c662a",
       "kind": "performance_verification",
+      "status": "completed"
+    },
+    {
+      "id": "20261103T080217Z_final_review_5e9d39f4",
+      "kind": "final_review",
+      "status": "completed"
+    },
+    {
+      "id": "20261103T080418Z_dataset_preview_69a6efd5",
+      "kind": "dataset_preview",
+      "status": "completed"
+    },
+    {
+      "id": "20261103T080421Z_augmentation_preview_f239b291",
+      "kind": "augmentation_preview",
+      "status": "completed"
+    },
+    {
+      "id": "20261103T080738Z_notebook_render_2e623fea",
+      "kind": "notebook_render",
+      "status": "completed"
+    },
+    {
+      "id": "20261103T080841Z_requirements_verification_71110eb1",
+      "kind": "requirements_verification",
       "status": "completed"
     }
   ]

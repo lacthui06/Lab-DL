@@ -14,9 +14,13 @@ def audit_frozen_trial(run):
     rows = read_json(run/'epoch_history.json')
     selection = read_json(run/'selection_summary.json')
     frozen = read_json(run/'frozen_selection.json')
-    if ([r['epoch'] for r in rows] != list(range(1, 11)) or cfg['num_train_epochs'] != 10
-            or cfg['metric_for_best_model'] != 'loss' or selection['early_stopping']):
-        raise ValueError('Expected ten epochs and validation-loss checkpoint selection')
+    budget, completed = cfg['num_train_epochs'], len(rows)
+    enabled = bool(cfg.get('early_stopping',{}).get('enabled',False))
+    if (not 1 <= completed <= budget or [r['epoch'] for r in rows] != list(range(1,completed+1))
+            or cfg['metric_for_best_model'] != 'loss' or selection['early_stopping'] != enabled
+            or selection['completed_epochs'] != completed or selection.get('requested_epochs',budget) != budget
+            or (not enabled and completed != budget)):
+        raise ValueError('Epoch history differs from declared budget/early-stopping policy')
     best = min(rows, key=lambda r: r['validation_loss'])
     if best['epoch'] != selection['selected_epoch'] or best['step'] != selection['best_step']:
         raise ValueError('Checkpoint differs from minimum validation loss')

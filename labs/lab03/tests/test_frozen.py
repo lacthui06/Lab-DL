@@ -80,14 +80,15 @@ def test_frozen_trial_artifacts_and_review_zip(tiny, tmp_path, monkeypatch):
         fp16=False, augmentation={'enabled': False})
     out = script.run(cfg, root=tmp_path, allow_cpu_fixture=True)
     selection = json.loads((out/'selection_summary.json').read_text())
-    assert selection['completed_epochs'] == 10 and not selection['test_used_for_selection']
+    assert 1 <= selection['completed_epochs'] <= 5 and not selection['test_used_for_selection']
+    assert selection['requested_epochs']==5 and selection['early_stopping'] is True
     assert (out/'learning_curves.png').is_file()
     assert (out/'validation_threshold_curves.png').is_file()
     assert (out/'sample_predictions.png').is_file()
     assert json.loads((out/'sample_predictions.json').read_text())
     assert (out/'best_model/decision_threshold.json').is_file()
     resources=json.loads((out/'resource_history.json').read_text())
-    assert [r['epoch'] for r in resources]==list(range(1,11))
+    assert [r['epoch'] for r in resources]==list(range(1,int(selection['completed_epochs'])+1))
     assert all(r['ms_per_sample']>0 and r['ram_peak_rss_mib']>0 for r in resources)
     assert all(r['vram_peak_allocated_mib'] is None for r in resources)
     assert (out/'performance.png').is_file() and (out/'model_architecture.png').is_file()

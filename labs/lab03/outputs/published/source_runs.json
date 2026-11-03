@@ -23,8 +23,10 @@
     "frozen_exercise1_analysis": "20261027T095630Z_exercise1_analysis_dc3ef4d7",
     "frozen_dataset_preview": "20261027T095637Z_dataset_preview_e2b4d582",
     "frozen_augmentation_preview": "20261027T095647Z_augmentation_preview_acb26523",
-    "final_review": "20261027T112616Z_final_review_82e3f77d",
-    "performance_report": "20261102T032327Z_performance_report_5892bdbe"
+    "final_review": "20261103T080217Z_final_review_5e9d39f4",
+    "performance_report": "20261102T032327Z_performance_report_5892bdbe",
+    "data_preparation": "20261103T080418Z_dataset_preview_69a6efd5",
+    "feature_augmentation": "20261103T080421Z_augmentation_preview_f239b291"
   },
   "source_manifests": {
     "exercise1": "0df1428fafe25b5b1619baba8e82d6bab023aa87708832ad344f15dc04683ca8",
@@ -50,8 +52,10 @@
     "frozen_exercise1_analysis": "5aa47ea4e798cd284a9bf38bc7678ea1ac1d9a021c1f14bbf4fdca99485f6a37",
     "frozen_dataset_preview": "412e139ae2f604b1ceb78fb8b783f8c24229db1d1194db4891eca22ad76407b0",
     "frozen_augmentation_preview": "ea22a364a709fb6232898fbfd352584b09da795c463f9e5bb410b73d44dfcfd7",
-    "final_review": "c8066e2bded65f38487ca1835ea78ba98a14fb24dbe815324517c5e64b4862e6",
-    "performance_report": "d76734b0f6cac07dc583ecff9139db72d417732a7b08e224a0e84bd0b20a9d1b"
+    "final_review": "971fffa56f17a0b157d7e1cb2de44067aaf08d3ce0333d28c558e9dabbc08262",
+    "performance_report": "d76734b0f6cac07dc583ecff9139db72d417732a7b08e224a0e84bd0b20a9d1b",
+    "data_preparation": "8b31968613be3a148c5fdfb5e787cb9b08f92883453283bfe77b1b91ab5f6a7b",
+    "feature_augmentation": "f98f179d5b1afc2ace6e3d08884bb26cddbac9feeafc55e34c31e249ffc3dff6"
   },
   "availability_sha256": {
     "exercise1": "b85d9168c81e6bf7ddb21eaf7aa567c1ec31852e3708ed7cca223e43e57b187f",
@@ -59,7 +63,7 @@
     "evaluation": "6b3ff45e74af3b2f505f62ceedea4a6d6ae86c7b622695a43c3f6961961ae1b8",
     "inference": "adf30aa16dd95d92e96dd7e86de8a6716b9400058d2160c5d273f427efd7f477"
   },
-  "exporter_sha256": "30f67cd0d7cb851f1f57656e7f4daf35389bc58328b48fda2daddade0eac6fde",
+  "exporter_sha256": "ea9302e0535207fea1d8cf195d147087975e92b7185daec30cda03f752154fc3",
   "primary_result": "frozen_trial",
   "weights_included": false,
   "raw_logs_included": true

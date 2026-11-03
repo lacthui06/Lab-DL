@@ -1,0 +1,28 @@
+{
+  "purpose": "CPU-only EDA evidence; no neural model training",
+  "source": "independent public RT polarity corpus and historical official Hugging Face split builder",
+  "source_commit": "18762b459e21d9c70e5c242f8d43fc4e6db37a0d",
+  "source_urls": [
+    "https://raw.githubusercontent.com/dennybritz/cnn-text-classification-tf/18762b459e21d9c70e5c242f8d43fc4e6db37a0d/data/rt-polaritydata/rt-polarity.pos",
+    "https://raw.githubusercontent.com/dennybritz/cnn-text-classification-tf/18762b459e21d9c70e5c242f8d43fc4e6db37a0d/data/rt-polaritydata/rt-polarity.neg"
+  ],
+  "builder_url": "https://raw.githubusercontent.com/huggingface/datasets/1.18.0/datasets/rotten_tomatoes/rotten_tomatoes.py",
+  "download_sha256": {
+    "pos": "4134882974a28d0c7b5151256f0e33a6169984ee7372c279e673f1114f475d58",
+    "neg": "2d11cfbc790f1cd96d78339f41ce53ced1efa83cd22d37d6788fa3fe3d17e2fd"
+  },
+  "builder_sha256": "539ec9312afcb70a507a451994129664d96d3e6467e55ecafd0fb8a5e7e60e8d",
+  "reconstruction": "split UTF-8 lines first, encode CP1252/decode Latin-1, strip; per-label boundaries 4265,4798,5331; positive then negative",
+  "verification": {
+    "validation_records_exact": 1066,
+    "test_records_exact": 1066,
+    "augmented_train_parent_records_exact": 274,
+    "augmentation_records_exact": true
+  },
+  "limitation": "All original train rows and HF dataset fingerprints were not independently verified against pinned Parquet. This is an explicitly reconstructed EDA corpus; future Kaggle training still uses pinned official Hugging Face dataset.",
+  "content_sha256": {
+    "train": "a5c2c2dfe7b80a363e241a83de2aa0ee9433a68493f157dfc89e8f30cd54d256",
+    "validation": "4db8d431c79659fa9c2baa0812310a588de52f22be5b91a0594cdcc0861fb855",
+    "test": "a17cf45c36f02562bf99dc8e60c609783b87048a3c7dea70e75881cf48cb3021"
+  }
+}

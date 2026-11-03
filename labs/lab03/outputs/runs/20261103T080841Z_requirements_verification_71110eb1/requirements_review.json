@@ -1,0 +1,56 @@
+{
+  "artifact_run": "20261103T080841Z_requirements_verification_71110eb1",
+  "tests_passed": 118,
+  "architecture_and_rationale_documented": true,
+  "active_training_max_epochs": 5,
+  "validation_early_stopping": {
+    "enabled": true,
+    "patience": 2,
+    "min_delta": 0.001
+  },
+  "tiny_plateau_early_stop_verified": true,
+  "regularization": [
+    "freeze embedding +4 encoder blocks",
+    "dropout .2/.2/.4",
+    "AdamW weight decay .1",
+    "differential LR",
+    "warmup/linear decay",
+    "gradient clipping",
+    "train-only augmentation"
+  ],
+  "deep_eda_cpu_only": true,
+  "eda_source_limitation": "Reconstructed independent public RT corpus; 2132 heldout +274 augmentation records checked, not all train rows/HF fingerprints. Kaggle train uses pinned official HF dataset.",
+  "raw_logs_published": 23,
+  "published_files_verified": 403,
+  "source_log_bytes_preserved": true,
+  "selected_run_manifests_verified": 27,
+  "historical_scientific_sources_unchanged_from_base": true,
+  "relative_links_verified": 75,
+  "notebooks": [
+    {
+      "notebook": "01_eda_preprocessing_feature_engineering.ipynb",
+      "mode": "view",
+      "executed_code_cells": 10,
+      "errors": 0,
+      "training_executed": false,
+      "artifact": "notebooks/01_eda_preprocessing_feature_engineering.ipynb",
+      "notebook_sha256": "267c256ac4a0091fd0be606e87a6d9f97d8802fdf98322da564389c84c1efde7",
+      "inline_pngs": 12
+    },
+    {
+      "notebook": "02_modeling.ipynb",
+      "mode": "view",
+      "executed_code_cells": 11,
+      "errors": 0,
+      "training_executed": false,
+      "artifact": "notebooks/02_modeling.ipynb",
+      "notebook_sha256": "8e185dd2ee2245ffcfff6a1bad1d9350fcb03c03022b3f1caf2515a638d19715",
+      "inline_pngs": 13
+    }
+  ],
+  "new_five_epoch_gpu_results_complete": false,
+  "actual_primary_gpu_ram_vram_measurement_complete": false,
+  "missing_evidence": "New 5-epoch maximum GPU run with early stopping/resource telemetry pending; historical training memory NOT LOGGED.",
+  "full_neural_training_executed_locally": false,
+  "overall": "source/view/published ready for Kaggle; GPU result verification pending returned review ZIP"
+}
