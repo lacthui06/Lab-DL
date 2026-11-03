@@ -4,6 +4,7 @@ import json
 import os
 import subprocess
 import sys
+import uuid
 from datetime import datetime, timezone
 
 
@@ -20,12 +21,23 @@ class NotebookSession:
         self.env.update(TOKENIZERS_PARALLELISM='false', PYTHONUNBUFFERED='1',
                         CUDA_VISIBLE_DEVICES='' if device == 'cpu' else '0',
                         CUBLAS_WORKSPACE_CONFIG=':4096:8')
-        self.paths = {role:self.lab/'outputs/runs'/run_id
-                      for role,run_id in self.read(self.lab/'config/report.json')['runs'].items()}
-        self.paths.update(data=self.paths.get('data_preparation',self.paths['frozen_dataset_preview']),
-            augmentation=self.paths.get('feature_augmentation',self.paths['frozen_augmentation_preview']),model=self.paths['frozen_trial'],
-            exercise1_current=self.paths['frozen_exercise1'],
-            exercise1_visuals=self.paths['frozen_exercise1_analysis'])
+        self.env['LAB03_SESSION_ID'] = uuid.uuid4().hex
+        self.paths = {}
+        if mode == 'view':
+            aliases = {'frozen_trial':'model', 'exercise1':'exercise1_current',
+                       'exercise1_analysis':'exercise1_visuals'}
+            for name in ('latest_preparation.json', 'latest_report.json'):
+                selection = self.lab/'outputs'/name
+                if not selection.is_file():continue
+                for role,run_id in self.read(selection)['runs'].items():
+                    if not isinstance(run_id,str) or run_id in {'.','..'} or Path(run_id).name != run_id:
+                        raise ValueError('Unsafe run ID in selected artifacts')
+                    self.paths[aliases.get(role,role)] = self.lab/'outputs/runs'/run_id
+            if 'model' in self.paths:
+                self.paths.setdefault('data',self.paths['model'])
+                self.paths.setdefault('augmentation',self.paths['model'])
+            if not self.paths:
+                raise FileNotFoundError('Chưa có artifact được chọn; chạy MODE=prepare hoặc MODE=train trước.')
 
     @staticmethod
     def read(path):
@@ -63,6 +75,9 @@ class NotebookSession:
         self.paths['data'] = self.active('dataset_preview')
         self.run('labs/lab03/scripts/preview_augmentation.py','--config',config)
         self.paths['augmentation'] = self.active('augmentation_preview')
+        from .utils.runs import save_json
+        save_json(self.lab/'outputs/latest_preparation.json',{'runs':{
+            role:self.paths[role].name for role in ('data','augmentation')}})
 
     def preflight(self):
         if self.mode != 'train':
@@ -81,7 +96,7 @@ class NotebookSession:
 
     def exercise1(self):
         if self.mode == 'train':
-            self.run('labs/lab03/scripts/run_exercise1.py')
+            self.run('labs/lab03/scripts/run_exercise1.py','--config',self.lab/'config/frozen_trial.json')
             self.paths['exercise1_current'] = self.active('exercise1')
             self.paths['exercise1_visuals'] = self.active('exercise1_analysis')
 
@@ -90,7 +105,7 @@ class NotebookSession:
             self.run('labs/lab03/scripts/run_frozen_trial.py','--config',
                      self.lab/'config/frozen_trial.json','--device',self.device)
             self.paths['model'] = self.active('frozen_trial')
-        else:print('View mode: không train; hiển thị frozen trial đã kiểm chứng.')
+        else:print('View mode: đọc kết quả được chọn trong outputs/latest_report.json.')
 
     def table(self, role, filename, field=None, columns=None):
         import pandas as pd
@@ -109,15 +124,12 @@ class NotebookSession:
         return shown
 
     def performance(self):
-        if (self.paths['model']/'performance_summary.json').is_file():
-            self.paths['performance'] = self.paths['model']
-        else:
-            self.paths['performance'] = self.paths['performance_report']
+        self.paths['performance'] = self.paths['model']
         return self.read(self.paths['performance']/'performance_summary.json')
 
     def export(self):
         if self.mode == 'view':
-            print('Artifact report có sẵn:',self.lab/'outputs/published/index.md')
+            print('Artifact report:',self.lab/'outputs/published/index.md')
             return
         from IPython.display import display, HTML, FileLink
         from urllib.parse import quote

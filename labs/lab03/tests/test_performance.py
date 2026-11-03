@@ -29,5 +29,5 @@ def test_historical_performance_never_invents_memory_or_pure_train_timer(tmp_pat
     write_performance(SOURCE,tmp_path)
     assert (tmp_path/'model_architecture.png').is_file()
     assert (tmp_path/'performance.png').is_file()
-    assert json.loads((tmp_path/'performance_summary.json').read_text())['historical_memory_status'].startswith('not logged')
+    assert json.loads((tmp_path/'performance_summary.json').read_text())['memory_status'].startswith('not logged')
     assert {str(p):hash_file(p) for p in SOURCE.rglob('*') if p.is_file()}==before

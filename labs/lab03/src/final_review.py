@@ -90,7 +90,7 @@ def audit_frozen_trial(run):
     return {'status':'passed', 'run_id':run.name, 'manifest':manifest, 'selected_epoch':best['epoch'],
         'threshold':policy['selected_threshold'], 'test_samples':len(test),
         'weights_loaded_locally':False, 'threshold_reselected_on_test':False,
-        'historical_test_previously_inspected':True}
+        'test_used_for_selection':False}
 
 
 def ensure_final_review(root=ROOT):

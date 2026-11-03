@@ -1,4 +1,4 @@
-"""Gói kernel Kaggle chỉ đổi MODE sang train; notebook nguồn phải giữ view."""
+"""Gói kernel Kaggle có MODE=train, không mang cached outputs hoặc sửa source."""
 import importlib.util
 import json
 
@@ -15,7 +15,7 @@ def _module():
     return module
 
 
-def test_export_only_flips_mode_and_keeps_source_notebook_untouched():
+def test_export_keeps_clean_train_source_notebook_untouched():
     module = _module()
     source = ROOT / "notebooks/02_modeling.ipynb"
     before = source.read_bytes()
@@ -23,18 +23,10 @@ def test_export_only_flips_mode_and_keeps_source_notebook_untouched():
     assert source.read_bytes() == before
     original = nbformat.read(source, as_version=4)
     assert len(exported.cells) == len(original.cells)
-    changed = [i for i, (a, b) in enumerate(zip(original.cells, exported.cells)) if a.source != b.source]
-    assert changed == [2]
-    source_lines = original.cells[2].source.splitlines()
-    export_lines = exported.cells[2].source.splitlines()
-    assert len(source_lines) == len(export_lines)
-    differing = [i for i, (a, b) in enumerate(zip(source_lines, export_lines)) if a != b]
-    assert len(differing) == 1
-    assert source_lines[differing[0]].strip().startswith('MODE = "view"')
-    assert export_lines[differing[0]].strip() == 'MODE = "train"'
+    assert [c.source for c in exported.cells]==[c.source for c in original.cells]
+    assert all(not c.outputs and c.execution_count is None for c in exported.cells if c.cell_type=='code')
     code = [c.source for c in exported.cells if c.cell_type == "code"]
     assert sum('MODE = "train"' in s for s in code) == 1
-    assert not any('MODE = "view"' in s for s in code)
     assert exported.metadata["kaggle"]["accelerator"] == "gpu"
     assert exported.metadata["kaggle"]["isInternetEnabled"] is True
 
@@ -52,12 +44,12 @@ def test_export_writes_metadata_with_gpu_and_internet(tmp_path):
     assert meta["dataset_sources"] == [] and meta["kernel_sources"] == []
 
 
-def test_export_rejects_notebook_without_view_marker(tmp_path):
+def test_export_rejects_notebook_without_training_mode(tmp_path):
     module = _module()
     notebook = nbformat.read(ROOT / "notebooks/02_modeling.ipynb", as_version=4)
     for cell in notebook.cells:
         if cell.cell_type == "code":
-            cell.source = cell.source.replace('MODE = "view"', 'MODE = "train"')
+            cell.source = cell.source.replace('MODE = "train"', 'MODE = "prepare"')
     broken = tmp_path / "broken.ipynb"
     nbformat.write(notebook, broken)
     with pytest.raises(ValueError, match="MODE"):

@@ -1,12 +1,8 @@
-"""Sinh gói kernel Kaggle (notebook train + metadata) từ notebook modeling gốc.
-
-Notebook gốc trong notebooks/ giữ MODE="view" để renderer và test không bao giờ
-train ngoài ý muốn. Bản Kaggle được sinh ra với MODE="train" và đặt trong
-labs/lab03/kaggle/ để `kaggle kernels push` dùng trực tiếp.
-"""
+"""Đóng gói notebook modeling để chạy Kaggle GPU; giữ source và artifact riêng."""
 from pathlib import Path
 import argparse
 import json
+import re
 import sys
 
 import nbformat
@@ -22,22 +18,18 @@ TITLE = "Lab03 Frozen DistilBERT train"
 
 
 def train_notebook(source=SOURCE):
-    """Trả notebook đã đổi MODE sang train, không sửa file nguồn."""
+    """Trả notebook MODE=train không có cached outputs, không sửa file nguồn."""
     notebook = nbformat.read(source, as_version=4)
-    replaced = False
+    count = 0
     for cell in notebook.cells:
-        if cell.cell_type != "code":
-            continue
-        lines = []
-        for line in cell.source.splitlines(keepends=True):
-            if line.lstrip().startswith('MODE = "view"'):
-                indent = line[: len(line) - len(line.lstrip())]
-                line = f'{indent}MODE = "train"\n'
-                replaced = True
-            lines.append(line)
-        cell.source = "".join(lines)
-    if not replaced:
-        raise ValueError('Không tìm thấy dòng MODE = "view" trong notebook nguồn')
+        if cell.cell_type != "code":continue
+        pattern = r'^([ \t]*)MODE = "(?:view|train)"[^\n]*'
+        cell.source,n = re.subn(pattern,lambda m:m.group(1)+'MODE = "train"',cell.source,flags=re.M)
+        count += n
+        cell.outputs = []
+        cell.execution_count = None
+    if count != 1:
+        raise ValueError('Notebook cần đúng một khai báo MODE="train" hoặc MODE="view"')
     notebook.metadata["lab03"] = {
         "execution_mode": "train",
         "generated_from": source.relative_to(ROOT).as_posix(),

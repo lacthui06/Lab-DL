@@ -58,7 +58,7 @@ def test_report_primary_study_keeps_actual_metrics_and_historical_results_separa
     assert summary['primary_result']=='study' and summary['selected_threshold']==.5
     assert summary['test_comparison'][-1]['accuracy']==pytest.approx(889/1066)
     assert summary['test_comparison'][0]['test_loss'] is None
-    assert summary['historical_three_epoch_test_comparison'][0]['accuracy']==pytest.approx(895/1066)
+    assert summary['reference_test_comparison'][0]['accuracy']==pytest.approx(895/1066)
     assert (out/'study/candidate_validation_comparison.png').is_file()
     assert (out/'candidate_lr_3e5/step_learning_curves.png').is_file()
     manifest=json.loads((out/'manifest.json').read_text())
@@ -66,7 +66,7 @@ def test_report_primary_study_keeps_actual_metrics_and_historical_results_separa
 
 
 def test_primary_frozen_trial_uses_its_measured_metrics_and_saved_figures(tmp_path):
-    out=_module().publish_artifacts(output_dir=tmp_path/'published')
+    out=_module().publish_artifacts(ROOT/'config/report.json',output_dir=tmp_path/'published')
     summary=json.loads((out/'metrics_summary.json').read_text())
     assert summary['primary_result']=='frozen_trial'
     assert summary['selected_threshold']==.45
@@ -94,3 +94,33 @@ def test_training_autopublish_accepts_one_completed_run_and_keeps_log_bytes(tmp_
     assert {p.relative_to(destination).as_posix():hash_file(p) for p in destination.rglob('*') if p.is_file()}==before
     manifest=json.loads((out/'manifest.json').read_text())
     assert all(hash_file(out/name)==digest for name,digest in manifest.items())
+
+
+def test_autopublish_includes_only_exercise_runs_from_same_session(tmp_path):
+    import shutil
+    from labs.lab03.src.utils.runs import run_context,save_json
+    from labs.lab03.scripts.run_frozen_trial import publish_completed_trial
+    source=ROOT/'outputs/runs/20261027T095655Z_frozen_trial_d8d09116'
+    destination=tmp_path/'outputs/runs'/source.name
+    shutil.copytree(source,destination)
+    cfg=json.loads((destination/'config.json').read_text());cfg['session_id']='current-session'
+    save_json(destination/'config.json',cfg)
+    manifest=json.loads((destination/'manifest.json').read_text());manifest['config.json']=hash_file(destination/'config.json')
+    save_json(destination/'manifest.json',manifest)
+    with run_context('exercise1',{'session_id':'different-session'},root=tmp_path) as unrelated:
+        save_json(unrelated/'predictions.json',[])
+    with run_context('exercise1_analysis',{'session_id':'current-session'},root=tmp_path) as current:
+        save_json(current/'analysis_summary.json',{'fixture':True})
+    out=publish_completed_trial(destination,tmp_path)
+    selected=json.loads((out/'source_runs.json').read_text())['runs']
+    assert selected=={'frozen_trial':destination.name,'exercise1_analysis':current.name}
+    assert not (out/'exercise1').exists()
+    assert (out/'logs/exercise1_analysis/console.log').read_bytes()==(current/'console.log').read_bytes()
+
+
+def test_default_publication_requires_completed_training_selection(tmp_path):
+    (tmp_path/'config').mkdir()
+    (tmp_path/'config/report.json').write_text(json.dumps({'runs':{'frozen_trial':'unrelated'}}))
+    with pytest.raises(FileNotFoundError,match='latest_report'):
+        _module().publish_artifacts(source_root=tmp_path)
+    assert not (tmp_path/'outputs/published').exists()

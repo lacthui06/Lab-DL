@@ -1,25 +1,24 @@
 {
-  "artifact_run": "20261103T080738Z_notebook_render_2e623fea",
+  "status": "ready_to_execute",
   "notebooks": [
     {
       "notebook": "01_eda_preprocessing_feature_engineering.ipynb",
-      "mode": "view",
-      "executed_code_cells": 10,
-      "errors": 0,
-      "training_executed": false,
-      "artifact": "notebooks/01_eda_preprocessing_feature_engineering.ipynb",
-      "notebook_sha256": "267c256ac4a0091fd0be606e87a6d9f97d8802fdf98322da564389c84c1efde7",
-      "inline_pngs": 12
+      "default_mode": "prepare",
+      "syntax_valid": true,
+      "code_cells": 10,
+      "execution_status": "not_executed",
+      "cached_outputs": 0,
+      "sha256": "44de3d064fe0d5472d64e91cc268bd771e936351e444a2acc18e2cc6c40147dc"
     },
     {
       "notebook": "02_modeling.ipynb",
-      "mode": "view",
-      "executed_code_cells": 11,
-      "errors": 0,
-      "training_executed": false,
-      "artifact": "notebooks/02_modeling.ipynb",
-      "notebook_sha256": "8e185dd2ee2245ffcfff6a1bad1d9350fcb03c03022b3f1caf2515a638d19715",
-      "inline_pngs": 13
+      "default_mode": "train",
+      "syntax_valid": true,
+      "code_cells": 11,
+      "execution_status": "not_executed",
+      "cached_outputs": 0,
+      "sha256": "915896687f6aa037dd19d4609d0a1141c409b44c4ca430a29739d7237c403bd3"
     }
-  ]
+  ],
+  "artifact_run": "20261103T085020Z_readiness_verification_ca0f37ff"
 }

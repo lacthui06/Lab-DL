@@ -19,7 +19,7 @@ from labs.lab03.src.models.classifier import load_model, verify_saved_model
 from labs.lab03.src.training.trainer import make_trainer
 from labs.lab03.src.training.frozen import configure_frozen_optimizer
 from labs.lab03.src.training.thresholds import select_validation_threshold, binary_metrics_at_threshold, scan_thresholds
-from labs.lab03.src.utils.plots import plot_epoch_learning, plot_confusion, plot_samples
+from labs.lab03.src.utils.plots import plot_epoch_learning, plot_confusion, plot_samples, plot_metrics
 from labs.lab03.src.study import fit_text_baseline, audit_split_texts, prediction_diagnostics
 from labs.lab03.src.evidence import verify_manifest
 from labs.lab03.src.performance import ResourceMonitor, write_performance
@@ -63,7 +63,18 @@ def resolve_device(device):
 def publish_completed_trial(out,root=ROOT):
     from labs.lab03.scripts.publish_artifacts import publish_artifacts
     selection=Path(root)/'outputs/latest_report.json'
-    save_json(selection,{'primary_result':'frozen_trial','runs':{'frozen_trial':Path(out).name}})
+    runs={'frozen_trial':Path(out).name}
+    session= json.loads((Path(out)/'config.json').read_text()).get('session_id')
+    workflow=Path(root)/'config/workflow.json'
+    if session and workflow.is_file():
+        active=json.loads(workflow.read_text()).get('active_runs',{})
+        for role in ('exercise1','exercise1_analysis'):
+            run_id=active.get(role)
+            if not run_id or Path(run_id).name != run_id:continue
+            folder=Path(root)/'outputs/runs'/run_id
+            if (folder/'config.json').is_file() and json.loads((folder/'config.json').read_text()).get('session_id')==session:
+                runs[role]=run_id
+    save_json(selection,{'primary_result':'frozen_trial','runs':runs})
     return publish_artifacts(selection,output_dir=Path(root)/'outputs/published',source_root=root)
 
 
@@ -155,7 +166,7 @@ def run(config, root=ROOT, allow_cpu_fixture=False, device='auto'):
             'threshold': policy['selected_threshold'], 'selection_split': 'validation',
             'weights_sha256': hash_file(out/'best_model/model.safetensors'),
             'test_used_for_selection': False,
-            'prior_test_exposure': 'Historical test results have already been inspected.'})
+            'selection_split': 'validation'})
         # Test được đo sau khi đã ghi cố định checkpoint và threshold.
         monitor = ResourceMonitor(trainer.args.device, len(raw['test']),
                                   trainer.args.eval_batch_size, trainer.args.per_device_eval_batch_size).start()
@@ -176,6 +187,9 @@ def run(config, root=ROOT, allow_cpu_fixture=False, device='auto'):
             ('Frozen DistilBERT validation threshold', tp, policy['selected_threshold'])]:
             comparison.append({'model': name, **binary_metrics_at_threshold(labels, probs[:, 1], threshold)})
         save_json(out/'test_comparison.json', comparison)
+        chosen=comparison[-1]
+        plot_metrics({'accuracy':chosen['accuracy'],'binary_precision':chosen['precision'],
+            'binary_recall':chosen['recall'],'binary_f1':chosen['binary_f1']},out/'metrics_bar.png')
         plot_confusion(labels, tp[:, 1] >= policy['selected_threshold'], out/'confusion_matrix.png')
         examples = []
         for row in records(raw['test'], tp):
@@ -191,7 +205,10 @@ def run(config, root=ROOT, allow_cpu_fixture=False, device='auto'):
         plot_samples(shown, out/'sample_predictions.png')
         diagnostics = prediction_diagnostics(labels, tp, out, policy['selected_threshold'], config['seed'])
         save_json(out/'probability_diagnostics.json', diagnostics)
-        summary = f"""# Frozen DistilBERT trial\n\nRun: `{out.name}`\n\nTrain completed {completed}/{budget} epochs. Best checkpoint: epoch {best['epoch']} (validation loss).\n\nEmbedding and first {e['freeze_layers']} encoder layers frozen.\nEncoder LR {e['learning_rate']}; head LR {e['head_learning_rate']}.\n\nThreshold: {policy['selected_threshold']} (validation Macro-F1).\n\nThis configuration is a hypothesis, not a guaranteed improvement.\nOne seed only; historical test exposure; no causal claim about individual changes.\n\n```json\n{json.dumps(comparison, indent=2)}\n```\n"""
+        errors=json.loads((out/'threshold_errors.json').read_text())
+        for row in errors:row['text']=raw['test'][row['index']]['text']
+        save_json(out/'threshold_errors.json',errors)
+        summary = f"""# Frozen DistilBERT trial\n\nRun: `{out.name}`\n\nTrain completed {completed}/{budget} epochs. Best checkpoint: epoch {best['epoch']} (validation loss).\n\nEmbedding and first {e['freeze_layers']} encoder layers frozen.\nEncoder LR {e['learning_rate']}; head LR {e['head_learning_rate']}.\n\nThreshold: {policy['selected_threshold']} (validation Macro-F1).\n\nThis configuration is a hypothesis, not a guaranteed improvement.\nOne seed only; no causal claim about individual regularization techniques.\n\n```json\n{json.dumps(comparison, indent=2)}\n```\n"""
         (out/'report.md').write_text(summary, encoding='utf-8')
         write_performance(out,out)
         print(summary)
@@ -215,6 +232,10 @@ def run(config, root=ROOT, allow_cpu_fixture=False, device='auto'):
                 continue
             folder = root/'outputs/runs'/run_id
             if not folder.is_dir():
+                continue
+            session=json.loads((out/'config.json').read_text()).get('session_id')
+            folder_config=json.loads((folder/'config.json').read_text())
+            if not session or folder_config.get('session_id') != session:
                 continue
             if kind in ('dataset_preview', 'augmentation_preview'):
                 previous = json.loads((folder/'config.json').read_text()).get('exercise2', {})

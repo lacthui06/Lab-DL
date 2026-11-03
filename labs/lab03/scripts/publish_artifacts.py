@@ -30,10 +30,12 @@ JSON_FILES = {
 
 
 def publish_artifacts(settings=None, output_dir=None, source_root=ROOT):
-    """Chọn run tường minh qua report.json; giữ đường dẫn hình ổn định cho report."""
+    """Chọn run tường minh qua selection; giữ đường dẫn hình ổn định cho report."""
     source_root = Path(source_root)
-    settings = Path(settings or source_root / "config/report.json")
+    settings = Path(settings or source_root / "outputs/latest_report.json")
     output = Path(output_dir or source_root / "outputs/published")
+    if not settings.is_file():
+        raise FileNotFoundError('Chưa có outputs/latest_report.json; chạy notebook modeling trước khi publish.')
     configuration = read_json(settings)
     selected = configuration["runs"]
     paths = {}
@@ -88,8 +90,8 @@ def publish_artifacts(settings=None, output_dir=None, source_root=ROOT):
                 rows.append({'policy':f"Validation threshold {selected_metrics['threshold']:g}",
                     **{k:selected_metrics[k] for k in ['accuracy','precision','recall','binary_f1','macro_f1']},'test_loss':loss})
                 policy=read_json(evaluation/'decision_threshold.json')
-        historical_rows = list(rows)
-        primary = configuration.get('primary_result', 'historical')
+        reference_rows = list(rows)
+        primary = configuration.get('primary_result', 'evaluation')
         if primary == 'study':
             if 'study' not in paths:
                 raise ValueError('Primary study is missing from selected report runs')
@@ -115,7 +117,7 @@ def publish_artifacts(settings=None, output_dir=None, source_root=ROOT):
         performance_role = 'performance_report' if 'performance_report' in paths else (
             'frozen_trial' if 'frozen_trial' in paths and (paths['frozen_trial']/'performance_summary.json').is_file() else None)
         save_json(staged/'metrics_summary.json',{'primary_result':primary, 'source_run':paths[primary].name if primary in {'study','frozen_trial'} else evaluation.name,
-            'test_comparison':rows, 'historical_three_epoch_test_comparison':historical_rows, 'measured_test_loss':loss,
+            'test_comparison':rows, **({'reference_test_comparison':reference_rows} if reference_rows else {}), 'measured_test_loss':loss,
             'selection_split':policy.get('split') if policy else None,
             'selected_threshold':policy.get('selected_threshold') if policy else None,
             'performance':read_json(paths[performance_role]/'performance_summary.json') if performance_role else None})
@@ -128,17 +130,17 @@ def publish_artifacts(settings=None, output_dir=None, source_root=ROOT):
             loss_text=f"{row_loss:.6f}" if row_loss is not None else 'Not logged'
             lines.append(f"| {row['policy']} | {values} | {loss_text} |")
         if primary == 'study':
-            lines += ['', 'Bảng chính thuộc study 10 epoch; các role finetuning/evaluation/analysis cũ giữ bằng chứng lịch sử 3 epoch. Không gán số liệu hai protocol cho cùng một run.']
+            lines += ['', 'Bảng chính dùng study được chọn trong source_runs.json; các reference roles được giữ tách biệt theo run và protocol.']
         if primary == 'frozen_trial':
             selection=read_json(paths['frozen_trial']/'selection_summary.json')
-            lines += ['', f"Bảng chính thuộc frozen trial: hoàn thành {selection['completed_epochs']:g} epoch, checkpoint epoch {selection['selected_epoch']} theo validation loss; threshold {policy['selected_threshold']:g} theo validation Macro-F1. Các study khác là lịch sử; không khẳng định accuracy cao nhất."]
+            lines += ['', f"Bảng chính thuộc frozen trial: hoàn thành {selection['completed_epochs']:g} epoch, checkpoint epoch {selection['selected_epoch']} theo validation loss; threshold {policy['selected_threshold']:g} theo validation Macro-F1. Checkpoint và threshold được khóa trước khi đo test."]
         lines += ['','## Nguồn thí nghiệm','','| Vai trò | Run |','|---|---|']
         lines += [f'| {role} | `{run_id}` |' for role,run_id in selected.items()]
         if performance_role:
             perf=read_json(paths[performance_role]/'performance_summary.json')
             lines += ['','## Hiệu năng và phạm vi đo','',
                 f"Test evaluation: **{perf['test_eval_ms_per_sample']:.6f} ms/mẫu**; {perf['test_eval_timing_scope']}.",
-                f"RAM/VRAM training: **{perf['historical_memory_status']}**.",
+                f"RAM/VRAM training: **{perf.get('memory_status','not logged; consult source resource measurements')}**.",
                 f'[Bảng từng epoch]({performance_role}/performance_history.json) · [Phạm vi/đơn vị]({performance_role}/performance_summary.json)',
                 '', 'Peak/batch slots là bộ nhớ dùng chung được phân bổ theo batch, không phải bộ nhớ độc lập cho mỗi câu. Không thay số thiếu bằng 0.']
         lines += ['','## Log nguồn đã publish','',
@@ -168,6 +170,6 @@ def publish_artifacts(settings=None, output_dir=None, source_root=ROOT):
 
 if __name__ == '__main__':
     parser=argparse.ArgumentParser()
-    parser.add_argument('--config',type=Path,default=ROOT/'config/report.json')
+    parser.add_argument('--config',type=Path,default=ROOT/'outputs/latest_report.json')
     args=parser.parse_args()
     print('Report artifacts:',publish_artifacts(args.config))

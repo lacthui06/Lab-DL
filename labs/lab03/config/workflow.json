@@ -22,7 +22,8 @@
     "dataset_preview": "20261103T080418Z_dataset_preview_69a6efd5",
     "augmentation_preview": "20261103T080421Z_augmentation_preview_f239b291",
     "notebook_render": "20261103T080738Z_notebook_render_2e623fea",
-    "requirements_verification": "20261103T080841Z_requirements_verification_71110eb1"
+    "requirements_verification": "20261103T080841Z_requirements_verification_71110eb1",
+    "readiness_verification": "20261103T085020Z_readiness_verification_ca0f37ff"
   },
   "runs": [
     {
@@ -313,6 +314,11 @@
     {
       "id": "20261103T080841Z_requirements_verification_71110eb1",
       "kind": "requirements_verification",
+      "status": "completed"
+    },
+    {
+      "id": "20261103T085020Z_readiness_verification_ca0f37ff",
+      "kind": "readiness_verification",
       "status": "completed"
     }
   ]

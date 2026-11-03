@@ -1,0 +1,8 @@
+Run: 20261103T085020Z_readiness_verification_ca0f37ff
+{
+  "tests_passed": 122,
+  "notebooks": 2,
+  "relative_links_verified": 5,
+  "max_epochs": 5,
+  "gpu_training_executed": false
+}

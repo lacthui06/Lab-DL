@@ -1,0 +1,46 @@
+{
+  "status": "ready_for_kaggle_training",
+  "tests_passed": 122,
+  "profile_max_epochs": 5,
+  "early_stopping": {
+    "enabled": true,
+    "patience": 2,
+    "min_delta": 0.001,
+    "monitor": "validation_loss"
+  },
+  "dropout": {
+    "dropout": 0.2,
+    "attention_dropout": 0.2,
+    "seq_classif_dropout": 0.4
+  },
+  "encoder_learning_rate": 5e-06,
+  "head_learning_rate": 2e-05,
+  "weight_decay": 0.1,
+  "augmentation_enabled": true,
+  "fresh_session_isolation_tested": true,
+  "same_session_artifact_selection_tested": true,
+  "notebooks": [
+    {
+      "notebook": "01_eda_preprocessing_feature_engineering.ipynb",
+      "default_mode": "prepare",
+      "syntax_valid": true,
+      "code_cells": 10,
+      "execution_status": "not_executed",
+      "cached_outputs": 0,
+      "sha256": "44de3d064fe0d5472d64e91cc268bd771e936351e444a2acc18e2cc6c40147dc"
+    },
+    {
+      "notebook": "02_modeling.ipynb",
+      "default_mode": "train",
+      "syntax_valid": true,
+      "code_cells": 11,
+      "execution_status": "not_executed",
+      "cached_outputs": 0,
+      "sha256": "915896687f6aa037dd19d4609d0a1141c409b44c4ca430a29739d7237c403bd3"
+    }
+  ],
+  "relative_document_links_verified": 5,
+  "gpu_training_executed": false,
+  "gpu_metrics_recorded": false,
+  "artifact_run": "20261103T085020Z_readiness_verification_ca0f37ff"
+}

@@ -123,7 +123,7 @@ def performance_data(run):
         'test_eval_ms_per_sample':runtime['test_runtime']*1000/test_size,
         'test_eval_timing_scope':'Trainer.predict full test, includes batching/transfer/evaluation overhead; not single-request latency',
         'epoch_pipeline_timing_scope':'epoch start through validation callback; includes train, full train-eval and validation; excludes later checkpoint save',
-        'historical_memory_status':'measured' if measured else 'not logged; cannot reconstruct training peak from parameter count or saved weights',
+        'memory_status':'measured' if measured else 'not logged; cannot reconstruct training peak from parameter count or saved weights',
         'memory_normalization':'MiB per batch slot = process/device peak divided by nominal batch slots; shared model memory included; not MiB divided by dataset size',
         'cuda_device_available_in_source':read_json(run/'environment_snapshot.json')['cuda_available'],
         'source_device':read_json(run/'environment_snapshot.json').get('device'),
@@ -151,7 +151,7 @@ def write_performance(run, output):
         if points:
             ax.plot(*zip(*points),marker='o');ax.set(xlabel='Epoch',ylabel='MiB / nominal batch slot')
         else:
-            unavailable = 'N/A\nCPU execution' if summary['pure_train_resources_available'] and key.startswith('vram') else 'NOT LOGGED\nNo historical memory measurement'
+            unavailable = 'N/A\nCPU execution' if summary['pure_train_resources_available'] and key.startswith('vram') else 'NOT LOGGED\nNo memory measurement available'
             ax.text(.5,.5,unavailable,ha='center',va='center',transform=ax.transAxes)
             ax.set_xticks([]);ax.set_yticks([])
         ax.set_title(title)

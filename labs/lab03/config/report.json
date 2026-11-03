@@ -30,5 +30,5 @@
   },
   "primary_result": "frozen_trial",
   "planned_training_profile": "config/frozen_trial.json",
-  "planned_training_status": "5 epoch maximum with early stopping; pending GPU run. Report metrics remain historical."
+  "planned_training_status": "Five-epoch maximum with validation-loss early stopping; measurements are produced by the training session."
 }

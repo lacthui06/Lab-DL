@@ -1,4 +1,4 @@
-"""Thí nghiệm 10 epoch: chọn cấu hình trên validation rồi mới đánh giá test."""
+"""Baseline và thí nghiệm: chọn cấu hình trên validation rồi mới đánh giá test."""
 from copy import deepcopy
 import gc
 import json
@@ -303,7 +303,7 @@ def write_study_report(out, candidates, winner, comparison, diagnostics):
         'Xem report.md cho mẫu lỗi argmax và threshold_errors.json cho toàn bộ lỗi của policy chốt.',
         'Giả thuyết ngôn ngữ không phải causal attribution. Không sửa policy dựa trên ví dụ test.', '',
         '## Giới hạn', '',
-        'Test lịch sử 3 epoch từng được xem. Đây là mở rộng thí nghiệm, không phải benchmark hoàn toàn chưa đụng tới.',
+        'Test chỉ dùng đánh giá policy đã khóa; không dùng test để chọn checkpoint hoặc threshold.',
         'Một seed không chứng minh cấu hình ổn định qua các lần khởi tạo. Ba learning rate không chứng minh tối ưu toàn cục.',
         'Chạy lâu hơn không đảm bảo test accuracy/F1 cao hơn. Báo cáo cả cải thiện và suy giảm.',
         'Nếu overlap audit có giao nhau giữa split, phải nêu rõ trong kết luận; không tự đổi official splits.', '',

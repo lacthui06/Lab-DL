@@ -19,3 +19,12 @@ def test_runs_preserve_history_and_verify_manifest(tmp_path):
     state = json.loads((tmp_path / "config/workflow.json").read_text())
     assert state["active_runs"]["test"] == second.name
     assert [r["status"] for r in state["runs"]] == ["completed", "completed", "failed"]
+
+
+def test_session_metadata_is_recorded_without_mutating_configuration(tmp_path,monkeypatch):
+    monkeypatch.setenv('LAB03_SESSION_ID','isolated-session')
+    config={'seed':42}
+    with run_context('test',config,root=tmp_path) as out:
+        pass
+    assert json.loads((out/'config.json').read_text())['session_id']=='isolated-session'
+    assert config=={'seed':42}

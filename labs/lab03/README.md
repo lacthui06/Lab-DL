@@ -1,70 +1,74 @@
-# Lab03 — Getting started with Hugging Face
+# Lab03 — Binary Sentiment Classification with Hugging Face
 
-Hai Exercise: pretrained sentiment/tokenization và fine-tuning binary sentiment trên Rotten Tomatoes. Có đúng hai notebook: EDA → preprocessing → feature engineering, rồi modeling. Mỗi notebook có roadmap/module tham chiếu, bảng và ảnh inline; cùng hình/bảng/log được lưu trong `outputs/` để dùng lại cho report.
+Phân loại cảm xúc tiếng Anh trên Rotten Tomatoes: pretrained sentiment/tokenization và fine-tuning DistilBERT. Pipeline gồm đúng **hai notebook**, có roadmap, module tham chiếu, ảnh inline và artifact được lưu để dùng cho report.
 
-**Profile train hiện hành:** tối đa **5 epoch**, early stopping theo validation loss (patience2, min_delta0.001). Đây là cấu hình mới chờ lượt GPU. Bằng chứng đã publish thuộc lượt frozen **10epoch lịch sử**, không gọi đó là kết quả5epoch.
+## Chạy trên Kaggle
 
-## Notebook và cách chạy
-
-- [01 — EDA, preprocessing, feature engineering](notebooks/01_eda_preprocessing_feature_engineering.ipynb): `MODE="view"` xem hình có sẵn; `MODE="prepare"` tạo lại phân tích dữ liệu, tokenization, TF-IDF và augmentation. Không train mạng neural.
-- [02 — Modeling](notebooks/02_modeling.ipynb): `MODE="view"` xem kết quả đã lưu; đổi `MODE="train"`, `DEVICE="cuda"` để chạy mới trên Kaggle GPU. Chạy từ đầu theo thứ tự, không resume checkpoint cũ. Local dùng cùng notebook/script và chọn device phù hợp.
-- [Kaggle runbook](KAGGLE_RUNBOOK.md): import GitHub hoặc tạo kernel bằng CLI, bật GPU/Internet, lấy ZIP.
-
-Import notebook02 vào Kaggle từ URL:
+Import notebook modeling từ GitHub:
 
 ```text
 https://github.com/lacthui06/Lab-DL/blob/lab03/labs/lab03/notebooks/02_modeling.ipynb
 ```
 
-Notebook gốc mặc định view để mở báo cáo an toàn; phải đổi MODE trước Run All nếu muốn train. Kaggle tạo Python3.12 riêng, tránh xung đột thư viện kernel. Sau train có review ZIP nhẹ và checkpoint ZIP riêng tại `/kaggle/working`.
+Bật **GPU + Internet**, rồi **Run All**. Notebook mặc định `MODE="train"`, `DEVICE="cuda"`; bắt đầu từ pretrained base, tải official dataset và thực hiện trọn pipeline. Không cần cung cấp checkpoint đầu vào.
 
-## Luồng và cấu hình
+Cấu hình: **tối đa 5 epoch**, early stopping theo validation loss, patience 2, min_delta 0.001. Số epoch thực chạy có thể ít hơn 5. Kết quả, selected checkpoint và threshold được lấy từ chính phiên thực thi.
 
-1. Kiểm thử fixture/sanity overfit trước GPU training.
-2. Official train8.530 / validation1.066 / test1.066; seed42; không subsample hay chia lại test.
-3. Kiểm tra chất lượng, phân bố nhãn/độ dài, WordPiece và attention mask; max_length128, dynamic padding.
-4. Augmentation chỉ từ train: cùng cực tính, tránh phủ định/tương phản, dedup và cân bằng. Trần25%, số hợp lệ thực tế hiện có274, effective train8.804; synthetic label có thể nhiễu.
-5. Baseline TF-IDF unigram/bigram + Logistic Regression; fit train-only, chọn C bằng validation.
-6. DistilBERT base: embedding +4/6 blocks frozen, hai blocks cuối/head trainable. EncoderLR5e-6, headLR2e-5, dropout0.2/0.2/0.4, AdamW decay0.1, warmup10%, clipping1. Profile là giả thuyết đã định trước, chưa chứng minh tối ưu.
-7. Max5epoch, full train/validation evaluation mỗi epoch; early stopping validation-only, reload checkpoint min validation loss. Biểu đồ có đúng số epoch thực chạy, có thể ít hơn5.
-8. Quét19thresholds0.05–0.95 trên validation Macro-F1, khóa policy rồi mới test. Không chọn threshold theo test.
-9. Hiện learning curves, kiến trúc, accuracy/loss, time/sample, RAM/VRAM, confusion, ROC/PR, calibration và sample errors ngay trên notebook; đồng thời lưu artifact.
-10. Save/reload check, SHA256, tự publish hình/bảng/log và tạo hai ZIP.
+## Hai notebook
 
-## Vai trò folder/file
+| Notebook | Nội dung | Chế độ mặc định |
+|---|---|---|
+| [01 — EDA, preprocessing, feature engineering](notebooks/01_eda_preprocessing_feature_engineering.ipynb) | Quality/leakage audit, nhãn/độ dài, cutoff, tokens/IDs/mask, TF-IDF, augmentation | `prepare` |
+| [02 — Modeling](notebooks/02_modeling.ipynb) | Pretrained sentiment, baseline, fine-tune, performance, threshold, evaluation, errors, export | `train` |
+
+Ảnh được hiển thị từ cùng PNG đã lưu trong `outputs/runs/<run_id>/`. Sau khi có kết quả, `MODE="view"` đọc selection trong `outputs/latest_preparation.json` hoặc `outputs/latest_report.json`; không train để lấy lại hình. Notebook01 không phải điều kiện bắt buộc trước notebook02: script modeling tự thực hiện cùng data/feature pipeline.
+
+## Phương pháp
+
+- Official splits: **8.530 train / 1.066 validation / 1.066 test**; seed 42; không subsample hoặc chia lại test.
+- Giữ phủ định/punctuation; WordPiece tokenizer đã pin; max length 128 và dynamic padding.
+- Train-only augmentation bằng thay từ/cụm cùng cực tính, loại câu có phủ định/tương phản, dedup, cân bằng variants; tối đa 25%, không ép đủ bằng sao chép.
+- Baseline: TF-IDF unigram/bigram + Logistic Regression; fit train-only, chọn C bằng validation Macro-F1.
+- DistilBERT base: embedding và 4/6 encoder blocks frozen; encoder/head LR 5e-6/2e-5; dropout 0.2/0.2/0.4; AdamW decay 0.1; warmup 10%; gradient clipping 1.
+- Max 5 epoch + early stopping; chọn checkpoint bằng minimum validation loss.
+- Quét 19 thresholds trên validation Macro-F1, khóa policy rồi test.
+- Đo accuracy/loss theo epoch, time/sample, RAM RSS và CUDA peak/batch slot; hiển thị learning curves, architecture, metrics, confusion, ROC/PR, calibration và sample predictions.
+- Save/reload consistency, raw log, environment/config/source hashes và SHA256 manifest.
+
+Các kỹ thuật là lựa chọn được định trước để kiểm chứng bằng thực nghiệm; không bảo đảm không overfit hoặc luôn hơn baseline.
+
+## Folder và tài liệu
 
 | Folder/file | Vai trò |
 |---|---|
-| `config/frozen_trial.json` | Profile mới5epoch + early stopping/regularization |
-| `config/report.json` | Chọn tường minh run lịch sử cho notebook view/report; không ghi đè khi train mới |
-| `config/workflow.json` | Registry run runtime và active runs |
-| `notebooks/` | Đúng hai notebook, không nhân bản theo từng experiment |
-| `src/datasets/` | Loader official splits, tokenization và augmentation |
-| `src/data_preparation.py` | EDA, quality/cutoff audit, token/mask và TF-IDF train-only |
-| `src/models/` | Pretrained classifier và save/reload consistency |
-| `src/training/` | Trainer/early stopping, optimizer/freeze, metrics và threshold |
-| `src/performance.py` | Time/RSS/CUDA peak, phạm vi và đơn vị đo |
-| `src/utils/` | Isolated runs, snapshots, manifest, visualization |
-| `scripts/` | Entry points gọi cùng module với notebook; không chứa pipeline copy |
-| `tests/` | Fixture nhỏ: leakage, optimizer, early stop, reload, threshold, telemetry/artifact |
-| `outputs/runs/<id>/` | Nguồn bất biến của từng run, ảnh/bảng/log/config/environment/hash |
-| `outputs/published/` | Hình/bảng/log đã chọn và catalog dùng ngay cho report |
-| `outputs/latest_report.json` | Nguồn published của lượt train mới; không thay report lịch sử |
+| `config/frozen_trial.json` | Profile thí nghiệm, hyperparameters và early stopping |
+| `config/workflow.json` | Registry các run runtime |
+| `notebooks/` | Hai notebook trình bày và thực thi |
+| `src/datasets/` | Official loader, tokenizer, augmentation |
+| `src/data_preparation.py` | EDA, quality/cutoff audit, TF-IDF và token examples |
+| `src/models/` | Load classifier, inference và save/reload |
+| `src/training/` | Trainer, early stopping, optimizer/freeze, metrics, threshold |
+| `src/performance.py` | Timer, RSS/CUDA peak, phạm vi và đơn vị đo |
+| `src/utils/` | Run isolation, snapshot, manifest và figures |
+| `scripts/` | CLI dùng chung module với notebook |
+| `tests/` | Tiny fixtures và kiểm thử data/model/training/threshold/artifact |
+| `outputs/runs/<id>/` | Artifact nguồn của mỗi run |
+| `outputs/published/` | Hình/bảng/log được chọn cho report, catalog và manifest |
+| `outputs/latest_report.json` | Selection của phiên modeling hoàn thành |
+| `outputs/latest_preparation.json` | Selection của phiên EDA hoàn thành |
 | `outputs/preflight/` | Pytest log/XML trước training |
-| `outputs/imports/` | Manifest/provenance của kết quả Kaggle được nhập |
-| `validation/` | Bằng chứng kiểm thử/audit phần mềm, khác dataset validation |
-| `description_lab_03.md` | Đề, discussion/decision và architecture/rationale |
-| `walkthrough_lab_03.md` | Spec, quy trình thí nghiệm, kết quả, hình, lý do và giới hạn |
-
-Các config/module cho study cũ được giữ vì dùng kiểm toán/so sánh run đã công bố; không cần chạy lại khi train profile mới. Không commit dataset thô, ZIP hoặc weights.
+| `validation/` | Kiểm chứng phần mềm, khác dataset validation |
+| [Description](description_lab_03.md) | Đề bài, architecture, discussion và quyết định |
+| [Walkthrough](walkthrough_lab_03.md) | Phương pháp, vận hành, cách diễn giải và thu thập bằng chứng |
+| [Kaggle runbook](KAGGLE_RUNBOOK.md) | Import/push kernel, chạy và lấy kết quả |
 
 ## Local CLI
 
-Từ thư mục gốc repo, dùng Python3.12 và môi trường riêng:
+Dùng Python3.12, từ thư mục gốc repo:
 
 ```bash
 python -m venv .venv
-source .venv/bin/activate  # Git Bash/Windows: source .venv/Scripts/activate
+source .venv/bin/activate  # Git Bash trên Windows: source .venv/Scripts/activate
 python -m pip install -r labs/lab03/requirements.txt
 python -m pytest labs/lab03/tests -q
 python labs/lab03/scripts/preview_dataset.py
@@ -73,22 +77,15 @@ python labs/lab03/scripts/run_exercise1.py
 python labs/lab03/scripts/run_frozen_trial.py --config labs/lab03/config/frozen_trial.json --device cuda
 ```
 
-CLI GPU training tương đương MODE=train. CPU đầy đủ có hỗ trợ qua `--device cpu` nhưng chậm; local verification chỉ dùng fixture nhỏ. Evaluate/infer lại cần checkpoint đã tải riêng:
+Local verification chỉ dùng tiny fixtures/sanity minibatch. Full training khuyến nghị GPU; `--device cpu` chỉ dùng khi chủ động chấp nhận thời gian chạy.
 
-```bash
-python labs/lab03/scripts/eval.py --model-path /path/to/best_model
-python labs/lab03/scripts/infer.py --model-path /path/to/best_model --text "The acting was good, but the story was disappointing."
-```
+## Artifact và report
 
-Không đổi threshold sau khi xem test. Decision policy gắn với hash weights của checkpoint.
+Sau training thành công, hình/bảng/raw log được tự publish. Mỗi session có ID riêng; artifact đi kèm trong ZIP phải thuộc phiên tương ứng. Có hai ZIP tại `/kaggle/working` trên Kaggle hoặc `labs/lab03/outputs` trên local:
 
-## Bằng chứng đọc ngay sau khi pull
+- `lab03_review_<run_id>.zip`: config, log, predictions, history, performance, figures, published và manifest; không chứa weights.
+- `lab03_checkpoint_<run_id>.zip`: best model, tokenizer, training config và decision policy; giữ riêng để evaluate/infer.
 
-- [Catalog hình/bảng/log](outputs/published/index.md), [manifest SHA256](outputs/published/manifest.json).
-- [EDA chất lượng](outputs/published/data_preparation/data_quality.png), [TF-IDF](outputs/published/data_preparation/tfidf_features.png), [nguồn EDA](outputs/published/data_preparation/data_source_provenance.json).
-- [Kiến trúc](outputs/published/performance_report/model_architecture.png), [learning curves lịch sử](outputs/published/frozen_trial/learning_curves.png).
-- [Performance](outputs/published/performance_report/performance.png), [định nghĩa/đơn vị đo](outputs/published/performance_report/performance_summary.json), [raw log](outputs/published/logs/frozen_trial/console.log).
+Notebook hiển thị link tải. Nếu không tải được, mở Output → `/kaggle/working` → Refresh → Download. Tải notebook có cell outputs bằng File → Download Notebook. Không commit weights, dataset thô hoặc ZIP vào Git; commit hình/bảng/log nhẹ và notebook đã chạy.
 
-Frozen10epoch lịch sử: selected epoch9, validation threshold0.45, test883/1.066 đúng (accuracy82.83%, Macro-F182.82%). Test evaluation khoảng0.466792ms/mẫu là throughput batch, không phải latency request đơn lẻ. Run cũ không ghi training RAM/VRAM nên hiển thị **NOT LOGGED**, không tạo số giả; lượt train mới có resource_history/test_resource_metrics và hình tương ứng.
-
-EDA bổ sung dùng corpus công khai phục dựng theo legacy official builder, đối chiếu2.132heldout và274augmentation records với run Kaggle; chưa đối chiếu toàn bộ train/HF fingerprints. Provenance ghi rõ giới hạn. Lần train/prepare mới vẫn dùng pinned HF official dataset. Sau khi có reviewZIP5epoch, cập nhật kết quả trong walkthrough và report selection; chưa coi phép đo GPU mới hoàn tất trước lúc đó.
+RAM/VRAM per batch slot gồm shared model memory, không phải bộ nhớ riêng của một câu. Test ms/sample là batch throughput, không phải latency request đơn lẻ. Metric chỉ được kết luận sau khi đọc artifact thật của lượt chạy.
