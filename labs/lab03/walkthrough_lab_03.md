@@ -664,12 +664,14 @@ DistilBERT có 66.955.010 tham số, trong đó 14.767.874 trainable. Embedding 
 | 4 | 84.51% | 83.96% | 0.348804 | 0.368835 |
 | 5 | 84.58% | 83.96% | 0.348564 | 0.367875 |
 
-Validation loss giảm từ0,394180 xuống0,367875; checkpoint epoch5 được chọn đúng minimum loss. Accuracy gap cuối là **0,616 điểm phần trăm**, loss gap0,01931. Chưa thấy validation-loss tăng trong cửa sổ5epoch; điều này không bảo đảm hết overfit hay mô hình tối ưu. Early stopping patience2/min_delta0.001 bật nhưng **không dừng sớm**: có đủ cải thiện trước khi chạm patience.
+Validation loss giảm từ0,394180 xuống0,367875; checkpoint epoch5 được chọn đúng minimum loss. Accuracy gap cuối là **0,616 điểm phần trăm**, loss gap0,01931. Chưa thấy validation-loss tăng trong cửa sổ5epoch; điều này không bảo đảm hết overfit hay mô hình tối ưu. Early stopping patience2/min_delta0.001 được bật; `stopped_early=False` nghĩa là không kết thúc trước ngân sách5epoch. Tái hiện callback Transformers4.48.3 từ config/history cho counter0/0/0/1/2: cải thiện epoch4 là0,0006465 và epoch5 là0,0009598, đều nhỏ hơn min_delta. Patience do đó đạt ngưỡng ngay tại biên ngân sách. Đây là **counter dẫn xuất**, không phải counter đã được ghi trực tiếp; không kết luận rằng patience chưa đạt ngưỡng.
+
+[Bảng tái hiện patience](outputs/published/result_analysis/early_stopping_replay.json) nêu provenance. Minimum loss vẫn được cập nhật khi có cải thiện nhỏ, nên checkpoint epoch5 được chọn đúng dù min_delta không reset patience.
 
 Log ghi **2 AMP skipped optimizer steps**; không diễn giải 2.755 global steps thành 2.755 updates thành công. Mọi loss/metric cần thiết hữu hạn; giữ cảnh báo AMP trong raw log và selection_summary, không xóa để làm đẹp kết quả.
 
 ![Learning curves](outputs/published/frozen_trial/learning_curves.png)
-[Kiến trúc chi tiết hai model dạng text](outputs/architecture/model_architectures.txt)
+[Kiến trúc chi tiết hai model dạng text](outputs/published/architecture/model_architectures.txt) và [bảng cấu trúc/provenance](outputs/published/architecture/summary.json). Mỗi model có66.955.010parameters; Exercise1 chỉ inference nên tối ưu0parameters, dù requires_grad vẫn bật trong cấu trúc khai báo. Exercise2 tối ưu14.767.874parameters. View dựng module tree từ pinned configuration, không load pretrained/checkpoint weights; không dùng sơ đồ này làm bằng chứng reload GPU.
 
 #### Threshold validation-only và kết quả test
 
@@ -687,6 +689,17 @@ Test loss **0,409902** thuộc score distribution của checkpoint, không thay 
 
 ![Threshold](outputs/published/frozen_trial/validation_threshold_curves.png)
 ![Confusion](outputs/published/frozen_trial/confusion_matrix.png)
+
+| Lớp (one-vs-rest) | Precision | Recall / TPR | F1 | FPR | Support |
+|---|---:|---:|---:|---:|---:|
+| Negative | 83,88% | 81,99% | 82,92% | 15,76% | 533 |
+| Positive | 82,39% | 84,24% | 83,30% | 18,01% | 533 |
+
+Negative có TPR thấp hơn;96/533 câu Negative bị gán Positive. FPR Positive18,01% là tỷ lệ trong Negative bị gọi Positive; FPR Negative15,76% là tỷ lệ trong Positive bị gọi Negative. Không nhầm FPR với1-precision.
+
+![Per-class metrics](outputs/published/result_analysis/per_class_metrics.png)
+
+Baseline log loss tính lại từ1.066saved probability vectors là **0,517371**; Transformer test loss đo tại Kaggle là **0,409902**. Loss baseline là dẫn xuất sklearn log_loss, không phải số đo GPU. [Summary dẫn xuất](outputs/published/result_analysis/results_summary.json) ghi source manifest/code hashes. Test runtime metrics của Transformer dùng argmax; policy threshold0,45 được báo riêng trong test_comparison, không ghi đè metrics nguồn.
 ![ROC PR](outputs/published/frozen_trial/roc_pr_curves.png)
 ![Calibration](outputs/published/frozen_trial/calibration_confidence.png)
 
@@ -724,15 +737,15 @@ Review ZIP không có checkpoint weights: reload_check ghi nhận kiểm tra CPU
 
 | Yêu cầu | Bằng chứng hiện có |
 |---|---|
-| Hai notebook rõ phase/module, không quá ngắn | Notebook01:22cells,12ảnh inline; notebook02:26cells,16ảnh inline và kiến trúc text |
+| Hai notebook rõ phase/module, không quá ngắn | Notebook01:22cells,12ảnh inline; notebook02:26cells,17ảnh inline và kiến trúc text |
 | EDA/preprocessing/features | Quality, split overlap, length/cutoff, tokens/mask, TF-IDF, augmentation PNG/JSON |
 | Architecture và discussion/quyết định | Description Section4–8; walkthrough Section1–2 |
 | Ngân sách5epoch + early stopping + regularization | frozen_trial.json, selection_summary, history đủ5mốc |
 | Binary threshold | Validation scan đủ19ngưỡng, frozen policy0,45 và test comparison |
 | Train accuracy/loss, timing, RAM/VRAM | performance_history/summary, performance.png và log nguồn |
-| Hình vừa inline vừa lưu artifact | Hai notebook thực thi view không lỗi;28image/png outputs |
+| Hình vừa inline vừa lưu artifact | Hai notebook thực thi view không lỗi;29image/png outputs |
 | Pull về làm report không train lại | published/index.md, PNG, metrics, raw logs, SHA256 và notebook cached outputs |
-| Kiểm thử phần mềm | 91tests đạt, không skip; [log](outputs/verification/pytest.log), [JUnit](outputs/verification/pytest.xml), [summary](validation/verification.json) |
+| Kiểm thử phần mềm | 93tests đạt, không skip; [log](outputs/verification/pytest.log), [JUnit](outputs/verification/pytest.xml), [summary](validation/verification.json) |
 | Giới hạn checkpoint | Review ZIP không weights; audit metrics đạt, chưa reload weights trên máy review |
 
 Tests của các module/công cụ đã loại bỏ được dọn cùng chức năng tương ứng. Bộ hiện hành vẫn kiểm dữ liệu/train-only features, dynamic padding, optimizer freezing, sanity100%/loss<0,05, early stopping, threshold tie-break/nonfinite, artifact tampering, session isolation, ZIP và notebook. Không thay bài kiểm thực bằng zero-test/syntax-only. Log preflight trong ZIP thuộc source commit lúc train; log verification hiện hành thuộc code sau rà soát.

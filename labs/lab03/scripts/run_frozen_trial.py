@@ -75,7 +75,9 @@ def publish_completed_trial(out,root=ROOT):
             if (folder/'config.json').is_file() and json.loads((folder/'config.json').read_text()).get('session_id')==session:
                 runs[role]=run_id
     save_json(selection,{'primary_result':'frozen_trial','runs':runs})
-    return publish_artifacts(selection,output_dir=Path(root)/'outputs/published',source_root=root)
+    published=publish_artifacts(selection,output_dir=Path(root)/'outputs/published',source_root=root)
+    save_json(Path(root)/'outputs/experiment_results.json',json.loads((published/'metrics_summary.json').read_text()))
+    return published
 
 
 def run(config, root=ROOT, allow_cpu_fixture=False, device='auto'):
@@ -244,8 +246,9 @@ def run(config, root=ROOT, allow_cpu_fixture=False, device='auto'):
                     continue
             verify_manifest(folder)
             files.extend(p for p in folder.rglob('*') if p.is_file())
-    architecture = root/'outputs/architecture/model_architectures.txt'
-    if architecture.is_file(): files.append(architecture)
+    for name in ('model_architectures.txt','summary.json','manifest.json'):
+        architecture=root/'outputs/architecture'/name
+        if architecture.is_file():files.append(architecture)
     preflight = sorted((root/'outputs/preflight').glob('*/pytest.*'))
     if preflight:
         latest = max(p.parent for p in preflight)

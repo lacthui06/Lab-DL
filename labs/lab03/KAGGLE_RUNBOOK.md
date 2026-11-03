@@ -5,10 +5,10 @@
 Kaggle → New Notebook → File → Import Notebook → GitHub, dán:
 
 ```text
-https://github.com/phucthanh2210/Lab-Deep-Learning/blob/lab03/labs/lab03/notebooks/02_modeling.ipynb
+https://github.com/lacthui06/Lab-DL/blob/lab03/labs/lab03/notebooks/02_modeling.ipynb
 ```
 
-Notebook và code trên branch phải đồng bộ: cell setup clone `phucthanh2210/Lab-Deep-Learning`, branch `lab03`.
+Notebook và code trên branch phải đồng bộ: cell setup clone `lacthui06/Lab-DL`, branch `lab03`.
 Dùng một phiên Kaggle mới để clone đầy đủ source.
 
 ## 2. Bật tài nguyên

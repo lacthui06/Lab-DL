@@ -46,5 +46,10 @@
     "checkpoint_available_locally": false,
     "run": "20261103T110425Z_exercise1_f9b5a257",
     "compared_sentences": 3
-  }
+  },
+  "original_bundle_sha256_verified": 158,
+  "source_files_sha256_verified": 44,
+  "resource_records_verified": 6,
+  "architecture_summary_verified": true,
+  "per_class_metrics_verified": true
 }

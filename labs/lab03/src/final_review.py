@@ -90,3 +90,67 @@ def audit_frozen_trial(run):
         'threshold':policy['selected_threshold'], 'test_samples':len(test),
         'weights_loaded_locally':False, 'threshold_reselected_on_test':False,
         'test_used_for_selection':False}
+
+
+def write_results_analysis(run, output):
+    """Dẫn xuất báo cáo từ predictions/history đã audit; không sửa nguồn hoặc load model."""
+    from .utils.runs import save_json,hash_file
+    from .utils.plots import finish
+    import matplotlib.pyplot as plt
+    run,output=Path(run),Path(output)
+    audit_frozen_trial(run)
+    output.mkdir(parents=True,exist_ok=True)
+    settings=read_json(run/'config.json')['exercise2']
+    policy=read_json(run/'decision_threshold.json')
+    records=read_json(run/'test_predictions.json')
+    labels=np.array([r['true_label'] for r in records])
+    probabilities=np.array([r['probabilities'] for r in records])
+    predicted=probabilities[:,1]>=policy['selected_threshold']
+    metrics=[]
+    for label,name in [(0,'Negative'),(1,'Positive')]:
+        truth,decision=labels==label,predicted==label
+        tp=int(np.sum(truth & decision));fp=int(np.sum(~truth & decision))
+        fn=int(np.sum(truth & ~decision));tn=int(np.sum(~truth & ~decision))
+        ratio=lambda a,b:a/b if b else 0.
+        precision,recall=ratio(tp,tp+fp),ratio(tp,tp+fn)
+        metrics.append({'label':label,'class':name,'precision':precision,'recall':recall,
+            'f1':ratio(2*precision*recall,precision+recall),'true_positive_rate':recall,
+            'false_positive_rate':ratio(fp,fp+tn),'support':int(truth.sum()),
+            'TP':tp,'FP':fp,'FN':fn,'TN':tn})
+    history=read_json(run/'epoch_history.json')
+    stop=settings.get('early_stopping',{})
+    best=None;counter=0;replay=[]
+    for row in history:
+        loss=row['validation_loss']
+        improved=best is None or (loss<best and abs(loss-best)>stop.get('min_delta',.001))
+        counter=0 if improved else counter+1
+        replay.append({'epoch':row['epoch'],'validation_loss':loss,'previous_best_loss':best,
+            'improved_beyond_min_delta':improved,'patience_counter':counter})
+        best=loss if best is None else min(best,loss)
+    stopping={'source':'replay of Transformers 4.48.3 callback using config and epoch_history; not a recorded callback counter',
+        'counter_was_logged':False,'epochs':replay,'enabled':stop.get('enabled',False),
+        'patience_reached_at_budget':bool(stop.get('enabled') and counter>=stop.get('patience',2)
+            and len(history)==settings['num_train_epochs'])}
+    baseline=read_json(run/'baseline_test_predictions.json')
+    baseline_probs=np.array([r['probabilities'] for r in baseline]);baseline_probs/=baseline_probs.sum(axis=1,keepdims=True)
+    summary={'source_run':run.name,'source_manifest_sha256':hash_file(run/'manifest.json'),
+        'analysis_code_sha256':hash_file(Path(__file__)),'test_samples':len(records),
+        'test_loss':read_json(run/'test_runtime_metrics.json')['test_loss'],
+        'baseline_log_loss':float(log_loss(labels,baseline_probs,labels=[0,1])),
+        'baseline_loss_scope':'recomputed sklearn log_loss from full baseline test probabilities; not neural cross-entropy GPU timing',
+        'final_accuracy_gap_pp':100*(history[-1]['train_accuracy']-history[-1]['validation_accuracy']),
+        'final_loss_gap':history[-1]['validation_loss']-history[-1]['train_loss_eval'],
+        'gpu_weights_loaded_for_analysis':False}
+    save_json(output/'results_summary.json',summary)
+    save_json(output/'per_class_metrics.json',metrics)
+    save_json(output/'early_stopping_replay.json',stopping)
+    fig,axes=plt.subplots(1,2,figsize=(12,4));x=np.arange(2)
+    for i,key in enumerate(('precision','recall','f1')):
+        axes[0].bar(x+(i-1)*.24,[100*r[key] for r in metrics],width=.24,label=key)
+    axes[0].set(xticks=x,xticklabels=['Negative','Positive'],ylim=(0,100),ylabel='Test (%)',title='Per-class metrics at validation-selected threshold')
+    axes[0].legend()
+    bars=axes[1].bar(['Negative','Positive'],[100*r['false_positive_rate'] for r in metrics])
+    axes[1].bar_label(bars,fmt='%.2f%%')
+    axes[1].set(ylim=(0,100),ylabel='One-vs-rest FPR (%)',title='False positive rate: other class predicted as this class')
+    finish(fig,output/'per_class_metrics.png')
+    return summary

@@ -79,3 +79,21 @@ def test_default_publication_requires_completed_training_selection(tmp_path):
     with pytest.raises(FileNotFoundError,match='latest_report'):
         _module().publish_artifacts(source_root=tmp_path)
     assert not (tmp_path/'outputs/published').exists()
+
+
+def test_architecture_text_is_published_and_hash_checked_before_cache(tmp_path):
+    import shutil
+    from labs.lab03.src.utils.runs import save_json
+    run='20261103T110437Z_frozen_trial_b021d6eb'
+    shutil.copytree(ROOT/'outputs/runs'/run,tmp_path/'outputs/runs'/run)
+    save_json(tmp_path/'outputs/latest_report.json',{'primary_result':'frozen_trial','runs':{'frozen_trial':run}})
+    folder=tmp_path/'outputs/architecture';folder.mkdir()
+    (folder/'model_architectures.txt').write_text('Architecture unit fixture')
+    save_json(folder/'summary.json',{'fixture':True})
+    save_json(folder/'manifest.json',{n:hash_file(folder/n) for n in ['model_architectures.txt','summary.json']})
+    out=_module().publish_artifacts(source_root=tmp_path)
+    assert (out/'architecture/model_architectures.txt').read_bytes()==(folder/'model_architectures.txt').read_bytes()
+    assert (out/'result_analysis/per_class_metrics.png').is_file()
+    (folder/'model_architectures.txt').write_text('tampered')
+    with pytest.raises(ValueError,match='Architecture SHA256'):
+        _module().publish_artifacts(source_root=tmp_path)

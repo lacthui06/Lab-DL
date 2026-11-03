@@ -1,30 +1,30 @@
-........................................................................ [ 79%]
-...................                                                      [100%]
+........................................................................ [ 77%]
+.....................                                                    [100%]
 =============================== warnings summary ===============================
-../../workspace/Lab-Deep-Learning/.venv/lib/python3.12/site-packages/matplotlib/_fontconfig_pattern.py:64
-  /workspace/Lab-Deep-Learning/.venv/lib/python3.12/site-packages/matplotlib/_fontconfig_pattern.py:64: PyparsingDeprecationWarning: 'oneOf' deprecated - use 'one_of'
+../lab03-venv/lib/python3.12/site-packages/matplotlib/_fontconfig_pattern.py:64
+  /workspace/lab03-venv/lib/python3.12/site-packages/matplotlib/_fontconfig_pattern.py:64: PyparsingDeprecationWarning: 'oneOf' deprecated - use 'one_of'
     prop = Group((name + Suppress("=") + comma_separated(value)) | oneOf(_CONSTANTS))
 
-../../workspace/Lab-Deep-Learning/.venv/lib/python3.12/site-packages/matplotlib/_fontconfig_pattern.py:85
-../../workspace/Lab-Deep-Learning/.venv/lib/python3.12/site-packages/matplotlib/_fontconfig_pattern.py:85
-../../workspace/Lab-Deep-Learning/.venv/lib/python3.12/site-packages/matplotlib/_fontconfig_pattern.py:85
-../../workspace/Lab-Deep-Learning/.venv/lib/python3.12/site-packages/matplotlib/_fontconfig_pattern.py:85
-../../workspace/Lab-Deep-Learning/.venv/lib/python3.12/site-packages/matplotlib/_fontconfig_pattern.py:85
-../../workspace/Lab-Deep-Learning/.venv/lib/python3.12/site-packages/matplotlib/_fontconfig_pattern.py:85
-  /workspace/Lab-Deep-Learning/.venv/lib/python3.12/site-packages/matplotlib/_fontconfig_pattern.py:85: PyparsingDeprecationWarning: 'parseString' deprecated - use 'parse_string'
+../lab03-venv/lib/python3.12/site-packages/matplotlib/_fontconfig_pattern.py:85
+../lab03-venv/lib/python3.12/site-packages/matplotlib/_fontconfig_pattern.py:85
+../lab03-venv/lib/python3.12/site-packages/matplotlib/_fontconfig_pattern.py:85
+../lab03-venv/lib/python3.12/site-packages/matplotlib/_fontconfig_pattern.py:85
+../lab03-venv/lib/python3.12/site-packages/matplotlib/_fontconfig_pattern.py:85
+../lab03-venv/lib/python3.12/site-packages/matplotlib/_fontconfig_pattern.py:85
+  /workspace/lab03-venv/lib/python3.12/site-packages/matplotlib/_fontconfig_pattern.py:85: PyparsingDeprecationWarning: 'parseString' deprecated - use 'parse_string'
     parse = parser.parseString(pattern)
 
-../../workspace/Lab-Deep-Learning/.venv/lib/python3.12/site-packages/matplotlib/_fontconfig_pattern.py:89
-../../workspace/Lab-Deep-Learning/.venv/lib/python3.12/site-packages/matplotlib/_fontconfig_pattern.py:89
-../../workspace/Lab-Deep-Learning/.venv/lib/python3.12/site-packages/matplotlib/_fontconfig_pattern.py:89
-../../workspace/Lab-Deep-Learning/.venv/lib/python3.12/site-packages/matplotlib/_fontconfig_pattern.py:89
-../../workspace/Lab-Deep-Learning/.venv/lib/python3.12/site-packages/matplotlib/_fontconfig_pattern.py:89
-../../workspace/Lab-Deep-Learning/.venv/lib/python3.12/site-packages/matplotlib/_fontconfig_pattern.py:89
-  /workspace/Lab-Deep-Learning/.venv/lib/python3.12/site-packages/matplotlib/_fontconfig_pattern.py:89: PyparsingDeprecationWarning: 'resetCache' deprecated - use 'reset_cache'
+../lab03-venv/lib/python3.12/site-packages/matplotlib/_fontconfig_pattern.py:89
+../lab03-venv/lib/python3.12/site-packages/matplotlib/_fontconfig_pattern.py:89
+../lab03-venv/lib/python3.12/site-packages/matplotlib/_fontconfig_pattern.py:89
+../lab03-venv/lib/python3.12/site-packages/matplotlib/_fontconfig_pattern.py:89
+../lab03-venv/lib/python3.12/site-packages/matplotlib/_fontconfig_pattern.py:89
+../lab03-venv/lib/python3.12/site-packages/matplotlib/_fontconfig_pattern.py:89
+  /workspace/lab03-venv/lib/python3.12/site-packages/matplotlib/_fontconfig_pattern.py:89: PyparsingDeprecationWarning: 'resetCache' deprecated - use 'reset_cache'
     parser.resetCache()
 
-../../workspace/Lab-Deep-Learning/.venv/lib/python3.12/site-packages/matplotlib/_mathtext.py:45
-  /workspace/Lab-Deep-Learning/.venv/lib/python3.12/site-packages/matplotlib/_mathtext.py:45: PyparsingDeprecationWarning: 'enablePackrat' deprecated - use 'enable_packrat'
+../lab03-venv/lib/python3.12/site-packages/matplotlib/_mathtext.py:45
+  /workspace/lab03-venv/lib/python3.12/site-packages/matplotlib/_mathtext.py:45: PyparsingDeprecationWarning: 'enablePackrat' deprecated - use 'enable_packrat'
     ParserElement.enablePackrat()
 
 tests/test_augmentation.py: 4 warnings
@@ -33,8 +33,9 @@ tests/test_datasets.py: 1 warning
 tests/test_epoch_training.py: 3 warnings
 tests/test_frozen.py: 3 warnings
 tests/test_training.py: 3 warnings
-  /workspace/Lab-Deep-Learning/.venv/lib/python3.12/site-packages/datasets/utils/_dill.py:385: DeprecationWarning: co_lnotab is deprecated, use co_lines instead.
+  /workspace/lab03-venv/lib/python3.12/site-packages/datasets/utils/_dill.py:385: DeprecationWarning: co_lnotab is deprecated, use co_lines instead.
     obj.co_lnotab,  # for < python 3.10 [not counted in args]
 
 -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
-91 passed, 31 warnings in 17.17s
+-------------- generated xml file: /tmp/lab03-completed-tests.xml --------------
+93 passed, 31 warnings in 20.52s

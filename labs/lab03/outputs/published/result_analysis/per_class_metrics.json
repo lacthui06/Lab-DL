@@ -1,0 +1,30 @@
+[
+  {
+    "label": 0,
+    "class": "Negative",
+    "precision": 0.8387715930902111,
+    "recall": 0.8198874296435272,
+    "f1": 0.8292220113851992,
+    "true_positive_rate": 0.8198874296435272,
+    "false_positive_rate": 0.1575984990619137,
+    "support": 533,
+    "TP": 437,
+    "FP": 84,
+    "FN": 96,
+    "TN": 449
+  },
+  {
+    "label": 1,
+    "class": "Positive",
+    "precision": 0.8238532110091743,
+    "recall": 0.8424015009380863,
+    "f1": 0.8330241187384044,
+    "true_positive_rate": 0.8424015009380863,
+    "false_positive_rate": 0.1801125703564728,
+    "support": 533,
+    "TP": 449,
+    "FP": 96,
+    "FN": 84,
+    "TN": 437
+  }
+]

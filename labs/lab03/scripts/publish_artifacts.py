@@ -48,9 +48,22 @@ def publish_artifacts(settings=None, output_dir=None, source_root=ROOT):
     if "threshold_selection" in paths and "evaluation" in paths:
         if read_json(paths['threshold_selection']/'decision_threshold.json') != read_json(paths['evaluation']/'decision_threshold.json'):
             raise ValueError("Report selection and evaluation use different threshold policies")
+    architecture=source_root/'outputs/architecture'
+    architecture_files=[]
+    if (architecture/'manifest.json').is_file():
+        declared=read_json(architecture/'manifest.json')
+        if set(declared)!={'model_architectures.txt','summary.json'}:
+            raise ValueError('Invalid architecture manifest')
+        for name,digest in declared.items():
+            if not (architecture/name).is_file() or hash_file(architecture/name)!=digest:
+                raise ValueError('Architecture SHA256 mismatch')
+            architecture_files.append(architecture/name)
+        architecture_files.append(architecture/'manifest.json')
     provenance = {"runs": selected, "source_manifests": {k: hash_file(p/'manifest.json') for k,p in paths.items()},
                   "availability_sha256": {k:hash_file(p/'artifact_availability.json') for k,p in paths.items() if (p/'artifact_availability.json').is_file()},
-                  "exporter_sha256": hash_file(Path(__file__)), "primary_result": configuration.get("primary_result", "historical"),
+                  "exporter_sha256": hash_file(Path(__file__)), "primary_result": configuration.get("primary_result", "evaluation"),
+                  "results_analysis_code_sha256": hash_file(Path(__file__).resolve().parents[1]/"src/final_review.py"),
+                  "architecture_manifest_sha256":hash_file(architecture/"manifest.json") if architecture_files else None,
                   "weights_included": False,
                   "raw_logs_included": any((p/name).is_file() for p in paths.values() for name in ('console.log','recovery.log'))}
     if (output/'source_runs.json').is_file() and read_json(output/'source_runs.json') == provenance:
@@ -101,12 +114,28 @@ def publish_artifacts(settings=None, output_dir=None, source_root=ROOT):
             rows = [{'policy':r['model'], **{k:r[k] for k in ['accuracy','precision','recall','binary_f1','macro_f1']},
                      'test_loss':loss if r['model'].startswith('Frozen') else None}
                     for r in read_json(trial/'test_comparison.json')]
+        if primary == 'frozen_trial':
+            from labs.lab03.src.final_review import write_results_analysis
+            derived=write_results_analysis(paths['frozen_trial'],staged/'result_analysis')
+            for row in rows:
+                if row['policy']=='TF-IDF':row['test_loss']=derived['baseline_log_loss']
+            for file in sorted((staged/'result_analysis').iterdir()):
+                catalog.append({'role':'result_analysis','run':paths['frozen_trial'].name,
+                    'file':file.relative_to(staged).as_posix(),'sha256':hash_file(file),
+                    'kind':'image' if file.suffix=='.png' else 'table','derived_from':'saved run predictions/history'})
+        for file in architecture_files:
+            target=staged/'architecture'/file.name;target.parent.mkdir(exist_ok=True)
+            shutil.copyfile(file,target)
+            catalog.append({'role':'architecture','run':selected.get('frozen_trial','configuration'),
+                'file':target.relative_to(staged).as_posix(),'sha256':hash_file(target),
+                'kind':'text' if file.suffix=='.txt' else 'table','derived_from':'pinned model configuration; not a checkpoint reload'})
         save_json(staged/'source_runs.json',provenance)
         save_json(staged/'artifact_catalog.json',catalog)
         performance_role = 'performance_report' if 'performance_report' in paths else (
             'frozen_trial' if 'frozen_trial' in paths and (paths['frozen_trial']/'performance_summary.json').is_file() else None)
         save_json(staged/'metrics_summary.json',{'primary_result':primary, 'source_run':paths[primary].name if primary == 'frozen_trial' else evaluation.name,
             'test_comparison':rows, **({'reference_test_comparison':reference_rows} if reference_rows else {}), 'measured_test_loss':loss,
+            'test_loss_source':'TF-IDF: recomputed log_loss from saved probabilities; Transformer: measured test loss',
             'selection_split':policy.get('split') if policy else None,
             'selected_threshold':policy.get('selected_threshold') if policy else None,
             'performance':read_json(paths[performance_role]/'performance_summary.json') if performance_role else None})
@@ -119,6 +148,7 @@ def publish_artifacts(settings=None, output_dir=None, source_root=ROOT):
             loss_text=f"{row_loss:.6f}" if row_loss is not None else 'Not logged'
             lines.append(f"| {row['policy']} | {values} | {loss_text} |")
         if primary == 'frozen_trial':
+            lines += ['','TF-IDF loss được tính lại từ saved test probabilities; Transformer loss là số đo test_runtime_metrics của checkpoint.']
             selection=read_json(paths['frozen_trial']/'selection_summary.json')
             lines += ['', f"Bảng chính thuộc frozen trial: hoàn thành {selection['completed_epochs']:g} epoch, checkpoint epoch {selection['selected_epoch']} theo validation loss; threshold {policy['selected_threshold']:g} theo validation Macro-F1. Checkpoint và threshold được khóa trước khi đo test."]
         lines += ['','## Nguồn thí nghiệm','','| Vai trò | Run |','|---|---|']
@@ -130,10 +160,14 @@ def publish_artifacts(settings=None, output_dir=None, source_root=ROOT):
                 f"RAM/VRAM training: **{perf.get('memory_status','not logged; consult source resource measurements')}**.",
                 f'[Bảng từng epoch]({performance_role}/performance_history.json) · [Phạm vi/đơn vị]({performance_role}/performance_summary.json)',
                 '', 'Peak/batch slots là bộ nhớ dùng chung được phân bổ theo batch, không phải bộ nhớ độc lập cho mỗi câu. Không thay số thiếu bằng 0.']
+        if architecture_files:
+            lines += ['','## Kiến trúc hai model','',
+                '[Toàn bộ module tree dạng text](architecture/model_architectures.txt) · [Thông số và provenance](architecture/summary.json)',
+                '', 'Đây là cấu trúc từ config đã pin, không phải phép xác thực reload checkpoint. Exercise1 chỉ inference, không tối ưu weights.']
         lines += ['','## Log nguồn đã publish','',
             'Các log dưới đây được copy nguyên byte từ run nguồn và có SHA256 trong catalog/manifest. Log thiếu trong nguồn giữ khai báo artifact_availability; không sinh log thay thế.','']
         lines += [f"- [{item['role']}: {Path(item['file']).name}]({item['file']})" for item in catalog if item['kind']=='log']
-        lines += ['','## Hình và bảng','','Các PNG dưới đây là bản sao của hình đã lưu trong run nguồn. JSON giữ số liệu để tính lại.','']
+        lines += ['','## Hình và bảng','','Hình nguồn được copy nguyên byte. Mục result_analysis được dẫn xuất từ predictions/history đã audit; JSON ghi nguồn và phương pháp.','']
         for item in catalog:
             if item['file'].endswith('.png'):
                 lines += [f"### {item['file']}",'',f"![{item['role']}]({item['file']})",'']

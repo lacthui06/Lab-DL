@@ -1,5 +1,8 @@
 {
-  "artifact_catalog.json": "086c1f4f7638058655aec517ce4329ca23d1f94cbe64c4bf83eefaef40282093",
+  "architecture/manifest.json": "977bce7849fd762c2ff5c3769b625f12e8db60d443104a23218574a323b18c5d",
+  "architecture/model_architectures.txt": "e9a05dc60f2860a9e7b99d48a24f026af1bfd51b14b8f520dc75ca96d35421e4",
+  "architecture/summary.json": "3a2573a3390d96e127a397a47ece764f61886cc33da9520b1259517f027ae63f",
+  "artifact_catalog.json": "982333b39908a0c8f22082f23a6f03ef0b1ae1f5ec03b75103b48a7d0fa5e55e",
   "exercise1/config.json": "d2b75bcfd6428a938174f4f8702a158f274d98267475fd40728cdcbf96a7e782",
   "exercise1/environment_snapshot.json": "d88b5ce8be1d8cb85d8f4b203c0f1d00bf2112ac96f316553378fb076e3cc459",
   "exercise1/predictions.json": "a8441cc76a219a7a0277751df2eba3a1cfa95774a1354bf5fd8d5985b5d6bdd8",
@@ -67,10 +70,14 @@
   "frozen_trial/validation_predictions.json": "d0272ba145b27c90db7e32b49b95ecb7aec5df07fcee42ab08333747bd07d28e",
   "frozen_trial/validation_threshold_curves.png": "42d87d374fba11d358feb3a27298c7e54896c8eb9db8b4d3ff26060bf8b35feb",
   "frozen_trial/validation_threshold_scan.json": "a6519e556cc017cd8073a1a650f378b08ef436230190f1e457d919570f1dcbbb",
-  "index.md": "a180bc588e6a185a6e4e97b7031d104a2fbb657316c1fbf25f9c8fee619886c1",
+  "index.md": "d81c335d9d1c6a2ee570aaad50b36eb004e2fde3d38347815d1d9b50cbd65e1f",
   "logs/exercise1/console.log": "386aa054284f5277cce8c6a4ef1fb4425baefde28d53a2bc460971736d0acbdf",
   "logs/exercise1_analysis/console.log": "b99d43d8b76f59a7f48935fc592f511a32d5ce64f073ee6d3b04f12ae16c6626",
   "logs/frozen_trial/console.log": "5e27337678e7e8b3c81325f8670246db8b7cff2527b90353cb9999373ab9a2db",
-  "metrics_summary.json": "9773eddca269cc23277ec9628f8976c336909f01ba1f4b819a6a113d2c3950fe",
-  "source_runs.json": "8767da464bc8efe9039c569de74abc56e6366665e2de1ce12b9ae30d37cf566c"
+  "metrics_summary.json": "1b5ad569dbb70d82387d35af319da19dca536f878f885031ecbe22de914b7f1d",
+  "result_analysis/early_stopping_replay.json": "e0404a96a585c32109cf79dc370970b4491d3c92461e8c2a3c6d62fc21440160",
+  "result_analysis/per_class_metrics.json": "b52504f27bd6aeaf3469940164eaef3764b5492f2b9edfd115e6fff136344fc1",
+  "result_analysis/per_class_metrics.png": "482acf6751e76d61f1e0eaaf586206da5efb61ace4af6815d137d508e16863bf",
+  "result_analysis/results_summary.json": "b7858da7d6f1edfdb9a273995ce9ada674de61695caed945d7d0e95137feb338",
+  "source_runs.json": "513073a7fcb6e28cd35ce8f378cfe761f739b89a24b61c0e40088eb84bcadeff"
 }

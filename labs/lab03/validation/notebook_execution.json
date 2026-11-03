@@ -1,11 +1,11 @@
 {
-  "artifact_run": "20261103T120307Z_notebook_render_0220937b",
+  "artifact_run": "20261103T124802Z_notebook_render_2e7e5fb2",
   "notebooks": [
     {
       "notebook": "01_eda_preprocessing_feature_engineering.ipynb",
       "mode": "view",
       "training_executed": false,
-      "notebook_sha256": "8dc724094013546277f941f7d2d7327a26b6438b2a346e29a2d7f88be8d2d744",
+      "notebook_sha256": "b6c537804dac86257d1804638e4edd1379e0773a3666f234a23aa5cf266d102a",
       "errors": 0,
       "executed_code_cells": 10,
       "inline_pngs": 12
@@ -14,10 +14,10 @@
       "notebook": "02_modeling.ipynb",
       "mode": "view",
       "training_executed": false,
-      "notebook_sha256": "7d88667687ae8461175eaa9633b991473306ba50e09753fbf1983fb16af52898",
+      "notebook_sha256": "5791e44be01f105a6bf3de65ca735a1c2aeb69da4d7c22d190f3b314843f3edc",
       "errors": 0,
       "executed_code_cells": 12,
-      "inline_pngs": 16
+      "inline_pngs": 17
     }
   ]
 }

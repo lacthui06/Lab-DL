@@ -117,6 +117,7 @@ lab = Path('labs/lab03')
 cfg = json.loads((lab/'config/frozen_trial.json').read_text())
 mode = __import__('sys').argv[1]
 sections = []
+summaries = []
 for role in ('exercise1', 'exercise2'):
     settings = cfg[role]
     if mode == 'view':
@@ -138,14 +139,27 @@ for role in ('exercise1', 'exercise2'):
     total = sum(p.numel() for p in model.parameters())
     trainable = sum(p.numel() for p in model.parameters() if p.requires_grad)
     purpose = 'pretrained SST-2 inference; no optimization in this lab' if role == 'exercise1' else 'binary fine-tuning; embedding and first 4 blocks frozen'
+    summaries.append({'model':role,'name':settings['model_name'],'input':'[B,L], L<=128',
+        'output':'[B,2] logits','layers':config.n_layers,'hidden':config.dim,
+        'total_parameters':total,'requires_grad_parameters':trainable,
+        'parameters_optimized_in_this_lab':0 if role=='exercise1' else trainable})
     sections.append(f'{role}: {settings["model_name"]}\n{purpose}\n{provenance}\nTotal parameters: {total:,}; requires_grad parameters: {trainable:,}\n{model}\n')
     del model
     gc.collect()
 text = '\n'.join(sections)
 (lab/'outputs/architecture/model_architectures.txt').write_text(text, encoding='utf-8')
-print(text)
+from labs.lab03.src.utils.runs import save_json, hash_file
+folder = lab/'outputs/architecture'
+save_json(folder/'summary.json',{'models':summaries,'construction_mode':mode,
+    'weights_loaded':False,'source':'pinned model configuration; module structure only',
+    'config_sha256':hash_file(lab/'config/frozen_trial.json')})
+save_json(folder/'manifest.json',{name:hash_file(folder/name) for name in ('model_architectures.txt','summary.json')})
 '''
         self.run('-c', code, self.mode)
+        from IPython.display import display
+        import pandas as pd
+        display(pd.DataFrame(self.read(output.with_name('summary.json'))['models']))
+        print(output.read_text(encoding='utf-8'))
         return output
 
     def train(self):

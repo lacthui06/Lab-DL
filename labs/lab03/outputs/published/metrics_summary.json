@@ -9,7 +9,7 @@
       "recall": 0.7861163227016885,
       "binary_f1": 0.7890772128060264,
       "macro_f1": 0.7898657092067516,
-      "test_loss": null
+      "test_loss": 0.5173709105267964
     },
     {
       "policy": "Frozen DistilBERT threshold 0.5",
@@ -31,6 +31,7 @@
     }
   ],
   "measured_test_loss": 0.409902423620224,
+  "test_loss_source": "TF-IDF: recomputed log_loss from saved probabilities; Transformer: measured test loss",
   "selection_split": "validation",
   "selected_threshold": 0.45,
   "performance": {

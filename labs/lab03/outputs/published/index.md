@@ -4,9 +4,11 @@ Nguồn run được chọn tường minh trong source_runs.json (report.json ho
 
 | Policy | Accuracy | Precision | Recall | Binary F1 | Macro F1 | Test loss |
 |---|---:|---:|---:|---:|---:|---:|
-| TF-IDF | 78.9869% | 79.2060% | 78.6116% | 78.9077% | 78.9866% | Not logged |
+| TF-IDF | 78.9869% | 79.2060% | 78.6116% | 78.9077% | 78.9866% | 0.517371 |
 | Frozen DistilBERT threshold 0.5 | 82.9268% | 83.0508% | 82.7392% | 82.8947% | 82.9268% | 0.409902 |
 | Frozen DistilBERT validation threshold | 83.1144% | 82.3853% | 84.2402% | 83.3024% | 83.1123% | 0.409902 |
+
+TF-IDF loss được tính lại từ saved test probabilities; Transformer loss là số đo test_runtime_metrics của checkpoint.
 
 Bảng chính thuộc frozen trial: hoàn thành 5 epoch, checkpoint epoch 5 theo validation loss; threshold 0.45 theo validation Macro-F1. Checkpoint và threshold được khóa trước khi đo test.
 
@@ -26,6 +28,12 @@ RAM/VRAM training: **measured**.
 
 Peak/batch slots là bộ nhớ dùng chung được phân bổ theo batch, không phải bộ nhớ độc lập cho mỗi câu. Không thay số thiếu bằng 0.
 
+## Kiến trúc hai model
+
+[Toàn bộ module tree dạng text](architecture/model_architectures.txt) · [Thông số và provenance](architecture/summary.json)
+
+Đây là cấu trúc từ config đã pin, không phải phép xác thực reload checkpoint. Exercise1 chỉ inference, không tối ưu weights.
+
 ## Log nguồn đã publish
 
 Các log dưới đây được copy nguyên byte từ run nguồn và có SHA256 trong catalog/manifest. Log thiếu trong nguồn giữ khai báo artifact_availability; không sinh log thay thế.
@@ -36,7 +44,7 @@ Các log dưới đây được copy nguyên byte từ run nguồn và có SHA25
 
 ## Hình và bảng
 
-Các PNG dưới đây là bản sao của hình đã lưu trong run nguồn. JSON giữ số liệu để tính lại.
+Hình nguồn được copy nguyên byte. Mục result_analysis được dẫn xuất từ predictions/history đã audit; JSON ghi nguồn và phương pháp.
 
 ### frozen_trial/attention_mask.png
 
@@ -133,3 +141,7 @@ Các PNG dưới đây là bản sao của hình đã lưu trong run nguồn. JS
 ### exercise1_analysis/tokenizer_table.png
 
 ![exercise1_analysis](exercise1_analysis/tokenizer_table.png)
+
+### result_analysis/per_class_metrics.png
+
+![result_analysis](result_analysis/per_class_metrics.png)
