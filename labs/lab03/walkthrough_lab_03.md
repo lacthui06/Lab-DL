@@ -669,7 +669,7 @@ Validation loss giảm từ0,394180 xuống0,367875; checkpoint epoch5 được 
 Log ghi **2 AMP skipped optimizer steps**; không diễn giải 2.755 global steps thành 2.755 updates thành công. Mọi loss/metric cần thiết hữu hạn; giữ cảnh báo AMP trong raw log và selection_summary, không xóa để làm đẹp kết quả.
 
 ![Learning curves](outputs/published/frozen_trial/learning_curves.png)
-![Architecture](outputs/published/frozen_trial/model_architecture.png)
+[Kiến trúc chi tiết hai model dạng text](outputs/architecture/model_architectures.txt)
 
 #### Threshold validation-only và kết quả test
 
@@ -716,7 +716,7 @@ Câu test276 “worked for me ... then it caved in” có label positive nhưng 
 
 #### Khả năng tái sử dụng sau pull
 
-Hai notebook mặc định MODE=view, đã lưu output inline từ chính artifacts này. Có thể mở trên GitHub hoặc chạy view offline mà không tải Hugging Face, không train và không cần GPU. Đổi MODE=prepare cho EDA mới; MODE=train/DEVICE=cuda cho training mới. Config mặc định chỉ dùng ngân sách5epoch.
+Hai notebook có MODE=view, đã lưu output inline từ chính artifacts này. Có thể mở trên GitHub hoặc chạy view offline mà không tải Hugging Face, không train và không cần GPU. Đổi MODE=prepare cho EDA mới; MODE=train/DEVICE=cuda cho training mới. Config mặc định chỉ dùng ngân sách5epoch.
 
 Review ZIP không có checkpoint weights: reload_check ghi nhận kiểm tra CPU FP32 thành công tại Kaggle, nhưng máy review này chỉ xác minh hash được ghi và prediction consistency, không tự load weights vắng mặt. Muốn infer/eval checkpoint thật phải giữ ZIP checkpoint riêng. Checkpoint thiếu không ngăn audit metrics, đọc biểu đồ hoặc hoàn thành report.
 
@@ -724,13 +724,13 @@ Review ZIP không có checkpoint weights: reload_check ghi nhận kiểm tra CPU
 
 | Yêu cầu | Bằng chứng hiện có |
 |---|---|
-| Hai notebook rõ phase/module, không quá ngắn | Notebook01:22cells,12ảnh inline; notebook02:24cells,17ảnh inline |
+| Hai notebook rõ phase/module, không quá ngắn | Notebook01:22cells,12ảnh inline; notebook02:26cells,16ảnh inline và kiến trúc text |
 | EDA/preprocessing/features | Quality, split overlap, length/cutoff, tokens/mask, TF-IDF, augmentation PNG/JSON |
 | Architecture và discussion/quyết định | Description Section4–8; walkthrough Section1–2 |
 | Ngân sách5epoch + early stopping + regularization | frozen_trial.json, selection_summary, history đủ5mốc |
 | Binary threshold | Validation scan đủ19ngưỡng, frozen policy0,45 và test comparison |
 | Train accuracy/loss, timing, RAM/VRAM | performance_history/summary, performance.png và log nguồn |
-| Hình vừa inline vừa lưu artifact | Hai notebook thực thi view không lỗi;29image/png outputs |
+| Hình vừa inline vừa lưu artifact | Hai notebook thực thi view không lỗi;28image/png outputs |
 | Pull về làm report không train lại | published/index.md, PNG, metrics, raw logs, SHA256 và notebook cached outputs |
 | Kiểm thử phần mềm | 91tests đạt, không skip; [log](outputs/verification/pytest.log), [JUnit](outputs/verification/pytest.xml), [summary](validation/verification.json) |
 | Giới hạn checkpoint | Review ZIP không weights; audit metrics đạt, chưa reload weights trên máy review |

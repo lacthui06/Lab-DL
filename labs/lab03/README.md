@@ -10,14 +10,14 @@ Run Kaggle `20261103T110437Z_frozen_trial_b021d6eb` hoàn thành **5/5 epoch**, 
 - [Kết quả và diễn giải chi tiết](walkthrough_lab_03.md#30-kết-quả-thực-nghiệm-đã-xác-minh-từ-zip-kaggle)
 - [Selection](outputs/latest_report.json), [audit](validation/final_review_audit.json)
 
-Hai notebook đã có output inline và mặc định `MODE="view"`; không cần train/tải dataset để đọc báo cáo.
+Hai notebook đã có output inline; chọn `MODE="view"` để xem offline. Source mặc định prepare/train cho phiên Kaggle mới; không cần train/tải dataset để đọc báo cáo.
 
 ## Chạy trên Kaggle
 
 Import notebook modeling từ GitHub:
 
 ```text
-https://github.com/lacthui06/Lab-DL/blob/lab03/labs/lab03/notebooks/02_modeling.ipynb
+https://github.com/phucthanh2210/Lab-Deep-Learning/blob/lab03/labs/lab03/notebooks/02_modeling.ipynb
 ```
 
 Bật **GPU + Internet**, rồi **Run All**. Để train mới, đổi cell setup thành `MODE="train"`, `DEVICE="cuda"`; bắt đầu từ pretrained base, tải official dataset và thực hiện trọn pipeline. Không cần cung cấp checkpoint đầu vào.

@@ -204,4 +204,4 @@ Tiêu chí hoàn thành thực nghiệm: pipeline pass gates, có kết quả th
 
 Run `20261103T110437Z_frozen_trial_b021d6eb` đã hoàn thành5epoch, chọn epoch5 theo validation loss; validation threshold0,45. Test accuracy83,11%, Binary F1 83,30%; baseline accuracy78,99%. EDA/feature pipeline, regularization, threshold và resource monitoring đều có artifact thật trong [published report](outputs/published/index.md). Phân tích kết quả, giới hạn và liên kết ảnh ở Section3 của [walkthrough](walkthrough_lab_03.md).
 
-Hai notebook lưu ảnh inline và mặc định MODE=view để pull về đọc ngay. Khi train mới chọn MODE=train/DEVICE=cuda; notebook EDA chọn MODE=prepare để tạo mới, có ZIP riêng. Không cần chạy lại training để lấy hình hoặc chỉ số report. Weights không nằm trong review ZIP; checkpoint inference cần ZIP checkpoint riêng.
+Hai notebook lưu ảnh inline và hỗ trợ MODE=view để pull về đọc ngay. Khi train mới chọn MODE=train/DEVICE=cuda; notebook EDA chọn MODE=prepare để tạo mới, có ZIP riêng. Không cần chạy lại training để lấy hình hoặc chỉ số report. Weights không nằm trong review ZIP; checkpoint inference cần ZIP checkpoint riêng.

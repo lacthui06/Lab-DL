@@ -49,7 +49,7 @@ def test_export_rejects_notebook_without_training_mode(tmp_path):
     notebook = nbformat.read(ROOT / "notebooks/02_modeling.ipynb", as_version=4)
     for cell in notebook.cells:
         if cell.cell_type == "code":
-            cell.source = cell.source.replace('MODE = "view"', 'MODE = "prepare"')
+            cell.source = cell.source.replace('MODE = "view"', 'MODE = "prepare"').replace('MODE = "train"', 'MODE = "prepare"')
     broken = tmp_path / "broken.ipynb"
     nbformat.write(notebook, broken)
     with pytest.raises(ValueError, match="MODE"):

@@ -244,6 +244,8 @@ def run(config, root=ROOT, allow_cpu_fixture=False, device='auto'):
                     continue
             verify_manifest(folder)
             files.extend(p for p in folder.rglob('*') if p.is_file())
+    architecture = root/'outputs/architecture/model_architectures.txt'
+    if architecture.is_file(): files.append(architecture)
     preflight = sorted((root/'outputs/preflight').glob('*/pytest.*'))
     if preflight:
         latest = max(p.parent for p in preflight)

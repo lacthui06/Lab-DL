@@ -16,7 +16,7 @@ def test_only_two_notebooks_cover_preparation_and_modeling():
         assert 'Module/file' in notebook.cells[0].source
         codes=[c.source for c in notebook.cells if c.cell_type=='code']
         for source in codes:ast.parse(source)
-        assert sum('MODE = "view"' in source for source in codes)==1
+        assert sum(any(f'MODE = "{mode}"' in source for mode in ('view', 'train', 'prepare')) for source in codes)==1
         assert 'session.setup()' in codes[0]
     preparation=nbformat.read(paths[0],as_version=4)
     modeling=nbformat.read(paths[1],as_version=4)

@@ -105,6 +105,49 @@ class NotebookSession:
             self.paths['exercise1_current'] = self.active('exercise1')
             self.paths['exercise1_visuals'] = self.active('exercise1_analysis')
 
+    def architectures(self):
+        """In module tree dạng text; lưu riêng, không sửa artifact nguồn đã audit."""
+        output = self.lab/'outputs/architecture/model_architectures.txt'
+        output.parent.mkdir(parents=True, exist_ok=True)
+        code = r'''
+import json, gc
+from pathlib import Path
+from transformers import AutoConfig, AutoModelForSequenceClassification, DistilBertConfig
+lab = Path('labs/lab03')
+cfg = json.loads((lab/'config/frozen_trial.json').read_text())
+mode = __import__('sys').argv[1]
+sections = []
+for role in ('exercise1', 'exercise2'):
+    settings = cfg[role]
+    if mode == 'view':
+        # View không tải config/weights. Đây là cấu trúc khai báo, không phải reload checkpoint.
+        config = DistilBertConfig(vocab_size=30522, max_position_embeddings=512,
+            n_layers=6, n_heads=12, dim=768, hidden_dim=3072, num_labels=2,
+            **(settings.get('model_overrides', {})))
+        provenance = 'Declared pinned DistilBERT structure; instantiated without pretrained weights (offline view).'
+    else:
+        revision = settings.get('revision', settings.get('model_revision'))
+        config = AutoConfig.from_pretrained(settings['model_name'], revision=revision)
+        for key, value in settings.get('model_overrides', {}).items(): setattr(config, key, value)
+        provenance = 'Architecture from pinned Hugging Face config; weights are loaded later by training/inference.'
+    model = AutoModelForSequenceClassification.from_config(config)
+    if role == 'exercise2':
+        for parameter in model.distilbert.embeddings.parameters(): parameter.requires_grad_(False)
+        for layer in model.distilbert.transformer.layer[:settings['freeze_layers']]:
+            for parameter in layer.parameters(): parameter.requires_grad_(False)
+    total = sum(p.numel() for p in model.parameters())
+    trainable = sum(p.numel() for p in model.parameters() if p.requires_grad)
+    purpose = 'pretrained SST-2 inference; no optimization in this lab' if role == 'exercise1' else 'binary fine-tuning; embedding and first 4 blocks frozen'
+    sections.append(f'{role}: {settings["model_name"]}\n{purpose}\n{provenance}\nTotal parameters: {total:,}; requires_grad parameters: {trainable:,}\n{model}\n')
+    del model
+    gc.collect()
+text = '\n'.join(sections)
+(lab/'outputs/architecture/model_architectures.txt').write_text(text, encoding='utf-8')
+print(text)
+'''
+        self.run('-c', code, self.mode)
+        return output
+
     def train(self):
         if self.mode == 'train':
             self.run('labs/lab03/scripts/run_frozen_trial.py','--config',
