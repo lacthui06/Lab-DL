@@ -17,11 +17,14 @@ def context() -> tuple[Path, Path, Path]:
     """Resolve the lab, explicitly selected run, and presentation destination."""
     configured = os.environ.get('LAB02_ROOT')
     try:
-        root = Path(configured).expanduser().resolve() if configured else Path(__file__).resolve().parents[2]
+        root = Path(configured).expanduser() if configured else Path(__file__).resolve().parents[2]
+        if not root.is_absolute():
+            raise RuntimeError('Set LAB02_ROOT to an existing absolute Lab02 directory.')
+        root = root.resolve()
     except OSError as exc:
         raise RuntimeError('Cannot resolve Lab02. Set LAB02_ROOT to an existing absolute Lab02 directory.') from exc
-        if not (root / 'src/utils/notebook_views.py').is_file():
-            raise RuntimeError(f'Invalid Lab02 directory: {root}. Set LAB02_ROOT to the directory containing src/utils/notebook_views.py.')
+    if not (root / 'src/utils/notebook_views.py').is_file():
+        raise RuntimeError(f'Invalid Lab02 directory: {root}. Set LAB02_ROOT to an existing absolute Lab02 directory.')
     selected = json.loads((root / 'outputs/selected_run.json').read_text(encoding='utf-8'))
     run = Path(os.environ.get('LAB02_RUN', selected['run']))
     run = run if run.is_absolute() else root / run
@@ -42,7 +45,7 @@ def _save(fig, output: Path, name: str) -> None:
 def quality_cost(run: Path, output: Path) -> None:
     """Compare quality and recorded costs, retaining the execution caveat."""
     metrics = pd.read_csv(run / 'comparison.csv')
-    from ..training.costs import cost_table
+    from .costs import cost_table
     costs = cost_table(run, metrics)
     table = metrics.drop(columns=['pipeline_training_seconds', 'execution'], errors='ignore').merge(
                           costs[['model', 'stage', 'pipeline_training_seconds', 'execution']],
@@ -345,9 +348,95 @@ def roundtrip(run: Path) -> None:
     display(pd.DataFrame(records))
 
 
+def single_image_benchmark(run: Path, benchmark: Path, output: Path) -> dict:
+    """Display an explicit, verified loaded-model benchmark without running inference."""
+    from .delivery import file_hash
+    provenance = json.loads((benchmark/'provenance.json').read_text(encoding='utf-8'))
+    if provenance['training_run'] != run.name:
+        raise ValueError('Benchmark training run differs from the selected modeling run')
+    models = ('resnet18', 'densenet121')
+    if set(provenance['benchmark_runs']) != set(models):
+        raise ValueError('Expected one benchmark for each supported model')
+    if file_hash(benchmark/'input.png') != provenance['input_sha256']:
+        raise ValueError('Benchmark input checksum mismatch')
+    records = []
+    for name in models:
+        folder = benchmark/name
+        manifest = json.loads((folder/'manifest.json').read_text(encoding='utf-8'))
+        required = {'summary.json', 'config.json', 'environment_snapshot.json',
+                    'status.json', 'latency_samples.csv', 'stage_samples.csv'}
+        if not required <= manifest.keys():
+            raise ValueError('Incomplete benchmark manifest')
+        for filename, digest in manifest.items():
+            if Path(filename).name != filename:
+                raise ValueError('Unsafe benchmark manifest path')
+            if file_hash(folder/filename) != digest:
+                raise ValueError('Benchmark evidence checksum mismatch: '+filename)
+        read = lambda filename: json.loads((folder/filename).read_text(encoding='utf-8'))
+        status, cfg, result, env = (read(p) for p in
+            ('status.json', 'config.json', 'summary.json', 'environment_snapshot.json'))
+        if status['status'] != 'completed' or status['kind'] != 'single_image_benchmark':
+            raise ValueError('Only completed single-image benchmarks can be displayed')
+        if (result['model'] != name or cfg['model'] != name or
+                cfg['image_sha256'] != provenance['input_sha256'] or
+                cfg['model_load_in_timing'] or result['batch_size'] != 1):
+            raise ValueError('Benchmark input or loaded-model protocol mismatch')
+        records.append((name, cfg, result, env))
+    latency, first, ram, vram, stages, environment = [], [], [], [], [], []
+    mib = lambda value: None if value is None else value/2**20
+    for name, cfg, result, env in records:
+        memory, timing = result['memory'], result['latency_ms']
+        latency.append({'Model':name, 'Device':env['device_name'], 'Requests':timing['count'],
+                        'Mean (ms/image)':timing['mean'], 'Median (ms/image)':timing['median'],
+                        'P95 (ms/image)':timing['p95']})
+        first.append({'Model':name, 'First request (ms)':result['first_request_ms']})
+        ram.append({'Model':name, 'RSS after load (MiB)':mib(memory['after_load']['rss_bytes']),
+                    'RSS before memory pass (MiB)':mib(memory['before_pass']['rss_bytes']),
+                    'RSS peak (MiB)':mib(memory['peak_rss_bytes']),
+                    'RSS increase (MiB)':mib(memory['rss_increase_bytes'])})
+        vram.append({'Model':name, 'Allocated peak (MiB)':mib(memory['peak_allocated_bytes']),
+                     'Reserved peak (MiB)':mib(memory['peak_reserved_bytes']),
+                     'Allocated increase (MiB)':mib(memory['allocated_increase_bytes'])})
+        stages.extend({'Model':name, 'Stage':stage, 'Mean (ms)':values['mean'],
+                       'Median (ms)':values['median'], 'P95 (ms)':values['p95']}
+                      for stage, values in result['stages_ms'].items())
+        environment.append({'Model':name, 'Training run':provenance['training_run'],
+            'Benchmark run':provenance['benchmark_runs'][name], 'Device':env['device_name'],
+            'Torch':env['torch'], 'CUDA':env['cuda'], 'Image size':result['image_size'],
+            'Batch':result['batch_size'], 'Precision':result['precision'], 'Warm-up':cfg['warmup']})
+    tables = {key:pd.DataFrame(rows) for key, rows in
+              [('latency',latency), ('first',first), ('ram',ram), ('vram',vram),
+               ('stages',stages), ('environment',environment)]}
+    captions = {'latency':'Warmed end-to-end latency', 'first':'First request after model load',
+                'ram':'Process RAM (RSS)', 'vram':'PyTorch CUDA allocator memory',
+                'stages':'Separate diagnostic stage pass', 'environment':'Recorded execution context'}
+    for key, table in tables.items():
+        display(HTML('<h4>'+captions[key]+'</h4>'))
+        display(table.round(4))
+    fig, axes = plt.subplots(1, 3, figsize=(14, 3.8))
+    tables['latency'].set_index('Model')[['Median (ms/image)', 'P95 (ms/image)']].plot.barh(ax=axes[0])
+    tables['ram'].set_index('Model')[['RSS after load (MiB)', 'RSS peak (MiB)']].plot.barh(ax=axes[1])
+    gpu = tables['vram'].set_index('Model')[['Allocated peak (MiB)', 'Reserved peak (MiB)']]
+    if gpu.notna().any().any():
+        gpu.plot.barh(ax=axes[2])
+    else:
+        axes[2].text(.1, .5, 'CUDA memory: not applicable', transform=axes[2].transAxes)
+    for ax, title, unit in zip(axes, ['Warmed request', 'Process RAM', 'CUDA allocator'],
+                               ['ms/image', 'MiB', 'MiB']):
+        ax.set(title=title, xlabel=unit, ylabel='')
+        if ax.get_legend() is not None:
+            ax.legend(fontsize=7)
+    _save(fig, output, 'single_image_benchmark')
+    display(HTML('<p>Model load is excluded. First requests are separate from warmed statistics. '
+        'Stages and memory use separate passes; do not sum stage timing to infer total latency. '
+        'RSS is sampled process memory; CUDA allocated/reserved exclude context and other allocators. '
+        'These measurements do not establish minimum hardware requirements.</p>'))
+    return tables
+
+
 def efficiency(run: Path, output: Path) -> None:
     """Separate search budget from the cost of retraining the selected recipe."""
-    from ..training.costs import cost_table, validation_recommendation
+    from .costs import cost_table, validation_recommendation
     table = cost_table(run, pd.read_csv(run/'comparison.csv'))
     fine = table[table.stage=='finetune'].copy()
     fig, axes = plt.subplots(1,2,figsize=(11,3.7))

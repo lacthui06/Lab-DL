@@ -6,9 +6,10 @@ So sánh ResNet18 và DenseNet121 pretrained, head-only và fine-tune. Kết qu�
 ## Structure
 
 - [description_lab_02.md](description_lab_02.md): nội dung đối chiếu trực tiếp ảnh đề trang 23; phân biệt yêu cầu của đề với lựa chọn của bài làm.
-- [walkthrough_lab_02.md](walkthrough_lab_02.md): tài liệu sống duy nhất, theo [template](../../.agents/templates/walkthrough_template.md): Spec → Changelog → Report.
+- [walkthrough_lab_02.md](walkthrough_lab_02.md): báo cáo theo cấu trúc Lab01: đặc tả/thiết kế → phương pháp thực nghiệm → kết quả/thảo luận.
 - [01_lab02_eda.ipynb](notebooks/01_lab02_eda.ipynb): raw → integrity → pixel/spatial EDA → preprocessing → handcrafted features; chỉ dùng `src.datasets.eda`, không nạp mạng.
-- [02_lab02_modeling.ipynb](notebooks/02_lab02_modeling.ipynb): kiến trúc tóm tắt, LR search, đường cong, chất lượng/chi phí, phân tích lỗi và đề xuất.
+- [02_lab02_modeling.ipynb](notebooks/02_lab02_modeling.ipynb): roadmap như Lab01, output ngay từng bước; đã tích hợp latency một ảnh, RAM RSS và VRAM ở mục 8. Bản [Kaggle](notebooks/02_lab02_modeling-kaggle.ipynb) có cùng bố cục.
+- [03_lab02_single_image_benchmark.ipynb](notebooks/03_lab02_single_image_benchmark.ipynb): bản thực thi T4 gốc được giữ làm bằng chứng. Kết quả xem trực tiếp trong notebook 02; không cần chạy lại 03. Xem [provenance](outputs/published/single_image_benchmark/20261102T184034Z_kaggle/provenance.json).
 - [config/](config/): [full.json](config/full.json) cho GPU 224×224; [cpu_pilot.json](config/cpu_pilot.json) kiểm tra nhỏ; [cpu_full.json](config/cpu_full.json) mô tả run CPU lịch sử; [tuned.json](config/tuned.json) là cấu hình tuning chạy được; thiết kế và lý do nằm trong walkthrough.
 - [requirements.txt](requirements.txt): phiên bản cố định từ Windows; cài trên Linux/Kaggle chưa kiểm chứng.
 - [outputs/selected_run.json](outputs/selected_run.json): run được chọn; [outputs/label_update.json](outputs/label_update.json) lưu lịch sử sửa nhãn tài liệu. `outputs/runs/` là bằng chứng gốc; `outputs/review/` chứa biểu đồ trình bày mới, không ghi đè run gốc.
@@ -17,34 +18,49 @@ So sánh ResNet18 và DenseNet121 pretrained, head-only và fine-tune. Kết qu�
 
 | File | Nơi sử dụng / mục đích |
 |---|---|
-| [src/datasets/](src/datasets/) | `data.py` loader/transform và `eda.py` split, thống kê, integrity; không phụ thuộc training |
+| [src/datasets/](src/datasets/) | [data.py](src/datasets/data.py) loader/transform và [eda.py](src/datasets/eda.py) split, thống kê, integrity; không phụ thuộc training |
+| [src/models/](src/models/) | Namespace model; khởi tạo và freeze nằm trong module bên dưới |
 | [src/models/models.py](src/models/models.py) | Khởi tạo mạng, freeze, cached tail |
-| [src/training/](src/training/) | `experiment.py` train/validation/checkpoint; `tuning.py` search; `costs.py` chi phí |
-| [src/utils/](src/utils/) | `reporting.py`, `notebook_views.py`, `delivery.py`, constants và artifact IO |
+| [src/training/](src/training/) | [experiment.py](src/training/experiment.py) train/validation/checkpoint; [feature_cache.py](src/training/feature_cache.py) cache đặc trưng/prefix và loader tensor; [tuning.py](src/training/tuning.py) search và lựa chọn theo validation |
+| [src/utils/](src/utils/) | [costs.py](src/utils/costs.py) chi phí từ artifact; [reporting.py](src/utils/reporting.py), [notebook_views.py](src/utils/notebook_views.py), [delivery.py](src/utils/delivery.py), [constants.py](src/utils/constants.py) và artifact IO |
 | [src/__init__.py](src/__init__.py) | Package nhẹ, chỉ khai báo namespace; dependency được nạp theo module cần dùng |
+| [src/inference.py](src/inference.py) | Nạp model một lần và dự đoán một ảnh, dùng chung cho infer/benchmark |
+| [src/utils/inference_benchmark.py](src/utils/inference_benchmark.py) | Latency một ảnh và lượt đo RAM/VRAM riêng, không nạp checkpoint trong phép đo |
 | [scripts/analyze_data.py](scripts/analyze_data.py) | Tái đo EDA raw; `--data-dir` trỏ thư mục chứa `cifar-10-batches-py` |
 | [scripts/run.py](scripts/run.py) | Điểm vào huấn luyện, dùng config/*.json |
 | [scripts/infer.py](scripts/infer.py) | Nạp checkpoint và dự đoán một ảnh |
+| [scripts/benchmark_inference.py](scripts/benchmark_inference.py) | Xuất ảnh test, đóng gói hai checkpoint và benchmark model đã nạp sẵn |
 | [scripts/download_assets.py](scripts/download_assets.py) | README: CIFAR-10/weights; --chunked là fallback tải chia phần; --dataset-only bỏ weights |
 | [scripts/resume_interrupted.py](scripts/resume_interrupted.py) | Phục hồi tại ranh giới kiến trúc, không phải resume giữa epoch |
 | [scripts/execute_notebook.py](scripts/execute_notebook.py) | Thực thi notebook với interpreter hiện tại |
 | [scripts/finalize.py](scripts/finalize.py) | README: finalize run; --all còn chạy test/notebook/inference theo model được validation chọn |
 | [tests/test_contracts.py](tests/test_contracts.py) | Shape, freeze, split và một batch overfit |
 | [tests/test_cached_prefix.py](tests/test_cached_prefix.py) | Đối chiếu logits/gradient cache và forward đầy đủ |
+| [tests/test_feature_cache.py](tests/test_feature_cache.py) | Thứ tự mẫu/nhãn/chỉ số, nội dung cache, shuffle có seed và gỡ hook khi lỗi |
 | [tests/test_tuning.py](tests/test_tuning.py) | LR groups, scheduler, gradient hai block, reset trial, không dùng test khi search, timing và smoke pipeline |
 | [tests/test_eda.py](tests/test_eda.py) | Chặn import training, kiểm tra feature/duplicate/split, đối chiếu hash và thống kê run cũ |
 | [tests/test_cleanup.py](tests/test_cleanup.py) | Graph tham chiếu production, CLI --help/import an toàn, split chung, CSV schema mới, đúng run/checkpoint và tải chia phần có checksum |
 | [tests/test_notebook_review.py](tests/test_notebook_review.py) | Đối chiếu metric, ranh giới EDA và liên kết tài liệu; không cần torch |
+| [tests/test_import_boundaries.py](tests/test_import_boundaries.py) | Chặn import PyTorch/model/engine khi tính chi phí và gọi view; kiểm tra export lazy |
+| [tests/test_inference_benchmark.py](tests/test_inference_benchmark.py) | Output một ảnh, ranh giới thời gian, thống kê, sampler RAM và CUDA peak |
 
-Có 4 package chức năng trong `src/` và 7 CLI.; logic duy nhất nằm trong package con. Snapshot trong `outputs/runs/` được manifest/hash tham chiếu, giữ riêng khỏi graph code hiện hành.
+Có 4 package chức năng trong `src/`, module inference dùng chung và 8 CLI. Snapshot trong `outputs/runs/` được manifest/hash tham chiếu, giữ riêng khỏi graph code hiện hành.
 
-Luồng chính: `run.py → experiment → data/models/tuning/reporting`; `data → eda.locked_split`; `reporting → costs`; `notebook 01 → eda`; `notebook 02 → notebook_views → costs`; `finalize.py → delivery → reporting`; `infer.py → data/models`.
+Luồng chính: `run.py → experiment → data/models/tuning/reporting`; `data → eda.locked_split`; `reporting → utils.costs`; `notebook 01 → eda`; `notebook 02 → notebook_views → utils.costs`; `finalize.py → delivery → reporting`; `infer.py → data/models`.
+
+`experiment` gọi `training.feature_cache.cached_features` để lưu tensor CPU theo schema `features/labels/indices`, và prefix NPY khi được cấu hình. `tensor_loader` dùng chung cho head, fine-tune từ cache và resume. Tên file, thứ tự mẫu và seed giữ nguyên; các import cũ qua `experiment` và export cấp `src.training` vẫn dùng được.
+
+Các namespace `src.training` và `src.utils` chỉ nạp module khi export được yêu cầu. Chi phí đọc từ artifact qua `src.utils.costs`; recommendation dùng chính sách số liệu thuần trong `training.tuning`, không nạp PyTorch, model hoặc `training.experiment`. Các export cấp package trước đây được giữ; đường dẫn module chi phí mới là `src.utils.costs`.
 
 Test graph bắt module production bị bỏ rơi, public function không có tham chiếu tĩnh và file thiếu link README. Tham chiếu trong test hoặc snapshot không được tính làm caller production. Docstring giải thích vai trò; không thêm import giả để giữ file.
+
+Graph kiểm tra cả package con và relative import. Roadmap Modeling đã gọi `lr_search` và `roundtrip`; view export `tensorboard_evidence` vẫn chưa có caller production tĩnh, được giữ làm ngoại lệ chờ rà soát API riêng. Snapshot của finalize/resume liệt kê đệ quy các file Python/JSON trong `src/`, `scripts/`, `tests/`, `config/`; bỏ qua cache và artifact trong outputs.
 
 ## Reproduce
 
 Chạy từ `labs/lab02`. Để **xem kết quả**, không cần dataset/weights: mở hai notebook đã có output, hoặc chạy lại bằng interpreter có NumPy, pandas, matplotlib, Pillow, scikit-learn, IPython, nbformat, nbclient và ipykernel:
+
+Cell đầu của notebook tìm lab từ thư mục hiện tại và các thư mục cha, hoặc dùng `LAB02_ROOT` là đường dẫn tuyệt đối tới Lab02. Nếu cwd đã bị xóa, cần đặt `LAB02_ROOT` trước khi chạy cell. Đường dẫn sai được báo lỗi rõ ràng thay vì tiếp tục đọc artifact từ nơi khác.
 
 ```powershell
 python -X utf8 scripts/execute_notebook.py 01_lab02_eda.ipynb
@@ -142,7 +158,7 @@ Mỗi seed có 6 head trials và 13 fine-tune trials **mỗi model**, fine-tune 
 
 `finetune_search_results.csv` lưu toàn bộ grid; `selection.json` ghi winner; `finetune/` chứa checkpoint/history được chọn, không train lại thêm lần nữa. TensorBoard lưu LR từng nhóm, optimizer/depth/scheduler, train/val loss/accuracy. `cost_comparison.csv` tách tổng search với selected recipe, không cộng lặp selected trial. Full wall time của quá trình chọn model, throughput và peak CUDA memory cũng được ghi.
 
-Khi chất lượng gần nhau, xem thêm thời gian của selected recipe và test pass. Run cũ khác cache policy nên chưa xếp hạng tốc độ kiến trúc bằng train time. Xem [walkthrough](walkthrough_lab_02.md#15-loss-function-and-optimization-design) để biết giới hạn và kiểm thử.
+Khi chất lượng gần nhau, xem thêm thời gian của selected recipe và test pass. Run cũ khác cache policy nên chưa xếp hạng tốc độ kiến trúc bằng train time. Xem [phương pháp chọn model](walkthrough_lab_02.md#28-thiết-kế-search-và-chọn-model-bằng-validation) và [chi phí](walkthrough_lab_02.md#37-chi-phí-huấn-luyện-và-đánh-giá).
 
 Các profile grid cũ dùng batch **64/128**. Recipe mới đã chốt nằm ở `config/scheduled.json`; chưa có kết quả full training cho recipe này. Run lịch sử và checkpoint được giữ riêng.
 
@@ -169,3 +185,33 @@ python scripts/execute_notebook.py 01_lab02_eda.ipynb
 Không dùng `finalize.py --all` để chạy lại toàn bộ kiểm thử lịch sử. Mỗi run có thư mục timestamp/ID riêng ở `outputs/runs/`. Registry chỉ đổi khi suite hoàn tất; figure ở `outputs/review/<run_id>/`. Lệnh train lưu snapshot notebook hiện tại vào run cũ trước khi đổi registry; execute notebook lưu thêm bản trước/sau theo hash. Snapshot có thể có liên kết tương đối theo vị trí notebook gốc; dùng để giữ nội dung và output, không mặc định chạy lại trực tiếp từ thư mục snapshot.
 
 TensorBoard ở terminal thứ hai, cùng môi trường: `tensorboard --logdir outputs/runs --port 6006`. Lưu `Run: ...` in ở đầu log để truy vết. Dừng giữa chừng không tự hoàn tất selection/test; xem `scripts/resume_interrupted.py --help` trước khi resume, không tự đổi source/config của run đang dở.
+
+## Benchmark một ảnh với model đã nạp sẵn
+
+Kết quả đã tích hợp tại **mục 8 của notebook Modeling**: các bảng latency warmed/request đầu, RAM RSS, VRAM allocated/reserved và stage diagnostics. `Run All` ở notebook 02 chỉ đọc bộ evidence được chọn tường minh trong biến `BENCHMARK`, kiểm tra checksum và training run; không khởi chạy lại GPU. Khi chuyển máy, copy cả `outputs/published/single_image_benchmark/20261102T184034Z_kaggle/`. Thiếu file sẽ hiện thông báo; sai run/checksum sẽ báo lỗi để tránh ghép nhầm kết quả.
+
+`scripts/benchmark_inference.py` đo riêng ResNet18/DenseNet121, mỗi model một process, batch 1, FP32, eval và inference_mode. Không tính nạp checkpoint, khởi tạo model, in terminal hoặc ghi báo cáo. Tổng thời gian gồm đọc/giải mã ảnh, preprocessing từ metadata checkpoint, chuyển tensor lên thiết bị, forward, softmax/lấy kết quả về CPU và tạo chuỗi JSON.
+
+Lượt đầu sau khi nạp model được ghi riêng. Mặc định warm-up 20 lượt rồi đo tổng 100 lượt (mean/median/p95, ms/ảnh). Chạy riêng 20 lượt đo từng bước có đồng bộ CUDA; không cộng thời gian bước để suy ra tổng. RAM/VRAM được đo ở 20 lượt riêng để sampler không làm nhiễu latency chính.
+
+RAM là RSS process: sau nạp model, sau warm-up, trước lượt đo bộ nhớ và peak quan sát được, lấy mẫu mặc định 1 ms. Có thể bỏ lỡ đỉnh ngắn; chênh lệch peak so với baseline không phải kích thước model. VRAM là allocated/reserved của PyTorch và peak trong lượt đo warmed; không phải toàn bộ VRAM process/CUDA context. CPU ghi VRAM là null. Đây là tài nguyên quan sát được, không khẳng định cấu hình phần cứng tối thiểu. Cùng ảnh được đọc lặp nên có thể hưởng OS cache; không ép flush cache, không bật AMP/TF32/compile.
+
+Chuẩn bị từ terminal tại `labs/lab02` (không train lại):
+
+```bash
+python scripts/benchmark_inference.py prepare-image --data-dir data --index 0 --output ../../.agents/single-image-benchmark/input.png
+python scripts/benchmark_inference.py package --run outputs/runs/20261030T052121Z_cifar10_scheduled64_b895bfc1 --image ../../.agents/single-image-benchmark/input.png --output ../../.agents/single-image-benchmark/lab02-single-image-benchmark.zip
+```
+
+Ảnh được xuất từ tập test trong process riêng; không nạp toàn bộ test_batch trong process benchmark. ZIP chỉ chứa source cần chạy, PNG và metadata nguồn ảnh, hai `finetune/best.pt` đã chọn bằng validation và manifest SHA256. Gắn ZIP dưới dạng Kaggle Dataset **private**, giải nén vào thư mục mới dưới `/kaggle/working/` và đối chiếu manifest trước khi chạy. Giữ nguyên thư mục training cũ. Không cần cài lại pins Windows; ghi môi trường Kaggle thực tế vào kết quả.
+
+Sau khi giải nén, chạy từ thư mục `lab02` của gói, mỗi lệnh là một process độc lập:
+
+Có thể import notebook 03 vào một Kaggle Notebook riêng, gắn Dataset private vừa upload, chọn GPU và Run All. Runner nhận cả gói ZIP lẫn Dataset đã giải nén, kiểm tra checksum, dùng thư mục working mới và xuất bảng so sánh cùng ZIP kết quả. Notebook training cũ không cần chạy lại.
+
+```bash
+python scripts/benchmark_inference.py run --checkpoint checkpoints/resnet18.pt --image input.png --device cuda --output-dir /kaggle/working/single-image-results
+python scripts/benchmark_inference.py run --checkpoint checkpoints/densenet121.pt --image input.png --device cuda --output-dir /kaggle/working/single-image-results
+```
+
+Mỗi model có benchmark ID riêng, gồm status/config/environment/source hashes, `latency_samples.csv`, `stage_samples.csv`, `summary.json`, `prediction.json` và checksum manifest. CLI yêu cầu CUDA thực, không tự chuyển sang CPU. `--device cpu` chỉ dành cho kiểm thử hoặc phép đo CPU được ghi nhãn riêng; không dùng thay kết quả Kaggle GPU. Kết quả này không cập nhật registry run training hay ghi đè metric lịch sử. Thu hồi toàn bộ thư mục kết quả và notebook đã chạy trước khi kết thúc phiên Kaggle.

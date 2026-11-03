@@ -1,0 +1,12 @@
+{
+  "dataset": "CIFAR10",
+  "split": "test",
+  "index": 0,
+  "actual": "cat",
+  "original_size": [
+    32,
+    32
+  ],
+  "png_sha256": "bc1876dae20d9c63afe538f3f5893a4e552ead5a06b677b09a0da1e6dbb83b13",
+  "input_policy": "PNG exported in a separate process before loading benchmark models"
+}

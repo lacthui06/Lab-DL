@@ -20,15 +20,15 @@ import numpy as np
 import pandas as pd
 import torch
 from torch import nn
-from torch.utils.data import DataLoader, TensorDataset
 from torch.utils.tensorboard import SummaryWriter
 from torchvision.utils import make_grid
 
 from ..datasets.data import image_loader, image_transform, prepare_indices
 from ..datasets.eda import export_summary
 from ..utils.delivery import write_json, file_hash, resolve_data_dir
-from ..models.models import (SPECS, build_model, classifier, features, configure_trainable,
-                             parameter_counts, training_mode, last_block, CachedTail)
+from ..models.models import (SPECS, build_model, classifier, configure_trainable,
+                             parameter_counts, training_mode, CachedTail)
+from .feature_cache import cached_features, tensor_loader
 from .tuning import fine_candidates, select_trial, make_optimizer, make_scheduler, stopping_policy
 from ..utils.reporting import export_evaluation, summarize_suite
 
@@ -48,45 +48,6 @@ def seed_all(seed):
 def sync(device):
     if device.type == "cuda":
         torch.cuda.synchronize()
-
-
-def cached_features(model, name, data_dir, split, indices, cfg, device, dest):
-    model.eval()
-    xs, ys, ids = [], [], []
-    loader = image_loader(data_dir, split, indices, name, cfg["feature_batch_size"], cfg["seed"], image_size=cfg["image_size"])
-    start = time.perf_counter()
-    prefix_cache, offset = None, 0
-    def save_prefix(module, arguments):
-        nonlocal prefix_cache, offset
-        value = arguments[0].detach().cpu().numpy()
-        if prefix_cache is None:
-            prefix_cache = np.lib.format.open_memmap(dest.with_name(f'{split}_prefix.npy'),
-                mode='w+', dtype=np.float32, shape=(len(indices), *value.shape[1:]))
-        prefix_cache[offset:offset + len(value)] = value
-        offset += len(value)
-    handle = last_block(model, name).register_forward_pre_hook(save_prefix) if cfg.get('cache_frozen_prefix') else None
-    try:
-        with torch.inference_mode():
-            for batch_no, (images, labels, original) in enumerate(loader):
-                xs.append(features(model, name, images.to(device)).cpu())
-                ys.append(labels)
-                ids.append(original)
-                if batch_no % 25 == 0:
-                    print(f"{name} extract {split}: {min((batch_no + 1) * loader.batch_size, len(indices))}/{len(indices)}", flush=True)
-    finally:
-        if handle is not None:
-            handle.remove()
-        if prefix_cache is not None:
-            prefix_cache.flush()
-    sync(device)
-    result = (torch.cat(xs), torch.cat(ys), torch.cat(ids))
-    torch.save(dict(zip(("features", "labels", "indices"), result)), dest)
-    return result, time.perf_counter() - start
-
-
-def tensor_loader(data, batch, seed, shuffle=False):
-    return DataLoader(TensorDataset(*data), batch_size=batch, shuffle=shuffle,
-                      generator=torch.Generator().manual_seed(seed))
 
 
 def pass_epoch(model, loader, device, optimizer=None, mode_fn=None):

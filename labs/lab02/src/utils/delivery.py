@@ -6,6 +6,7 @@ saved artifacts; complete_delivery additionally requires original data/checkpoin
 import hashlib
 import json
 import os
+from collections.abc import Iterator
 from pathlib import Path
 
 
@@ -23,6 +24,14 @@ def file_hash(path) -> str:
         for block in iter(lambda: stream.read(1024*1024), b''):
             digest.update(block)
     return digest.hexdigest()
+
+
+def iter_source_files(root: Path) -> Iterator[Path]:
+    """Yield sorted Python/config files, including nested packages, without run artifacts."""
+    yield from sorted(path for section in ('src', 'scripts', 'tests', 'config')
+                      for path in (root / section).rglob('*')
+                      if path.is_file() and path.suffix in ('.py', '.json')
+                      and '__pycache__' not in path.parts)
 
 
 def resolve_data_dir(root: Path, explicit=None) -> Path:
@@ -212,7 +221,7 @@ def finalize_run(run_path: str | None = None) -> None:
                 axes[row, column].set(title=f'{name}: {metric}', xlabel='Epoch within stage')
                 axes[row, column].legend(fontsize=8)
                 axes[row, column].grid(alpha=.2)
-    from ..training.costs import cost_table, validation_recommendation
+    from .costs import cost_table, validation_recommendation
     costs = cost_table(run,comparison).to_dict('records')
     fig.suptitle('Monitoring evidence reconstructed from TensorBoard events (not a UI screenshot)')
     fig.tight_layout()
@@ -249,13 +258,11 @@ def finalize_run(run_path: str | None = None) -> None:
     lock = subprocess.check_output([sys.executable, "-m", "pip", "freeze"], text=True)
     (run / "requirements-freeze.txt").write_text(lock, encoding="utf-8")
     snapshot = run / "source_snapshot"
-    for section in ("src", "config", "scripts", "tests"):
-        for source in (root / section).glob("*"):
-            if source.is_file() and source.suffix in (".py", ".json"):
-                dest = snapshot / source.relative_to(root)
-                dest.parent.mkdir(parents=True, exist_ok=True)
-                if not dest.exists():
-                    shutil.copy2(source, dest)
+    for source in iter_source_files(root):
+        dest = snapshot / source.relative_to(root)
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        if not dest.exists():
+            shutil.copy2(source, dest)
     write_json(run / "verification.json", {"status": "passed", "metric_recomputation": True,
         "confusion_totals": True, "validation_selection": True, "roundtrips": len(cfg["models"]) * 2,
         "tensorboard_scalar_runs": scalars,
@@ -267,8 +274,7 @@ def finalize_run(run_path: str | None = None) -> None:
         resume_hashes = json.loads(resume_hash_path.read_text(encoding='utf-8'))
         audits['resume_source_snapshot'] = audit_snapshot(run / 'resume_source_snapshot', resume_hashes)
     write_json(run / 'snapshot_checkout_audit.json', audits)
-    delivery_hashes = {str(p.relative_to(root)): file_hash(p)
-        for section in ['src', 'scripts', 'tests', 'config'] for p in (root / section).glob('*') if p.is_file()}
+    delivery_hashes = {str(p.relative_to(root)): file_hash(p) for p in iter_source_files(root)}
     write_json(run / 'delivery_source_hashes.json', delivery_hashes)
     for relative in delivery_hashes:
         destination = run / 'delivery_source_snapshot' / relative

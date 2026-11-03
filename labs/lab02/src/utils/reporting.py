@@ -128,9 +128,8 @@ def plot_learning_curves(run, output=None, show=False, per_model_folders=False, 
 
 
 def summarize_suite(run, cfg, selected):
-    from .constants import CLASSES
     comparison = pd.read_csv(run / "comparison.csv")
-    from ..training.costs import cost_table, validation_recommendation
+    from .costs import cost_table, validation_recommendation
     cost_table(run, comparison).to_csv(run/'cost_comparison.csv', index=False)
     (run/'validation_recommendation.json').write_text(
         json.dumps(validation_recommendation(run,comparison,cfg), indent=2), encoding='utf-8')

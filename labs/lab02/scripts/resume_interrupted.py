@@ -25,7 +25,7 @@ def main(argv=None):
     import pandas as pd
     import torch
     from src.training.experiment import run_model,Tee
-    from src.utils.delivery import resolve_run,resolve_data_dir,write_json,file_hash
+    from src.utils.delivery import resolve_run,resolve_data_dir,write_json,file_hash,iter_source_files
     from src.utils.reporting import summarize_suite
     from src.training.tuning import fine_candidates
 
@@ -77,14 +77,12 @@ def main(argv=None):
         raise
     finally:
         hashes={}
-        for section in ['src','scripts','tests','config']:
-            for source in (ROOT/section).glob('*'):
-                if not source.is_file() or source.suffix not in ('.py','.json'): continue
-                relative=source.relative_to(ROOT)
-                destination=run/'resume_source_snapshot'/relative
-                destination.parent.mkdir(parents=True,exist_ok=True)
-                shutil.copy2(source,destination)
-                hashes[str(relative)]=file_hash(source)
+        for source in iter_source_files(ROOT):
+            relative=source.relative_to(ROOT)
+            destination=run/'resume_source_snapshot'/relative
+            destination.parent.mkdir(parents=True,exist_ok=True)
+            shutil.copy2(source,destination)
+            hashes[str(relative)]=file_hash(source)
         write_json(run/'resume_source_hashes.json',hashes)
         write_json(run/'manifest.json',{str(p.relative_to(run)):file_hash(p) for p in run.rglob('*')
             if p.is_file() and p.name!='manifest.json'})
@@ -97,7 +95,8 @@ def _resume_trial(run, relative, cfg, device):
     import torch
     from src.datasets.data import image_loader
     from src.utils.delivery import file_hash, resolve_data_dir, write_json
-    from src.training.experiment import fit, tensor_loader
+    from src.training.experiment import fit
+    from src.training.feature_cache import tensor_loader
     from src.models.models import build_model, classifier, configure_trainable, training_mode, CachedTail
     from src.training.tuning import make_optimizer, make_scheduler, stopping_policy
 

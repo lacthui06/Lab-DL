@@ -11,52 +11,6 @@ from src.models.models import build_model, configure_trainable, parameter_counts
 from src.training.tuning import fine_candidates, select_trial, make_optimizer, make_scheduler
 
 
-@pytest.mark.parametrize('name,expected', [('resnet18', 4725770), ('densenet121', 2921034)])
-def test_scheduled_recipe_parameters_and_backward(name, expected):
-    torch.set_num_threads(2)
-    torch.manual_seed(42)
-    model = build_model(name, pretrained=False, dropout=.2)
-    configure_trainable(model, name, 'finetune', 'scheduled_tail', max_fraction=.5)
-    assert parameter_counts(model)['trainable'] == expected
-    training_mode(model)
-    statistics = {n: b.clone() for n, b in model.named_buffers() if 'running_' in n}
-    output = model(torch.randn(2, 3, 64, 64))
-    assert output.shape == (2, 10) and torch.isfinite(output).all()
-    output.square().mean().backward()
-    for n, p in model.named_parameters():
-        assert (p.grad is not None) == p.requires_grad, n
-    for n, b in model.named_buffers():
-        if n in statistics:
-            assert torch.equal(b, statistics[n]), n
-    if name == 'densenet121':
-        assert model.features.denseblock3.denselayer11.conv1.weight.requires_grad
-        assert not model.features.denseblock3.denselayer10.conv1.weight.requires_grad
-        assert not model.features.denseblock3.denselayer13.conv1.weight.requires_grad
-    with pytest.raises(ValueError, match='limit'):
-        configure_trainable(model, name, 'finetune', 'scheduled_tail', max_fraction=.1)
-
-
-def test_ratio_schedule_and_resume_preserve_group_ratio():
-    parameters = [nn.Parameter(torch.ones(1)), nn.Parameter(torch.ones(1))]
-    optimizer = torch.optim.AdamW([{'params': [parameters[0]], 'lr': 1e-4},
-                                  {'params': [parameters[1]], 'lr': 1e-3}])
-    scheduler = make_scheduler(optimizer, 'cosine_ratio', 20)
-    for _ in range(10):
-        optimizer.step()
-        scheduler.step()
-    assert [g['lr'] for g in optimizer.param_groups] == pytest.approx([5.5e-5, 5.5e-4])
-    opt_state, sched_state = copy.deepcopy(optimizer.state_dict()), copy.deepcopy(scheduler.state_dict())
-    for _ in range(10):
-        optimizer.step()
-        scheduler.step()
-    expected = [g['lr'] for g in optimizer.param_groups]
-    assert expected == pytest.approx([1e-5, 1e-4])
-    optimizer.load_state_dict(opt_state)
-    scheduler.load_state_dict(sched_state)
-    for _ in range(10):
-        optimizer.step()
-        scheduler.step()
-    assert [g['lr'] for g in optimizer.param_groups] == pytest.approx(expected)
 
 
 @pytest.mark.parametrize('name,expected', [('resnet18', 4725770), ('densenet121', 2921034)])
@@ -298,7 +252,7 @@ def test_resume_cli_restores_head_trial_without_finalizing_suite(tmp_path, monke
     trial.mkdir(parents=True)
     indices = np.arange(8)
     np.savez(run/'selected_indices.npz', train=indices, val=indices)
-    write_json(run/'source_hashes.json', {'src/models.py': file_hash(root/'src/models.py')})
+    write_json(run/'source_hashes.json', {'src/models/models.py': file_hash(root/'src/models/models.py')})
     write_json(run/'status.json', {'status': 'failed'})
     cfg = dict(threads=2, head_epochs=3, finetune_epochs=3, weight_decay=0.)
     meta = dict(model='resnet18', stage='head', optimizer='adamw', lr=.1, batch_size=2,
@@ -418,7 +372,7 @@ def test_search_resets_same_head_and_does_not_touch_test(tmp_path,monkeypatch):
 
 
 def test_costs_count_entire_fine_search_once_and_selected_recipe_separately(tmp_path):
-    from src.training.costs import cost_table
+    from src.utils.costs import cost_table
     import pandas as pd
     folder=tmp_path/'resnet18/head_selected'; folder.mkdir(parents=True)
     (folder/'training_summary.json').write_text(json.dumps(dict(feature_extraction_train_val_seconds=10,
@@ -434,9 +388,10 @@ def test_costs_count_entire_fine_search_once_and_selected_recipe_separately(tmp_
 def test_training_search_smoke_and_reporting_without_downloads(tmp_path,monkeypatch,regularized):
     """Exercise real fit/predict/promotion/cost reporting on a small synthetic batch."""
     import src.training.experiment as exp
+    import src.training.feature_cache as cache
     import numpy as np
     import pandas as pd
-        from src.utils.reporting import summarize_suite
+    from src.utils.reporting import summarize_suite
     torch.set_num_threads(2)
     torch.manual_seed(42)
     images=torch.randn(4,3,64,64)
@@ -450,6 +405,7 @@ def test_training_search_smoke_and_reporting_without_downloads(tmp_path,monkeypa
         return DataLoader(TensorDataset(images,labels,indices),batch_size=batch,shuffle=shuffle,
                           generator=torch.Generator().manual_seed(seed))
     monkeypatch.setattr(exp,'image_loader',loader)
+    monkeypatch.setattr(cache,'image_loader',loader)
     monkeypatch.setattr(exp,'build_model',lambda name,pretrained=True,**kwargs:build_model(name,pretrained=False,**kwargs))
     monkeypatch.setattr(exp,'export_evaluation',lambda folder,p,y,i,data_dir:dict(test_samples=len(y),
         accuracy=float((p.argmax(1)==y).mean()),loss=1.,macro_f1=.1,macro_precision=.1,macro_recall=.1))

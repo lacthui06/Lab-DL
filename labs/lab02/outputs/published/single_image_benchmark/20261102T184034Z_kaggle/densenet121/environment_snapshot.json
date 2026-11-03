@@ -1,0 +1,14 @@
+{
+  "python": "3.13.16 (main, Oct  1 2026, 15:40:24) [GCC 13.3.0]",
+  "platform": "Linux-6.18.55+-x86_64-with-glibc2.39",
+  "torch": "2.11.0+cu130",
+  "torchvision": "0.26.0+cu130",
+  "psutil": "5.9.5",
+  "cuda": "13.0",
+  "cudnn": 92700,
+  "device": "cuda",
+  "device_name": "Tesla T4",
+  "threads": 4,
+  "tf32": false,
+  "cudnn_benchmark": false
+}

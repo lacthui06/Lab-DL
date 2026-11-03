@@ -1,0 +1,12 @@
+{
+  "training_run": "20261030T052121Z_cifar10_scheduled64_b895bfc1",
+  "benchmark_runs": {
+    "resnet18": "20261102T184034Z_single_image_resnet18_a652f073",
+    "densenet121": "20261102T184057Z_single_image_densenet121_9ca65e6f"
+  },
+  "execution_package_sha256": "287a625bd40edb0e2be12f5384805c7dcf27192adbfac62b3d7034ffc5a332e8",
+  "input_sha256": "bc1876dae20d9c63afe538f3f5893a4e552ead5a06b677b09a0da1e6dbb83b13",
+  "dataset_url": "https://www.kaggle.com/datasets/thuongfeai/lab02-single-image-benchmark-20261103",
+  "notebook_url": "https://www.kaggle.com/code/thuongfeai/lab02-single-image-benchmark",
+  "scope": "Exact selected artifacts; no model weights, raw logs or training metric replacement"
+}

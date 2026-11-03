@@ -57,11 +57,20 @@ def test_split_is_reused_and_tampering_rejected(tmp_path):
 
 
 def test_raw_eda_matches_historical_training_split():
+    import hashlib
     root = Path(__file__).resolve().parents[1]
     run = root / json.loads((root/'outputs/selected_run.json').read_text())['run']
     meta = json.loads((root/'outputs/eda/split_metadata.json').read_text())
     old = json.loads((run/'resnet18/head_trial_00/config.json').read_text())
-    assert meta['indices_sha256'] == old['data_sha256']
+    eda_indices = root/'outputs/eda/split_indices.npz'
+    selected_indices = run/'selected_indices.npz'
+    assert hashlib.sha256(eda_indices.read_bytes()).hexdigest() == meta['indices_sha256']
+    assert hashlib.sha256(selected_indices.read_bytes()).hexdigest() == old['data_sha256']
+    # NPZ archive bytes can differ while the partition arrays are identical.
+    with np.load(eda_indices, allow_pickle=False) as measured_split, np.load(selected_indices, allow_pickle=False) as training_split:
+        assert set(measured_split.files) == set(training_split.files) == {'train','val','test'}
+        for split in measured_split.files:
+            np.testing.assert_array_equal(measured_split[split], training_split[split])
     measured = json.loads((root/'outputs/eda/preprocessing_config.json').read_text())
     original = json.loads((run/'eda/summary.json').read_text())
     for key in ['train_mean_rgb', 'train_std_rgb']:
