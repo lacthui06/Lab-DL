@@ -96,7 +96,7 @@ def test_training_autopublish_accepts_one_completed_run_and_keeps_log_bytes(tmp_
     assert all(hash_file(out/name)==digest for name,digest in manifest.items())
 
 
-def test_autopublish_includes_only_exercise_runs_from_same_session(tmp_path):
+def test_autopublish_includes_only_exercise_runs_from_same_session(tmp_path,monkeypatch):
     import shutil
     from labs.lab03.src.utils.runs import run_context,save_json
     from labs.lab03.scripts.run_frozen_trial import publish_completed_trial
@@ -107,8 +107,10 @@ def test_autopublish_includes_only_exercise_runs_from_same_session(tmp_path):
     save_json(destination/'config.json',cfg)
     manifest=json.loads((destination/'manifest.json').read_text());manifest['config.json']=hash_file(destination/'config.json')
     save_json(destination/'manifest.json',manifest)
+    monkeypatch.setenv('LAB03_SESSION_ID','different-session')
     with run_context('exercise1',{'session_id':'different-session'},root=tmp_path) as unrelated:
         save_json(unrelated/'predictions.json',[])
+    monkeypatch.setenv('LAB03_SESSION_ID','current-session')
     with run_context('exercise1_analysis',{'session_id':'current-session'},root=tmp_path) as current:
         save_json(current/'analysis_summary.json',{'fixture':True})
     out=publish_completed_trial(destination,tmp_path)

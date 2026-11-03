@@ -1,6 +1,6 @@
 {
   "status": "ready_for_kaggle_training",
-  "tests_passed": 122,
+  "tests_passed": 123,
   "profile_max_epochs": 5,
   "early_stopping": {
     "enabled": true,
@@ -42,5 +42,6 @@
   "relative_document_links_verified": 5,
   "gpu_training_executed": false,
   "gpu_metrics_recorded": false,
-  "artifact_run": "20261103T085020Z_readiness_verification_ca0f37ff"
+  "artifact_run": "20261103T105221Z_preflight_verification_8634cda5",
+  "preflight_session_isolation_verified": true
 }

@@ -45,3 +45,23 @@ def test_train_session_starts_without_loading_report_or_previous_selection(tmp_p
     assert session.paths=={}
     assert session.env['LAB03_SESSION_ID']
     assert session.env['LAB03_SESSION_ID'] != NotebookSession(tmp_path,mode='train').env['LAB03_SESSION_ID']
+
+
+def test_preflight_isolates_session_environment_without_changing_training_env(tmp_path,monkeypatch):
+    monkeypatch.setenv('LAB03_SESSION_ID','parent-notebook-session')
+    session=NotebookSession(tmp_path,mode='train')
+    training_session=session.env['LAB03_SESSION_ID']
+    captured={}
+    class Process:
+        stdout=()
+        def wait(self):return 0
+    def launch(*args,**kwargs):
+        captured.update(kwargs)
+        return Process()
+    monkeypatch.setattr('labs.lab03.src.notebook_runtime.subprocess.Popen',launch)
+    session.preflight()
+    assert captured['env'].get('LAB03_SESSION_ID') is None
+    assert captured['env']['CUDA_VISIBLE_DEVICES']==''
+    assert session.env['LAB03_SESSION_ID']==training_session
+    import os
+    assert os.environ['LAB03_SESSION_ID']=='parent-notebook-session'

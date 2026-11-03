@@ -86,6 +86,8 @@ class NotebookSession:
         folder = self.lab/'outputs/preflight'/datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')
         folder.mkdir(parents=True,exist_ok=False)
         env = self.env.copy();env['CUDA_VISIBLE_DEVICES']=''
+        # Pytest tạo session fixtures riêng; không kế thừa ID của phiên training.
+        env.pop('LAB03_SESSION_ID',None)
         with (folder/'pytest.log').open('w',encoding='utf-8') as log:
             process = subprocess.Popen([self.python,'-u','-m','pytest','labs/lab03/tests','-q',
                 f'--junitxml={folder/"pytest.xml"}'],cwd=self.repo,env=env,

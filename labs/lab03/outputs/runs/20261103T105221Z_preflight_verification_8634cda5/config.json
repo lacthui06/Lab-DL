@@ -1,0 +1,5 @@
+{
+  "purpose": "Verify pytest/training session isolation",
+  "test_environment_session_id_present": true,
+  "full_gpu_training_executed": false
+}

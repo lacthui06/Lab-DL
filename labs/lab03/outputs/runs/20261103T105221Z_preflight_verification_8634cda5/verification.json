@@ -1,0 +1,10 @@
+{
+  "status": "passed",
+  "tests_passed": 123,
+  "preflight_child_session_id_removed": true,
+  "training_session_preserved": true,
+  "session_fixture_environment_isolated": true,
+  "runtime_sha256": "a610826e6aaaacc88700b1e0d1fffbeb4f28c5a5531dec0e653fa9610023b1bb",
+  "full_gpu_training_executed": false,
+  "artifact_run": "20261103T105221Z_preflight_verification_8634cda5"
+}
