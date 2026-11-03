@@ -1,0 +1,20 @@
+[
+  {
+    "notebook": "01_eda_preprocessing_feature_engineering.ipynb",
+    "mode": "view",
+    "training_executed": false,
+    "notebook_sha256": "633dd72ad621165347da75c713942a1bb57b7de850f1e7df1a8a221cc394c831",
+    "errors": 0,
+    "executed_code_cells": 10,
+    "inline_pngs": 12
+  },
+  {
+    "notebook": "02_modeling.ipynb",
+    "mode": "view",
+    "training_executed": false,
+    "notebook_sha256": "fe73a22a094677a6ed86d9e0a23d6e29f8ee1be15a9443b85de95b4c5ce52452",
+    "errors": 0,
+    "executed_code_cells": 11,
+    "inline_pngs": 17
+  }
+]

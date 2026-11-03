@@ -16,7 +16,7 @@ def test_only_two_notebooks_cover_preparation_and_modeling():
         assert 'Module/file' in notebook.cells[0].source
         codes=[c.source for c in notebook.cells if c.cell_type=='code']
         for source in codes:ast.parse(source)
-        assert sum('MODE = "prepare"' in source or 'MODE = "train"' in source for source in codes)==1
+        assert sum('MODE = "view"' in source for source in codes)==1
         assert 'session.setup()' in codes[0]
     preparation=nbformat.read(paths[0],as_version=4)
     modeling=nbformat.read(paths[1],as_version=4)
@@ -27,7 +27,7 @@ def test_only_two_notebooks_cover_preparation_and_modeling():
     assert 'session.preflight()' in source and 'session.export()' in source
     for notebook in (preparation,modeling):
         assert len(notebook.cells)>=20
-        assert all(not c.outputs and c.execution_count is None for c in notebook.cells if c.cell_type=='code')
+        assert all(not any(o.output_type == 'error' for o in c.outputs) for c in notebook.cells if c.cell_type=='code')
         text='\n'.join(c.source for c in notebook.cells)
         assert '10 epoch' not in text and '10epoch' not in text and 'lịch sử' not in text
         assert 'final_review' not in text and 'config/report.json' not in text
@@ -40,7 +40,7 @@ def test_dataset_preview_persists_original_counts_and_three_figures(tiny,tmp_pat
     monkeypatch.setattr('labs.lab03.src.datasets.loader.load_data',lambda cfg:ds)
     monkeypatch.setattr('transformers.AutoTokenizer.from_pretrained',lambda *a,**k:tokenizer)
     monkeypatch.setattr('labs.lab03.src.utils.runs.run_context',lambda kind,cfg:run_context(kind,cfg,root=tmp_path))
-    monkeypatch.setattr(sys,'argv',['preview_dataset.py','--config',str(ROOT/'config/augmented.json')])
+    monkeypatch.setattr(sys,'argv',['preview_dataset.py','--config',str(ROOT/'config/frozen_trial.json')])
     runpy.run_path(str(ROOT/'scripts/preview_dataset.py'),run_name='__main__')
     state=json.loads((tmp_path/'config/workflow.json').read_text())
     out=tmp_path/'outputs/runs'/state['active_runs']['dataset_preview']

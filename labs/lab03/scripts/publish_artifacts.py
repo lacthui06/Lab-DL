@@ -92,17 +92,6 @@ def publish_artifacts(settings=None, output_dir=None, source_root=ROOT):
                 policy=read_json(evaluation/'decision_threshold.json')
         reference_rows = list(rows)
         primary = configuration.get('primary_result', 'evaluation')
-        if primary == 'study':
-            if 'study' not in paths:
-                raise ValueError('Primary study is missing from selected report runs')
-            from labs.lab03.src.study_evidence import audit_study
-            audit_study(paths['study'], root=source_root)
-            study = paths['study']
-            loss = read_json(study/'test_runtime_metrics.json')['test_loss']
-            policy = read_json(study/'decision_threshold.json')
-            rows = [{'policy':r['model'], **{k:r[k] for k in ['accuracy','precision','recall','binary_f1','macro_f1']},
-                     'test_loss':loss if r['model'].startswith('DistilBERT') else None}
-                    for r in read_json(study/'test_comparison.json')]
         if primary == 'frozen_trial':
             from labs.lab03.src.final_review import audit_frozen_trial
             trial = paths['frozen_trial']
@@ -116,7 +105,7 @@ def publish_artifacts(settings=None, output_dir=None, source_root=ROOT):
         save_json(staged/'artifact_catalog.json',catalog)
         performance_role = 'performance_report' if 'performance_report' in paths else (
             'frozen_trial' if 'frozen_trial' in paths and (paths['frozen_trial']/'performance_summary.json').is_file() else None)
-        save_json(staged/'metrics_summary.json',{'primary_result':primary, 'source_run':paths[primary].name if primary in {'study','frozen_trial'} else evaluation.name,
+        save_json(staged/'metrics_summary.json',{'primary_result':primary, 'source_run':paths[primary].name if primary == 'frozen_trial' else evaluation.name,
             'test_comparison':rows, **({'reference_test_comparison':reference_rows} if reference_rows else {}), 'measured_test_loss':loss,
             'selection_split':policy.get('split') if policy else None,
             'selected_threshold':policy.get('selected_threshold') if policy else None,
@@ -129,8 +118,6 @@ def publish_artifacts(settings=None, output_dir=None, source_root=ROOT):
             row_loss = row.get('test_loss')
             loss_text=f"{row_loss:.6f}" if row_loss is not None else 'Not logged'
             lines.append(f"| {row['policy']} | {values} | {loss_text} |")
-        if primary == 'study':
-            lines += ['', 'Bảng chính dùng study được chọn trong source_runs.json; các reference roles được giữ tách biệt theo run và protocol.']
         if primary == 'frozen_trial':
             selection=read_json(paths['frozen_trial']/'selection_summary.json')
             lines += ['', f"Bảng chính thuộc frozen trial: hoàn thành {selection['completed_epochs']:g} epoch, checkpoint epoch {selection['selected_epoch']} theo validation loss; threshold {policy['selected_threshold']:g} theo validation Macro-F1. Checkpoint và threshold được khóa trước khi đo test."]

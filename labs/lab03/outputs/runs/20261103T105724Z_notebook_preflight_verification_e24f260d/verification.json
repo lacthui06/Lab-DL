@@ -1,9 +1,0 @@
-{
-  "status": "passed",
-  "tests_passed": 125,
-  "notebook_preflight_isolated": true,
-  "training_session_restored_on_success_and_failure": true,
-  "preflight_failures_not_suppressed": true,
-  "notebook_sha256": "d7f9d7a5ae235c2bb10bf1f72c46408156ca2d072fe8641222fe553c3973c5b9",
-  "full_gpu_training_executed": false
-}

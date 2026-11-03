@@ -14,7 +14,7 @@ Dùng một phiên Kaggle mới để clone đầy đủ source.
 ## 2. Bật tài nguyên
 
 Trong Settings, bật GPU và Internet. Tài khoản Kaggle cần hoàn thành xác minh theo yêu cầu dịch vụ.
-Notebook mặc định:
+Notebook đã lưu kết quả và mặc định MODE=view. Chỉ khi muốn train mới, đổi cell setup:
 
 ```python
 MODE = "train"
@@ -77,7 +77,7 @@ python labs/lab03/scripts/render_notebooks.py --kernel python3
 ```
 
 Lệnh render chuyển MODE sang view trong bộ nhớ khi thực thi, không train hoặc tải dữ liệu.
-Source notebook giữ chế độ prepare/train để chạy trực tiếp khi import.
+Source notebook giữ MODE=view để xem kết quả an toàn; gói Kaggle CLI tự chuyển MODE=train và xóa cached outputs.
 
 ## 7. Troubleshooting
 

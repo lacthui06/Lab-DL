@@ -23,7 +23,7 @@ def test_export_keeps_clean_train_source_notebook_untouched():
     assert source.read_bytes() == before
     original = nbformat.read(source, as_version=4)
     assert len(exported.cells) == len(original.cells)
-    assert [c.source for c in exported.cells]==[c.source for c in original.cells]
+    assert all(c.source == o.source.replace('MODE = "view"', 'MODE = "train"') for c,o in zip(exported.cells, original.cells))
     assert all(not c.outputs and c.execution_count is None for c in exported.cells if c.cell_type=='code')
     code = [c.source for c in exported.cells if c.cell_type == "code"]
     assert sum('MODE = "train"' in s for s in code) == 1
@@ -49,7 +49,7 @@ def test_export_rejects_notebook_without_training_mode(tmp_path):
     notebook = nbformat.read(ROOT / "notebooks/02_modeling.ipynb", as_version=4)
     for cell in notebook.cells:
         if cell.cell_type == "code":
-            cell.source = cell.source.replace('MODE = "train"', 'MODE = "prepare"')
+            cell.source = cell.source.replace('MODE = "view"', 'MODE = "prepare"')
     broken = tmp_path / "broken.ipynb"
     nbformat.write(notebook, broken)
     with pytest.raises(ValueError, match="MODE"):

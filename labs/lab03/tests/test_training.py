@@ -9,6 +9,10 @@ def test_one_batch_sanity_overfit(tiny):
     model, tok = tiny
     loss = sanity_overfit(model, tok, steps=80, lr=.005)
     assert loss < .05, loss
+    batch = tok(["I loved this excellent movie", "A terrible boring film"] * 4,
+                padding=True, return_tensors='pt').to(next(model.parameters()).device)
+    with torch.no_grad():
+        assert model(**batch).logits.argmax(-1).tolist() == [1, 0] * 4
 
 @pytest.mark.parametrize("fp16_requested", [False, True])
 def test_trainer_train_evaluate_and_best_checkpoint(tiny, tmp_path, fp16_requested):
@@ -44,6 +48,7 @@ def test_complete_workflow_with_local_fixture(tiny, tmp_path, monkeypatch):
     monkeypatch.setattr(workflow, "prepare_data", lambda config: (raw_ds, tok, tokens))
     monkeypatch.setattr(workflow, "run_context", lambda kind, cfg: run_context(kind, cfg, root=tmp_path))
     cfg = read_config()
+    cfg["exercise2"]["augmentation"] = {"enabled": False}
     cfg["exercise2"].update(model_name=str(model_path), model_revision=None,
         num_train_epochs=1, batch_size=4, eval_batch_size=4)
     out = workflow.finetune(cfg, allow_cpu=True)

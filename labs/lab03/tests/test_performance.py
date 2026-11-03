@@ -3,7 +3,7 @@ import pytest
 from labs.lab03.src.utils.runs import ROOT, hash_file
 from labs.lab03.src.performance import ResourceMonitor, performance_data, write_performance
 
-SOURCE=ROOT/'outputs/runs/20261027T095655Z_frozen_trial_d8d09116'
+SOURCE=ROOT/'outputs/runs/20261103T110437Z_frozen_trial_b021d6eb'
 
 
 def test_cpu_resource_units_and_vram_unavailable_are_explicit():
@@ -18,16 +18,13 @@ def test_cpu_resource_units_and_vram_unavailable_are_explicit():
     assert monitor.finish() is result
 
 
-def test_historical_performance_never_invents_memory_or_pure_train_timer(tmp_path):
-    before={str(p):hash_file(p) for p in SOURCE.rglob('*') if p.is_file()}
-    rows,summary=performance_data(SOURCE)
-    assert len(rows)==10 and not summary['pure_train_resources_available']
-    assert all(r['ram_peak_rss_mib'] is None and r['train_ms_per_sample'] is None for r in rows)
-    assert all(r['vram_peak_allocated_mib'] is None for r in rows)
-    assert summary['test_eval_ms_per_sample']==pytest.approx(.4976*1000/1066)
-    assert rows[0]['epoch_pipeline_ms_per_train_sample']==pytest.approx(18.811370074999957*1000/8804)
-    write_performance(SOURCE,tmp_path)
-    assert (tmp_path/'model_architecture.png').is_file()
-    assert (tmp_path/'performance.png').is_file()
-    assert json.loads((tmp_path/'performance_summary.json').read_text())['memory_status'].startswith('not logged')
-    assert {str(p):hash_file(p) for p in SOURCE.rglob('*') if p.is_file()}==before
+def test_saved_t4_performance_is_measured_and_sources_are_unchanged(tmp_path):
+    before = {str(p): hash_file(p) for p in SOURCE.rglob('*') if p.is_file()}
+    rows, summary = performance_data(SOURCE)
+    assert len(rows) == 5 and summary['pure_train_resources_available']
+    assert summary['training_ram_complete'] and summary['training_vram_complete']
+    assert all(r['ram_peak_rss_mib'] > 0 and r['vram_peak_allocated_mib'] > 0 for r in rows)
+    assert summary['test_eval_ms_per_sample'] == pytest.approx(.4263602251407129)
+    write_performance(SOURCE, tmp_path)
+    assert (tmp_path/'model_architecture.png').is_file() and (tmp_path/'performance.png').is_file()
+    assert {str(p): hash_file(p) for p in SOURCE.rglob('*') if p.is_file()} == before

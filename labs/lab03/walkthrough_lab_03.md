@@ -629,6 +629,114 @@ Notebook có cell output được tải riêng từ giao diện Kaggle.
 
 ## 3. Đọc kết quả và hoàn thành báo cáo
 
+### 3.0. Kết quả thực nghiệm đã xác minh từ ZIP Kaggle
+
+Nguồn duy nhất cho kết quả chính: `20261103T110437Z_frozen_trial_b021d6eb`, source commit `c02effea2f08e630c37775712cfbc9ac7e6faa8e`, Kaggle Tesla T4. ZIP do người thực hiện gửi; 158 file khớp bundle SHA256 trước nhập. Run sources được giữ nguyên byte; biểu đồ/bảng/log được publish để dùng trực tiếp trong report. Không huấn luyện lại, không chọn lại threshold trên test, không đổi số đo.
+
+[Report có toàn bộ hình và log](outputs/published/index.md) · [Selection](outputs/latest_report.json) · [Audit độc lập](validation/final_review_audit.json) · [Bằng chứng nhập ZIP](validation/import_audit.json).
+
+#### EDA và feature engineering đã quan sát
+
+Official splits 8.530/1.066/1.066; mỗi split cân bằng hai nhãn. Không có missing/blank/invalid label, normalized duplicates trong split hoặc normalized exact overlap giữa các split. Đây là audit exact/normalized text, chưa chứng minh không có semantic paraphrase leakage.
+
+Train WordPiece median 27, P90=43, P95=47, P99=56, max=78 tokens (gồm special tokens). Cutoff 64 cắt 6/8.530 câu (0,0703%); cutoff 96/128/256 không cắt câu train. Giữ max128 đã định trước; dynamic padding tránh trả chi phí pad128 cho mọi câu. Không chọn lại cutoff bằng test.
+
+Train negative/positive có mean word count 20,94/21,05 và mean tokens 27,46/27,27: độ dài trung bình gần nhau, không phải feature phân loại mạnh tự thân. Tín hiệu phủ định/tương phản xuất hiện trong 38,12% negative và 28,65% positive; giữ các dấu hiệu này thay vì xóa stopwords. Số liệu heuristic không phải giải thích nhân quả.
+
+TF-IDF fit original train có 24.083 features, 207.847 nonzero, density 0,1012%, sparse arrays 2.528.288 bytes. Top mean TF-IDF mô tả tần suất có trọng số; không gọi là classifier importance. Modeling fit baseline train-only trên cùng effective pool như Transformer rồi chọn C bằng validation.
+
+Augmentation thêm **274 mẫu** (137 mỗi lớp), effective train **8.804**. Trần25% không phải số mẫu bắt buộc: 2.848 câu có negation/contrast được bỏ qua; số candidates của lớp negative giới hạn pool cân bằng. Không duplicate để ép thêm mẫu. Heldout không đổi. Labels synthetic kế thừa parent, chưa được người gán nhãn kiểm duyệt hết.
+
+![EDA](outputs/published/frozen_trial/lengths_by_class.png)
+![Preprocessing](outputs/published/frozen_trial/preprocessing_diagnostics.png)
+![Features](outputs/published/frozen_trial/tfidf_features.png)
+![Augmentation](outputs/published/frozen_trial/augmentation_diagnostics.png)
+
+#### Học, chọn checkpoint và regularization
+
+DistilBERT có 66.955.010 tham số, trong đó 14.767.874 trainable. Embedding và4blocks đầu frozen; encoder LR5e-6/headLR2e-5, dropout0.2/0.2/0.4, decay0.1, warmup10%, clipping1 và augmentation được khai báo trước. Không thực hiện ablation nên không kết luận riêng từng kỹ thuật gây cải thiện.
+
+| Epoch | Train accuracy (eval) | Validation accuracy | Train loss (eval) | Validation loss |
+|---|---:|---:|---:|---:|
+| 1 | 82.30% | 82.83% | 0.390672 | 0.394180 |
+| 2 | 83.58% | 83.40% | 0.367919 | 0.376805 |
+| 3 | 84.31% | 83.68% | 0.356153 | 0.369482 |
+| 4 | 84.51% | 83.96% | 0.348804 | 0.368835 |
+| 5 | 84.58% | 83.96% | 0.348564 | 0.367875 |
+
+Validation loss giảm từ0,394180 xuống0,367875; checkpoint epoch5 được chọn đúng minimum loss. Accuracy gap cuối là **0,616 điểm phần trăm**, loss gap0,01931. Chưa thấy validation-loss tăng trong cửa sổ5epoch; điều này không bảo đảm hết overfit hay mô hình tối ưu. Early stopping patience2/min_delta0.001 bật nhưng **không dừng sớm**: có đủ cải thiện trước khi chạm patience.
+
+Log ghi **2 AMP skipped optimizer steps**; không diễn giải 2.755 global steps thành 2.755 updates thành công. Mọi loss/metric cần thiết hữu hạn; giữ cảnh báo AMP trong raw log và selection_summary, không xóa để làm đẹp kết quả.
+
+![Learning curves](outputs/published/frozen_trial/learning_curves.png)
+![Architecture](outputs/published/frozen_trial/model_architecture.png)
+
+#### Threshold validation-only và kết quả test
+
+Quét19ngưỡng0,05–0,95 trên validation Macro-F1, khóa threshold **0,45** cùng identity checkpoint trước khi predict test. Không có lựa chọn threshold dựa trên test.
+
+| Model/policy | Accuracy | Precision positive | Recall positive | Binary F1 | Macro F1 |
+|---|---:|---:|---:|---:|---:|
+| TF-IDF | 78.99% | 79.21% | 78.61% | 78.91% | 78.99% |
+| Frozen DistilBERT threshold 0.5 | 82.93% | 83.05% | 82.74% | 82.89% | 82.93% |
+| Frozen DistilBERT validation threshold | 83.11% | 82.39% | 84.24% | 83.30% | 83.11% |
+
+Policy được chọn đúng **886/1.066**, sai180. Confusion matrix `[TN FP; FN TP]` = `[[437,96],[84,449]]`. So threshold0,5, threshold0,45 sửa thêm8FN nhưng tăng6FP: net thêm2dự đoán đúng, accuracy tăng0,188điểm phần trăm. So baseline, tăng44dự đoán đúng và4,128điểm phần trăm accuracy. Đây là so sánh một seed, chưa là bằng chứng thống kê về mọi lần train.
+
+Test loss **0,409902** thuộc score distribution của checkpoint, không thay đổi bởi threshold. ROC-AUC0,90037; average precision0,90974; Brier0,12664; confidence ECE0,04254. Bootstrap95% accuracy **80,86–85,37%**, conditional trên fixed model/policy, không bao gồm uncertainty của seed training.
+
+![Threshold](outputs/published/frozen_trial/validation_threshold_curves.png)
+![Confusion](outputs/published/frozen_trial/confusion_matrix.png)
+![ROC PR](outputs/published/frozen_trial/roc_pr_curves.png)
+![Calibration](outputs/published/frozen_trial/calibration_confidence.png)
+
+#### Performance đã đo
+
+RAM là parent RSS sampled20ms; VRAM là PyTorch allocator trên cuda:0. Peak/batch slots chứa shared model/optimizer; không phải bộ nhớ riêng của một câu. Các epoch dùng batch16/device. Test **0,42636ms/mẫu** là batch throughput, không phải request latency. Bảng đầy đủ nằm trong performance_history.json.
+
+| Epoch | Train ms/mẫu | Pipeline ms/train mẫu | RAM peak MiB | RAM MiB/batch slot | VRAM allocated MiB | VRAM MiB/batch slot |
+|---|---:|---:|---:|---:|---:|---:|
+| 1 | 1.6680 | 2.1173 | 1551.15 | 96.95 | 567.47 | 35.47 |
+| 2 | 1.6064 | 2.0606 | 1729.50 | 108.09 | 567.47 | 35.47 |
+| 3 | 1.6285 | 2.0841 | 1747.57 | 109.22 | 567.47 | 35.47 |
+| 4 | 1.6155 | 2.0778 | 1747.59 | 109.22 | 567.47 | 35.47 |
+| 5 | 1.6591 | 2.1285 | 1830.71 | 114.42 | 567.47 | 35.47 |
+
+VRAM reserved peak638MiB; RAM peak tăng qua epoch có thể do allocator/cache, không đủ bằng chứng kết luận memory leak. Các số này thuộc run T4 đã nhận, không phải ước lượng từ weights.
+
+![Performance](outputs/published/frozen_trial/performance.png)
+
+#### Error analysis và giới hạn
+
+Câu test607 có mệnh đề nhượng bộ “though ... routine script” nhưng kết thúc “cinematic fluidity ... makes it work”; model dự đoán positive0,9875 trong khi label negative. Đây là ví dụ cue xung đột và ambiguity của sentence-level label; không tự sửa nhãn sau khi nhìn prediction.
+
+Câu test276 “worked for me ... then it caved in” có label positive nhưng model negative0,9705. Cần ngữ cảnh rộng hơn hoặc label audit độc lập để phân biệt lỗi model với ambiguity nhãn. High-confidence examples được chọn để kiểm lỗi, không phải random sample đại diện. Không dùng các ví dụ test này để thay rule augmentation của run đã báo cáo.
+
+![Examples](outputs/published/frozen_trial/sample_predictions.png)
+
+#### Khả năng tái sử dụng sau pull
+
+Hai notebook mặc định MODE=view, đã lưu output inline từ chính artifacts này. Có thể mở trên GitHub hoặc chạy view offline mà không tải Hugging Face, không train và không cần GPU. Đổi MODE=prepare cho EDA mới; MODE=train/DEVICE=cuda cho training mới. Config mặc định chỉ dùng ngân sách5epoch.
+
+Review ZIP không có checkpoint weights: reload_check ghi nhận kiểm tra CPU FP32 thành công tại Kaggle, nhưng máy review này chỉ xác minh hash được ghi và prediction consistency, không tự load weights vắng mặt. Muốn infer/eval checkpoint thật phải giữ ZIP checkpoint riêng. Checkpoint thiếu không ngăn audit metrics, đọc biểu đồ hoặc hoàn thành report.
+
+#### Đối chiếu yêu cầu bàn giao
+
+| Yêu cầu | Bằng chứng hiện có |
+|---|---|
+| Hai notebook rõ phase/module, không quá ngắn | Notebook01:22cells,12ảnh inline; notebook02:24cells,17ảnh inline |
+| EDA/preprocessing/features | Quality, split overlap, length/cutoff, tokens/mask, TF-IDF, augmentation PNG/JSON |
+| Architecture và discussion/quyết định | Description Section4–8; walkthrough Section1–2 |
+| Ngân sách5epoch + early stopping + regularization | frozen_trial.json, selection_summary, history đủ5mốc |
+| Binary threshold | Validation scan đủ19ngưỡng, frozen policy0,45 và test comparison |
+| Train accuracy/loss, timing, RAM/VRAM | performance_history/summary, performance.png và log nguồn |
+| Hình vừa inline vừa lưu artifact | Hai notebook thực thi view không lỗi;29image/png outputs |
+| Pull về làm report không train lại | published/index.md, PNG, metrics, raw logs, SHA256 và notebook cached outputs |
+| Kiểm thử phần mềm | 91tests đạt, không skip; [log](outputs/verification/pytest.log), [JUnit](outputs/verification/pytest.xml), [summary](validation/verification.json) |
+| Giới hạn checkpoint | Review ZIP không weights; audit metrics đạt, chưa reload weights trên máy review |
+
+Tests của các module/công cụ đã loại bỏ được dọn cùng chức năng tương ứng. Bộ hiện hành vẫn kiểm dữ liệu/train-only features, dynamic padding, optimizer freezing, sanity100%/loss<0,05, early stopping, threshold tie-break/nonfinite, artifact tampering, session isolation, ZIP và notebook. Không thay bài kiểm thực bằng zero-test/syntax-only. Log preflight trong ZIP thuộc source commit lúc train; log verification hiện hành thuộc code sau rà soát.
+
 ### 3.1. Thứ tự kiểm tra một run hoàn thành
 
 Đầu tiên đọc status, config, environment và source hashes.

@@ -2,6 +2,16 @@
 
 Phân loại cảm xúc tiếng Anh trên Rotten Tomatoes: pretrained sentiment/tokenization và fine-tuning DistilBERT. Pipeline gồm đúng **hai notebook**, có roadmap, module tham chiếu, ảnh inline và artifact được lưu để dùng cho report.
 
+## Kết quả đã hoàn thành và xem ngay
+
+Run Kaggle `20261103T110437Z_frozen_trial_b021d6eb` hoàn thành **5/5 epoch**, checkpoint epoch5, threshold validation **0,45**. Test: **Accuracy83,11%, Binary F1 83,30%**, 886/1.066 mẫu đúng. TF-IDF baseline:78,99%.
+
+- [Report hình/bảng/log](outputs/published/index.md)
+- [Kết quả và diễn giải chi tiết](walkthrough_lab_03.md#30-kết-quả-thực-nghiệm-đã-xác-minh-từ-zip-kaggle)
+- [Selection](outputs/latest_report.json), [audit](validation/final_review_audit.json)
+
+Hai notebook đã có output inline và mặc định `MODE="view"`; không cần train/tải dataset để đọc báo cáo.
+
 ## Chạy trên Kaggle
 
 Import notebook modeling từ GitHub:
@@ -10,16 +20,16 @@ Import notebook modeling từ GitHub:
 https://github.com/lacthui06/Lab-DL/blob/lab03/labs/lab03/notebooks/02_modeling.ipynb
 ```
 
-Bật **GPU + Internet**, rồi **Run All**. Notebook mặc định `MODE="train"`, `DEVICE="cuda"`; bắt đầu từ pretrained base, tải official dataset và thực hiện trọn pipeline. Không cần cung cấp checkpoint đầu vào.
+Bật **GPU + Internet**, rồi **Run All**. Để train mới, đổi cell setup thành `MODE="train"`, `DEVICE="cuda"`; bắt đầu từ pretrained base, tải official dataset và thực hiện trọn pipeline. Không cần cung cấp checkpoint đầu vào.
 
-Cấu hình: **tối đa 5 epoch**, early stopping theo validation loss, patience 2, min_delta 0.001. Số epoch thực chạy có thể ít hơn 5. Kết quả, selected checkpoint và threshold được lấy từ chính phiên thực thi.
+Cấu hình: **tối đa 5 epoch**, early stopping theo validation loss, patience 2, min_delta 0.001. Số epoch thực chạy có thể ít hơn 5. Notebook01 có ZIP EDA riêng ở cuối khi MODE=prepare. Kết quả, selected checkpoint và threshold được lấy từ chính phiên thực thi.
 
 ## Hai notebook
 
 | Notebook | Nội dung | Chế độ mặc định |
 |---|---|---|
-| [01 — EDA, preprocessing, feature engineering](notebooks/01_eda_preprocessing_feature_engineering.ipynb) | Quality/leakage audit, nhãn/độ dài, cutoff, tokens/IDs/mask, TF-IDF, augmentation | `prepare` |
-| [02 — Modeling](notebooks/02_modeling.ipynb) | Pretrained sentiment, baseline, fine-tune, performance, threshold, evaluation, errors, export | `train` |
+| [01 — EDA, preprocessing, feature engineering](notebooks/01_eda_preprocessing_feature_engineering.ipynb) | Quality/leakage audit, nhãn/độ dài, cutoff, tokens/IDs/mask, TF-IDF, augmentation | `view` (đổi `prepare` để tạo mới) |
+| [02 — Modeling](notebooks/02_modeling.ipynb) | Pretrained sentiment, baseline, fine-tune, performance, threshold, evaluation, errors, export | `view` (đổi `train` để tạo mới) |
 
 Ảnh được hiển thị từ cùng PNG đã lưu trong `outputs/runs/<run_id>/`. Sau khi có kết quả, `MODE="view"` đọc selection trong `outputs/latest_preparation.json` hoặc `outputs/latest_report.json`; không train để lấy lại hình. Notebook01 không phải điều kiện bắt buộc trước notebook02: script modeling tự thực hiện cùng data/feature pipeline.
 

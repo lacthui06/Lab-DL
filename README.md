@@ -22,7 +22,7 @@ Repository containing source code, engineering workflows, and practical lab exer
 
 Lab03 uses its own pinned dependencies in `labs/lab03/requirements.txt` and a separate Python 3.12 environment; do not replace the Lab01 environment with these pins.
 
-Lab03 notebooks now include phase roadmaps, module references and persisted visual diagnostics; threshold 0.8 was selected on validation and evaluated on test (accuracy 84.05%, binary F1 83.50%). Historical test sensitivity plots do not choose a threshold from test.
+Lab03: hai notebook đã có output EDA/modeling từ run Kaggle5epoch. Validation-selected threshold0.45; test accuracy83.11%, binary F1 83.30%. Xem [report hình, bảng và log](labs/lab03/outputs/published/index.md) và [walkthrough](labs/lab03/walkthrough_lab_03.md).
 
 ## Lab Directory
 

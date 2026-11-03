@@ -1,9 +1,0 @@
-{
-  "config.json": "9523fc528a366ef49f5b1593c202d84518baaecccdccea9c5d80272409ede4c2",
-  "console.log": "024a1b2bf8d913ca3bd6ea57868bb55f50401d683a079c5d1037f9e60257f104",
-  "environment_snapshot.json": "bcf0d01e2586b4625a96504b6da40ca423cc190b0c9789f7749cdb3a7245ff29",
-  "pytest.log": "c519ae65438b07c83ec370bacddf59c5c480c22882e1931f3caad3a68b4a3506",
-  "pytest.xml": "4248b471ec8fbf3b3e0eb5eb956d69efdcbff2ac92971887afb55762c8d0ee6d",
-  "status.json": "7ccc76c79702d3036f1f73acdf5cc4c333fa7d9721df7437015a74558db32533",
-  "verification.json": "59b23a69d36b6ee6b462ca879f7f9d6cffc20967798415262abe703d85962445"
-}

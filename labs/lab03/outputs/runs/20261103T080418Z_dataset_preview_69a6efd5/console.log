@@ -1,5 +1,0 @@
-Run: 20261103T080418Z_dataset_preview_69a6efd5
-Source: reconstructed public corpus; see data_source_provenance.json
-Splits: {'train': 8530, 'validation': 1066, 'test': 1066}
-Statistics: {'train_samples': 8530, 'fitted_split': 'train', 'token_quantiles': {'0.5': 27.0, '0.9': 43.0, '0.95': 47.0, '0.99': 56.0, '1.0': 78.0}, 'truncation_rates': {'64': 0.0007033997655334115, '96': 0.0, '128': 0.0, '256': 0.0}, 'configured_max_length': 128, 'preserve_negation_punctuation': True, 'normalized_train_conflicting_label_groups': 0}
-Features: {'fitted_split': 'train', 'settings': {'ngram_range': [1, 2], 'min_df': 2, 'max_features': 50000}, 'train_shape': [8530, 24083], 'nnz': 207847, 'density': 0.0010117754644827124, 'sparse_array_storage_bytes': 2528288, 'storage_note': 'array footprint only, not process RAM peak'}

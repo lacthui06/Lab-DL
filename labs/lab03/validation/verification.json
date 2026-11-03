@@ -1,22 +1,13 @@
 {
-  "artifact_run": "20261027T121218Z_verification_ff365b79",
-  "tests_passed": 109,
-  "notebook_count": 2,
-  "relative_links_verified": 60,
-  "notebook_inline_pngs": {
-    "01_eda_preprocessing_feature_engineering.ipynb": 6,
-    "02_modeling.ipynb": 11
-  },
-  "full_training_executed": false,
-  "saved_scientific_metrics_changed": false,
-  "device_modes_supported": [
-    "auto",
-    "cuda",
-    "cpu"
-  ],
-  "local_cuda_training_benchmarked": false,
-  "scientific_raw_evidence_preserved": true,
-  "old_render_and_software_proof_runs_removed": 19,
-  "duplicate_copy_cell_helpers_removed": 4,
-  "obsolete_cli_wrappers_removed": 7
+  "tests": 91,
+  "failures": 0,
+  "errors": 0,
+  "skipped": 0,
+  "runtime_seconds": 17.056,
+  "workflow": "CPU tiny fixtures and real Kaggle artifact audit; full training not executed locally",
+  "test_log": "outputs/verification/pytest.log",
+  "junit": "outputs/verification/pytest.xml",
+  "one_batch_sanity": "loss < 0.05 and 100% accuracy on 8 disposable fixture samples",
+  "notebook_execution": "validation/notebook_execution.json",
+  "gpu_validation": "Kaggle run evidence from provided review ZIP; checkpoint weights absent locally"
 }

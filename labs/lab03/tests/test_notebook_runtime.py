@@ -36,6 +36,36 @@ def test_device_selection_is_explicit_and_cuda_unavailability_is_reported(monkey
     with pytest.raises(ValueError):resolve_device('invalid')
 
 
+def test_preparation_export_is_self_contained_and_detects_corruption(tmp_path, monkeypatch):
+    import json
+    import zipfile
+    import hashlib
+    from labs.lab03.src.utils.runs import save_json
+    session = NotebookSession(tmp_path, mode='prepare')
+    session.kaggle = False
+    for role in ('data', 'augmentation'):
+        folder = session.lab/'outputs/runs'/role
+        folder.mkdir(parents=True)
+        (folder/'console.log').write_text('actual preparation log')
+        (folder/'diagnostic.png').write_bytes(b'fixture-image')
+        save_json(folder/'config.json', {'session_id': session.env['LAB03_SESSION_ID']})
+        save_json(folder/'status.json', {'status': 'completed'})
+        save_json(folder/'manifest.json', {p.name: hash_file(p) for p in folder.iterdir()})
+        session.paths[role] = folder
+    save_json(session.lab/'outputs/latest_preparation.json', {'runs': {k: p.name for k,p in session.paths.items()}})
+    monkeypatch.setattr('IPython.display.display', lambda *a: None)
+    archive = session.export_preparation()
+    with zipfile.ZipFile(archive) as z:
+        manifest = json.loads(z.read('bundle_manifest.json'))
+        assert all(hashlib.sha256(z.read(n)).hexdigest() == h for n,h in manifest.items())
+        assert 'outputs/latest_preparation.json' in manifest
+        assert 'outputs/preparation/index.md' in manifest
+        assert len([n for n in manifest if n.endswith('.png')]) == 4
+        assert 'diagnostic.png' in z.read('outputs/preparation/index.md').decode()
+    (session.paths['data']/'console.log').write_text('tampered')
+    with pytest.raises(ValueError): session.export_preparation()
+
+
 def test_train_session_starts_without_loading_report_or_previous_selection(tmp_path):
     from labs.lab03.src.utils.runs import save_json
     lab=tmp_path/'labs/lab03'

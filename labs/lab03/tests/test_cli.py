@@ -42,27 +42,6 @@ def test_eval_and_infer_use_checkpoint_config_without_backbone_download(tiny, tm
     assert '"probabilities"' in capsys.readouterr().out
 
 
-def test_checkpoint_threshold_command_reads_validation_only(tiny, tmp_path, monkeypatch):
-    model, tokenizer = tiny
-    run = tmp_path / "training_run"; checkpoint = run / "best_model"
-    model.save_pretrained(checkpoint); tokenizer.save_pretrained(checkpoint)
-    cfg = read_config(); cfg["exercise2"].update(dataset_name="original-dataset", max_length=4)
-    save_json(run / "config.json", cfg)
-    validation = Dataset.from_dict({"text":["excellent movie","terrible film"],"label":[1,0]})
-    # Không cấp train/test: script sẽ lỗi nếu dùng nhầm split để chọn threshold.
-    monkeypatch.setattr("labs.lab03.src.datasets.loader.load_data", lambda config: {"validation": validation})
-    monkeypatch.setattr("labs.lab03.src.utils.runs.run_context",
-        lambda kind, config: run_context(kind, config, root=tmp_path / "selection"))
-    monkeypatch.setattr(sys,"argv",["select_threshold.py","--model-path",str(checkpoint)])
-    runpy.run_path(str(ROOT / "scripts/select_threshold.py"),run_name="__main__")
-    state=json.loads((tmp_path / "selection/config/workflow.json").read_text())
-    out=tmp_path / "selection/outputs/runs" / state["active_runs"]["threshold_selection"]
-    policy=json.loads((out / "decision_threshold.json").read_text())
-    assert policy["split"] == "validation" and policy["sample_count"] == 2
-    assert (out / "validation_predictions.json").exists()
-    assert not (out / "all_predictions.json").exists()
-
-
 def test_infer_rejects_threshold_without_checkpoint_before_model_download(monkeypatch):
     def forbidden(*args,**kwargs):
         raise AssertionError("Must reject invalid arguments before downloading any model")

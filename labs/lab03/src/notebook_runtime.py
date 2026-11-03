@@ -45,6 +45,9 @@ class NotebookSession:
 
     def setup(self):
         """Kaggle dùng interpreter riêng; local dùng kernel đã cài requirements."""
+        if self.mode == 'view':
+            print('MODE=view: đọc artifacts đã lưu; không cài/tải model, không training.')
+            return
         if self.kaggle:
             subprocess.run([sys.executable,'-m','pip','install','-q','uv==0.9.5'],check=True)
             env = Path('/kaggle/working/lab03-py312')
@@ -128,6 +131,58 @@ class NotebookSession:
     def performance(self):
         self.paths['performance'] = self.paths['model']
         return self.read(self.paths['performance']/'performance_summary.json')
+
+    def export_preparation(self):
+        """Xuất ảnh/log EDA đã xác minh để xem và làm report không cần tải lại data."""
+        import zipfile
+        import shutil
+        from .evidence import verify_manifest
+        from .utils.runs import save_json, hash_file
+        if self.mode == 'view':
+            print('Ảnh EDA đã lưu:', self.paths['data'])
+            return
+        roles = {role: self.paths[role] for role in ('data', 'augmentation')}
+        for folder in roles.values():
+            verify_manifest(folder)
+        published = self.lab/'outputs/preparation'
+        if published.exists(): shutil.rmtree(published)
+        published.mkdir(parents=True, exist_ok=True)
+        lines = ['# EDA và feature engineering', '', 'Ảnh và log từ các run nguồn đã kiểm tra SHA256.', '']
+        files = [self.lab/'outputs/latest_preparation.json']
+        for role, folder in roles.items():
+            for path in sorted(folder.rglob('*')):
+                if not path.is_file(): continue
+                files.append(path)
+                target = published/role/path.relative_to(folder)
+                target.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copyfile(path, target)
+                files.append(target)
+                relative = target.relative_to(published).as_posix()
+                if path.suffix == '.png': lines += [f'## {role}: {path.stem}', '', f'![{path.stem}]({relative})', '']
+                elif path.name == 'console.log': lines += [f'[Log {role}]({relative})', '']
+        (published/'index.md').write_text('\n'.join(lines), encoding='utf-8')
+        save_json(published/'manifest.json', {p.relative_to(published).as_posix(): hash_file(p)
+            for p in published.rglob('*') if p.is_file() and p.name != 'manifest.json'})
+        files += [published/'index.md', published/'manifest.json']
+        destination = Path('/kaggle/working') if self.kaggle else self.lab/'outputs'
+        archive = destination/f'lab03_preparation_{roles["data"].name}.zip'
+        with zipfile.ZipFile(archive, 'w', zipfile.ZIP_DEFLATED) as z:
+            manifest = {}
+            for path in files:
+                name = path.relative_to(self.lab).as_posix()
+                z.write(path, name); manifest[name] = hash_file(path)
+            z.writestr('bundle_manifest.json', json.dumps(manifest, indent=2))
+        self._download(archive)
+        return archive
+
+    def _download(self, path):
+        from IPython.display import display, HTML, FileLink
+        from urllib.parse import quote
+        print(path, f'{path.stat().st_size/1024**2:.1f} MiB')
+        if self.kaggle:
+            display(HTML(f'<a href="/files/{quote(path.name)}" download="{path.name}">Tải {path.name}</a>'))
+        else:
+            display(FileLink(os.path.relpath(path, Path.cwd())))
 
     def export(self):
         if self.mode == 'view':
