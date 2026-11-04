@@ -5,7 +5,7 @@
   "trainable_parameters": 14767874,
   "optimizer_groups": [
     {
-      "lr": 2e-06,
+      "lr": 5e-06,
       "weight_decay": 0.1,
       "parameter_names": [
         "distilbert.transformer.layer.4.attention.q_lin.weight",
@@ -34,7 +34,7 @@
       "fused": null
     },
     {
-      "lr": 2e-06,
+      "lr": 5e-06,
       "weight_decay": 0.0,
       "parameter_names": [
         "distilbert.transformer.layer.4.attention.q_lin.bias",
@@ -71,7 +71,7 @@
       "fused": null
     },
     {
-      "lr": 1e-05,
+      "lr": 2e-05,
       "weight_decay": 0.1,
       "parameter_names": [
         "pre_classifier.weight",
@@ -90,7 +90,7 @@
       "fused": null
     },
     {
-      "lr": 1e-05,
+      "lr": 2e-05,
       "weight_decay": 0.0,
       "parameter_names": [
         "pre_classifier.bias",

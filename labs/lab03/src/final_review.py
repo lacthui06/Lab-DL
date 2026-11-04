@@ -1,9 +1,8 @@
 """Kiểm toán frozen trial và dựng báo cáo so sánh từ artifact đã đo, không train."""
 from pathlib import Path
 import numpy as np
-from sklearn.metrics import classification_report, log_loss
+from sklearn.metrics import log_loss
 from .evidence import read_json, verify_manifest
-from .utils.runs import ROOT, hash_file, save_json, run_context
 from .training.thresholds import binary_metrics_at_threshold, select_validation_threshold
 
 
@@ -14,9 +13,13 @@ def audit_frozen_trial(run):
     rows = read_json(run/'epoch_history.json')
     selection = read_json(run/'selection_summary.json')
     frozen = read_json(run/'frozen_selection.json')
-    if ([r['epoch'] for r in rows] != list(range(1, 11)) or cfg['num_train_epochs'] != 10
-            or cfg['metric_for_best_model'] != 'loss' or selection['early_stopping']):
-        raise ValueError('Expected ten epochs and validation-loss checkpoint selection')
+    budget, completed = cfg['num_train_epochs'], len(rows)
+    enabled = bool(cfg.get('early_stopping',{}).get('enabled',False))
+    if (not 1 <= completed <= budget or [r['epoch'] for r in rows] != list(range(1,completed+1))
+            or cfg['metric_for_best_model'] != 'loss' or selection['early_stopping'] != enabled
+            or selection['completed_epochs'] != completed or selection.get('requested_epochs',budget) != budget
+            or (not enabled and completed != budget)):
+        raise ValueError('Epoch history differs from declared budget/early-stopping policy')
     best = min(rows, key=lambda r: r['validation_loss'])
     if best['epoch'] != selection['selected_epoch'] or best['step'] != selection['best_step']:
         raise ValueError('Checkpoint differs from minimum validation loss')
@@ -86,95 +89,68 @@ def audit_frozen_trial(run):
     return {'status':'passed', 'run_id':run.name, 'manifest':manifest, 'selected_epoch':best['epoch'],
         'threshold':policy['selected_threshold'], 'test_samples':len(test),
         'weights_loaded_locally':False, 'threshold_reselected_on_test':False,
-        'historical_test_previously_inspected':True}
+        'test_used_for_selection':False}
 
 
-def ensure_final_review(root=ROOT):
-    root = Path(root)
-    configuration = read_json(root/'config/report.json')
-    roles = configuration['runs']
-    trial = root/'outputs/runs'/roles['frozen_trial']
-    augmented = root/'outputs/runs'/roles['augmented_study']
-    audit = audit_frozen_trial(trial)
-    from .study_evidence import audit_study
-    audit_study(augmented, root=root)
-    sources = {'frozen_trial':trial, 'augmented_study':augmented,
-        'unregularized_study':root/'outputs/runs'/roles['study']}
-    key = {'source_manifests':{k:hash_file(p/'manifest.json') for k,p in sources.items()},
-           'analysis_code_sha256':hash_file(Path(__file__))}
-    registry = read_json(root/'config/workflow.json')
-    for record in reversed(registry['runs']):
-        if record['kind'] == 'final_review' and record['status'] == 'completed':
-            folder = root/'outputs/runs'/record['id']
-            if read_json(folder/'review_source.json') == key:
-                verify_manifest(folder)
-                return folder
-    trial_rows = read_json(trial/'epoch_history.json')
-    selected = read_json(trial/'selection_summary.json')
-    augmented_winner = read_json(augmented/'study_summary.json')['winner']['run_id']
-    augmented_epochs = read_json(root/'outputs/runs'/augmented_winner/'epoch_history.json')
-    comparison = []
-    for label, path in [('Unregularized 10 epoch',sources['unregularized_study']),
-                        ('Augmented full fine-tuning',augmented), ('Frozen 4 layers',trial)]:
-        metrics = read_json(path/'test_comparison.json')[-1]
-        diagnostic = read_json(path/'probability_diagnostics.json')
-        comparison.append({'experiment':label,'run_id':path.name,
-            **{k:metrics[k] for k in ('threshold','accuracy','precision','recall','binary_f1','macro_f1','TN','FP','FN','TP')},
-            'test_loss':read_json(path/'test_runtime_metrics.json')['test_loss'],
-            'confidence_ece':diagnostic['confidence_ece'], 'brier_score':diagnostic['brier_score']})
-    for source in (augmented, sources['unregularized_study']):
-        records = read_json(source/'all_predictions.json')
-        if [(r['index'],r['text'],r['true_label']) for r in records] != [(r['index'],r['text'],r['true_label']) for r in read_json(trial/'test_predictions.json')]:
-            raise ValueError('Historical test cohorts differ')
-    records = read_json(trial/'test_predictions.json')
-    threshold = audit['threshold']
-    y = np.array([r['true_label'] for r in records]); p = np.array([r['probabilities'][1] for r in records])
-    predicted = (p >= threshold).astype(int)
-    report = classification_report(y, predicted, labels=[0,1], target_names=['NEGATIVE','POSITIVE'], output_dict=True)
-    per_class = []
-    for c, name in enumerate(('NEGATIVE','POSITIVE')):
-        fp = int(np.sum((predicted==c)&(y!=c))); negative_support = int(np.sum(y!=c))
-        per_class.append({'class':name,**report[name], 'TPR':report[name]['recall'],'FPR':fp/negative_support})
-    examples = [{**r, 'predicted_label':int(predicted[i]), 'confidence':float(max(r['probabilities'])),
-        'correct':bool(predicted[i]==y[i])} for i,r in enumerate(records)]
-    shown = []
-    for correct in (True, False):
-        for label in (0,1):
-            candidates = [r for r in examples if r['correct']==correct and r['true_label']==label]
-            shown.extend(sorted(candidates,key=lambda r:-r['confidence'])[:2])
-    final = trial_rows[-1]; previous = augmented_epochs[-1]
-    gap = {'frozen_final':{'accuracy_gap':final['train_accuracy']-final['validation_accuracy'],
-        'loss_gap':final['validation_loss']-final['train_loss_eval']},
-        'augmented_final':{'accuracy_gap':previous['train_accuracy']-previous['validation_accuracy'],
-        'loss_gap':previous['validation_loss']-previous['train_loss_eval']}}
-    with run_context('final_review',key,root=root) as out:
-        save_json(out/'review_source.json',key);save_json(out/'audit.json',audit)
-        save_json(out/'comparison.json',comparison);save_json(out/'per_class_metrics.json',per_class)
-        save_json(out/'sample_predictions.json',shown);save_json(out/'generalization_gaps.json',gap)
-        save_json(out/'review_summary.json',{'primary_result':'frozen_trial','run_id':trial.name,
-            'selected_epoch':selected['selected_epoch'],'threshold':threshold,
-            'purpose':'reduce observed overfitting, not maximize historical test accuracy',
-            'one_training_seed':True,'causal_ablation_performed':False,
-            'checkpoint_loaded_locally':False,'test_used_for_new_selection':False,
-            'test_previously_inspected':True,'test_comparison':comparison})
-        from .analysis import _table_image
-        from .utils.plots import finish, plot_samples
-        import matplotlib.pyplot as plt
-        plot_samples(shown, out/'sample_predictions.png')
-        _table_image(per_class,['class','precision','recall','f1-score','TPR','FPR','support'],
-            out/'per_class_metrics.png','Class metrics at validation-selected threshold',widths=[.2,.14,.14,.14,.13,.13,.12])
-        fig, axes = plt.subplots(1,2,figsize=(12,4))
-        for name, rows in [('Augmented full fine-tuning',augmented_epochs),('Frozen 4 layers',trial_rows)]:
-            axes[0].plot([r['epoch'] for r in rows],[r['validation_loss']-r['train_loss_eval'] for r in rows],marker='o',label=name)
-            axes[1].plot([r['epoch'] for r in rows],[100*(r['train_accuracy']-r['validation_accuracy']) for r in rows],marker='o',label=name)
-        for ax in axes:ax.set(xlabel='Epoch',xticks=list(range(1,11)));ax.grid(alpha=.2);ax.legend()
-        axes[0].set_ylabel('Validation loss minus train loss (eval mode)')
-        axes[1].set_ylabel('Train minus validation accuracy (percentage points)')
-        finish(fig,out/'generalization_gaps.png')
-        fig,axes=plt.subplots(1,3,figsize=(14,4))
-        for ax,key,label in zip(axes,['accuracy','test_loss','confidence_ece'],['Test accuracy','Test loss','Confidence ECE']):
-            values=[r[key] for r in comparison]
-            bars=ax.bar(['Original','Augmented','Frozen'],values);ax.bar_label(bars,fmt='%.3f');ax.set_title(label)
-            ax.set_ylim(0, max(values)*1.2)
-        finish(fig,out/'experiment_comparison.png')
-    return out
+def write_results_analysis(run, output):
+    """Dẫn xuất báo cáo từ predictions/history đã audit; không sửa nguồn hoặc load model."""
+    from .utils.runs import save_json,hash_file
+    from .utils.plots import finish
+    import matplotlib.pyplot as plt
+    run,output=Path(run),Path(output)
+    audit_frozen_trial(run)
+    output.mkdir(parents=True,exist_ok=True)
+    settings=read_json(run/'config.json')['exercise2']
+    policy=read_json(run/'decision_threshold.json')
+    records=read_json(run/'test_predictions.json')
+    labels=np.array([r['true_label'] for r in records])
+    probabilities=np.array([r['probabilities'] for r in records])
+    predicted=probabilities[:,1]>=policy['selected_threshold']
+    metrics=[]
+    for label,name in [(0,'Negative'),(1,'Positive')]:
+        truth,decision=labels==label,predicted==label
+        tp=int(np.sum(truth & decision));fp=int(np.sum(~truth & decision))
+        fn=int(np.sum(truth & ~decision));tn=int(np.sum(~truth & ~decision))
+        ratio=lambda a,b:a/b if b else 0.
+        precision,recall=ratio(tp,tp+fp),ratio(tp,tp+fn)
+        metrics.append({'label':label,'class':name,'precision':precision,'recall':recall,
+            'f1':ratio(2*precision*recall,precision+recall),'true_positive_rate':recall,
+            'false_positive_rate':ratio(fp,fp+tn),'support':int(truth.sum()),
+            'TP':tp,'FP':fp,'FN':fn,'TN':tn})
+    history=read_json(run/'epoch_history.json')
+    stop=settings.get('early_stopping',{})
+    best=None;counter=0;replay=[]
+    for row in history:
+        loss=row['validation_loss']
+        improved=best is None or (loss<best and abs(loss-best)>stop.get('min_delta',.001))
+        counter=0 if improved else counter+1
+        replay.append({'epoch':row['epoch'],'validation_loss':loss,'previous_best_loss':best,
+            'improved_beyond_min_delta':improved,'patience_counter':counter})
+        best=loss if best is None else min(best,loss)
+    stopping={'source':'replay of Transformers 4.48.3 callback using config and epoch_history; not a recorded callback counter',
+        'counter_was_logged':False,'epochs':replay,'enabled':stop.get('enabled',False),
+        'patience_reached_at_budget':bool(stop.get('enabled') and counter>=stop.get('patience',2)
+            and len(history)==settings['num_train_epochs'])}
+    baseline=read_json(run/'baseline_test_predictions.json')
+    baseline_probs=np.array([r['probabilities'] for r in baseline]);baseline_probs/=baseline_probs.sum(axis=1,keepdims=True)
+    summary={'source_run':run.name,'source_manifest_sha256':hash_file(run/'manifest.json'),
+        'analysis_code_sha256':hash_file(Path(__file__)),'test_samples':len(records),
+        'test_loss':read_json(run/'test_runtime_metrics.json')['test_loss'],
+        'baseline_log_loss':float(log_loss(labels,baseline_probs,labels=[0,1])),
+        'baseline_loss_scope':'recomputed sklearn log_loss from full baseline test probabilities; not neural cross-entropy GPU timing',
+        'final_accuracy_gap_pp':100*(history[-1]['train_accuracy']-history[-1]['validation_accuracy']),
+        'final_loss_gap':history[-1]['validation_loss']-history[-1]['train_loss_eval'],
+        'gpu_weights_loaded_for_analysis':False}
+    save_json(output/'results_summary.json',summary)
+    save_json(output/'per_class_metrics.json',metrics)
+    save_json(output/'early_stopping_replay.json',stopping)
+    fig,axes=plt.subplots(1,2,figsize=(12,4));x=np.arange(2)
+    for i,key in enumerate(('precision','recall','f1')):
+        axes[0].bar(x+(i-1)*.24,[100*r[key] for r in metrics],width=.24,label=key)
+    axes[0].set(xticks=x,xticklabels=['Negative','Positive'],ylim=(0,100),ylabel='Test (%)',title='Per-class metrics at validation-selected threshold')
+    axes[0].legend()
+    bars=axes[1].bar(['Negative','Positive'],[100*r['false_positive_rate'] for r in metrics])
+    axes[1].bar_label(bars,fmt='%.2f%%')
+    axes[1].set(ylim=(0,100),ylabel='One-vs-rest FPR (%)',title='False positive rate: other class predicted as this class')
+    finish(fig,output/'per_class_metrics.png')
+    return summary

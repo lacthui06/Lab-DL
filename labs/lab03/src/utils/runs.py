@@ -53,7 +53,10 @@ def run_context(kind, config, root=ROOT):
     run_id = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ") + "_" + kind + "_" + uuid.uuid4().hex[:8]
     path = root / "outputs" / "runs" / run_id
     path.mkdir(parents=True, exist_ok=False)
-    save_json(path / "config.json", config)
+    recorded_config = dict(config)
+    if os.environ.get('LAB03_SESSION_ID'):
+        recorded_config['session_id'] = os.environ['LAB03_SESSION_ID']
+    save_json(path / "config.json", recorded_config)
     save_json(path / "environment_snapshot.json", snapshot())
     status = "failed"
     try:

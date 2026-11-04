@@ -17,8 +17,8 @@
     "max_length": 128,
     "batch_size": 16,
     "eval_batch_size": 32,
-    "learning_rate": 2e-06,
-    "num_train_epochs": 10,
+    "learning_rate": 5e-06,
+    "num_train_epochs": 5,
     "weight_decay": 0.1,
     "warmup_ratio": 0.1,
     "fp16": true,
@@ -48,8 +48,16 @@
       "max_ratio": 0.25,
       "require_added": true
     },
-    "head_learning_rate": 1e-05,
-    "freeze_layers": 4
+    "head_learning_rate": 2e-05,
+    "freeze_layers": 4,
+    "early_stopping": {
+      "enabled": true,
+      "patience": 2,
+      "min_delta": 0.001,
+      "monitor": "validation_loss"
+    },
+    "device": "cuda"
   },
-  "experiment_name": "frozen_four_layers_validation_loss"
+  "experiment_name": "frozen_regularized_five_epoch_early_stopping",
+  "session_id": "2b0c27120e0f41cb8cd5d87d8e876f0d"
 }

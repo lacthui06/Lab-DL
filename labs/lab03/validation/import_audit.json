@@ -1,0 +1,11 @@
+{
+  "source_archive": "lab03_review_20261103T110437Z_frozen_trial_b021d6eb.zip",
+  "archive_sha256": "eefe66cde41cc62349d27b47649a21de712c17c678b41bd3c52a4fd6e609940b",
+  "bundle_files_verified_before_import": 158,
+  "source_files_preserved": 82,
+  "source_run": "20261103T110437Z_frozen_trial_b021d6eb",
+  "weights_included": false,
+  "source_commit": "c02effea2f08e630c37775712cfbc9ac7e6faa8e",
+  "source_run_bytes_modified": false,
+  "publication_note": "Published files are derived from verified source runs; original bundle manifest retained in outputs/imports."
+}

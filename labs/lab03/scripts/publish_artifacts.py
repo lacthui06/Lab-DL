@@ -11,7 +11,7 @@ from labs.lab03.src.evidence import read_json, verify_manifest
 from labs.lab03.src.utils.runs import ROOT, hash_file, save_json
 
 JSON_FILES = {
-    "artifact_availability.json", "config.json", "test_metrics.json", "test_threshold_metrics.json", "test_runtime_metrics.json",
+    "baseline_architecture.txt", "model_architecture.txt", "artifact_availability.json", "config.json", "test_metrics.json", "test_threshold_metrics.json", "test_runtime_metrics.json",
     "train_metrics.json", "trainer_history.json", "data_statistics.json", "provenance.json",
     "reload_check.json", "decision_threshold.json", "validation_metrics.json", "validation_runtime_metrics.json",
     "summary.json", "analysis_summary.json", "tables.json", "threshold_scan.json", "selected_threshold.json",
@@ -23,14 +23,19 @@ JSON_FILES = {
     "freezing_and_optimizer.json", "test_predictions.json", "baseline_test_predictions.json", "baseline_policy.json",
     "validation_threshold_scan.json", "comparison.json", "per_class_metrics.json", "generalization_gaps.json", "review_summary.json", "audit.json",
     "inference_predictions.json", "baseline_validation_candidates.json", "baseline_validation_policy.json", "checkpoint_reference.json",
+    "performance_history.json", "performance_summary.json", "performance_source.json", "resource_history.json",
+    "test_resource_metrics.json", "model_architecture.json", "environment_snapshot.json", "source_commit.json",
+    "data_source_provenance.json", "data_quality.json", "preprocessing_statistics.json", "text_signals.json", "tokenization_examples.json", "feature_summary.json",
 }
 
 
 def publish_artifacts(settings=None, output_dir=None, source_root=ROOT):
-    """Chọn run tường minh qua report.json; giữ đường dẫn hình ổn định cho report."""
+    """Chọn run tường minh qua selection; giữ đường dẫn hình ổn định cho report."""
     source_root = Path(source_root)
-    settings = Path(settings or source_root / "config/report.json")
+    settings = Path(settings or source_root / "outputs/latest_report.json")
     output = Path(output_dir or source_root / "outputs/published")
+    if not settings.is_file():
+        raise FileNotFoundError('Chưa có outputs/latest_report.json; chạy notebook modeling trước khi publish.')
     configuration = read_json(settings)
     selected = configuration["runs"]
     paths = {}
@@ -43,9 +48,24 @@ def publish_artifacts(settings=None, output_dir=None, source_root=ROOT):
     if "threshold_selection" in paths and "evaluation" in paths:
         if read_json(paths['threshold_selection']/'decision_threshold.json') != read_json(paths['evaluation']/'decision_threshold.json'):
             raise ValueError("Report selection and evaluation use different threshold policies")
+    architecture=source_root/'outputs/architecture'
+    architecture_files=[]
+    if (architecture/'manifest.json').is_file():
+        declared=read_json(architecture/'manifest.json')
+        if set(declared)!={'model_architectures.txt','summary.json'}:
+            raise ValueError('Invalid architecture manifest')
+        for name,digest in declared.items():
+            if not (architecture/name).is_file() or hash_file(architecture/name)!=digest:
+                raise ValueError('Architecture SHA256 mismatch')
+            architecture_files.append(architecture/name)
+        architecture_files.append(architecture/'manifest.json')
     provenance = {"runs": selected, "source_manifests": {k: hash_file(p/'manifest.json') for k,p in paths.items()},
-                  "exporter_sha256": hash_file(Path(__file__)), "primary_result": configuration.get("primary_result", "historical"),
-                  "weights_included": False, "raw_logs_included": False}
+                  "availability_sha256": {k:hash_file(p/'artifact_availability.json') for k,p in paths.items() if (p/'artifact_availability.json').is_file()},
+                  "exporter_sha256": hash_file(Path(__file__)), "primary_result": configuration.get("primary_result", "evaluation"),
+                  "results_analysis_code_sha256": hash_file(Path(__file__).resolve().parents[1]/"src/final_review.py"),
+                  "architecture_manifest_sha256":hash_file(architecture/"manifest.json") if architecture_files else None,
+                  "weights_included": False,
+                  "raw_logs_included": any((p/name).is_file() for p in paths.values() for name in ('console.log','recovery.log'))}
     if (output/'source_runs.json').is_file() and read_json(output/'source_runs.json') == provenance:
         manifest = read_json(output/'manifest.json')
         if all((output/name).is_file() and hash_file(output/name) == value for name,value in manifest.items()):
@@ -60,14 +80,16 @@ def publish_artifacts(settings=None, output_dir=None, source_root=ROOT):
             for path in sorted(run.rglob('*')):
                 if not path.is_file() or any(p in {'best_model','checkpoints'} for p in path.relative_to(run).parts):
                     continue
-                if path.relative_to(run).as_posix() not in source_manifest:
+                if path.relative_to(run).as_posix() not in source_manifest and path.name != 'artifact_availability.json':
                     continue
-                if path.suffix != '.png' and path.name not in JSON_FILES:
+                is_log = path.name in {'console.log','recovery.log'}
+                if path.suffix != '.png' and path.name not in JSON_FILES and not is_log:
                     continue
-                relative = Path(role) / path.relative_to(run)
+                relative = Path('logs')/role/path.name if is_log else Path(role)/path.relative_to(run)
                 target = staged/relative;target.parent.mkdir(parents=True,exist_ok=True)
                 shutil.copyfile(path,target)
-                catalog.append({'role':role,'run':run.name,'file':relative.as_posix(),'sha256':hash_file(target)})
+                catalog.append({'role':role,'run':run.name,'file':relative.as_posix(),'sha256':hash_file(target),
+                                'kind':'log' if is_log else ('image' if path.suffix=='.png' else 'table')})
         evaluation = paths.get('evaluation',paths.get('finetuning'))
         rows=[];loss=None;policy=None
         if evaluation:
@@ -81,19 +103,8 @@ def publish_artifacts(settings=None, output_dir=None, source_root=ROOT):
                 rows.append({'policy':f"Validation threshold {selected_metrics['threshold']:g}",
                     **{k:selected_metrics[k] for k in ['accuracy','precision','recall','binary_f1','macro_f1']},'test_loss':loss})
                 policy=read_json(evaluation/'decision_threshold.json')
-        historical_rows = list(rows)
-        primary = configuration.get('primary_result', 'historical')
-        if primary == 'study':
-            if 'study' not in paths:
-                raise ValueError('Primary study is missing from selected report runs')
-            from labs.lab03.src.study_evidence import audit_study
-            audit_study(paths['study'], root=source_root)
-            study = paths['study']
-            loss = read_json(study/'test_runtime_metrics.json')['test_loss']
-            policy = read_json(study/'decision_threshold.json')
-            rows = [{'policy':r['model'], **{k:r[k] for k in ['accuracy','precision','recall','binary_f1','macro_f1']},
-                     'test_loss':loss if r['model'].startswith('DistilBERT') else None}
-                    for r in read_json(study/'test_comparison.json')]
+        reference_rows = list(rows)
+        primary = configuration.get('primary_result', 'evaluation')
         if primary == 'frozen_trial':
             from labs.lab03.src.final_review import audit_frozen_trial
             trial = paths['frozen_trial']
@@ -103,13 +114,32 @@ def publish_artifacts(settings=None, output_dir=None, source_root=ROOT):
             rows = [{'policy':r['model'], **{k:r[k] for k in ['accuracy','precision','recall','binary_f1','macro_f1']},
                      'test_loss':loss if r['model'].startswith('Frozen') else None}
                     for r in read_json(trial/'test_comparison.json')]
+        if primary == 'frozen_trial':
+            from labs.lab03.src.final_review import write_results_analysis
+            derived=write_results_analysis(paths['frozen_trial'],staged/'result_analysis')
+            for row in rows:
+                if row['policy']=='TF-IDF':row['test_loss']=derived['baseline_log_loss']
+            for file in sorted((staged/'result_analysis').iterdir()):
+                catalog.append({'role':'result_analysis','run':paths['frozen_trial'].name,
+                    'file':file.relative_to(staged).as_posix(),'sha256':hash_file(file),
+                    'kind':'image' if file.suffix=='.png' else 'table','derived_from':'saved run predictions/history'})
+        for file in architecture_files:
+            target=staged/'architecture'/file.name;target.parent.mkdir(exist_ok=True)
+            shutil.copyfile(file,target)
+            catalog.append({'role':'architecture','run':selected.get('frozen_trial','configuration'),
+                'file':target.relative_to(staged).as_posix(),'sha256':hash_file(target),
+                'kind':'text' if file.suffix=='.txt' else 'table','derived_from':'pinned model configuration; not a checkpoint reload'})
         save_json(staged/'source_runs.json',provenance)
         save_json(staged/'artifact_catalog.json',catalog)
-        save_json(staged/'metrics_summary.json',{'primary_result':primary, 'source_run':paths[primary].name if primary in {'study','frozen_trial'} else evaluation.name,
-            'test_comparison':rows, 'historical_three_epoch_test_comparison':historical_rows, 'measured_test_loss':loss,
+        performance_role = 'performance_report' if 'performance_report' in paths else (
+            'frozen_trial' if 'frozen_trial' in paths and (paths['frozen_trial']/'performance_summary.json').is_file() else None)
+        save_json(staged/'metrics_summary.json',{'primary_result':primary, 'source_run':paths[primary].name if primary == 'frozen_trial' else evaluation.name,
+            'test_comparison':rows, **({'reference_test_comparison':reference_rows} if reference_rows else {}), 'measured_test_loss':loss,
+            'test_loss_source':'TF-IDF: recomputed log_loss from saved probabilities; Transformer: measured test loss',
             'selection_split':policy.get('split') if policy else None,
-            'selected_threshold':policy.get('selected_threshold') if policy else None})
-        lines=['# Lab03 — Artifacts cho report','','Nguồn run được chọn tường minh trong `config/report.json`. Không huấn luyện hoặc chọn lại threshold khi xuất.','',
+            'selected_threshold':policy.get('selected_threshold') if policy else None,
+            'performance':read_json(paths[performance_role]/'performance_summary.json') if performance_role else None})
+        lines=['# Lab03 — Artifacts cho report','','Nguồn run được chọn tường minh trong source_runs.json (report.json hoặc latest_report.json). Không huấn luyện hoặc chọn lại threshold khi xuất.','',
             '| Policy | Accuracy | Precision | Recall | Binary F1 | Macro F1 | Test loss |',
             '|---|---:|---:|---:|---:|---:|---:|']
         for row in rows:
@@ -117,13 +147,27 @@ def publish_artifacts(settings=None, output_dir=None, source_root=ROOT):
             row_loss = row.get('test_loss')
             loss_text=f"{row_loss:.6f}" if row_loss is not None else 'Not logged'
             lines.append(f"| {row['policy']} | {values} | {loss_text} |")
-        if primary == 'study':
-            lines += ['', 'Bảng chính thuộc study 10 epoch; các role finetuning/evaluation/analysis cũ giữ bằng chứng lịch sử 3 epoch. Không gán số liệu hai protocol cho cùng một run.']
         if primary == 'frozen_trial':
-            lines += ['', 'Bảng chính thuộc frozen trial: checkpoint epoch 9 theo validation loss, threshold 0.45 theo validation Macro-F1. Ưu tiên giảm overfitting; không khẳng định accuracy cao nhất lịch sử. Các study khác giữ vai trò so sánh.']
+            lines += ['','TF-IDF loss được tính lại từ saved test probabilities; Transformer loss là số đo test_runtime_metrics của checkpoint.']
+            selection=read_json(paths['frozen_trial']/'selection_summary.json')
+            lines += ['', f"Bảng chính thuộc frozen trial: hoàn thành {selection['completed_epochs']:g} epoch, checkpoint epoch {selection['selected_epoch']} theo validation loss; threshold {policy['selected_threshold']:g} theo validation Macro-F1. Checkpoint và threshold được khóa trước khi đo test."]
         lines += ['','## Nguồn thí nghiệm','','| Vai trò | Run |','|---|---|']
         lines += [f'| {role} | `{run_id}` |' for role,run_id in selected.items()]
-        lines += ['','## Hình và bảng','','Các PNG dưới đây là bản sao của hình đã lưu trong run nguồn. JSON giữ số liệu để tính lại.','']
+        if performance_role:
+            perf=read_json(paths[performance_role]/'performance_summary.json')
+            lines += ['','## Hiệu năng và phạm vi đo','',
+                f"Test evaluation: **{perf['test_eval_ms_per_sample']:.6f} ms/mẫu**; {perf['test_eval_timing_scope']}.",
+                f"RAM/VRAM training: **{perf.get('memory_status','not logged; consult source resource measurements')}**.",
+                f'[Bảng từng epoch]({performance_role}/performance_history.json) · [Phạm vi/đơn vị]({performance_role}/performance_summary.json)',
+                '', 'Peak/batch slots là bộ nhớ dùng chung được phân bổ theo batch, không phải bộ nhớ độc lập cho mỗi câu. Không thay số thiếu bằng 0.']
+        if architecture_files:
+            lines += ['','## Kiến trúc hai model','',
+                '[Toàn bộ module tree dạng text](architecture/model_architectures.txt) · [Thông số và provenance](architecture/summary.json)',
+                '', 'Đây là cấu trúc từ config đã pin, không phải phép xác thực reload checkpoint. Exercise1 chỉ inference, không tối ưu weights.']
+        lines += ['','## Log nguồn đã publish','',
+            'Các log dưới đây được copy nguyên byte từ run nguồn và có SHA256 trong catalog/manifest. Log thiếu trong nguồn giữ khai báo artifact_availability; không sinh log thay thế.','']
+        lines += [f"- [{item['role']}: {Path(item['file']).name}]({item['file']})" for item in catalog if item['kind']=='log']
+        lines += ['','## Hình và bảng','','Hình nguồn được copy nguyên byte. Mục result_analysis được dẫn xuất từ predictions/history đã audit; JSON ghi nguồn và phương pháp.','']
         for item in catalog:
             if item['file'].endswith('.png'):
                 lines += [f"### {item['file']}",'',f"![{item['role']}]({item['file']})",'']
@@ -147,6 +191,6 @@ def publish_artifacts(settings=None, output_dir=None, source_root=ROOT):
 
 if __name__ == '__main__':
     parser=argparse.ArgumentParser()
-    parser.add_argument('--config',type=Path,default=ROOT/'config/report.json')
+    parser.add_argument('--config',type=Path,default=ROOT/'outputs/latest_report.json')
     args=parser.parse_args()
     print('Report artifacts:',publish_artifacts(args.config))

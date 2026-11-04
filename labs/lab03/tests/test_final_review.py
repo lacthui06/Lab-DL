@@ -4,13 +4,13 @@ import pytest
 from labs.lab03.src.utils.runs import ROOT, hash_file
 from labs.lab03.src.final_review import audit_frozen_trial
 
-RUN = '20261027T095655Z_frozen_trial_d8d09116'
+RUN = '20261103T110437Z_frozen_trial_b021d6eb'
 
 
 def test_actual_frozen_trial_reconstructs_selection_and_test_metrics():
     result = audit_frozen_trial(ROOT/'outputs/runs'/RUN)
     assert result['status'] == 'passed'
-    assert result['selected_epoch'] == 9 and result['threshold'] == .45
+    assert result['selected_epoch'] == 5 and result['threshold'] == .45
     assert not result['weights_loaded_locally'] and result['test_samples'] == 1066
 
 
@@ -18,7 +18,7 @@ def test_audit_rejects_changed_selection_even_with_consistent_file_checksum(tmp_
     source = ROOT/'outputs/runs'/RUN
     target = tmp_path/'run';shutil.copytree(source,target)
     summary = json.loads((target/'selection_summary.json').read_text())
-    summary['selected_epoch'] = 10
+    summary['selected_epoch'] = 4
     (target/'selection_summary.json').write_text(json.dumps(summary))
     manifest = json.loads((target/'manifest.json').read_text())
     manifest['selection_summary.json'] = hash_file(target/'selection_summary.json')
@@ -27,31 +27,20 @@ def test_audit_rejects_changed_selection_even_with_consistent_file_checksum(tmp_
         audit_frozen_trial(target)
 
 
-def test_new_bundle_imports_preserve_original_bytes():
-    ids = ['20261027T083010Z_study_99bce559', RUN]
-    for run_id in ids:
-        folder = ROOT/'outputs/imports'/run_id
-        manifest = json.loads((folder/'bundle_manifest.json').read_text())
-        for name,digest in manifest.items():
-            path = folder/name if name.startswith('config/') else ROOT/name
-            assert hash_file(path) == digest, name
-
-
-def test_prepare_checkpoint_binds_policy_without_modifying_source(tmp_path, monkeypatch):
-    from labs.lab03.scripts import prepare_frozen_checkpoint as module
-    from labs.lab03.src.decision import load_decision_policy
-    source=tmp_path/'source';source.mkdir()
-    checkpoint=tmp_path/'extracted/best_model';checkpoint.mkdir(parents=True)
-    (checkpoint/'model.safetensors').write_bytes(b'checkpoint fixture')
-    (source/'frozen_selection.json').write_text(json.dumps({'weights_sha256':hash_file(checkpoint/'model.safetensors')}))
-    (source/'decision_threshold.json').write_text(json.dumps({'split':'validation','selected_threshold':.45}))
-    (source/'config.json').write_text(json.dumps({'seed':42}))
-    monkeypatch.setattr(module,'verify_manifest',lambda path:None)
-    before=(source/'decision_threshold.json').read_bytes()
-    module.prepare_checkpoint(checkpoint,source)
-    assert load_decision_policy(checkpoint)['selected_threshold']==.45
-    assert (source/'decision_threshold.json').read_bytes()==before
-    assert json.loads((checkpoint/'training_config.json').read_text())['seed']==42
-    (checkpoint/'model.safetensors').write_bytes(b'different checkpoint')
-    with pytest.raises(ValueError,match='SHA256'):
-        module.prepare_checkpoint(checkpoint,source)
+def test_derived_report_checks_per_class_rates_loss_and_patience_without_mutation(tmp_path):
+    from labs.lab03.src.final_review import write_results_analysis
+    source=ROOT/'outputs/runs'/RUN
+    before={p.relative_to(source).as_posix():hash_file(p) for p in source.rglob('*') if p.is_file()}
+    summary=write_results_analysis(source,tmp_path)
+    rows=json.loads((tmp_path/'per_class_metrics.json').read_text())
+    assert rows[0]['recall']==pytest.approx(437/533)
+    assert rows[0]['false_positive_rate']==pytest.approx(84/533)
+    assert rows[1]['recall']==pytest.approx(449/533)
+    assert rows[1]['false_positive_rate']==pytest.approx(96/533)
+    assert summary['baseline_log_loss']>0 and summary['test_loss']==pytest.approx(.409902423620224)
+    stopping=json.loads((tmp_path/'early_stopping_replay.json').read_text())
+    assert [r['patience_counter'] for r in stopping['epochs']]==[0,0,0,1,2]
+    assert stopping['patience_reached_at_budget'] is True
+    assert stopping['counter_was_logged'] is False
+    assert (tmp_path/'per_class_metrics.png').is_file()
+    assert {p.relative_to(source).as_posix():hash_file(p) for p in source.rglob('*') if p.is_file()}==before

@@ -9,7 +9,7 @@ from labs.lab03.src.datasets.augmentation import augment_train,export_augmentati
 from labs.lab03.src.utils.runs import ROOT,run_context
 
 if __name__=='__main__':
-    parser=argparse.ArgumentParser();parser.add_argument('--config',type=Path,default=ROOT/'config/augmented.json')
+    parser=argparse.ArgumentParser();parser.add_argument('--config',type=Path,default=ROOT/'config/frozen_trial.json')
     args=parser.parse_args();cfg=read_config(args.config)
     raw=load_data(cfg['exercise2']);_,summary=augment_train(raw,cfg['exercise2']['augmentation'],cfg['seed'])
     with run_context('augmentation_preview',cfg) as out:

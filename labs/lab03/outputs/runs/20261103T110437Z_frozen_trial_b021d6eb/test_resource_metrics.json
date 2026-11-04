@@ -1,0 +1,18 @@
+{
+  "seconds": 0.4565064670000538,
+  "sample_count": 1066,
+  "ms_per_sample": 0.4282424643527709,
+  "samples_per_second": 2335.1257365645915,
+  "batch_size": 32,
+  "device_batch_size": 32,
+  "ram_peak_rss_mib": 1844.5546875,
+  "ram_mib_per_batch_slot": 57.642333984375,
+  "vram_peak_allocated_mib": 511.37548828125,
+  "vram_peak_reserved_mib": 638.0,
+  "vram_mib_per_batch_slot": 15.980484008789062,
+  "device": "cuda:0",
+  "rss_poll_interval_seconds": 0.02,
+  "memory_scope": "parent process RSS; CUDA allocator on selected device; includes shared model/optimizer",
+  "normalization": "peak/batch slots is amortized shared memory, not independent per-example allocation",
+  "vram_unavailable_reason": null
+}

@@ -1,125 +1,105 @@
-# Lab 03: Rotten Tomatoes Sentiment Analysis with DistilBERT & Hugging Face
+# Lab03 — Binary Sentiment Classification with Hugging Face
 
-Dự án phân loại văn bản cảm xúc nhị phân trên toàn bộ tập dữ liệu Rotten Tomatoes (8.530 train / 1.066 validation / 1.066 test) áp dụng mô hình Transformer tiền huấn luyện DistilBERT, kết hợp chiến lược Freeze Backbone, Discriminative Learning Rates, Regularization và tối ưu hóa ngưỡng quyết định (Operating Threshold Tuning).
+Phân loại cảm xúc tiếng Anh trên Rotten Tomatoes: pretrained sentiment/tokenization và fine-tuning DistilBERT. Pipeline gồm đúng **hai notebook**, có roadmap, module tham chiếu, ảnh inline và artifact được lưu để dùng cho report.
 
-Kiến trúc dự án tuân thủ nghiêm ngặt chuẩn modular hóa, tách bạch giữa cấu hình (`config/`), thư viện tái sử dụng (`src/`), công cụ thực thi dòng lệnh (`scripts/`), kiểm thử tự động (`tests/`) và sổ tay nghiên cứu trực quan (`notebooks/`).
+## Cấu hình mới và bằng chứng có sẵn
 
----
+Profile hiện tại chạy **tối đa 3 epoch**, early stopping validation loss. Chưa có full GPU run cho profile 3 epoch này. Kết quả dưới đây thuộc run 5 epoch đã được kiểm tra; không gán các chỉ số đó cho lần train mới.
 
-## 1. Cấu Trúc Thư Mục Dự Án
+Run Kaggle `20261103T110437Z_frozen_trial_b021d6eb` hoàn thành **5/5 epoch**, checkpoint epoch5, threshold validation **0,45**. Test: **Accuracy83,11%, Binary F1 83,30%**, 886/1.066 mẫu đúng. TF-IDF baseline:78,99%.
+
+- [Report hình/bảng/log](outputs/published/index.md)
+- [Kết quả và diễn giải chi tiết](walkthrough_lab_03.md#30-kết-quả-thực-nghiệm-đã-xác-minh-từ-zip-kaggle)
+- [Kiến trúc hai model dạng text](outputs/published/architecture/model_architectures.txt), [bảng tóm tắt](outputs/published/architecture/summary.json).
+- [Metrics theo lớp](outputs/published/result_analysis/per_class_metrics.png), [patience replay](outputs/published/result_analysis/early_stopping_replay.json).
+- [Selection](outputs/latest_report.json), [audit](validation/final_review_audit.json)
+
+Hai notebook đã có output inline; chọn `MODE="view"` để xem offline. Source mặc định view; đổi prepare/train cho phiên Kaggle mới; không cần train/tải dataset để đọc báo cáo.
+
+## Chạy trên Kaggle
+
+Import notebook modeling từ GitHub:
 
 ```text
-labs/lab03/
-├── config/                             # Cấu hình tham số và kịch bản thí nghiệm
-│   ├── config.json                     # Cấu hình cơ bản (Baseline & Standard fine-tuning)
-│   ├── frozen_trial.json               # Cấu hình chính (Discriminative LR, Freeze 4 layers, Dropout 0.4)
-│   ├── augmented.json                  # Cấu hình thử nghiệm Text Augmentation
-│   ├── report.json                     # Nguồn dữ liệu cố định cho báo cáo tổng kết
-│   └── workflow.json                   # Sổ đăng ký trạng thái và active run runtime
-├── notebooks/                          # Sổ tay nghiên cứu trực quan
-│   ├── 01_eda_preprocessing_feature_engineering.ipynb   # Phân tích dữ liệu, độ dài token, từ điển và augmentation
-│   └── 02_modeling.ipynb               # Exercise 1 Pretrained, Baseline, Frozen DistilBERT & Đánh giá
-├── outputs/                            # Artifacts sinh ra từ các pipeline
-│   ├── published/                      # Toàn bộ biểu đồ PNG và bảng JSON được chọn lọc cho báo cáo
-│   │   ├── final_review/               # Confusion matrix, Learning curves, ROC-PR curves
-│   │   ├── epoch_presentation/         # Biểu đồ diễn tiến 10 epochs
-│   │   └── index.md                    # Danh mục artifacts tra cứu nhanh
-│   ├── runs/                           # Dữ liệu thực nghiệm chi tiết của từng run
-│   └── preflight/                      # Kết quả kiểm tra môi trường và sanity test
-├── src/                                # Gói thư viện mã nguồn lõi (Core Python Package)
-│   ├── datasets/                       # Quản lý nạp dữ liệu, tokenizer và augmentation
-│   │   ├── loader.py                   # Nạp official splits và WordPiece dynamic padding
-│   │   └── augmentation.py             # Kỹ thuật mở rộng văn bản an toàn không rò rỉ
-│   ├── models/                         # Kiến trúc mô hình Transformer
-│   │   ├── classifier.py               # Hugging Face AutoModel, classification head và manual inference
-│   │   └── reloading.py                # Kiểm chứng tải lại checkpoint và tính toàn vẹn logits
-│   ├── training/                       # Động cơ huấn luyện và tối ưu hóa
-│   │   ├── trainer.py                  # PyTorch / Hugging Face Trainer, callbacks và 1-batch sanity check
-│   │   ├── thresholds.py               # Quét 19 ngưỡng quyết định (Operating Thresholds) trên Validation
-│   │   ├── metrics.py                  # Tính toán Accuracy, Binary F1, Macro F1, Precision, Recall
-│   │   └── frozen.py                   # Đóng băng Embedding + 4/6 Encoder layers
-│   └── utils/                          # Công cụ bổ trợ
-│       ├── runs.py                     # Quản lý thư mục run, manifest SHA256 và snapshot môi trường
-│       └── plots.py                    # Module visualization tập trung cho toàn bộ biểu đồ
-├── scripts/                            # Điểm thực thi dòng lệnh (CLI Entry Points)
-│   ├── run_frozen_trial.py             # Script chạy huấn luyện mô hình chính (10 epochs)
-│   ├── run_exercise1.py                # Chạy minh họa Exercise 1 sentiment pretrained
-│   ├── eval.py                         # Đánh giá checkpoint mô hình trên tập Test
-│   └── infer.py                        # Dự đoán nhãn cảm xúc cho văn bản tùy biến
-├── tests/                              # Bộ kiểm thử tự động toàn diện (112 test cases)
-│   ├── test_datasets.py                # Kiểm tra phân chia dữ liệu, không rò rỉ ranh giới
-│   ├── test_models.py                  # Kiểm tra cấu trúc tham số, head và logits
-│   ├── test_training.py                # Kiểm tra sanity overfit và chu trình huấn luyện
-│   ├── test_thresholds.py              # Kiểm tra chính sách quét ngưỡng trên validation
-│   └── test_augmentation.py            # Kiểm tra an toàn dữ liệu augmentation
-├── requirements.txt                    # Danh sách thư viện phụ thuộc đã kiểm chứng
-├── description_lab_03.md               # Diễn giải đề bài, yêu cầu và quyết định kỹ thuật
-├── walkthrough_lab_03.md               # Báo cáo kỹ thuật sống duy nhất (Spec, Changelog, Results)
-└── README.md                           # Tài liệu hướng dẫn sử dụng này
----
+https://github.com/lacthui06/Lab-DL/blob/new-lab03/labs/lab03/notebooks/02_modeling.ipynb
+```
 
-## 2. Điểm Nhấn Kỹ Thuật & Quyết Định Thiết Kế
+Bật **GPU + Internet**, rồi **Run All**. Để train mới, đổi cell setup thành `MODE="train"`, `DEVICE="cuda"`; bắt đầu từ pretrained base, tải official dataset và thực hiện trọn pipeline. Không cần cung cấp checkpoint đầu vào.
 
-- **Bảo toàn Hợp đồng Dữ liệu (Strict Official Data Contract):**
-  - Giữ nguyên toàn bộ 10.662 mẫu chính thức của Rotten Tomatoes chia theo 3 tập: 8.530 train, 1.066 validation, 1.066 test. Tuyệt đối không xáo trộn nhãn hoặc chia lại tập kiểm thử.
-- **Chiến lược Đóng băng Layer & Discriminative Learning Rates:**
-  - Để tránh phá vỡ các đặc trưng biểu diễn ngữ nghĩa đã học của Transformer, toàn bộ Embedding và 4 tầng Encoder đầu tiên được đóng băng (`requires_grad = False`).
-  - Phân tầng tốc độ học: Áp dụng $2 \times 10^{-6}$ cho 2 tầng Encoder còn lại và $1 \times 10^{-5}$ cho Classification Head mới.
-- **Tối ưu hóa Điểm Vận hành (Operating Threshold Tuning):**
-  - Quét 19 ngưỡng xác suất (từ 0.05 đến 0.95, bước 0.05) **độc quyền trên tập Validation**.
-  - Ngưỡng tối ưu $\tau = 0.45$ (hoặc 0.50 tùy kịch bản) được khóa cứng trước khi suy luận trên tập Test, đảm bảo đánh đổi tối ưu giữa False Positive và False Negative mà không rò rỉ dữ liệu Test.
-- **Chống Overfitting & Đánh giá Đa diện:**
-  - Không lựa chọn mô hình dựa trên đỉnh nhọn ngẫu nhiên của Test Accuracy. Lựa chọn checkpoint dựa trên **Validation Loss thấp nhất** (Epoch 9) kết hợp đo đạc toàn diện bộ chỉ số: Accuracy (82.83%), Macro-F1 (82.82%), Binary F1 (83.23%).
+Cấu hình: **tối đa 3 epoch**, early stopping theo validation loss, patience 1, min_delta 0.001. Số epoch thực chạy có thể ít hơn 3. Notebook01 có ZIP EDA riêng ở cuối khi MODE=prepare. Kết quả, selected checkpoint và threshold được lấy từ chính phiên thực thi.
 
-** Cấu trúc mô hình (Model Architecture)
-Mô hình áp dụng kiến trúc Frozen DistilBERT (distilbert-base-uncased) kết hợp với Classification Head tinh chỉnh cho bài toán Sentiment Analysis:
--Input: Văn bản đánh giá phim từ tập Rotten Tomatoes
--Tokenizer: DistilBertTokenizer (WordPiece vocabulary size: 30,522).
--Embedding Layer: Đóng băng hoàn toàn (Frozen).
--Transformer Encoder (6 Layers):
-  -Layers 1–4: Đóng băng (Frozen).
-  -Layers 5–6: Mở để huấn luyện (Trainable / Unfrozen).
--Classification Head: Fully Connected Layer ($768 \to 2$) với Dropout ($p=0.4$).
+## Hai notebook
 
-**Lý do chọn kiến trúc (Architecture Rationale)
--Bảo toàn Hợp đồng Dữ liệu (Strict Official Data Contract): Giữ nguyên 10.662 mẫu chính thức chia theo 3 tập: 8.530 train, 1.066 validation, 1.066 test, tránh rò rỉ dữ liệu.
--Tận dụng Tri thức Đã Huấn luyện (Pre-trained Knowledge): DistilBERT mang lại khả năng hiểu ngữ cảnh văn bản sâu sắc mà không cần huấn luyện Transformer từ đầu.
--Tối ưu hóa Tài nguyên & Tốc độ: Đóng băng Embedding và 4/6 tầng Encoder giúp giảm số lượng tham số huấn luyện xuống chỉ còn ~22.06% (14.77M / 66.96M tham số).Giảm đáng kể VRAM requirement và tăng tốc độ xử lý mỗi Epoch.
--Discriminative Learning Rates & Phòng tránh Overfitting: Áp dụng $2 \times 10^{-6}$ cho 2 tầng Encoder và $1 \times 10^{-5}$ cho Classification Head. Việc này giúp cập nhật nhẹ nhàng các tầng ngữ nghĩa và hạn chế tình trạng Catastrophic Forgetting.
----
+| Notebook | Nội dung | Chế độ mặc định |
+|---|---|---|
+| [01 — EDA, preprocessing, feature engineering](notebooks/01_eda_preprocessing_feature_engineering.ipynb) | Quality/leakage audit, nhãn/độ dài, cutoff, tokens/IDs/mask, TF-IDF, augmentation | `view` (đổi `prepare` để tạo mới) |
+| [02 — Modeling](notebooks/02_modeling.ipynb) | Pretrained sentiment, baseline, fine-tune, performance, threshold, evaluation, errors, export | `view` (đổi `train` để tạo mới) |
 
-## 3. Hướng Dẫn Thực Thi
+Ảnh được hiển thị từ cùng PNG đã lưu trong `outputs/runs/<run_id>/`. Sau khi có kết quả, `MODE="view"` đọc selection trong `outputs/latest_preparation.json` hoặc `outputs/latest_report.json`; không train để lấy lại hình. Notebook01 không phải điều kiện bắt buộc trước notebook02: script modeling tự thực hiện cùng data/feature pipeline.
 
-### Cách 1: Sử Dụng Công Cụ Dòng Lệnh (CLI)
+## Phương pháp
 
-```powershell
+- Official splits: **8.530 train / 1.066 validation / 1.066 test**; seed 42; không subsample hoặc chia lại test.
+- Giữ phủ định/punctuation; WordPiece tokenizer đã pin; max length 128 và dynamic padding.
+- Train-only augmentation bằng thay từ/cụm cùng cực tính, loại câu có phủ định/tương phản, dedup, cân bằng variants; tối đa 25%, không ép đủ bằng sao chép.
+- Baseline: TF-IDF unigram/bigram + Logistic Regression; fit train-only, chọn C bằng validation Macro-F1.
+- DistilBERT base: embedding và 4/6 encoder blocks frozen; encoder/head LR 5e-6/2e-5; dropout 0.2/0.2/0.4; AdamW decay 0.1; warmup 10%; gradient clipping 1.
+- Max 3 epoch + early stopping; chọn checkpoint bằng minimum validation loss.
+- Quét 19 thresholds trên validation Macro-F1, khóa policy rồi test.
+- Đo accuracy/loss theo epoch, time/sample, RAM RSS và CUDA peak/batch slot; hiển thị learning curves, architecture, metrics, confusion, ROC/PR, calibration và sample predictions.
+- Save/reload consistency, raw log, environment/config/source hashes và SHA256 manifest.
 
-# 1. Chạy Exercise 1: Kiểm chứng mô hình Pretrained Sentiment Analysis
+Các kỹ thuật là lựa chọn được định trước để kiểm chứng bằng thực nghiệm; không bảo đảm không overfit hoặc luôn hơn baseline.
+
+## Folder và tài liệu
+
+| Folder/file | Vai trò |
+|---|---|
+| `config/frozen_trial.json` | Profile thí nghiệm, hyperparameters và early stopping |
+| `config/workflow.json` | Registry các run runtime |
+| `notebooks/` | Hai notebook trình bày và thực thi |
+| `src/datasets/` | Official loader, tokenizer, augmentation |
+| `src/data_preparation.py` | EDA, quality/cutoff audit, TF-IDF và token examples |
+| `src/models/` | Load classifier, inference và save/reload |
+| `src/training/` | Trainer, early stopping, optimizer/freeze, metrics, threshold |
+| `src/performance.py` | Timer, RSS/CUDA peak, phạm vi và đơn vị đo |
+| `src/utils/` | Run isolation, snapshot, manifest và figures |
+| `scripts/` | CLI dùng chung module với notebook |
+| `tests/` | Tiny fixtures và kiểm thử data/model/training/threshold/artifact |
+| `outputs/runs/<id>/` | Artifact nguồn của mỗi run |
+| `outputs/published/` | Hình/bảng/log được chọn cho report, catalog và manifest |
+| `outputs/latest_report.json` | Selection của phiên modeling hoàn thành |
+| `outputs/latest_preparation.json` | Selection của phiên EDA hoàn thành |
+| `outputs/preflight/` | Pytest log/XML trước training |
+| `validation/` | Kiểm chứng phần mềm, khác dataset validation |
+| [Description](description_lab_03.md) | Đề bài, architecture, discussion và quyết định |
+| [Walkthrough](walkthrough_lab_03.md) | Phương pháp, vận hành, cách diễn giải và thu thập bằng chứng |
+| [Kaggle runbook](KAGGLE_RUNBOOK.md) | Import/push kernel, chạy và lấy kết quả |
+
+## Local CLI
+
+Dùng Python3.12, từ thư mục gốc repo:
+
+```bash
+python -m venv .venv
+source .venv/bin/activate  # Git Bash trên Windows: source .venv/Scripts/activate
+python -m pip install -r labs/lab03/requirements.txt
+python -m pytest labs/lab03/tests -q
+python labs/lab03/scripts/preview_dataset.py
+python labs/lab03/scripts/preview_augmentation.py
 python labs/lab03/scripts/run_exercise1.py
-
-# 2. Huấn luyện mô hình DistilBERT (10 epochs với Frozen Layers và Discriminative LR)
-python labs/lab03/scripts/run_frozen_trial.py --config labs/lab03/config/frozen_trial.json --device auto
-
-# 3. Đánh giá mô hình đã huấn luyện trên tập Test
-python labs/lab03/scripts/eval.py --config labs/lab03/config/frozen_trial.json
-
-# 4. Suy luận phân loại cảm xúc trên một câu văn bản bất kỳ
-python labs/lab03/scripts/infer.py --text "This movie is an absolute masterpiece of modern cinema!"
-
+python labs/lab03/scripts/run_frozen_trial.py --config labs/lab03/config/frozen_trial.json --device cuda
 ```
 
-### Cách 2: Sử Dụng Jupyter Notebook
+Local verification chỉ dùng tiny fixtures/sanity minibatch. Full training khuyến nghị GPU; `--device cpu` chỉ dùng khi chủ động chấp nhận thời gian chạy.
 
-Mở các sổ tay nghiên cứu trong thư mục `labs/lab03/notebooks/`:
-- [`01_eda_preprocessing_feature_engineering.ipynb`](notebooks/01_eda_preprocessing_feature_engineering.ipynb): Khám phá phân bố từ vựng, độ dài token và cơ chế Text Augmentation.
-- [`02_modeling.ipynb`](notebooks/02_modeling.ipynb): Toàn bộ pipeline mô hình hóa từ Pretrained Sentiment, Frozen DistilBERT, huấn luyện 10 epochs và chẩn đoán lỗi phân loại trên tập kiểm thử.
+## Artifact và report
 
----
+Sau training thành công, hình/bảng/raw log được tự publish. Mỗi session có ID riêng; artifact đi kèm trong ZIP phải thuộc phiên tương ứng. Có hai ZIP tại `/kaggle/working` trên Kaggle hoặc `labs/lab03/outputs` trên local:
 
-## 4. Kiểm Thử Tự Động (TDD Test Suite)
+- `lab03_review_<run_id>.zip`: config, log, predictions, history, performance, figures, published và manifest; không chứa weights.
+- `lab03_checkpoint_<run_id>.zip`: best model, tokenizer, training config và decision policy; giữ riêng để evaluate/infer.
 
-Chạy toàn bộ 112 bài kiểm thử tự động để xác nhận tính toàn vẹn của mã nguồn, luồng huấn luyện và các cổng kiểm soát rò rỉ:
+Notebook hiển thị link tải. Nếu không tải được, mở Output → `/kaggle/working` → Refresh → Download. Tải notebook có cell outputs bằng File → Download Notebook. Không commit weights, dataset thô hoặc ZIP vào Git; commit hình/bảng/log nhẹ và notebook đã chạy.
 
-```powershell
-pytest labs/lab03/tests/ -q
-```
+RAM/VRAM per batch slot gồm shared model memory, không phải bộ nhớ riêng của một câu. Test ms/sample là batch throughput, không phải latency request đơn lẻ. Metric chỉ được kết luận sau khi đọc artifact thật của lượt chạy.

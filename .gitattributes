@@ -14,3 +14,10 @@ labs/lab03/outputs/preflight/** -text
 
 # Giữ byte báo cáo tự xuất trong run gốc, kể cả dòng trắng cuối file.
 labs/lab03/outputs/runs/*/study_report.md -whitespace
+
+# Artifacts architecture/EDA giữ nguyên bytes để kiểm chứng trên Windows/Linux.
+labs/lab03/outputs/architecture/** -text
+labs/lab03/outputs/preparation/** -text
+
+# Raw console logs trong publication giữ nguyên dòng trắng của bằng chứng nguồn.
+labs/lab03/outputs/published/logs/** -whitespace

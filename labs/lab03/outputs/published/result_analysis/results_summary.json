@@ -1,0 +1,12 @@
+{
+  "source_run": "20261103T110437Z_frozen_trial_b021d6eb",
+  "source_manifest_sha256": "1bd245cf7bc079c3aacb6be5d4284ce076e027b4ed9565ccf80db38f6772eb80",
+  "analysis_code_sha256": "f052d35e7328a8fcf3866228db6d0dd9565a9411becbe81c53ad9ddcd8ce38c1",
+  "test_samples": 1066,
+  "test_loss": 0.409902423620224,
+  "baseline_log_loss": 0.5173709105267964,
+  "baseline_loss_scope": "recomputed sklearn log_loss from full baseline test probabilities; not neural cross-entropy GPU timing",
+  "final_accuracy_gap_pp": 0.6164688914215177,
+  "final_loss_gap": 0.019311517477035522,
+  "gpu_weights_loaded_for_analysis": false
+}

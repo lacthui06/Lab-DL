@@ -168,11 +168,15 @@ def finetune(config=None, allow_cpu=False, evaluate_test=True):
         trainer = make_trainer(model, tokenizer, tokenized, cfg, out)
         if torch.cuda.is_available(): torch.cuda.reset_peak_memory_stats()
         trained = trainer.train()
-        if abs(float(trainer.state.epoch) - float(cfg["num_train_epochs"])) > 1e-5:
+        stopping_enabled = bool(cfg.get('early_stopping', {}).get('enabled', False))
+        completed = float(trainer.state.epoch)
+        if not 1 <= completed <= cfg['num_train_epochs'] or (
+                not stopping_enabled and abs(completed - cfg['num_train_epochs']) > 1e-5):
             raise RuntimeError("Training did not finish the requested epoch budget")
         save_json(out / "selection_summary.json", {
             "requested_epochs": cfg["num_train_epochs"], "completed_epochs": trainer.state.epoch,
-            "global_step": trainer.state.global_step, "early_stopping": False,
+            "global_step": trainer.state.global_step, "early_stopping": stopping_enabled,
+            "stopped_early": completed < cfg['num_train_epochs'],
             "amp_skipped_optimizer_steps": getattr(trainer, "amp_skipped_optimizer_steps", 0),
             "successful_optimizer_updates": trainer.state.global_step - getattr(trainer, "amp_skipped_optimizer_steps", 0),
             "selection_split": "validation", "metric": trainer.args.metric_for_best_model,

@@ -1,0 +1,5 @@
+Run: 20261104T085807Z_notebook_render_b7f6800b
+/workspace/lab03-venv/lib/python3.12/site-packages/IPython/paths.py:67: UserWarning: IPython parent '/home/agent' is not a writable location, using a temp directory.
+  warn("IPython parent '{}' is not a writable location,"
+Rendered: 01_eda_preprocessing_feature_engineering.ipynb
+Rendered: 02_modeling.ipynb

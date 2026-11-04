@@ -1,5 +1,5 @@
 {
-  "source_run": "20261026T155744Z_exercise1_65dfe784",
+  "source_run": "20261103T110425Z_exercise1_f9b5a257",
   "sentence": "I love this wonderful movie!",
   "tokenization": [
     {
@@ -107,13 +107,11 @@
     }
   ],
   "audit": {
-    "verified_files": 5,
+    "verified_files": 6,
     "omitted_checkpoint_files": [],
-    "omitted_raw_logs": [
-      "console.log"
-    ],
+    "omitted_raw_logs": [],
     "checkpoint_available_locally": false,
-    "run": "20261026T155744Z_exercise1_65dfe784",
+    "run": "20261103T110425Z_exercise1_f9b5a257",
     "compared_sentences": 3
   }
 }

@@ -5,37 +5,37 @@
     {
       "text": "compassionately explores the seemingly irreconcilable situation between conservative christian parents and their estranged gay and lesbian children .",
       "label": "POSITIVE",
-      "score": 0.984190046787262,
+      "score": 0.9878777265548706,
       "probabilities": [
-        0.01580999232828617,
-        0.984190046787262
+        0.012122328393161297,
+        0.9878777265548706
       ]
     },
     {
       "text": "the soundtrack alone is worth the price of admission .",
       "label": "POSITIVE",
-      "score": 0.6056829690933228,
+      "score": 0.5613357424736023,
       "probabilities": [
-        0.39431703090667725,
-        0.6056829690933228
+        0.4386642575263977,
+        0.5613357424736023
       ]
     },
     {
       "text": "rodriguez does a splendid job of racial profiling hollywood style--casting excellent latin actors of all ages--a trend long overdue .",
       "label": "POSITIVE",
-      "score": 0.9864175319671631,
+      "score": 0.9861788749694824,
       "probabilities": [
-        0.013582521118223667,
-        0.9864175319671631
+        0.013821117579936981,
+        0.9861788749694824
       ]
     },
     {
       "text": "beneath the film's obvious determination to shock at any cost lies considerable skill and determination , backed by sheer nerve .",
       "label": "POSITIVE",
-      "score": 0.9827908277511597,
+      "score": 0.9820719361305237,
       "probabilities": [
-        0.01720915548503399,
-        0.9827908277511597
+        0.017928123474121094,
+        0.9820719361305237
       ]
     }
   ]

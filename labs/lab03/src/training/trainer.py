@@ -1,14 +1,23 @@
-"""Trainer có đủ epoch, log theo step và checkpoint chọn chỉ trên validation."""
+"""Trainer với ngân sách epoch, early stopping và checkpoint chọn trên validation."""
 import math
 import warnings
 import time
 import torch
 from copy import copy
-from transformers import Trainer, TrainingArguments, DataCollatorWithPadding, TrainerCallback
+from transformers import Trainer, TrainingArguments, DataCollatorWithPadding, TrainerCallback, EarlyStoppingCallback
 from .metrics import compute_metrics
 from ..utils.runs import save_json
 
 def make_trainer(model, tokenizer, ds, config, run_path):
+    stopping = config.get('early_stopping', {})
+    if stopping.get('enabled', False):
+        patience, delta = stopping.get('patience', 2), stopping.get('min_delta', .001)
+        if isinstance(patience, bool) or not isinstance(patience, int) or patience < 1:
+            raise ValueError('Early-stopping patience must be a positive integer')
+        if isinstance(delta, bool) or not isinstance(delta, (int,float)) or not math.isfinite(delta) or delta < 0:
+            raise ValueError('Early-stopping min_delta must be finite and nonnegative')
+        if config.get('metric_for_best_model', '').removeprefix('eval_') != 'loss':
+            raise ValueError('Early stopping is predeclared on validation loss')
     use_cpu = config.get("device") == "cpu"
     strategy = config.get("eval_strategy", "epoch")
     if strategy not in {"steps", "epoch"}:
@@ -19,7 +28,8 @@ def make_trainer(model, tokenizer, ds, config, run_path):
         num_train_epochs=config["num_train_epochs"],
         per_device_train_batch_size=config["batch_size"],
         per_device_eval_batch_size=config["eval_batch_size"],
-        weight_decay=config["weight_decay"], warmup_steps=config.get("warmup_ratio", config.get("warmup_steps", 0.0)),
+        weight_decay=config["weight_decay"], warmup_ratio=config.get("warmup_ratio", 0.0),
+        warmup_steps=config.get("warmup_steps", 0),
         eval_strategy=strategy, save_strategy=strategy,
         eval_steps=config.get("eval_steps", 100), save_steps=config.get("eval_steps", 100),
         logging_strategy="steps" if strategy == "steps" else "epoch",
@@ -97,14 +107,25 @@ def make_trainer(model, tokenizer, ds, config, run_path):
             scheduled = copy(control)
             self.train_epoch_metrics = trainer.evaluate(ds["train"], metric_key_prefix="train")
             # Đo validation/save cả cuối epoch, kể cả step cuối không chia hết 100.
-            # Không early stopping: mọi cấu hình phải chạy đủ ngân sách epoch.
+            # Validation tiếp theo quyết định early stopping nếu profile bật cơ chế đó.
             scheduled.should_evaluate = True
             scheduled.should_save = True
             return scheduled
     if config.get("epoch_console_summary", False):
         from transformers.trainer_callback import PrinterCallback
         trainer.remove_callback(PrinterCallback)
+    if config.get('record_resources', False):
+        from ..performance import EpochResources
+        trainer.resource_callback = EpochResources(trainer, len(ds['train']), run_path)
+        trainer.add_callback(trainer.resource_callback)
     trainer.add_callback(TrainingMetrics())
+    if stopping.get('enabled', False):
+        class ValidationEarlyStopping(EarlyStoppingCallback):
+            def on_evaluate(self, args, state, control, metrics, **kwargs):
+                # Không tính evaluate(train) thành một lần validation không cải thiện.
+                if 'eval_loss' in metrics:
+                    return super().on_evaluate(args, state, control, metrics, **kwargs)
+        trainer.add_callback(ValidationEarlyStopping(patience, delta))
     return trainer
 
 def sanity_overfit(model, tokenizer, steps=30, lr=1e-3):

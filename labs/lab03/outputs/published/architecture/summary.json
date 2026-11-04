@@ -1,0 +1,30 @@
+{
+  "models": [
+    {
+      "model": "exercise1",
+      "name": "distilbert/distilbert-base-uncased-finetuned-sst-2-english",
+      "input": "[B,L], L<=128",
+      "output": "[B,2] logits",
+      "layers": 6,
+      "hidden": 768,
+      "total_parameters": 66955010,
+      "requires_grad_parameters": 66955010,
+      "parameters_optimized_in_this_lab": 0
+    },
+    {
+      "model": "exercise2",
+      "name": "distilbert/distilbert-base-uncased",
+      "input": "[B,L], L<=128",
+      "output": "[B,2] logits",
+      "layers": 6,
+      "hidden": 768,
+      "total_parameters": 66955010,
+      "requires_grad_parameters": 14767874,
+      "parameters_optimized_in_this_lab": 14767874
+    }
+  ],
+  "construction_mode": "view",
+  "weights_loaded": false,
+  "source": "pinned model configuration; module structure only",
+  "config_sha256": "09ea74b5b8e02a49d997b7ad0524a9045d0dfe46127e97406fdb585dc1e2f206"
+}

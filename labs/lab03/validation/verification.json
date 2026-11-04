@@ -1,22 +1,46 @@
 {
-  "artifact_run": "20261027T121218Z_verification_ff365b79",
-  "tests_passed": 109,
-  "notebook_count": 2,
-  "relative_links_verified": 60,
-  "notebook_inline_pngs": {
-    "01_eda_preprocessing_feature_engineering.ipynb": 6,
-    "02_modeling.ipynb": 11
+  "date_utc": "2026-11-04",
+  "target_branch": "new-lab03",
+  "tests_passed": 93,
+  "tests_failed": 0,
+  "tests_skipped": 0,
+  "test_evidence": "outputs/verification/pytest.log",
+  "notebooks": {
+    "02_modeling.ipynb": {
+      "cells": 26,
+      "inline_pngs": 17
+    },
+    "01_eda_preprocessing_feature_engineering.ipynb": {
+      "cells": 22,
+      "inline_pngs": 12
+    }
   },
-  "full_training_executed": false,
-  "saved_scientific_metrics_changed": false,
-  "device_modes_supported": [
-    "auto",
-    "cuda",
-    "cpu"
-  ],
-  "local_cuda_training_benchmarked": false,
-  "scientific_raw_evidence_preserved": true,
-  "old_render_and_software_proof_runs_removed": 19,
-  "duplicate_copy_cell_helpers_removed": 4,
-  "obsolete_cli_wrappers_removed": 7
+  "notebook_execution_mode": "view",
+  "notebook_execution_errors": 0,
+  "active_profile": {
+    "max_epochs": 3,
+    "early_stopping": {
+      "enabled": true,
+      "patience": 1,
+      "min_delta": 0.001,
+      "monitor": "validation_loss"
+    },
+    "encoder_lr": 5e-06,
+    "head_lr": 2e-05,
+    "dropout": {
+      "dropout": 0.2,
+      "attention_dropout": 0.2,
+      "seq_classif_dropout": 0.4
+    }
+  },
+  "full_gpu_training_of_three_epoch_profile_executed": false,
+  "reference_run": "20261103T110437Z_frozen_trial_b021d6eb",
+  "reference_run_budget": 5,
+  "raw_source_evidence_modified": false,
+  "relative_links_verified": true,
+  "proof_files": {
+    "config/frozen_trial.json": "09ea74b5b8e02a49d997b7ad0524a9045d0dfe46127e97406fdb585dc1e2f206",
+    "src/training/trainer.py": "ea4a15d808c9df9dd8c85017ce7d13244b02ca10849fc22b03d584e005e725b0",
+    "src/performance.py": "5d5f6d034ee417c24be36e0f0a0d15dfb8541c9a2f0e01f26a57f6bbcb02fe48"
+  }
 }

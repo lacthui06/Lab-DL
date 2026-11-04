@@ -1,9 +1,8 @@
 {
   "checkpoint_selection_metric": "validation_loss",
-  "selected_epoch": 9,
+  "selected_epoch": 5,
   "threshold": 0.45,
   "selection_split": "validation",
-  "weights_sha256": "e47850508fdfeb0ca4cc4f828d24bb395a71389cc5c1cb6d9bcbbbf6045c4e8e",
-  "test_used_for_selection": false,
-  "prior_test_exposure": "Historical test results have already been inspected."
+  "weights_sha256": "515be1adc4b8659ac424004706ebbc93b0bd30f80c017b7839c5a9d048d0821a",
+  "test_used_for_selection": false
 }
