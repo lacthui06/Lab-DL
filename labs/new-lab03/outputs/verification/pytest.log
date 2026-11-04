@@ -1,5 +1,5 @@
-........................................................................ [ 77%]
-.....................                                                    [100%]
+........................................................................ [ 75%]
+.......................                                                  [100%]
 =============================== warnings summary ===============================
 ../lab03-venv/lib/python3.12/site-packages/matplotlib/_fontconfig_pattern.py:64
   /workspace/lab03-venv/lib/python3.12/site-packages/matplotlib/_fontconfig_pattern.py:64: PyparsingDeprecationWarning: 'oneOf' deprecated - use 'one_of'
@@ -37,5 +37,5 @@ tests/test_training.py: 3 warnings
     obj.co_lnotab,  # for < python 3.10 [not counted in args]
 
 -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
------ generated xml file: /workspace/scratch/new-lab03-directory-tests.xml -----
-93 passed, 31 warnings in 26.88s
+------- generated xml file: /workspace/scratch/new-lab03-ready-tests.xml -------
+95 passed, 31 warnings in 23.64s
