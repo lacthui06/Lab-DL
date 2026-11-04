@@ -89,19 +89,11 @@ lightning_logs/
 .tensorboard/
 *.log
 
-# Lab03: trọng số Hugging Face và checkpoint theo từng run
-*.safetensors
-**/best_model/
-**/outputs/runs/*/checkpoints/
-.venv-lab03/
+# Local-only technical change journals
+**/internal_changes.md
 
-**/outputs/.registry.lock
-
-labs/lab03/internal_changes.md
-
-labs/lab03/outputs/publication_history/
-
-labs/lab03/outputs/.published-*/
-
-# Lab03: gói kernel Kaggle được sinh lại bằng scripts/export_kaggle_kernel.py
-labs/lab03/kaggle/
+# Curated report evidence (raw runs remain ignored).
+!labs/lab01/outputs/published/
+!labs/lab01/outputs/published/**/
+!labs/lab01/outputs/published/**/*.csv
+!labs/lab01/outputs/published/**/*.npz

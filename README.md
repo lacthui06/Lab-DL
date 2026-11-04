@@ -20,15 +20,11 @@ Repository containing source code, engineering workflows, and practical lab exer
 
 ---
 
-Lab03 uses its own pinned dependencies in `labs/lab03/requirements.txt` and a separate Python 3.12 environment; do not replace the Lab01 environment with these pins.
-
-Lab03 notebooks now include phase roadmaps, module references and persisted visual diagnostics; threshold 0.8 was selected on validation and evaluated on test (accuracy 84.05%, binary F1 83.50%). Historical test sensitivity plots do not choose a threshold from test.
-
 ## Lab Directory
 
 - **Lab 01**: [FashionMNIST Classification with PyTorch](labs/lab01/README.md) — local experiments available; final PDF pending.
 - **Lab 02**: Upcoming
-- **Lab 03**: [Hugging Face Sentiment Analysis & Fine-tuning](labs/lab03/README.md) — full Rotten Tomatoes, executed notebooks and verified Kaggle artifacts.
+- **Lab 03**: [Hugging Face Sentiment Analysis & Fine-tuning](https://github.com/lacthui06/Lab-DL/tree/lab03/labs/lab03) — notebooks and experiment results on the `lab03` branch.
 - **Lab 04**: Upcoming
 
 ---
