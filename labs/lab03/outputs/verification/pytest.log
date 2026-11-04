@@ -37,5 +37,5 @@ tests/test_training.py: 3 warnings
     obj.co_lnotab,  # for < python 3.10 [not counted in args]
 
 -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
---------- generated xml file: /workspace/scratch/new-lab03-pytest.xml ----------
-93 passed, 31 warnings in 19.18s
+------- generated xml file: /workspace/scratch/new-lab03-clean-tests.xml -------
+93 passed, 31 warnings in 28.49s

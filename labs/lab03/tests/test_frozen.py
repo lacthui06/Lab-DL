@@ -38,13 +38,13 @@ def test_reject_invalid_freezing(count):
         configure_frozen_optimizer(model, config)
 
 
-def test_discriminative_optimizer_trainer_five_tiny_epochs(tiny, tmp_path):
+def test_discriminative_optimizer_trainer_three_tiny_epochs(tiny, tmp_path):
     import json
     from datasets import Dataset, DatasetDict
     from labs.lab03.src.training.trainer import make_trainer
     model, tokenizer = tiny
     cfg = dict(freeze_layers=0, learning_rate=2e-6, head_learning_rate=1e-5,
-        weight_decay=.1, num_train_epochs=5, batch_size=8, eval_batch_size=8,
+        weight_decay=.1, num_train_epochs=3, batch_size=8, eval_batch_size=8,
         warmup_ratio=.1, fp16=False, seed=42, eval_strategy='epoch',
         metric_for_best_model='loss', epoch_console_summary=True, save_only_model=True)
     optimizer, _ = configure_frozen_optimizer(model, cfg)
@@ -54,7 +54,7 @@ def test_discriminative_optimizer_trainer_five_tiny_epochs(tiny, tmp_path):
     trainer.optimizer = optimizer
     trainer.train()
     rows = json.loads((tmp_path/'epoch_history.json').read_text())
-    assert [r['epoch'] for r in rows] == list(range(1, 6))
+    assert [r['epoch'] for r in rows] == list(range(1, 4))
     best = min(rows, key=lambda r: r['validation_loss'])
     assert trainer.state.best_model_checkpoint.endswith('checkpoint-' + str(best['step']))
     assert not trainer.args.greater_is_better

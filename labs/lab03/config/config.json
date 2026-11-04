@@ -52,9 +52,9 @@
     "freeze_layers": 4,
     "early_stopping": {
       "enabled": true,
-      "patience": 1,
+      "patience": 2,
       "min_delta": 0.001
     }
   },
-  "experiment_name": "frozen_regularized_five_epoch_early_stopping"
+  "experiment_name": "three_epoch_binary_sentiment"
 }

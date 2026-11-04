@@ -461,7 +461,7 @@ Metric prefix train_* không được đếm như validation.
 Callback chỉ xử lý metrics có eval_loss.
 
 Min_delta điều khiển patience; checkpoint vẫn chọn loss nhỏ nhất thực tế.
-Early stopping có thể kết thúc trước ngân sách 3 epoch.
+Với budget 3 epoch, patience 2 và đánh giá mỗi epoch, early stopping sớm nhất ở epoch3. Không đổi patience giữa các thí nghiệm ngân sách.
 selection_summary lưu requested/completed/stopped_early và selected_epoch.
 
 ### 2.22. Chọn và reload checkpoint
@@ -627,349 +627,181 @@ Bundle manifest cần được kiểm trước khi nhập artifact.
 Không commit dataset thô, ZIP hoặc weights vào Git.
 Notebook có cell output được tải riêng từ giao diện Kaggle.
 
-## 3. Đọc kết quả và hoàn thành báo cáo
+## 3. Kết quả, bằng chứng và hoàn thành báo cáo
 
-### 3.0. Kết quả thực nghiệm đã xác minh từ ZIP Kaggle
+### 3.0. Trạng thái
 
-Nguồn duy nhất cho kết quả chính: `20261103T110437Z_frozen_trial_b021d6eb`, source commit `c02effea2f08e630c37775712cfbc9ac7e6faa8e`, Kaggle Tesla T4. ZIP do người thực hiện gửi; 158 file khớp bundle SHA256 trước nhập. Run sources được giữ nguyên byte; biểu đồ/bảng/log được publish để dùng trực tiếp trong report. Không huấn luyện lại, không chọn lại threshold trên test, không đổi số đo.
+Thí nghiệm 3 epoch chưa được full train trên GPU. Không có số đo accuracy, loss, threshold, runtime hoặc VRAM để kết luận. Các mục dưới đây là hướng dẫn đọc bằng chứng do chính phiên chạy sinh ra; không phải kết quả đã thực hiện.
 
-[Report có toàn bộ hình và log](outputs/published/index.md) · [Selection](outputs/latest_report.json) · [Audit độc lập](validation/final_review_audit.json) · [Bằng chứng nhập ZIP](validation/import_audit.json).
+Không dùng kết quả mô hình từ run khác để điền bảng. Không tạo learning curves trước training. Hai notebook hiện không có cached outputs; Run All sẽ tạo bảng và hình inline đồng thời lưu artifact.
 
-#### EDA và feature engineering đã quan sát
+### 3.1. Kiểm tra data contract
 
-Official splits 8.530/1.066/1.066; mỗi split cân bằng hai nhãn. Không có missing/blank/invalid label, normalized duplicates trong split hoặc normalized exact overlap giữa các split. Đây là audit exact/normalized text, chưa chứng minh không có semantic paraphrase leakage.
+Đọc data_statistics.json trong model run. Official splits phải là 8.530 train, 1.066 validation, 1.066 test. Effective train bằng train gốc cộng added_count trong augmentation.json. Validation/test không tăng mẫu.
 
-Train WordPiece median 27, P90=43, P95=47, P99=56, max=78 tokens (gồm special tokens). Cutoff 64 cắt 6/8.530 câu (0,0703%); cutoff 96/128/256 không cắt câu train. Giữ max128 đã định trước; dynamic padding tránh trả chi phí pad128 cho mọi câu. Không chọn lại cutoff bằng test.
+Kiểm tra parent index, text gốc, text mới và nhãn kế thừa trong augmentation records. Synthetic variants không phải dữ liệu đã được con người xác nhận lại nhãn. Nếu không có candidate phù hợp, sửa phương pháp dựa trên train thay vì ép nhân bản đủ quota.
 
-Train negative/positive có mean word count 20,94/21,05 và mean tokens 27,46/27,27: độ dài trung bình gần nhau, không phải feature phân loại mạnh tự thân. Tín hiệu phủ định/tương phản xuất hiện trong 38,12% negative và 28,65% positive; giữ các dấu hiệu này thay vì xóa stopwords. Số liệu heuristic không phải giải thích nhân quả.
+### 3.2. Đọc learning curves
 
-TF-IDF fit original train có 24.083 features, 207.847 nonzero, density 0,1012%, sparse arrays 2.528.288 bytes. Top mean TF-IDF mô tả tần suất có trọng số; không gọi là classifier importance. Modeling fit baseline train-only trên cùng effective pool như Transformer rồi chọn C bằng validation.
+Mỗi dòng epoch_history tương ứng một epoch thực chạy. Train loss trên biểu đồ được evaluate lại trên toàn effective train với dropout tắt, có thể khác running optimization loss. Validation cũng được evaluate ở chế độ eval. So hai đại lượng cùng cách đo để đọc generalization gap.
 
-Augmentation thêm **274 mẫu** (137 mỗi lớp), effective train **8.804**. Trần25% không phải số mẫu bắt buộc: 2.848 câu có negation/contrast được bỏ qua; số candidates của lớp negative giới hạn pool cân bằng. Không duplicate để ép thêm mẫu. Heldout không đổi. Labels synthetic kế thừa parent, chưa được người gán nhãn kiểm duyệt hết.
+Nếu train loss tiếp tục giảm mà validation loss tăng, đó là dấu hiệu overfit cần điều tra. Nếu hai loss đều cao và accuracy gần ngẫu nhiên, có thể underfit hoặc lỗi pipeline. Nếu gap nhỏ nhưng performance thấp, không kết luận mô hình tốt chỉ dựa vào gap.
 
-![EDA](outputs/published/frozen_trial/lengths_by_class.png)
-![Preprocessing](outputs/published/frozen_trial/preprocessing_diagnostics.png)
-![Features](outputs/published/frozen_trial/tfidf_features.png)
-![Augmentation](outputs/published/frozen_trial/augmentation_diagnostics.png)
+Biểu đồ dùng epoch làm trục X; step vẫn được lưu để định danh checkpoint và truy vết optimizer. Không thêm điểm giả khi run kết thúc. Không lấy accuracy tốt nhất trên test để chọn epoch.
 
-#### Học, chọn checkpoint và regularization
+### 3.3. Early stopping và checkpoint
 
-DistilBERT có 66.955.010 tham số, trong đó 14.767.874 trainable. Embedding và4 blocks đầu frozen; encoder LR5e-6/headLR2e-5, dropout0.2/0.2/0.4, decay0.1, warmup10%, clipping1 và augmentation được khai báo trước. Không thực hiện ablation nên không kết luận riêng từng kỹ thuật gây cải thiện.
+Budget tối đa 3 epoch, patience 2, min_delta 0.001, monitor validation loss. Evaluate/save mỗi epoch. Với lịch này patience không thể gây dừng trước epoch3. Đây là thuộc tính của cơ chế, không phải lỗi.
 
-| Epoch | Train accuracy (eval) | Validation accuracy | Train loss (eval) | Validation loss |
-|---|---:|---:|---:|---:|
-| 1 | 82.30% | 82.83% | 0.390672 | 0.394180 |
-| 2 | 83.58% | 83.40% | 0.367919 | 0.376805 |
-| 3 | 84.31% | 83.68% | 0.356153 | 0.369482 |
-| 4 | 84.51% | 83.96% | 0.348804 | 0.368835 |
-| 5 | 84.58% | 83.96% | 0.348564 | 0.367875 |
+Minimum validation loss vẫn cập nhật khi loss giảm ít hơn min_delta; patience chỉ reset khi cải thiện vượt min_delta. Do đó checkpoint được chọn có thể thuộc một epoch không reset patience.
 
-Validation loss giảm từ0,394180 xuống0,367875; checkpoint epoch5 được chọn đúng minimum loss. Accuracy gap cuối là **0,616 điểm phần trăm**, loss gap0,01931. Chưa thấy validation-loss tăng trong cửa sổ5 epoch; điều này không bảo đảm hết overfit hay mô hình tối ưu. Early stopping patience2/min_delta0.001 được bật; `stopped_early=False` nghĩa là không kết thúc trước ngân sách 5 epoch. Tái hiện callback Transformers4.48.3 từ config/history cho counter0/0/0/1/2: cải thiện epoch4 là0,0006465 và epoch5 là0,0009598, đều nhỏ hơn min_delta. Patience do đó đạt ngưỡng ngay tại biên ngân sách. Đây là **counter dẫn xuất**, không phải counter đã được ghi trực tiếp; không kết luận rằng patience chưa đạt ngưỡng.
+Đọc selection_summary để xác nhận requested_epochs, completed_epochs, selected_epoch, best_step, early_stopping và stopped_early. Không đánh đồng enabled với stopped_early.
 
-[Bảng tái hiện patience](outputs/published/result_analysis/early_stopping_replay.json) nêu provenance. Minimum loss vẫn được cập nhật khi có cải thiện nhỏ, nên checkpoint epoch5 được chọn đúng dù min_delta không reset patience.
+### 3.4. Threshold và test
 
-Log ghi **2 AMP skipped optimizer steps**; không diễn giải 2.755 global steps thành 2.755 updates thành công. Mọi loss/metric cần thiết hữu hạn; giữ cảnh báo AMP trong raw log và selection_summary, không xóa để làm đẹp kết quả.
+Sau khi chọn checkpoint, predict validation và quét 19 thresholds từ 0.05 đến 0.95. Chọn Macro-F1 lớn nhất, tie-break gần 0.5 rồi ngưỡng nhỏ hơn. Khóa decision_threshold trước predict test.
 
-![Learning curves](outputs/published/frozen_trial/learning_curves.png)
-[Kiến trúc chi tiết hai model dạng text](outputs/published/architecture/model_architectures.txt) và [bảng cấu trúc/provenance](outputs/published/architecture/summary.json). Mỗi model có66.955.010parameters; Exercise1 chỉ inference nên tối ưu0parameters, dù requires_grad vẫn bật trong cấu trúc khai báo. Exercise2 tối ưu14.767.874parameters. View dựng module tree từ pinned configuration, không load pretrained/checkpoint weights; không dùng sơ đồ này làm bằng chứng reload GPU.
+Báo cả argmax/threshold0.5 và threshold được chọn trên validation. Không dùng test để chọn operating point. Threshold tối ưu không được điền trước.
 
-#### Threshold validation-only và kết quả test
+Đọc TN/FP/FN/TP, precision, recall, Binary F1 và Macro-F1. Confusion matrix hiển thị counts và chuẩn hóa theo hàng; hai phần bổ sung nhau.
 
-Quét19ngưỡng0,05–0,95 trên validation Macro-F1, khóa threshold **0,45** cùng identity checkpoint trước khi predict test. Không có lựa chọn threshold dựa trên test.
+Accuracy cho biết tỷ lệ đúng, F1 mô tả trade-off precision/recall. Một threshold có thể cải thiện Macro-F1 nhưng làm accuracy thấp hơn. Giải thích theo mục tiêu đã định trước.
 
-| Model/policy | Accuracy | Precision positive | Recall positive | Binary F1 | Macro F1 |
-|---|---:|---:|---:|---:|---:|
-| TF-IDF | 78.99% | 79.21% | 78.61% | 78.91% | 78.99% |
-| Frozen DistilBERT threshold 0.5 | 82.93% | 83.05% | 82.74% | 82.89% | 82.93% |
-| Frozen DistilBERT validation threshold | 83.11% | 82.39% | 84.24% | 83.30% | 83.11% |
+### 3.5. Performance và bộ nhớ
 
-Policy được chọn đúng **886/1.066**, sai180. Confusion matrix `[TN FP; FN TP]` = `[[437,96],[84,449]]`. So threshold0,5, threshold0,45 sửa thêm8FN nhưng tăng6FP: net thêm2dự đoán đúng, accuracy tăng0,188 điểm phần trăm. So baseline, tăng44dự đoán đúng và4,128 điểm phần trăm accuracy. Đây là so sánh một seed, chưa là bằng chứng thống kê về mọi lần train.
+resource_history ghi train time không gồm full train-eval/validation/save. Epoch pipeline time có phạm vi rộng hơn. Hai loại time/sample không được gọi cùng một đại lượng.
 
-Test loss **0,409902** thuộc score distribution của checkpoint, không thay đổi bởi threshold. ROC-AUC0,90037; average precision0,90974; Brier0,12664; confidence ECE0,04254. Bootstrap95% accuracy **80,86–85,37%**, conditional trên fixed model/policy, không bao gồm uncertainty của seed training.
+Test evaluation runtime là thời gian predict cả tập, chia cho số mẫu; đó là throughput trung bình, không phải latency một request.
 
-![Threshold](outputs/published/frozen_trial/validation_threshold_curves.png)
-![Confusion](outputs/published/frozen_trial/confusion_matrix.png)
+RSS được lấy mẫu trên process cha. CUDA allocated/reserved peak là số đo allocator của device được chọn. CPU ghi VRAM N/A; không suy ra CUDA peak bằng số tham số.
 
-| Lớp (one-vs-rest) | Precision | Recall / TPR | F1 | FPR | Support |
-|---|---:|---:|---:|---:|---:|
-| Negative | 83,88% | 81,99% | 82,92% | 15,76% | 533 |
-| Positive | 82,39% | 84,24% | 83,30% | 18,01% | 533 |
+RAM/VRAM per batch slot là bộ nhớ peak chia số slot nominal của batch, có phần model/optimizer dùng chung. Không coi đây là bộ nhớ riêng biệt mà mỗi câu cần độc lập.
 
-Negative có TPR thấp hơn;96/533 câu Negative bị gán Positive. FPR Positive18,01% là tỷ lệ trong Negative bị gọi Positive; FPR Negative15,76% là tỷ lệ trong Positive bị gọi Negative. Không nhầm FPR với1-precision.
+### 3.6. Phân tích theo lớp
 
-![Per-class metrics](outputs/published/result_analysis/per_class_metrics.png)
+Báo precision, recall, F1, TPR, FPR và support của Negative/Positive. Với bài hai lớp, FP của lớp này liên quan FN của lớp kia; luôn ghi rõ positive label của phép one-vs-rest.
 
-Baseline log loss tính lại từ1.066saved probability vectors là **0,517371**; Transformer test loss đo tại Kaggle là **0,409902**. Loss baseline là dẫn xuất sklearn log_loss, không phải số đo GPU. [Summary dẫn xuất](outputs/published/result_analysis/results_summary.json) ghi source manifest/code hashes. Test runtime metrics của Transformer dùng argmax; policy threshold0,45 được báo riêng trong test_comparison, không ghi đè metrics nguồn.
-![ROC PR](outputs/published/frozen_trial/roc_pr_curves.png)
-![Calibration](outputs/published/frozen_trial/calibration_confidence.png)
+Đọc per_class_metrics.json cùng hình PNG. Kiểm tra totals bằng confusion counts để phát hiện đảo trục hoặc đổi thứ tự nhãn.
 
-#### Performance đã đo
+### 3.7. Calibration và uncertainty
 
-RAM là parent RSS sampled20ms; VRAM là PyTorch allocator trên cuda:0. Peak/batch slots chứa shared model/optimizer; không phải bộ nhớ riêng của một câu. Các epoch dùng batch16/device. Test **0,42636ms/mẫu** là batch throughput, không phải request latency. Bảng đầy đủ nằm trong performance_history.json.
+ROC-AUC đánh giá thứ tự scores, không cố định threshold. PR phản ánh precision/recall trên nhiều operating points. ECE và reliability diagram đánh giá confidence.
 
-| Epoch | Train ms/mẫu | Pipeline ms/train mẫu | RAM peak MiB | RAM MiB/batch slot | VRAM allocated MiB | VRAM MiB/batch slot |
-|---|---:|---:|---:|---:|---:|---:|
-| 1 | 1.6680 | 2.1173 | 1551.15 | 96.95 | 567.47 | 35.47 |
-| 2 | 1.6064 | 2.0606 | 1729.50 | 108.09 | 567.47 | 35.47 |
-| 3 | 1.6285 | 2.0841 | 1747.57 | 109.22 | 567.47 | 35.47 |
-| 4 | 1.6155 | 2.0778 | 1747.59 | 109.22 | 567.47 | 35.47 |
-| 5 | 1.6591 | 2.1285 | 1830.71 | 114.42 | 567.47 | 35.47 |
+Mô hình tự tin chưa chắc đúng. Không gọi score 0.99 là xác suất đúng đã được kiểm chứng nếu chưa đánh giá calibration.
 
-VRAM reserved peak638MiB; RAM peak tăng qua epoch có thể do allocator/cache, không đủ bằng chứng kết luận memory leak. Các số này thuộc run T4 đã nhận, không phải ước lượng từ weights.
+Bootstrap test interval chỉ mô tả uncertainty của fixed model trên mẫu test; không bao gồm variance do seed, dataset shift hoặc lựa chọn hyperparameters.
 
-![Performance](outputs/published/frozen_trial/performance.png)
+### 3.8. Đọc các câu sai
 
-#### Error analysis và giới hạn
+Đọc cả false positive và false negative. Chú ý negation, contrast, sarcasm, implicit sentiment và kiến thức ngữ cảnh.
 
-Câu test607 có mệnh đề nhượng bộ “though ... routine script” nhưng kết thúc “cinematic fluidity ... makes it work”; model dự đoán positive0,9875 trong khi label negative. Đây là ví dụ cue xung đột và ambiguity của sentence-level label; không tự sửa nhãn sau khi nhìn prediction.
+Các sample_predictions được chọn theo nhóm đúng/sai, nhãn và confidence để dễ phân tích; không phải mẫu ngẫu nhiên đại diện toàn test.
 
-Câu test276 “worked for me ... then it caved in” có label positive nhưng model negative0,9705. Cần ngữ cảnh rộng hơn hoặc label audit độc lập để phân biệt lỗi model với ambiguity nhãn. High-confidence examples được chọn để kiểm lỗi, không phải random sample đại diện. Không dùng các ví dụ test này để thay rule augmentation của run đã báo cáo.
+Giải thích ngôn ngữ là giả thuyết, không phải chứng minh nguyên nhân bên trong Transformer. Muốn kết luận nhân quả cần thiết kế ablation hoặc perturbation có kiểm soát.
 
-![Examples](outputs/published/frozen_trial/sample_predictions.png)
+### 3.9. Baseline
 
-#### Khả năng tái sử dụng sau pull
+TF-IDF + Logistic Regression dùng cùng effective train. Vocabulary/IDF fit train-only. Chọn C trên validation trước test. Không fit vocabulary trên tất cả splits để tăng feature coverage.
 
-Hai notebook hỗ trợ MODE=view, đã lưu output inline từ chính artifacts này. Source hiện mặc định prepare/train để import và thực thi ngay. Có thể mở trên GitHub hoặc chạy view offline mà không tải Hugging Face, không train và không cần GPU. Notebook 01 đã đặt MODE=prepare/DEVICE=cpu; notebook 02 đã đặt MODE=train/DEVICE=cuda. Chuyển MODE=view nếu chỉ đọc lại artifacts. Config mặc định chỉ dùng ngân sách 3 epoch.
+So baseline và Transformer trên cùng test cohorts, không chỉ cùng số lượng mẫu. Index, text và true label phải khớp.
 
-Review ZIP không có checkpoint weights: reload_check ghi nhận kiểm tra CPU FP32 thành công tại Kaggle, nhưng máy review này chỉ xác minh hash được ghi và prediction consistency, không tự load weights vắng mặt. Muốn infer/eval checkpoint thật phải giữ ZIP checkpoint riêng. Checkpoint thiếu không ngăn audit metrics, đọc biểu đồ hoặc hoàn thành report.
+Baseline log loss được tính từ saved probabilities; Transformer loss là cross-entropy do evaluation ghi. Không gán thời gian GPU của Transformer cho baseline.
 
-#### Đối chiếu yêu cầu bàn giao
+### 3.10. Publish và dùng artifact làm report
 
-| Yêu cầu | Bằng chứng hiện có |
-|---|---|
-| Hai notebook rõ phase/module, không quá ngắn | Notebook01:22cells,12ảnh inline; notebook02:26cells,17ảnh inline và kiến trúc text |
-| EDA/preprocessing/features | Quality, split overlap, length/cutoff, tokens/mask, TF-IDF, augmentation PNG/JSON |
-| Architecture và discussion/quyết định | Description Section4–8; walkthrough Section1–2 |
-| Profile mới tối đa 3 epoch + early stopping | frozen_trial.json và tests; chưa có full GPU run 3 epoch |
-| Binary threshold | Validation scan đủ19ngưỡng, frozen policy0,45 và test comparison |
-| Train accuracy/loss, timing, RAM/VRAM | performance_history/summary, performance.png và log nguồn |
-| Hình vừa inline vừa lưu artifact | Hai notebook thực thi view không lỗi;29image/png outputs |
-| Pull về làm report không train lại | published/index.md, PNG, metrics, raw logs, SHA256 và notebook cached outputs |
-| Kiểm thử phần mềm | 93 tests đạt, không skip; [log](outputs/verification/pytest.log), [JUnit](outputs/verification/pytest.xml), [summary](validation/verification.json) |
-| Giới hạn checkpoint | Review ZIP không weights; audit metrics đạt, chưa reload weights trên máy review |
+Sau training, mở outputs/published/index.md. Catalog ghi role, source run, đường dẫn và SHA256. Ảnh đã được sinh bởi pipeline; không cần train lại hoặc viết lại code để vẽ report.
 
-Tests của các module/công cụ đã loại bỏ được dọn cùng chức năng tương ứng. Bộ hiện hành vẫn kiểm dữ liệu/train-only features, dynamic padding, optimizer freezing, sanity100%/loss<0,05, early stopping, threshold tie-break/nonfinite, artifact tampering, session isolation, ZIP và notebook. Không thay bài kiểm thực bằng zero-test/syntax-only. Log preflight trong ZIP thuộc source commit lúc train; log verification hiện hành thuộc code sau rà soát.
+Raw run giữ config, environment, predictions, epoch history, resource history, console log và manifest. Published là bản chọn từ run tường minh. Không tự lấy run mới nhất để báo cáo.
 
-### 3.1. Thứ tự kiểm tra một run hoàn thành
+Notebook hiển thị cùng PNG được lưu. Tải executed notebook của Kaggle để giữ output cell; interactive notebook không tự nằm trong training subprocess.
 
-Đầu tiên đọc status, config, environment và source hashes.
-Kiểm official/effective sizes và augmentation records/digest.
+### 3.11. ZIP và checkpoint
 
-Đọc epoch_history, selection_summary và early-stopping status.
-Đối chiếu min validation loss với selected checkpoint step.
+Review ZIP không chứa weights nhưng có dữ liệu để kiểm tra metrics và biểu đồ. Checkpoint ZIP giữ model/tokenizer/training config/policy để reload hoặc inference. Không đưa trọng số hoặc ZIP lớn vào Git.
 
-Kiểm reload consistency và weights identity của policy.
-Kiểm threshold scan chỉ dựa trên validation.
-Cuối cùng recompute test metrics từ predictions và so figures/log.
+Giữ checkpoint để không phải train lại khi cần dự đoán, kiểm tra save/load hoặc mở rộng đánh giá. Kiểm tra SHA256 manifest trước xử lý bundle.
 
-### 3.2. Mẫu diễn giải learning curves
+### 3.12. Các gate trước kết luận
 
-Nếu train và validation cùng cải thiện, mô hình đang học tín hiệu có thể generalize trong phạm vi quan sát.
-Nếu train tiếp tục cải thiện trong khi validation loss tăng, xem xét overfitting hoặc confidence của lỗi.
+1. Preflight tests pass, sanity overfit minibatch pass.
+2. Full splits và train-only fitting đúng.
+3. Model architecture, dropout, frozen layers và optimizer khớp config.
+4. Có đúng số epoch thực chạy trong logs/curves/selection.
+5. Validation chọn checkpoint và threshold; test không tham gia lựa chọn.
+6. Raw predictions tái tính được metrics và confusion counts.
+7. Resource units và phạm vi đo được khai báo.
+8. Reload consistency được kiểm tra trên cùng execution context.
+9. Published images/logs/catalog/hash đầy đủ.
+10. Bảng kết quả lấy từ run thật; chưa chạy thì ghi pending.
 
-Nếu cả train/validation đều kém, có thể underfit hoặc preprocessing/model/optimizer chưa phù hợp.
-Hai đường gần nhau không đủ khẳng định mô hình tốt.
+## 4. Câu hỏi bảo vệ
 
-Đọc metric values, baseline và calibration trước khi kết luận.
-Không diễn giải số epoch dài/ngắn như bằng chứng chất lượng độc lập.
-Kết luận phải dẫn đúng run/epoch/figure.
+### Vì sao dùng pretrained base?
 
-### 3.3. Mẫu diễn giải threshold
+Biểu diễn ngôn ngữ đã học giúp thích nghi với lượng dữ liệu có hạn. Classification head được khởi tạo để học hai nhãn của bài toán.
 
-Nêu validation objective, grid/tie-break và threshold thực sự được chọn.
-Nêu policy đã được khóa trước test.
+### Pretrained sentiment ở Exercise1 có phải mô hình fine-tune ở Exercise2?
 
-So metrics threshold0.5 và selected threshold trong cùng test comparison.
-Mô tả FP/FN tăng giảm và ý nghĩa precision/recall trade-off.
+Không. Exercise1 dùng checkpoint đã học SST-2 để minh họa inference; Exercise2 dùng DistilBERT base và head mới.
 
-Không nói mọi metric đều cải thiện nếu chỉ một số metric tăng.
-Không đổi threshold sau khi đọc confusion test.
-Nếu0.5 được chọn, đó vẫn là một kết quả hợp lệ của sweep.
+### Vì sao cần baseline?
 
-### 3.4. Mẫu diễn giải performance
+Baseline đo lợi ích thực tế của kiến trúc phức tạp và giúp phát hiện lỗi dữ liệu hoặc training.
 
-Nêu device, batch size, FP16 và số mẫu làm mẫu số.
-Tách pure train, pipeline và test throughput.
+### Vì sao không xóa stopwords và punctuation?
 
-Báo RSS sampled peak và CUDA allocated/reserved với đơn vị MiB.
-Nêu per-batch-slot normalization và shared memory.
+Phủ định, dấu câu và từ tương phản có thể quyết định polarity. Tokenizer pretrained đã có quy tắc chuẩn hóa phù hợp.
 
-Không suy diễn memory của một model chỉ bằng số parameters.
-Không lấy CPU fixture timing gán cho T4.
-Nếu measurement thiếu, ghi thiếu thay vì0 hoặc giá trị ước lượng không được đánh dấu.
+### Vì sao không fit TF-IDF trên test?
 
-### 3.5. Mẫu diễn giải error analysis
+Vocabulary/IDF là phần của mô hình cần fit. Dùng test để fit sẽ làm test tham gia xây dựng representation.
 
-Chọn một số false positives và false negatives có text thật.
-Nêu predicted label/confidence và true label.
+### Feature engineering của Transformer là gì?
 
-Chỉ ra ngôn ngữ có thể gây khó như concession hoặc implicit sentiment.
-Đánh dấu đó là hypothesis, không mô tả như đã kiểm chứng cơ chế nội tại.
+Tokenization, cutoff, attention mask, dynamic padding và lựa chọn dữ liệu/augmentation. Không cần nối thủ công TF-IDF vào DistilBERT.
 
-Nhắc selection bias của high-confidence grid.
-Không dùng vài ví dụ để kết luận tỷ lệ lỗi của toàn corpus.
-Metrics toàn tập và per-class confusion mới cung cấp quy mô lỗi.
+### Freeze có tắt dropout không?
 
-### 3.6. Evidence map cho report
+Không. requires_grad=False ngăn cập nhật gradient; eval mode mới tắt dropout.
 
-| Nội dung | Artifact nguồn |
-|---|---|
-| Data sizes/balance/examples | data_preview.json, class_distribution.png |
-| Quality/overlap | data_quality.json/png, split_overlap_audit.json |
-| Length/cutoff | preprocessing_statistics.json, length/cutoff PNG |
-| Tokenization | tokenization_examples.json, preprocessing_examples.png, attention_mask.png |
-| TF-IDF | feature_summary.json, tfidf_features.png |
-| Augmentation | augmentation.json, counts/diagnostics/examples PNG |
-| Optimizer/architecture | freezing_and_optimizer.json, model_architecture.json/png |
-| Learning | epoch_history.json, trainer_history.json, learning_curves.png |
-| Resources | resource_history.json, performance_history/summary.json, performance.png |
-| Selection | selection_summary.json, decision_threshold.json |
-| Sweep | validation_threshold_scan.json, validation_threshold_curves.png |
-| Test | test_predictions/runtime_metrics/comparison.json, metrics_bar.png, confusion_matrix.png |
-| Calibration | probability_diagnostics.json, reliability_bins.json, ROC/PR/calibration PNG |
-| Error cases | sample_predictions.json/png, threshold_errors.json |
-| Reload | reload_check.json |
-| Provenance/log | source_commit/code hashes, environment_snapshot, console.log |
-| Integrity | manifest.json, package audit, bundle_manifest |
+### Vì sao có encoder/head LR khác nhau?
 
-### 3.7. Các lệnh vận hành
+Encoder có tri thức pretrained nên cập nhật nhẹ; head mới cần học nhanh hơn. Đây là lựa chọn cần kiểm chứng, không bảo đảm tối ưu.
 
-Từ thư mục gốc repository, dùng môi trường đã cài requirements:
+### Vì sao bias và LayerNorm không decay?
 
-```bash
-python -m pytest labs/lab03/tests -q
-python labs/lab03/scripts/preview_dataset.py
-python labs/lab03/scripts/preview_augmentation.py
-python labs/lab03/scripts/run_exercise1.py
-python labs/lab03/scripts/run_frozen_trial.py --config labs/lab03/config/frozen_trial.json --device cuda
-```
+Optimizer chỉ decay nhóm weights đã định trước; bias và các vector normalization được giữ ở nhóm không decay.
 
-Notebook modeling gọi cùng modules với CLI.
-Không copy training loop vào notebook rồi để hai phiên bản lệch nhau.
-Notebook chịu trách nhiệm giải thích, orchestration, display và lấy artifact.
+### Vì sao loss có thể tăng khi accuracy gần như không đổi?
 
-### 3.8. Evaluate và infer từ checkpoint
+Cross-entropy nhạy với confidence của lỗi. Argmax có thể giữ nguyên nhưng mô hình tự tin hơn vào các câu sai.
 
-Giải nén checkpoint ZIP, giữ nguyên best_model và policy.
-Lệnh evaluate/infer nhận đường dẫn model thật:
+### Early stopping có bảo đảm không overfit?
 
-```bash
-python labs/lab03/scripts/eval.py --model-path /path/to/best_model
-python labs/lab03/scripts/infer.py --model-path /path/to/best_model --text "The acting was good, but the story was disappointing."
-```
+Không. Nó giới hạn tiếp tục học theo validation monitor, còn generalization phụ thuộc dữ liệu, architecture và protocol.
 
-Không bỏ policy đã khóa để tự chọn threshold theo test.
-Không đổi weights nhưng giữ weights hash trong policy như thể không thay đổi.
-Khi cần kết quả mới, tạo run mới và lưu cấu hình/bằng chứng tương ứng.
+### Có bắt buộc đủ ba điểm trên biểu đồ?
 
-### 3.9. Checklist hoàn thành
+Chỉ vẽ số epoch thực chạy; với budget3/patience2/eval mỗi epoch, lượt hoàn thành bình thường chạy tới epoch3. Run lỗi không được gọi hoàn thành.
 
-- Official splits và labels đúng contract.
-- EDA/feature decisions có bảng/ảnh và lý do.
-- Baseline fit train-only, selection validation-only.
-- Model architecture, optimizer groups và regularization có nguồn.
-- Max epochs 3, early stopping và history nhất quán.
-- Best checkpoint là min validation loss.
-- Threshold scan đủ grid và policy khóa trước test.
-- Test predictions/metrics/confusion khớp cùng cohort.
-- Performance có scope, đơn vị và device rõ ràng.
-- Notebook hiển thị ảnh inline, cùng file đã lưu trong outputs/.
-- Published có hình/bảng/raw log và hashes.
-- Save/reload check pass; checkpoint được giữ riêng.
-- Report chỉ đưa kết luận có bằng chứng, ghi giới hạn dữ liệu/seed/sampling.
+### Có bảo đảm accuracy cao nhất không?
 
-### 3.10. Câu hỏi bảo vệ và câu trả lời
+Không. Kết luận phải dựa vào kết quả thật, baseline, calibration và giới hạn một seed; không dùng số epoch để suy ra chất lượng.
 
-**Vì sao dùng pretrained model?**
-Tận dụng representation ngôn ngữ, giảm nhu cầu dữ liệu/compute so với học từ đầu.
+### Vì sao lưu cả JSON và PNG?
 
-**Vì sao không dùng sentiment model của Exercise1 cho Exercise2?**
-Hai Exercise có mục tiêu khác nhau; Exercise2 học head/task từ base model theo pipeline được đặc tả.
+JSON lưu giá trị chính xác để kiểm toán; PNG phục vụ trực quan và report. Notebook cần hiển thị PNG inline, không chỉ in đường dẫn.
 
-**Vì sao cần baseline?**
-Để biết mô hình phức tạp có mang lại lợi ích trong cùng dữ liệu/policy hay không.
+### Nếu checkpoint tốt nhất không phải epoch cuối?
 
-**TF-IDF có fit trên validation không?**
-Không. Validation chỉ chọn C/policy; vocabulary/IDF fit train-only.
+Reload checkpoint theo minimum validation loss đã công bố trước. Không thay quy tắc vì thấy test tốt hơn ở epoch khác.
 
-**Tại sao không xóa not?**
-Vì có thể đảo sentiment; stopword list không thay thế phân tích ngữ nghĩa.
+### Vì sao cần lưu checkpoint riêng?
 
-**Attention mask có phải nhãn không?**
-Không. Nó chỉ phân biệt token hợp lệ và padding.
+Để reload/infer/evaluate mà không train lại. Review artifacts không thể thay thế model weights.
 
-**Tăng25% có phải phải đủ25% không?**
-Không. Đó là trần; số variants hợp lệ phụ thuộc rules, dedup và balance.
+### So sánh hai ngân sách huấn luyện thế nào?
 
-**Synthetic label có chắc đúng không?**
-Không. Nó kế thừa parent theo heuristic, cần kiểm duyệt và validation.
+Giữ dataset revision, seed, preprocessing, augmentation, model, optimizer, regularization và selection protocol. Ghi rằng LR schedule phụ thuộc tổng số steps: thay budget tạo một thí nghiệm khác, không nhất thiết bằng cắt history của run dài hơn.
 
-**Freeze có tắt dropout không?**
-Không. requires_grad và train/eval mode điều khiển hai cơ chế khác nhau.
-
-**Vì sao LR head lớn hơn encoder?**
-Head mới cần thích nghi, trong khi encoder cần thay đổi thận trọng hơn.
-
-**Vì sao min_delta không bằng improvement của checkpoint?**
-Min_delta dùng điều khiển patience; checkpoint vẫn lưu minimum loss thực tế.
-
-**Vì sao ít hơn5 điểm trên learning curves?**
-Early stopping có thể kết thúc trước ngân sách, không tạo thêm điểm chưa đo.
-
-**Vì sao loss tăng nhưng accuracy gần như giữ nguyên?**
-Một số lỗi có thể tự tin hơn; accuracy chỉ xét nhãn đúng/sai, loss còn xét xác suất.
-
-**Threshold0.5 có luôn tối ưu không?**
-Không. Validation sweep quyết định operating point cho objective đã chọn;0.5 vẫn có thể được chọn.
-
-**Quét threshold trên test có được không?**
-Không dùng test cho selection. Test chỉ đánh giá policy đã khóa.
-
-**ROC-AUC có phải accuracy không?**
-Không. ROC-AUC đo ranking qua thresholds, accuracy đo decisions ở một operating point.
-
-**Bootstrap có chứng minh model ổn định qua seeds không?**
-Không. Fixed-model bootstrap không bao gồm biến thiên do training seed.
-
-**RAM/VRAM per batch slot là gì?**
-Peak chia nominal slots, gồm shared memory; không phải memory riêng một câu.
-
-**Test ms/sample có phải latency ứng dụng không?**
-Không. Đó là throughput của full batch evaluation với overhead trong scope được ghi.
-
-**Lấy hình report có cần train lại không?**
-Không, sau pipeline hoàn thành có thể lấy trực tiếp từ published/index/catalog và raw run artifacts.
-
-
-## 3.11. Đối chiếu profile thực thi 3 epoch
-
-Cấu hình hiện tại là `config/frozen_trial.json`: tối đa 3 epoch, patience 1, min_delta 0.001 trên validation loss, evaluate/save mỗi epoch. Chọn checkpoint theo minimum validation loss trong các epoch thực chạy; không mặc định epoch cuối. Early stopping có thể kết thúc trước budget; không nối thêm điểm giả vào biểu đồ.
-
-Các kết quả 5 epoch trình bày ở Section 3 thuộc run `20261103T110437Z_frozen_trial_b021d6eb`. Giữ nguyên config, history, log và manifest nguồn để không đổi nhãn bằng chứng. Cấu hình 3 epoch chưa được full train trên GPU; accuracy, threshold tối ưu, số mẫu augmentation thực tế và mức overfit của run mới chỉ được báo cáo sau khi nhận review ZIP.
-
-Notebook 01 chạy `MODE="prepare"` trên CPU để xuất EDA/feature engineering và ZIP riêng. Notebook 02 chạy `MODE="train"`, `DEVICE="cuda"` để train từ pretrained base; không resume checkpoint cũ. Hai notebook đều clone nhánh `new-lab03`, hiển thị ảnh inline từ cùng PNG lưu trong outputs/. MODE=view đọc bộ bằng chứng đã chọn và không train.
-
-Không khẳng định bộ tham số là tối ưu toàn cục: LR encoder 5e-6/head 2e-5, dropout 0.2/0.2/0.4, decay 0.1 và freeze 4 blocks là lựa chọn regularization có cơ sở, cần kiểm chứng trên validation của run mới. Không dùng test để chọn LR, checkpoint hoặc threshold.
-
-Với budget 3 epoch, patience=1 cho phép dừng từ epoch2 nếu validation không cải thiện đủ; patience=2 chỉ có thể kích hoạt từ epoch3. Chọn patience1 để cơ chế có khả năng dừng trước budget. Checkpoint vẫn theo minimum validation loss, không theo số epoch đã chạy.
-
-
-## 3.12. Checklist trước khi chạy Kaggle
-
-| Yêu cầu | Thực thi và bằng chứng |
-|---|---|
-| Đúng hai notebook | 01 chuẩn bị dữ liệu; 02 modeling; roadmap và Module/file ở cell đầu |
-| EDA kỹ | Quality, overlap, conflicting labels, nhãn, length theo lớp, negation/contrast và cutoff |
-| Feature engineering | TF-IDF fit train-only, sparsity, top terms; WordPiece/IDs/mask; augmentation trước/sau |
-| Architecture dạng text ở đầu | session.architectures() in toàn bộ hai module tree, số tham số, trạng thái freeze; không thay bằng sơ đồ ảnh |
-| Train mới | Pretrained base + head mới; budget 3, patience 1, min_delta 0.001; không resume |
-| Regularization | Dropout 0.2/0.2/0.4, AdamW decay 0.1, encoder/head LR 5e-6/2e-5, freeze 4 blocks, clipping 1 |
-| Learning curves | Full train-eval và validation mỗi epoch; số điểm đúng số epoch thực chạy |
-| Performance | Train/eval time scopes, RSS, CUDA peak và chuẩn hóa theo batch slot; CPU VRAM ghi N/A |
-| Binary threshold | 19 ngưỡng validation, policy khóa trước test; tie-break được kiểm thử |
-| Inline và artifacts | session.show() hiển thị chính PNG trong outputs; JSON giữ số chính xác |
-| Publish và log | outputs/published/index.md, catalog, source_runs và manifest; review ZIP có log |
-| Kiểm tra phần mềm | outputs/verification/pytest.log và pytest.xml; validation/verification.json |
-| Kết quả 3 epoch | Chưa đo full GPU; cần ZIP của lần chạy mới trước khi viết kết luận cuối |
-
-Không dùng số epoch thấp như bằng chứng tự thân rằng mô hình tốt hơn. So validation loss, Macro-F1, độ lệch train/validation và calibration dưới cùng protocol; test chỉ đánh giá cuối. Không tăng augmentation/dropout vô điều kiện nếu mô hình đã underfit.
+Không chọn hyperparameters mới dựa trên test của từng run. So validation curves, selected checkpoint, thời gian và generalization; test là đánh giá cuối và cần thừa nhận mọi test exposure.

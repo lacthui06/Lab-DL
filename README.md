@@ -22,7 +22,7 @@ Repository containing source code, engineering workflows, and practical lab exer
 
 Lab03 uses its own pinned dependencies in `labs/lab03/requirements.txt` and a separate Python 3.12 environment; do not replace the Lab01 environment with these pins.
 
-Lab03 has two notebooks with phase roadmaps, inline visualizations and saved artifacts: EDA/preprocessing/feature engineering, then binary sentiment modeling. The active training profile uses at most 3 epochs with validation-loss early stopping and validation-only threshold selection. Measured reference results and the status of a new run are documented in the Lab03 walkthrough.
+Lab03 has two notebooks with phase roadmaps, inline visualizations and saved artifacts: EDA/preprocessing/feature engineering, then binary sentiment modeling. The active training profile uses at most 3 epochs with validation-loss early stopping and validation-only threshold selection. Results are published from each completed run and documented in the Lab03 walkthrough.
 
 ## Lab Directory
 

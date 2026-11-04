@@ -32,6 +32,6 @@ def test_active_profile_is_three_epochs_with_predeclared_regularization():
     from labs.lab03.src.utils.runs import ROOT
     cfg=json.loads((ROOT/'config/frozen_trial.json').read_text())['exercise2']
     assert cfg['num_train_epochs']==3 and cfg['early_stopping']['enabled']
-    assert cfg['early_stopping']['patience']==1 and cfg['metric_for_best_model']=='loss'
+    assert cfg['early_stopping']['patience']==2 and cfg['metric_for_best_model']=='loss'
     assert cfg['augmentation']['enabled'] and cfg['weight_decay']>0
     assert cfg['model_overrides']['seq_classif_dropout']==.4
