@@ -14,7 +14,7 @@ Run Kaggle `20261103T110437Z_frozen_trial_b021d6eb` hoàn thành **5/5 epoch**, 
 - [Metrics theo lớp](outputs/published/result_analysis/per_class_metrics.png), [patience replay](outputs/published/result_analysis/early_stopping_replay.json).
 - [Selection](outputs/latest_report.json), [audit](validation/final_review_audit.json)
 
-Hai notebook đã có output inline; chọn `MODE="view"` để xem offline. Source mặc định view; đổi prepare/train cho phiên Kaggle mới; không cần train/tải dataset để đọc báo cáo.
+Hai notebook đã có output inline; chọn `MODE="view"` để xem offline. Source mặc định prepare/train cho phiên Kaggle mới; chọn view khi chỉ đọc artifact; không cần train/tải dataset để đọc báo cáo.
 
 ## Chạy trên Kaggle
 
@@ -24,7 +24,7 @@ Import notebook modeling từ GitHub:
 https://github.com/lacthui06/Lab-DL/blob/new-lab03/labs/lab03/notebooks/02_modeling.ipynb
 ```
 
-Bật **GPU + Internet**, rồi **Run All**. Để train mới, đổi cell setup thành `MODE="train"`, `DEVICE="cuda"`; bắt đầu từ pretrained base, tải official dataset và thực hiện trọn pipeline. Không cần cung cấp checkpoint đầu vào.
+Bật **GPU + Internet**, rồi **Run All**. Notebook modeling đã đặt `MODE="train"`, `DEVICE="cuda"`; bắt đầu từ pretrained base, tải official dataset và thực hiện trọn pipeline. Không cần cung cấp checkpoint đầu vào.
 
 Cấu hình: **tối đa 3 epoch**, early stopping theo validation loss, patience 1, min_delta 0.001. Số epoch thực chạy có thể ít hơn 3. Notebook01 có ZIP EDA riêng ở cuối khi MODE=prepare. Kết quả, selected checkpoint và threshold được lấy từ chính phiên thực thi.
 
@@ -32,8 +32,8 @@ Cấu hình: **tối đa 3 epoch**, early stopping theo validation loss, patienc
 
 | Notebook | Nội dung | Chế độ mặc định |
 |---|---|---|
-| [01 — EDA, preprocessing, feature engineering](notebooks/01_eda_preprocessing_feature_engineering.ipynb) | Quality/leakage audit, nhãn/độ dài, cutoff, tokens/IDs/mask, TF-IDF, augmentation | `view` (đổi `prepare` để tạo mới) |
-| [02 — Modeling](notebooks/02_modeling.ipynb) | Pretrained sentiment, baseline, fine-tune, performance, threshold, evaluation, errors, export | `view` (đổi `train` để tạo mới) |
+| [01 — EDA, preprocessing, feature engineering](notebooks/01_eda_preprocessing_feature_engineering.ipynb) | Quality/leakage audit, nhãn/độ dài, cutoff, tokens/IDs/mask, TF-IDF, augmentation | `prepare` / CPU |
+| [02 — Modeling](notebooks/02_modeling.ipynb) | Pretrained sentiment, baseline, fine-tune, performance, threshold, evaluation, errors, export | `train` / CUDA |
 
 Ảnh được hiển thị từ cùng PNG đã lưu trong `outputs/runs/<run_id>/`. Sau khi có kết quả, `MODE="view"` đọc selection trong `outputs/latest_preparation.json` hoặc `outputs/latest_report.json`; không train để lấy lại hình. Notebook01 không phải điều kiện bắt buộc trước notebook02: script modeling tự thực hiện cùng data/feature pipeline.
 

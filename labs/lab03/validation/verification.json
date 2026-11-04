@@ -42,5 +42,15 @@
     "config/frozen_trial.json": "09ea74b5b8e02a49d997b7ad0524a9045d0dfe46127e97406fdb585dc1e2f206",
     "src/training/trainer.py": "ea4a15d808c9df9dd8c85017ce7d13244b02ca10849fc22b03d584e005e725b0",
     "src/performance.py": "5d5f6d034ee417c24be36e0f0a0d15dfb8541c9a2f0e01f26a57f6bbcb02fe48"
+  },
+  "notebook_default_modes": {
+    "01": "prepare/cpu",
+    "02": "train/cuda"
+  },
+  "notebook_default_change_verification": {
+    "tests_passed": 12,
+    "view_render_errors": 0,
+    "full_training_executed": false,
+    "log": "outputs/verification/notebook_defaults_tests.log"
   }
 }

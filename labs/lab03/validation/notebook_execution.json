@@ -1,23 +1,25 @@
 {
-  "artifact_run": "20261104T085807Z_notebook_render_b7f6800b",
+  "artifact_run": "20261104T090946Z_notebook_render_d6a065ef",
   "notebooks": [
     {
       "notebook": "01_eda_preprocessing_feature_engineering.ipynb",
       "mode": "view",
       "training_executed": false,
-      "notebook_sha256": "3843045b0ec43107659e73e7d8ece9c992800d8f80d6bac9700ccb8aa02c9702",
+      "notebook_sha256": "5121ed7cd731f694bf0d72fb752a52d61f207df5e4c0234997399a696ca24d97",
       "errors": 0,
       "executed_code_cells": 10,
-      "inline_pngs": 12
+      "inline_pngs": 12,
+      "source_default_mode": "prepare"
     },
     {
       "notebook": "02_modeling.ipynb",
       "mode": "view",
       "training_executed": false,
-      "notebook_sha256": "be91edcae791e9012195382dbf68d7a49ddd62c8f80249e069cf4baf1cca6d26",
+      "notebook_sha256": "a3825cfab91238855c202d8cdab4689252160ebf73475d9e19cfe6ca4d16b26b",
       "errors": 0,
       "executed_code_cells": 12,
-      "inline_pngs": 17
+      "inline_pngs": 17,
+      "source_default_mode": "train"
     }
   ]
 }

@@ -729,7 +729,7 @@ Câu test276 “worked for me ... then it caved in” có label positive nhưng 
 
 #### Khả năng tái sử dụng sau pull
 
-Hai notebook có MODE=view, đã lưu output inline từ chính artifacts này. Có thể mở trên GitHub hoặc chạy view offline mà không tải Hugging Face, không train và không cần GPU. Đổi MODE=prepare cho EDA mới; MODE=train/DEVICE=cuda cho training mới. Config mặc định chỉ dùng ngân sách 3 epoch.
+Hai notebook hỗ trợ MODE=view, đã lưu output inline từ chính artifacts này. Source hiện mặc định prepare/train để import và thực thi ngay. Có thể mở trên GitHub hoặc chạy view offline mà không tải Hugging Face, không train và không cần GPU. Notebook 01 đã đặt MODE=prepare/DEVICE=cpu; notebook 02 đã đặt MODE=train/DEVICE=cuda. Chuyển MODE=view nếu chỉ đọc lại artifacts. Config mặc định chỉ dùng ngân sách 3 epoch.
 
 Review ZIP không có checkpoint weights: reload_check ghi nhận kiểm tra CPU FP32 thành công tại Kaggle, nhưng máy review này chỉ xác minh hash được ghi và prediction consistency, không tự load weights vắng mặt. Muốn infer/eval checkpoint thật phải giữ ZIP checkpoint riêng. Checkpoint thiếu không ngăn audit metrics, đọc biểu đồ hoặc hoàn thành report.
 
