@@ -1,0 +1,23 @@
+{
+  "validation_run": "20261026T155822Z_finetuning_2c2f0401",
+  "test_run": "20261026T160058Z_evaluation_07c24854",
+  "validation_count": 1066,
+  "test_count": 1066,
+  "counts": {
+    "exact": {
+      "validation_duplicate_rows": 0,
+      "test_duplicate_rows": 0,
+      "shared_texts": 0
+    },
+    "casefold_whitespace": {
+      "validation_duplicate_rows": 0,
+      "test_duplicate_rows": 0,
+      "shared_texts": 0
+    }
+  },
+  "train_content_checked": false,
+  "source_hashes": {
+    "validation_predictions.json": "d8cc399afa24fb59a91b118e28345ee34e4a060471dc0716b71e414ca4a97627",
+    "all_predictions.json": "13e545dcf96bcea45af0d21562575b9912201b4b2ef824c9a7d9f98b56f5cfaa"
+  }
+}

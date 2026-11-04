@@ -1,0 +1,7 @@
+{
+  "source_commit": "ca58b27cfbda628ce2700c9e24476edc8eb997f9",
+  "verified_source_files": 37,
+  "method": "SHA256 of original Git revision blobs, not modified review code",
+  "all_match": true,
+  "bundle_member_checksums_verified": 128
+}

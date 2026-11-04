@@ -1,0 +1,15 @@
+Run: 20261026T083627Z_inference_0ed240e2
+[
+  {
+    "text": "The acting was excellent, but the story was disappointing.",
+    "label": "NEGATIVE",
+    "score": 0.9933324456214905,
+    "probabilities": [
+      0.9933324456214905,
+      0.006667588837444782
+    ],
+    "argmax_label": "NEGATIVE",
+    "decision_threshold": 0.8,
+    "threshold_selection_split": "validation"
+  }
+]

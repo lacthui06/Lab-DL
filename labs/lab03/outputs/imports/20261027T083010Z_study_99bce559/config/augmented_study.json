@@ -1,0 +1,25 @@
+{
+  "name": "augmented_regularized_epoch_study",
+  "seed": 42,
+  "epochs_per_candidate": 10,
+  "learning_rates": [
+    5e-06,
+    1e-05
+  ],
+  "selection_metric": "macro_f1",
+  "tie_break": "higher validation macro_f1, lower validation loss, lower learning rate",
+  "baseline": {
+    "C_values": [
+      0.1,
+      1.0,
+      10.0
+    ],
+    "ngram_range": [
+      1,
+      2
+    ],
+    "min_df": 2,
+    "max_features": 50000
+  },
+  "bootstrap_repeats": 2000
+}

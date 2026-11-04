@@ -1,0 +1,41 @@
+{
+  "split": "validation",
+  "selection_metric": "macro_f1",
+  "selected_threshold": 0.45,
+  "selected_metrics": {
+    "threshold": 0.45,
+    "accuracy": 0.8452157598499062,
+    "precision": 0.8382352941176471,
+    "recall": 0.8555347091932458,
+    "specificity": 0.8348968105065666,
+    "FPR": 0.1651031894934334,
+    "binary_f1": 0.8467966573816156,
+    "macro_f1": 0.8451992765581064,
+    "TN": 445,
+    "FP": 88,
+    "FN": 77,
+    "TP": 456,
+    "negative_support": 533,
+    "positive_support": 533,
+    "sample_count": 1066
+  },
+  "baseline_metrics": {
+    "threshold": 0.5,
+    "accuracy": 0.8442776735459663,
+    "precision": 0.8442776735459663,
+    "recall": 0.8442776735459663,
+    "specificity": 0.8442776735459663,
+    "FPR": 0.15572232645403378,
+    "binary_f1": 0.8442776735459663,
+    "macro_f1": 0.8442776735459663,
+    "TN": 450,
+    "FP": 83,
+    "FN": 83,
+    "TP": 450,
+    "negative_support": 533,
+    "positive_support": 533,
+    "sample_count": 1066
+  },
+  "tie_break": "maximum validation macro_f1; closest to 0.5; smaller threshold (score atol=1e-12)",
+  "decision_rule": "Positive if P(POSITIVE) >= threshold"
+}

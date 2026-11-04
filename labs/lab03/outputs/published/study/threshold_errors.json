@@ -1,0 +1,1418 @@
+[
+  {
+    "index": 2,
+    "true_label": 1,
+    "predicted_label": 0,
+    "positive_probability": 0.003045574063435197,
+    "decision_confidence": 0.9969544259365648,
+    "text": "it's like a \" big chill \" reunion of the baader-meinhof gang , only these guys are more harmless pranksters than political activists ."
+  },
+  {
+    "index": 4,
+    "true_label": 1,
+    "predicted_label": 0,
+    "positive_probability": 0.005819960031658411,
+    "decision_confidence": 0.9941800399683416,
+    "text": "red dragon \" never cuts corners ."
+  },
+  {
+    "index": 5,
+    "true_label": 1,
+    "predicted_label": 0,
+    "positive_probability": 0.06536578387022018,
+    "decision_confidence": 0.9346342161297798,
+    "text": "fresnadillo has something serious to say about the ways in which extravagant chance can distort our perspective and throw us off the path of good sense ."
+  },
+  {
+    "index": 7,
+    "true_label": 1,
+    "predicted_label": 0,
+    "positive_probability": 0.002191240666434169,
+    "decision_confidence": 0.9978087593335658,
+    "text": "weighty and ponderous but every bit as filling as the treat of the title ."
+  },
+  {
+    "index": 12,
+    "true_label": 1,
+    "predicted_label": 0,
+    "positive_probability": 0.002900857711210847,
+    "decision_confidence": 0.9970991422887892,
+    "text": "mostly , [goldbacher] just lets her complicated characters be unruly , confusing and , through it all , human ."
+  },
+  {
+    "index": 14,
+    "true_label": 1,
+    "predicted_label": 0,
+    "positive_probability": 0.021409772336483,
+    "decision_confidence": 0.978590227663517,
+    "text": "at its worst , the movie is pretty diverting ; the pity is that it rarely achieves its best ."
+  },
+  {
+    "index": 21,
+    "true_label": 1,
+    "predicted_label": 0,
+    "positive_probability": 0.39903566241264343,
+    "decision_confidence": 0.6009643375873566,
+    "text": "making such a tragedy the backdrop to a love story risks trivializing it , though chouraqui no doubt intended the film to affirm love's power to help people endure almost unimaginable horror ."
+  },
+  {
+    "index": 28,
+    "true_label": 1,
+    "predicted_label": 0,
+    "positive_probability": 0.002822832902893424,
+    "decision_confidence": 0.9971771670971066,
+    "text": "devotees of star trek ii : the wrath of khan will feel a nagging sense of deja vu , and the grandeur of the best next generation episodes is lacking ."
+  },
+  {
+    "index": 36,
+    "true_label": 1,
+    "predicted_label": 0,
+    "positive_probability": 0.003983970265835524,
+    "decision_confidence": 0.9960160297341645,
+    "text": "reminiscent of alfred hitchcock's thrillers , most of the scary parts in 'signs' occur while waiting for things to happen ."
+  },
+  {
+    "index": 40,
+    "true_label": 1,
+    "predicted_label": 0,
+    "positive_probability": 0.44468533992767334,
+    "decision_confidence": 0.5553146600723267,
+    "text": "you needn't be steeped in '50s sociology , pop culture or movie lore to appreciate the emotional depth of haynes' work . though haynes' style apes films from the period . . . its message is not rooted in that decade ."
+  },
+  {
+    "index": 50,
+    "true_label": 1,
+    "predicted_label": 0,
+    "positive_probability": 0.0038468718994408846,
+    "decision_confidence": 0.9961531281005591,
+    "text": "works because we're never sure if ohlinger's on the level or merely a dying , delusional man trying to get into the history books before he croaks ."
+  },
+  {
+    "index": 58,
+    "true_label": 1,
+    "predicted_label": 0,
+    "positive_probability": 0.028409065678715706,
+    "decision_confidence": 0.9715909343212843,
+    "text": "while it's nothing we haven't seen before from murphy , i spy is still fun and enjoyable and so aggressively silly that it's more than a worthwhile effort ."
+  },
+  {
+    "index": 81,
+    "true_label": 1,
+    "predicted_label": 0,
+    "positive_probability": 0.02585877664387226,
+    "decision_confidence": 0.9741412233561277,
+    "text": "zhuangzhuang creates delicate balance of style , text , and subtext that's so simple and precise that anything discordant would topple the balance , but against all odds , nothing does ."
+  },
+  {
+    "index": 95,
+    "true_label": 1,
+    "predicted_label": 0,
+    "positive_probability": 0.012576347216963768,
+    "decision_confidence": 0.9874236527830362,
+    "text": "the closest thing to the experience of space travel"
+  },
+  {
+    "index": 99,
+    "true_label": 1,
+    "predicted_label": 0,
+    "positive_probability": 0.0016009644605219364,
+    "decision_confidence": 0.9983990355394781,
+    "text": "an unusually dry-eyed , even analytical approach to material that is generally played for maximum moisture ."
+  },
+  {
+    "index": 109,
+    "true_label": 1,
+    "predicted_label": 0,
+    "positive_probability": 0.00854433048516512,
+    "decision_confidence": 0.9914556695148349,
+    "text": "tunney , brimming with coltish , neurotic energy , holds the screen like a true star ."
+  },
+  {
+    "index": 112,
+    "true_label": 1,
+    "predicted_label": 0,
+    "positive_probability": 0.12995381653308868,
+    "decision_confidence": 0.8700461834669113,
+    "text": "sometimes we feel as if the film careens from one colorful event to another without respite , but sometimes it must have seemed to frida kahlo as if her life did , too ."
+  },
+  {
+    "index": 115,
+    "true_label": 1,
+    "predicted_label": 0,
+    "positive_probability": 0.0027954769320786,
+    "decision_confidence": 0.9972045230679214,
+    "text": "it was filled with shootings , beatings , and more cussing than you could shake a stick at ."
+  },
+  {
+    "index": 116,
+    "true_label": 1,
+    "predicted_label": 0,
+    "positive_probability": 0.0017961491830646992,
+    "decision_confidence": 0.9982038508169353,
+    "text": "you don't know whether to admire the film's stately nature and call it classicism or be exasperated by a noticeable lack of pace . or both ."
+  },
+  {
+    "index": 117,
+    "true_label": 1,
+    "predicted_label": 0,
+    "positive_probability": 0.0026112475898116827,
+    "decision_confidence": 0.9973887524101883,
+    "text": "sure , i hated myself in the morning . but then again , i hate myself most mornings . i still like moonlight mile , better judgment be damned ."
+  },
+  {
+    "index": 126,
+    "true_label": 1,
+    "predicted_label": 0,
+    "positive_probability": 0.41273725032806396,
+    "decision_confidence": 0.587262749671936,
+    "text": "the comedy makes social commentary more palatable ."
+  },
+  {
+    "index": 134,
+    "true_label": 1,
+    "predicted_label": 0,
+    "positive_probability": 0.0021869742777198553,
+    "decision_confidence": 0.9978130257222801,
+    "text": "if you're in the right b-movie frame of mind , it may just scare the pants off you ."
+  },
+  {
+    "index": 141,
+    "true_label": 1,
+    "predicted_label": 0,
+    "positive_probability": 0.24953867495059967,
+    "decision_confidence": 0.7504613250494003,
+    "text": "it's got all the familiar bruckheimer elements , and schumacher does probably as good a job as anyone at bringing off the hopkins/rock collision of acting styles and onscreen personas ."
+  },
+  {
+    "index": 144,
+    "true_label": 1,
+    "predicted_label": 0,
+    "positive_probability": 0.036838702857494354,
+    "decision_confidence": 0.9631612971425056,
+    "text": "the production values are of the highest and the performances attractive without being memorable ."
+  },
+  {
+    "index": 157,
+    "true_label": 1,
+    "predicted_label": 0,
+    "positive_probability": 0.0008025183342397213,
+    "decision_confidence": 0.9991974816657603,
+    "text": "meant to reduce blake's philosophy into a tragic coming-of-age saga punctuated by bursts of animator todd mcfarlane's superhero dystopia ."
+  },
+  {
+    "index": 164,
+    "true_label": 1,
+    "predicted_label": 0,
+    "positive_probability": 0.0006693099858239293,
+    "decision_confidence": 0.9993306900141761,
+    "text": "its spirit of iconoclastic abandon -- however canned -- makes for unexpectedly giddy viewing ."
+  },
+  {
+    "index": 178,
+    "true_label": 1,
+    "predicted_label": 0,
+    "positive_probability": 0.0010796069400385022,
+    "decision_confidence": 0.9989203930599615,
+    "text": "what begins as a film in the tradition of the graduate quickly switches into something more recyclable than significant ."
+  },
+  {
+    "index": 186,
+    "true_label": 1,
+    "predicted_label": 0,
+    "positive_probability": 0.0016072202706709504,
+    "decision_confidence": 0.998392779729329,
+    "text": "as well-acted and well-intentioned as all or nothing is , however , the film comes perilously close to being too bleak , too pessimistic and too unflinching for its own good ."
+  },
+  {
+    "index": 193,
+    "true_label": 1,
+    "predicted_label": 0,
+    "positive_probability": 0.1552705019712448,
+    "decision_confidence": 0.8447294980287552,
+    "text": "not a strike against yang's similarly themed yi yi , but i found what time ? to be more engaging on an emotional level , funnier , and on the whole less detached ."
+  },
+  {
+    "index": 197,
+    "true_label": 1,
+    "predicted_label": 0,
+    "positive_probability": 0.000823138514533639,
+    "decision_confidence": 0.9991768614854664,
+    "text": "\" . . . something appears to have been lost in the translation this time . the importance of being earnest movie seems to be missing a great deal of the acerbic repartee of the play . \""
+  },
+  {
+    "index": 199,
+    "true_label": 1,
+    "predicted_label": 0,
+    "positive_probability": 0.004390866495668888,
+    "decision_confidence": 0.9956091335043311,
+    "text": "shiner can certainly go the distance , but isn't world championship material"
+  },
+  {
+    "index": 200,
+    "true_label": 1,
+    "predicted_label": 0,
+    "positive_probability": 0.001629308913834393,
+    "decision_confidence": 0.9983706910861656,
+    "text": "the film's desire to be liked sometimes undermines the possibility for an exploration of the thornier aspects of the nature/nurture argument in regards to homosexuality ."
+  },
+  {
+    "index": 216,
+    "true_label": 1,
+    "predicted_label": 0,
+    "positive_probability": 0.0007733056554570794,
+    "decision_confidence": 0.9992266943445429,
+    "text": "a soap-opera quality twist in the last 20 minutes . . . almost puts the kibosh on what is otherwise a sumptuous work of b-movie imagination ."
+  },
+  {
+    "index": 218,
+    "true_label": 1,
+    "predicted_label": 0,
+    "positive_probability": 0.05959219112992287,
+    "decision_confidence": 0.9404078088700771,
+    "text": "there's something to be said for a studio-produced film that never bothers to hand viewers a suitcase full of easy answers ."
+  },
+  {
+    "index": 219,
+    "true_label": 1,
+    "predicted_label": 0,
+    "positive_probability": 0.0011247573420405388,
+    "decision_confidence": 0.9988752426579595,
+    "text": "a movie where story is almost an afterthought amidst a swirl of colors and inexplicable events ."
+  },
+  {
+    "index": 221,
+    "true_label": 1,
+    "predicted_label": 0,
+    "positive_probability": 0.0007793660624884069,
+    "decision_confidence": 0.9992206339375116,
+    "text": "to call this one an eventual cult classic would be an understatement , and woe is the horror fan who opts to overlook this goofily endearing and well-lensed gorefest ."
+  },
+  {
+    "index": 224,
+    "true_label": 1,
+    "predicted_label": 0,
+    "positive_probability": 0.004477080889046192,
+    "decision_confidence": 0.9955229191109538,
+    "text": "i have a new favorite musical -- and i'm not even a fan of the genre"
+  },
+  {
+    "index": 225,
+    "true_label": 1,
+    "predicted_label": 0,
+    "positive_probability": 0.4195587933063507,
+    "decision_confidence": 0.5804412066936493,
+    "text": "it's unlikely we'll see a better thriller this year ."
+  },
+  {
+    "index": 233,
+    "true_label": 1,
+    "predicted_label": 0,
+    "positive_probability": 0.019681409001350403,
+    "decision_confidence": 0.9803185909986496,
+    "text": "this amiable picture talks tough , but it's all bluster -- in the end it's as sweet as greenfingers . . ."
+  },
+  {
+    "index": 239,
+    "true_label": 1,
+    "predicted_label": 0,
+    "positive_probability": 0.0015578481834381819,
+    "decision_confidence": 0.9984421518165618,
+    "text": "twohy knows how to inflate the mundane into the scarifying , and gets full mileage out of the rolling of a stray barrel or the unexpected blast of a phonograph record ."
+  },
+  {
+    "index": 248,
+    "true_label": 1,
+    "predicted_label": 0,
+    "positive_probability": 0.0010443859500810504,
+    "decision_confidence": 0.998955614049919,
+    "text": "those of you who don't believe in santa claus probably also think that sequels can never capture the magic of the original . well , this movie proves you wrong on both counts ."
+  },
+  {
+    "index": 252,
+    "true_label": 1,
+    "predicted_label": 0,
+    "positive_probability": 0.42134347558021545,
+    "decision_confidence": 0.5786565244197845,
+    "text": "i've yet to find an actual vietnam war combat movie actually produced by either the north or south vietnamese , but at least now we've got something pretty damn close ."
+  },
+  {
+    "index": 254,
+    "true_label": 1,
+    "predicted_label": 0,
+    "positive_probability": 0.004494525026530027,
+    "decision_confidence": 0.99550547497347,
+    "text": "it's a sharp movie about otherwise dull subjects ."
+  },
+  {
+    "index": 256,
+    "true_label": 1,
+    "predicted_label": 0,
+    "positive_probability": 0.001353758736513555,
+    "decision_confidence": 0.9986462412634864,
+    "text": "it's like rocky and bullwinkle on speed , but that's neither completely enlightening , nor does it catch the intensity of the movie's strangeness ."
+  },
+  {
+    "index": 276,
+    "true_label": 1,
+    "predicted_label": 0,
+    "positive_probability": 0.0009678616188466549,
+    "decision_confidence": 0.9990321383811533,
+    "text": "the movie worked for me right up to the final scene , and then it caved in ."
+  },
+  {
+    "index": 279,
+    "true_label": 1,
+    "predicted_label": 0,
+    "positive_probability": 0.20016653835773468,
+    "decision_confidence": 0.7998334616422653,
+    "text": "would you laugh if a tuba-playing dwarf rolled down a hill in a trash can ? do you chuckle at the thought of an ancient librarian whacking a certain part of a man's body ? if you answered yes , by all means enjoy the new guy ."
+  },
+  {
+    "index": 285,
+    "true_label": 1,
+    "predicted_label": 0,
+    "positive_probability": 0.001204238273203373,
+    "decision_confidence": 0.9987957617267966,
+    "text": "made-up lampoons the moviemaking process itself , while shining a not particularly flattering spotlight on america's skin-deep notions of pulchritude ."
+  },
+  {
+    "index": 290,
+    "true_label": 1,
+    "predicted_label": 0,
+    "positive_probability": 0.04177388176321983,
+    "decision_confidence": 0.9582261182367802,
+    "text": "the picture's fascinating byways are littered with trenchant satirical jabs at the peculiar egocentricities of the acting breed ."
+  },
+  {
+    "index": 291,
+    "true_label": 1,
+    "predicted_label": 0,
+    "positive_probability": 0.0012718428624793887,
+    "decision_confidence": 0.9987281571375206,
+    "text": "the modern remake of dumas's story is long on narrative and ( too ) short on action ."
+  },
+  {
+    "index": 293,
+    "true_label": 1,
+    "predicted_label": 0,
+    "positive_probability": 0.0010423501953482628,
+    "decision_confidence": 0.9989576498046517,
+    "text": "suffers from its timid parsing of the barn-side target of sons trying to breach gaps in their relationships with their fathers ."
+  },
+  {
+    "index": 295,
+    "true_label": 1,
+    "predicted_label": 0,
+    "positive_probability": 0.000874471792485565,
+    "decision_confidence": 0.9991255282075144,
+    "text": "it's like an old warner bros . costumer jived with sex -- this could be the movie errol flynn always wanted to make , though bette davis , cast as joan , would have killed him ."
+  },
+  {
+    "index": 299,
+    "true_label": 1,
+    "predicted_label": 0,
+    "positive_probability": 0.1563623696565628,
+    "decision_confidence": 0.8436376303434372,
+    "text": "a genuine mind-bender ."
+  },
+  {
+    "index": 303,
+    "true_label": 1,
+    "predicted_label": 0,
+    "positive_probability": 0.02740250527858734,
+    "decision_confidence": 0.9725974947214127,
+    "text": ". . . planos fijos , tomas largas , un ritmo pausado y una sutil observación de sus personajes , sin estridencias ni grandes revelaciones ."
+  },
+  {
+    "index": 305,
+    "true_label": 1,
+    "predicted_label": 0,
+    "positive_probability": 0.4639223515987396,
+    "decision_confidence": 0.5360776484012604,
+    "text": "the symbols float like butterflies and the spinning styx sting like bees . i wanted more ."
+  },
+  {
+    "index": 306,
+    "true_label": 1,
+    "predicted_label": 0,
+    "positive_probability": 0.02228618785738945,
+    "decision_confidence": 0.9777138121426105,
+    "text": "if it's unnerving suspense you're after -- you'll find it with ring , an indisputably spooky film ; with a screenplay to die for ."
+  },
+  {
+    "index": 317,
+    "true_label": 1,
+    "predicted_label": 0,
+    "positive_probability": 0.0012399961706250906,
+    "decision_confidence": 0.9987600038293749,
+    "text": "sayles has a knack for casting , often resurrecting performers who rarely work in movies now . . . and drawing flavorful performances from bland actors ."
+  },
+  {
+    "index": 323,
+    "true_label": 1,
+    "predicted_label": 0,
+    "positive_probability": 0.048496004194021225,
+    "decision_confidence": 0.9515039958059788,
+    "text": "spider-man is about growing strange hairs , getting a more mature body , and finding it necessary to hide new secretions from the parental units ."
+  },
+  {
+    "index": 324,
+    "true_label": 1,
+    "predicted_label": 0,
+    "positive_probability": 0.0066411131992936134,
+    "decision_confidence": 0.9933588868007064,
+    "text": "the first shocking thing about sorority boys is that it's actually watchable . even more baffling is that it's funny ."
+  },
+  {
+    "index": 328,
+    "true_label": 1,
+    "predicted_label": 0,
+    "positive_probability": 0.0026061658281832933,
+    "decision_confidence": 0.9973938341718167,
+    "text": "a visionary marvel , but it's lacking a depth in storytelling usually found in anime like this ."
+  },
+  {
+    "index": 332,
+    "true_label": 1,
+    "predicted_label": 0,
+    "positive_probability": 0.0008693674462847412,
+    "decision_confidence": 0.9991306325537153,
+    "text": "i just saw this movie . . . well , it's probably not accurate to call it a movie ."
+  },
+  {
+    "index": 336,
+    "true_label": 1,
+    "predicted_label": 0,
+    "positive_probability": 0.0017996542155742645,
+    "decision_confidence": 0.9982003457844257,
+    "text": "\" what really happened ? \" is a question for philosophers , not filmmakers ; all the filmmakers need to do is engage an audience ."
+  },
+  {
+    "index": 339,
+    "true_label": 1,
+    "predicted_label": 0,
+    "positive_probability": 0.3505881130695343,
+    "decision_confidence": 0.6494118869304657,
+    "text": "crush is so warm and fuzzy you might be able to forgive its mean-spirited second half ."
+  },
+  {
+    "index": 353,
+    "true_label": 1,
+    "predicted_label": 0,
+    "positive_probability": 0.0027576221618801355,
+    "decision_confidence": 0.9972423778381199,
+    "text": "where this was lazy but enjoyable , a formula comedy redeemed by its stars , that is even lazier and far less enjoyable ."
+  },
+  {
+    "index": 362,
+    "true_label": 1,
+    "predicted_label": 0,
+    "positive_probability": 0.0031665118876844645,
+    "decision_confidence": 0.9968334881123155,
+    "text": "works as pretty contagious fun ."
+  },
+  {
+    "index": 370,
+    "true_label": 1,
+    "predicted_label": 0,
+    "positive_probability": 0.0024919677525758743,
+    "decision_confidence": 0.9975080322474241,
+    "text": "a \" black austin powers ? \" i prefer to think of it as \" pootie tang with a budget . \" sa da tay !"
+  },
+  {
+    "index": 372,
+    "true_label": 1,
+    "predicted_label": 0,
+    "positive_probability": 0.005332885775715113,
+    "decision_confidence": 0.9946671142242849,
+    "text": "i would be shocked if there was actually one correct interpretation , but that shouldn't make the movie or the discussion any less enjoyable ."
+  },
+  {
+    "index": 377,
+    "true_label": 1,
+    "predicted_label": 0,
+    "positive_probability": 0.0022694687359035015,
+    "decision_confidence": 0.9977305312640965,
+    "text": "one of the funnier movies in town ."
+  },
+  {
+    "index": 380,
+    "true_label": 1,
+    "predicted_label": 0,
+    "positive_probability": 0.0011269538663327694,
+    "decision_confidence": 0.9988730461336672,
+    "text": "steven soderbergh doesn't remake andrei tarkovsky's solaris so much as distill it ."
+  },
+  {
+    "index": 386,
+    "true_label": 1,
+    "predicted_label": 0,
+    "positive_probability": 0.03963883966207504,
+    "decision_confidence": 0.960361160337925,
+    "text": "quando tiros em columbine acerta o alvo ( com o perdão do trocadilho ) , não há como negar o brilhantismo da argumentação de seu diretor ."
+  },
+  {
+    "index": 402,
+    "true_label": 1,
+    "predicted_label": 0,
+    "positive_probability": 0.03926875442266464,
+    "decision_confidence": 0.9607312455773354,
+    "text": "move over bond ; this girl deserves a sequel ."
+  },
+  {
+    "index": 403,
+    "true_label": 1,
+    "predicted_label": 0,
+    "positive_probability": 0.002095185685902834,
+    "decision_confidence": 0.9979048143140972,
+    "text": "the kind of trifle that date nights were invented for ."
+  },
+  {
+    "index": 405,
+    "true_label": 1,
+    "predicted_label": 0,
+    "positive_probability": 0.0009811718482524157,
+    "decision_confidence": 0.9990188281517476,
+    "text": "tells ( the story ) with such atmospheric ballast that shrugging off the plot's persnickety problems is simply a matter of ( being ) in a shrugging mood ."
+  },
+  {
+    "index": 415,
+    "true_label": 1,
+    "predicted_label": 0,
+    "positive_probability": 0.001299427356570959,
+    "decision_confidence": 0.998700572643429,
+    "text": "i'm happy to have seen it -- not as an alternate version , but as the ultimate exercise in viewing deleted scenes ."
+  },
+  {
+    "index": 421,
+    "true_label": 1,
+    "predicted_label": 0,
+    "positive_probability": 0.0011030265595763922,
+    "decision_confidence": 0.9988969734404236,
+    "text": "i'd rather watch a rerun of the powerpuff girls"
+  },
+  {
+    "index": 423,
+    "true_label": 1,
+    "predicted_label": 0,
+    "positive_probability": 0.0014021304668858647,
+    "decision_confidence": 0.9985978695331141,
+    "text": "the wonderful combination of the sweetness and the extraordinary technical accomplishments of the first film are maintained , but its overall impact falls a little flat with a storyline that never quite delivers the original magic ."
+  },
+  {
+    "index": 428,
+    "true_label": 1,
+    "predicted_label": 0,
+    "positive_probability": 0.0011357826879248023,
+    "decision_confidence": 0.9988642173120752,
+    "text": "other than the slightly flawed ( and fairly unbelievable ) finale , everything else is top shelf ."
+  },
+  {
+    "index": 430,
+    "true_label": 1,
+    "predicted_label": 0,
+    "positive_probability": 0.0010587475262582302,
+    "decision_confidence": 0.9989412524737418,
+    "text": "manages to delight without much of a story ."
+  },
+  {
+    "index": 432,
+    "true_label": 1,
+    "predicted_label": 0,
+    "positive_probability": 0.0017961491830646992,
+    "decision_confidence": 0.9982038508169353,
+    "text": "i have a confession to make : i didn't particularly like e . t . the first time i saw it as a young boy . that is because - damn it ! - i also wanted a little alien as a friend !"
+  },
+  {
+    "index": 435,
+    "true_label": 1,
+    "predicted_label": 0,
+    "positive_probability": 0.08779820054769516,
+    "decision_confidence": 0.9122017994523048,
+    "text": "though the aboriginal aspect lends the ending an extraordinary poignancy , and the story itself could be played out in any working class community in the nation ."
+  },
+  {
+    "index": 452,
+    "true_label": 1,
+    "predicted_label": 0,
+    "positive_probability": 0.02790137566626072,
+    "decision_confidence": 0.9720986243337393,
+    "text": "often demented in a good way , but it is an uneven film for the most part ."
+  },
+  {
+    "index": 453,
+    "true_label": 1,
+    "predicted_label": 0,
+    "positive_probability": 0.0010923190275207162,
+    "decision_confidence": 0.9989076809724793,
+    "text": "the script's snazzy dialogue establishes a realistic atmosphere that involves us in the unfolding crisis , but the lazy plotting ensures that little of our emotional investment pays off ."
+  },
+  {
+    "index": 454,
+    "true_label": 1,
+    "predicted_label": 0,
+    "positive_probability": 0.0014550628839060664,
+    "decision_confidence": 0.9985449371160939,
+    "text": "maggie smith as the ya-ya member with the o2-tank will absolutely crack you up with her crass , then gasp for gas , verbal deportment ."
+  },
+  {
+    "index": 456,
+    "true_label": 1,
+    "predicted_label": 0,
+    "positive_probability": 0.0030337367206811905,
+    "decision_confidence": 0.9969662632793188,
+    "text": "although i didn't hate this one , it's not very good either . it can be safely recommended as a video/dvd babysitter ."
+  },
+  {
+    "index": 469,
+    "true_label": 1,
+    "predicted_label": 0,
+    "positive_probability": 0.00698464922606945,
+    "decision_confidence": 0.9930153507739305,
+    "text": "an almost unbearably morbid love story ."
+  },
+  {
+    "index": 470,
+    "true_label": 1,
+    "predicted_label": 0,
+    "positive_probability": 0.0008951907511800528,
+    "decision_confidence": 0.99910480924882,
+    "text": "the wild thornberrys movie has all the sibling rivalry and general family chaos to which anyone can relate ."
+  },
+  {
+    "index": 473,
+    "true_label": 1,
+    "predicted_label": 0,
+    "positive_probability": 0.3917549252510071,
+    "decision_confidence": 0.6082450747489929,
+    "text": "the gags that fly at such a furiously funny pace that the only rip off that we were aware of was the one we felt when the movie ended so damned soon ."
+  },
+  {
+    "index": 498,
+    "true_label": 1,
+    "predicted_label": 0,
+    "positive_probability": 0.06284669786691666,
+    "decision_confidence": 0.9371533021330833,
+    "text": "what might have been readily dismissed as the tiresome rant of an aging filmmaker still thumbing his nose at convention takes a surprising , subtle turn at the midway point ."
+  },
+  {
+    "index": 501,
+    "true_label": 1,
+    "predicted_label": 0,
+    "positive_probability": 0.006877107545733452,
+    "decision_confidence": 0.9931228924542665,
+    "text": "this is popcorn movie fun with equal doses of action , cheese , ham and cheek ( as well as a serious debt to the road warrior ) , but it feels like unrealized potential"
+  },
+  {
+    "index": 506,
+    "true_label": 1,
+    "predicted_label": 0,
+    "positive_probability": 0.0649493932723999,
+    "decision_confidence": 0.9350506067276001,
+    "text": "your children will be occupied for 72 minutes ."
+  },
+  {
+    "index": 508,
+    "true_label": 1,
+    "predicted_label": 0,
+    "positive_probability": 0.014856702648103237,
+    "decision_confidence": 0.9851432973518968,
+    "text": "twohy's a good yarn-spinner , and ultimately the story compels ."
+  },
+  {
+    "index": 509,
+    "true_label": 1,
+    "predicted_label": 0,
+    "positive_probability": 0.005220125894993544,
+    "decision_confidence": 0.9947798741050065,
+    "text": "'tobey maguire is a poster boy for the geek generation . '"
+  },
+  {
+    "index": 512,
+    "true_label": 1,
+    "predicted_label": 0,
+    "positive_probability": 0.010776725597679615,
+    "decision_confidence": 0.9892232744023204,
+    "text": "road to perdition does display greatness , and it's worth seeing . but it also comes with the laziness and arrogance of a thing that already knows it's won ."
+  },
+  {
+    "index": 534,
+    "true_label": 0,
+    "predicted_label": 1,
+    "positive_probability": 0.998848557472229,
+    "decision_confidence": 0.998848557472229,
+    "text": "a film that will probably please people already fascinated by behan but leave everyone else yawning with admiration ."
+  },
+  {
+    "index": 540,
+    "true_label": 0,
+    "predicted_label": 1,
+    "positive_probability": 0.9937222599983215,
+    "decision_confidence": 0.9937222599983215,
+    "text": "( it ) highlights not so much the crime lord's messianic bent , but spacey's ."
+  },
+  {
+    "index": 544,
+    "true_label": 0,
+    "predicted_label": 1,
+    "positive_probability": 0.9968641400337219,
+    "decision_confidence": 0.9968641400337219,
+    "text": "a film without surprise geared toward maximum comfort and familiarity ."
+  },
+  {
+    "index": 556,
+    "true_label": 0,
+    "predicted_label": 1,
+    "positive_probability": 0.9988462924957275,
+    "decision_confidence": 0.9988462924957275,
+    "text": "visually exciting sci-fi film which suffers from a lackluster screenplay ."
+  },
+  {
+    "index": 570,
+    "true_label": 0,
+    "predicted_label": 1,
+    "positive_probability": 0.9821683764457703,
+    "decision_confidence": 0.9821683764457703,
+    "text": "it's not a bad plot ; but , unfortunately , the movie is nowhere near as refined as all the classic dramas it borrows from ."
+  },
+  {
+    "index": 572,
+    "true_label": 0,
+    "predicted_label": 1,
+    "positive_probability": 0.9625324606895447,
+    "decision_confidence": 0.9625324606895447,
+    "text": "girlfriends are bad , wives are worse and babies are the kiss of death in this bitter italian comedy ."
+  },
+  {
+    "index": 582,
+    "true_label": 0,
+    "predicted_label": 1,
+    "positive_probability": 0.7554566264152527,
+    "decision_confidence": 0.7554566264152527,
+    "text": "if anything , see it for karen black , who camps up a storm as a fringe feminist conspiracy theorist named dirty dick ."
+  },
+  {
+    "index": 596,
+    "true_label": 0,
+    "predicted_label": 1,
+    "positive_probability": 0.996616780757904,
+    "decision_confidence": 0.996616780757904,
+    "text": "the sweetest thing leaves a bitter taste ."
+  },
+  {
+    "index": 603,
+    "true_label": 0,
+    "predicted_label": 1,
+    "positive_probability": 0.8967949151992798,
+    "decision_confidence": 0.8967949151992798,
+    "text": "though uniformly well acted , especially by young ballesta and galan ( a first-time actor ) , writer/director achero manas's film is schematic and obvious ."
+  },
+  {
+    "index": 607,
+    "true_label": 0,
+    "predicted_label": 1,
+    "positive_probability": 0.9989718198776245,
+    "decision_confidence": 0.9989718198776245,
+    "text": "though its rather routine script is loaded with familiar situations , the movie has a cinematic fluidity and sense of intelligence that makes it work more than it probably should ."
+  },
+  {
+    "index": 609,
+    "true_label": 0,
+    "predicted_label": 1,
+    "positive_probability": 0.8824785351753235,
+    "decision_confidence": 0.8824785351753235,
+    "text": "\" not really as bad as you might think ! \""
+  },
+  {
+    "index": 611,
+    "true_label": 0,
+    "predicted_label": 1,
+    "positive_probability": 0.9986878037452698,
+    "decision_confidence": 0.9986878037452698,
+    "text": "one regards reign of fire with awe . what a vast enterprise has been marshaled in the service of such a minute idea ."
+  },
+  {
+    "index": 614,
+    "true_label": 0,
+    "predicted_label": 1,
+    "positive_probability": 0.998136043548584,
+    "decision_confidence": 0.998136043548584,
+    "text": "seeing as the film lacks momentum and its position remains mostly undeterminable , the director's experiment is a successful one ."
+  },
+  {
+    "index": 621,
+    "true_label": 0,
+    "predicted_label": 1,
+    "positive_probability": 0.695493221282959,
+    "decision_confidence": 0.695493221282959,
+    "text": "in a 102-minute film , aaliyah gets at most 20 minutes of screen time . . . . most viewers will wish there had been more of the \" queen \" and less of the \" damned . \""
+  },
+  {
+    "index": 632,
+    "true_label": 0,
+    "predicted_label": 1,
+    "positive_probability": 0.9955489635467529,
+    "decision_confidence": 0.9955489635467529,
+    "text": "according to wendigo , 'nature' loves the members of the upper class almost as much as they love themselves ."
+  },
+  {
+    "index": 633,
+    "true_label": 0,
+    "predicted_label": 1,
+    "positive_probability": 0.9990378618240356,
+    "decision_confidence": 0.9990378618240356,
+    "text": "an encouraging effort from mccrudden"
+  },
+  {
+    "index": 659,
+    "true_label": 0,
+    "predicted_label": 1,
+    "positive_probability": 0.9979047775268555,
+    "decision_confidence": 0.9979047775268555,
+    "text": "the movie strains to stay on the light , comic side of the issue , despite the difficulty of doing so when dealing with the destruction of property and , potentially , of life itself ."
+  },
+  {
+    "index": 661,
+    "true_label": 0,
+    "predicted_label": 1,
+    "positive_probability": 0.7709825038909912,
+    "decision_confidence": 0.7709825038909912,
+    "text": "disappointing in comparison to other recent war moviesor any other john woo flick for that matter ."
+  },
+  {
+    "index": 664,
+    "true_label": 0,
+    "predicted_label": 1,
+    "positive_probability": 0.9984452128410339,
+    "decision_confidence": 0.9984452128410339,
+    "text": "what [frei] gives us . . . is a man who uses the damage of war -- far more often than the warfare itself -- to create the kind of art shots that fill gallery shows ."
+  },
+  {
+    "index": 675,
+    "true_label": 0,
+    "predicted_label": 1,
+    "positive_probability": 0.9954615235328674,
+    "decision_confidence": 0.9954615235328674,
+    "text": "filled with low-brow humor , gratuitous violence and a disturbing disregard for life ."
+  },
+  {
+    "index": 680,
+    "true_label": 0,
+    "predicted_label": 1,
+    "positive_probability": 0.9988372921943665,
+    "decision_confidence": 0.9988372921943665,
+    "text": "harvard man is a semi-throwback , a reminiscence without nostalgia or sentimentality ."
+  },
+  {
+    "index": 689,
+    "true_label": 0,
+    "predicted_label": 1,
+    "positive_probability": 0.6905590891838074,
+    "decision_confidence": 0.6905590891838074,
+    "text": "been there , done that , liked it much better the first time around - when it was called the professional ."
+  },
+  {
+    "index": 691,
+    "true_label": 0,
+    "predicted_label": 1,
+    "positive_probability": 0.9984360337257385,
+    "decision_confidence": 0.9984360337257385,
+    "text": "the beautiful , unusual music is this film's chief draw , but its dreaminess may lull you to sleep ."
+  },
+  {
+    "index": 702,
+    "true_label": 0,
+    "predicted_label": 1,
+    "positive_probability": 0.9977699518203735,
+    "decision_confidence": 0.9977699518203735,
+    "text": "the ethos of the chelsea hotel may shape hawke's artistic aspirations , but he hasn't yet coordinated his own dv poetry with the beat he hears in his soul ."
+  },
+  {
+    "index": 721,
+    "true_label": 0,
+    "predicted_label": 1,
+    "positive_probability": 0.6669036746025085,
+    "decision_confidence": 0.6669036746025085,
+    "text": "the film falls short on tension , eloquence , spiritual challenge -- things that have made the original new testament stories so compelling for 20 centuries ."
+  },
+  {
+    "index": 722,
+    "true_label": 0,
+    "predicted_label": 1,
+    "positive_probability": 0.9971771240234375,
+    "decision_confidence": 0.9971771240234375,
+    "text": "by the end of it all i sort of loved the people onscreen , even though i could not stand them . perhaps the film should be seen as a conversation starter . it's not an easy one to review ."
+  },
+  {
+    "index": 725,
+    "true_label": 0,
+    "predicted_label": 1,
+    "positive_probability": 0.9991047978401184,
+    "decision_confidence": 0.9991047978401184,
+    "text": "never again , while nothing special , is pleasant , diverting and modest -- definitely a step in the right direction ."
+  },
+  {
+    "index": 732,
+    "true_label": 0,
+    "predicted_label": 1,
+    "positive_probability": 0.998275876045227,
+    "decision_confidence": 0.998275876045227,
+    "text": "too daft by half . . . but supremely good natured ."
+  },
+  {
+    "index": 736,
+    "true_label": 0,
+    "predicted_label": 1,
+    "positive_probability": 0.9980505704879761,
+    "decision_confidence": 0.9980505704879761,
+    "text": "juliette binoche's sand is vivacious , but it's hard to sense that powerhouse of 19th-century prose behind her childlike smile ."
+  },
+  {
+    "index": 738,
+    "true_label": 0,
+    "predicted_label": 1,
+    "positive_probability": 0.9936610460281372,
+    "decision_confidence": 0.9936610460281372,
+    "text": "you can tell almost immediately that welcome to collinwood isn't going to jell ."
+  },
+  {
+    "index": 755,
+    "true_label": 0,
+    "predicted_label": 1,
+    "positive_probability": 0.9261034727096558,
+    "decision_confidence": 0.9261034727096558,
+    "text": "lyne's latest , the erotic thriller unfaithful , further demonstrates just how far his storytelling skills have eroded ."
+  },
+  {
+    "index": 760,
+    "true_label": 0,
+    "predicted_label": 1,
+    "positive_probability": 0.8442806601524353,
+    "decision_confidence": 0.8442806601524353,
+    "text": "as his circle of friends keeps getting smaller one of the characters in long time dead says 'i'm telling you , this is f * * * ed' . maybe he was reading the minds of the audience ."
+  },
+  {
+    "index": 766,
+    "true_label": 0,
+    "predicted_label": 1,
+    "positive_probability": 0.9924958944320679,
+    "decision_confidence": 0.9924958944320679,
+    "text": "[lee] treats his audience the same way that jim brown treats his women -- as dumb , credulous , unassuming , subordinate subjects . and lee seems just as expectant of an adoring , wide-smiling reception ."
+  },
+  {
+    "index": 773,
+    "true_label": 0,
+    "predicted_label": 1,
+    "positive_probability": 0.9984452128410339,
+    "decision_confidence": 0.9984452128410339,
+    "text": "the armenian genocide deserves a more engaged and honest treatment ."
+  },
+  {
+    "index": 784,
+    "true_label": 0,
+    "predicted_label": 1,
+    "positive_probability": 0.8862728476524353,
+    "decision_confidence": 0.8862728476524353,
+    "text": "whether it's the worst movie of 2002 , i can't say for sure : memories of rollerball have faded , and i skipped country bears . but this new jangle of noise , mayhem and stupidity must be a serious contender for the title ."
+  },
+  {
+    "index": 785,
+    "true_label": 0,
+    "predicted_label": 1,
+    "positive_probability": 0.7075057625770569,
+    "decision_confidence": 0.7075057625770569,
+    "text": "[a] boldly stroked , luridly coloured , uni-dimensional nonsense machine that strokes the eyeballs while it evaporates like so much crypt mist in the brain ."
+  },
+  {
+    "index": 800,
+    "true_label": 0,
+    "predicted_label": 1,
+    "positive_probability": 0.9897513389587402,
+    "decision_confidence": 0.9897513389587402,
+    "text": "a sloppy slapstick throwback to long gone bottom-of-the-bill fare like the ghost and mr . chicken ."
+  },
+  {
+    "index": 807,
+    "true_label": 0,
+    "predicted_label": 1,
+    "positive_probability": 0.9949199557304382,
+    "decision_confidence": 0.9949199557304382,
+    "text": "some motion pictures portray ultimate passion ; others create ultimate thrills . men in black ii achieves ultimate insignificance -- it's the sci-fi comedy spectacle as whiffle-ball epic ."
+  },
+  {
+    "index": 811,
+    "true_label": 0,
+    "predicted_label": 1,
+    "positive_probability": 0.9829710125923157,
+    "decision_confidence": 0.9829710125923157,
+    "text": "a film that clearly means to preach exclusively to the converted ."
+  },
+  {
+    "index": 815,
+    "true_label": 0,
+    "predicted_label": 1,
+    "positive_probability": 0.8648250102996826,
+    "decision_confidence": 0.8648250102996826,
+    "text": "although it starts off so bad that you feel like running out screaming , it eventually works its way up to merely bad rather than painfully awful ."
+  },
+  {
+    "index": 819,
+    "true_label": 0,
+    "predicted_label": 1,
+    "positive_probability": 0.9983958601951599,
+    "decision_confidence": 0.9983958601951599,
+    "text": "it takes you somewhere you're not likely to have seen before , but beneath the exotic surface ( and exotic dancing ) it's surprisingly old-fashioned ."
+  },
+  {
+    "index": 831,
+    "true_label": 0,
+    "predicted_label": 1,
+    "positive_probability": 0.978260338306427,
+    "decision_confidence": 0.978260338306427,
+    "text": "it has become apparent that the franchise's best years are long past ."
+  },
+  {
+    "index": 841,
+    "true_label": 0,
+    "predicted_label": 1,
+    "positive_probability": 0.9968641400337219,
+    "decision_confidence": 0.9968641400337219,
+    "text": "those eternally devoted to the insanity of black will have an intermittently good time . feel free to go get popcorn whenever he's not onscreen ."
+  },
+  {
+    "index": 855,
+    "true_label": 0,
+    "predicted_label": 1,
+    "positive_probability": 0.9987768530845642,
+    "decision_confidence": 0.9987768530845642,
+    "text": "an uneasy mix of run-of-the-mill raunchy humor and seemingly sincere personal reflection ."
+  },
+  {
+    "index": 859,
+    "true_label": 0,
+    "predicted_label": 1,
+    "positive_probability": 0.9508236050605774,
+    "decision_confidence": 0.9508236050605774,
+    "text": "time literally stops on a dime in the tries-so-hard-to-be-cool \" clockstoppers , \" but that doesn't mean it still won't feel like the longest 90 minutes of your movie-going life ."
+  },
+  {
+    "index": 861,
+    "true_label": 0,
+    "predicted_label": 1,
+    "positive_probability": 0.9946980476379395,
+    "decision_confidence": 0.9946980476379395,
+    "text": "aptly named , this shimmering , beautifully costumed and filmed production doesn't work for me ."
+  },
+  {
+    "index": 869,
+    "true_label": 0,
+    "predicted_label": 1,
+    "positive_probability": 0.9986355900764465,
+    "decision_confidence": 0.9986355900764465,
+    "text": "the beautiful images and solemn words cannot disguise the slack complacency of [godard's] vision , any more than the gorgeous piano and strings on the soundtrack can drown out the tinny self-righteousness of his voice ."
+  },
+  {
+    "index": 870,
+    "true_label": 0,
+    "predicted_label": 1,
+    "positive_probability": 0.9988707900047302,
+    "decision_confidence": 0.9988707900047302,
+    "text": "the stunt work is top-notch ; the dialogue and drama often food-spittingly funny ."
+  },
+  {
+    "index": 876,
+    "true_label": 0,
+    "predicted_label": 1,
+    "positive_probability": 0.9977083206176758,
+    "decision_confidence": 0.9977083206176758,
+    "text": ". . . for all its social and political potential , state property doesn't end up being very inspiring or insightful ."
+  },
+  {
+    "index": 878,
+    "true_label": 0,
+    "predicted_label": 1,
+    "positive_probability": 0.8484078645706177,
+    "decision_confidence": 0.8484078645706177,
+    "text": "little more than a stylish exercise in revisionism whose point . . . is no doubt true , but serves as a rather thin moral to such a knowing fable ."
+  },
+  {
+    "index": 881,
+    "true_label": 0,
+    "predicted_label": 1,
+    "positive_probability": 0.9921233057975769,
+    "decision_confidence": 0.9921233057975769,
+    "text": "this off-putting french romantic comedy is sure to test severely the indulgence of fans of amélie ."
+  },
+  {
+    "index": 887,
+    "true_label": 0,
+    "predicted_label": 1,
+    "positive_probability": 0.9965165853500366,
+    "decision_confidence": 0.9965165853500366,
+    "text": "is it really an advantage to invest such subtlety and warmth in an animatronic bear when the humans are acting like puppets ?"
+  },
+  {
+    "index": 888,
+    "true_label": 0,
+    "predicted_label": 1,
+    "positive_probability": 0.9990507960319519,
+    "decision_confidence": 0.9990507960319519,
+    "text": "more successful at relating history than in creating an emotionally complex , dramatically satisfying heroine"
+  },
+  {
+    "index": 895,
+    "true_label": 0,
+    "predicted_label": 1,
+    "positive_probability": 0.9476239681243896,
+    "decision_confidence": 0.9476239681243896,
+    "text": "as earnest as a community-college advertisement , american chai is enough to make you put away the guitar , sell the amp , and apply to medical school ."
+  },
+  {
+    "index": 901,
+    "true_label": 0,
+    "predicted_label": 1,
+    "positive_probability": 0.9981324076652527,
+    "decision_confidence": 0.9981324076652527,
+    "text": "the world needs more filmmakers with passionate enthusiasms like martin scorsese . but it doesn't need gangs of new york ."
+  },
+  {
+    "index": 902,
+    "true_label": 0,
+    "predicted_label": 1,
+    "positive_probability": 0.9831660985946655,
+    "decision_confidence": 0.9831660985946655,
+    "text": "enchanted with low-life tragedy and liberally seasoned with emotional outbursts . . . what is sorely missing , however , is the edge of wild , lunatic invention that we associate with cage's best acting ."
+  },
+  {
+    "index": 921,
+    "true_label": 0,
+    "predicted_label": 1,
+    "positive_probability": 0.6304858326911926,
+    "decision_confidence": 0.6304858326911926,
+    "text": "rather than real figures , elling and kjell bjarne become symbolic characters whose actions are supposed to relate something about the naïf's encounter with the world ."
+  },
+  {
+    "index": 922,
+    "true_label": 0,
+    "predicted_label": 1,
+    "positive_probability": 0.9965770840644836,
+    "decision_confidence": 0.9965770840644836,
+    "text": "mariah carey gives us another peek at some of the magic we saw in glitter here in wisegirls ."
+  },
+  {
+    "index": 930,
+    "true_label": 0,
+    "predicted_label": 1,
+    "positive_probability": 0.9921537041664124,
+    "decision_confidence": 0.9921537041664124,
+    "text": "spectators will indeed sit open-mouthed before the screen , not screaming but yawning ."
+  },
+  {
+    "index": 932,
+    "true_label": 0,
+    "predicted_label": 1,
+    "positive_probability": 0.9957518577575684,
+    "decision_confidence": 0.9957518577575684,
+    "text": "a period story about a catholic boy who tries to help a jewish friend get into heaven by sending the audience straight to hell ."
+  },
+  {
+    "index": 939,
+    "true_label": 0,
+    "predicted_label": 1,
+    "positive_probability": 0.9991065859794617,
+    "decision_confidence": 0.9991065859794617,
+    "text": "entertains not so much because of its music or comic antics , but through the perverse pleasure of watching disney scrape the bottom of its own cracker barrel ."
+  },
+  {
+    "index": 943,
+    "true_label": 0,
+    "predicted_label": 1,
+    "positive_probability": 0.9982993006706238,
+    "decision_confidence": 0.9982993006706238,
+    "text": "an \" o bruin , where art thou ? \" -style cross-country adventure . . . it has sporadic bursts of liveliness , some so-so slapstick and a few ear-pleasing songs on its soundtrack ."
+  },
+  {
+    "index": 949,
+    "true_label": 0,
+    "predicted_label": 1,
+    "positive_probability": 0.9991151690483093,
+    "decision_confidence": 0.9991151690483093,
+    "text": "a very familiar tale , one that's been told by countless filmmakers about italian- , chinese- , irish- , latin- , indian- , russian- and other hyphenate american young men struggling to balance conflicting cultural messages ."
+  },
+  {
+    "index": 950,
+    "true_label": 0,
+    "predicted_label": 1,
+    "positive_probability": 0.9866490960121155,
+    "decision_confidence": 0.9866490960121155,
+    "text": "one key problem with these ardently christian storylines is that there is never any question of how things will turn out ."
+  },
+  {
+    "index": 951,
+    "true_label": 0,
+    "predicted_label": 1,
+    "positive_probability": 0.9957518577575684,
+    "decision_confidence": 0.9957518577575684,
+    "text": "essentially , the film is weak on detail and strong on personality"
+  },
+  {
+    "index": 958,
+    "true_label": 0,
+    "predicted_label": 1,
+    "positive_probability": 0.9972744584083557,
+    "decision_confidence": 0.9972744584083557,
+    "text": "the histrionic muse still eludes madonna and , playing a charmless witch , she is merely a charmless witch ."
+  },
+  {
+    "index": 960,
+    "true_label": 0,
+    "predicted_label": 1,
+    "positive_probability": 0.6548119783401489,
+    "decision_confidence": 0.6548119783401489,
+    "text": "diaz , applegate , blair and posey are suitably kooky which should appeal to women and they strip down often enough to keep men alert , if not amused ."
+  },
+  {
+    "index": 964,
+    "true_label": 0,
+    "predicted_label": 1,
+    "positive_probability": 0.5768623352050781,
+    "decision_confidence": 0.5768623352050781,
+    "text": "absolutely ( and unintentionally ) terrifying ."
+  },
+  {
+    "index": 971,
+    "true_label": 0,
+    "predicted_label": 1,
+    "positive_probability": 0.6545636057853699,
+    "decision_confidence": 0.6545636057853699,
+    "text": "blade ii has a brilliant director and charismatic star , but it suffers from rampant vampire devaluation ."
+  },
+  {
+    "index": 981,
+    "true_label": 0,
+    "predicted_label": 1,
+    "positive_probability": 0.9069007635116577,
+    "decision_confidence": 0.9069007635116577,
+    "text": "this will go on so long as there are moviegoers anxious to see strange young guys doing strange guy things ."
+  },
+  {
+    "index": 989,
+    "true_label": 0,
+    "predicted_label": 1,
+    "positive_probability": 0.9976403713226318,
+    "decision_confidence": 0.9976403713226318,
+    "text": "the film has too many spots where it's on slippery footing , but is acceptable entertainment for the entire family and one that's especially fit for the kiddies ."
+  },
+  {
+    "index": 990,
+    "true_label": 0,
+    "predicted_label": 1,
+    "positive_probability": 0.9796481728553772,
+    "decision_confidence": 0.9796481728553772,
+    "text": "purports to be a hollywood satire but winds up as the kind of film that should be the target of something deeper and more engaging . oh , and more entertaining , too ."
+  },
+  {
+    "index": 997,
+    "true_label": 0,
+    "predicted_label": 1,
+    "positive_probability": 0.9985814094543457,
+    "decision_confidence": 0.9985814094543457,
+    "text": "skillful as he is , mr . shyamalan is undone by his pretensions ."
+  },
+  {
+    "index": 998,
+    "true_label": 0,
+    "predicted_label": 1,
+    "positive_probability": 0.9285385012626648,
+    "decision_confidence": 0.9285385012626648,
+    "text": "while the new film is much more eye-catching than its blood-drenched stephen norrington-directed predecessor , the new script by the returning david s . goyer is much sillier ."
+  },
+  {
+    "index": 1007,
+    "true_label": 0,
+    "predicted_label": 1,
+    "positive_probability": 0.7843190431594849,
+    "decision_confidence": 0.7843190431594849,
+    "text": "two hours of sepia-tinted heavy metal images and surround sound effects of people moaning ."
+  },
+  {
+    "index": 1009,
+    "true_label": 0,
+    "predicted_label": 1,
+    "positive_probability": 0.545921266078949,
+    "decision_confidence": 0.545921266078949,
+    "text": "the campy results make mel brooks' borscht belt schtick look sophisticated ."
+  },
+  {
+    "index": 1010,
+    "true_label": 0,
+    "predicted_label": 1,
+    "positive_probability": 0.7976356148719788,
+    "decision_confidence": 0.7976356148719788,
+    "text": "its appeal will probably limited to lds church members and undemanding armchair tourists ."
+  },
+  {
+    "index": 1014,
+    "true_label": 0,
+    "predicted_label": 1,
+    "positive_probability": 0.9988120794296265,
+    "decision_confidence": 0.9988120794296265,
+    "text": "hey arnold ! is now stretched to barely feature length , with a little more attention paid to the animation . still , the updated dickensian sensibility of writer craig bartlett's story is appealing ."
+  },
+  {
+    "index": 1015,
+    "true_label": 0,
+    "predicted_label": 1,
+    "positive_probability": 0.5636369585990906,
+    "decision_confidence": 0.5636369585990906,
+    "text": "true to its title , it traps audiences in a series of relentlessly nasty situations that we would pay a considerable ransom not to be looking at ."
+  },
+  {
+    "index": 1019,
+    "true_label": 0,
+    "predicted_label": 1,
+    "positive_probability": 0.9971827268600464,
+    "decision_confidence": 0.9971827268600464,
+    "text": "the film didn't move me one way or the other , but it was an honest effort and if you want to see a flick about telemarketers this one will due ."
+  },
+  {
+    "index": 1022,
+    "true_label": 0,
+    "predicted_label": 1,
+    "positive_probability": 0.9896518588066101,
+    "decision_confidence": 0.9896518588066101,
+    "text": "any film that doesn't even in passing mention political prisoners , poverty and the boat loads of people who try to escape the country is less a documentary and more propaganda by way of a valentine sealed with a kiss ."
+  },
+  {
+    "index": 1025,
+    "true_label": 0,
+    "predicted_label": 1,
+    "positive_probability": 0.9859634041786194,
+    "decision_confidence": 0.9859634041786194,
+    "text": "though there are many tense scenes in trapped , they prove more distressing than suspenseful ."
+  },
+  {
+    "index": 1029,
+    "true_label": 0,
+    "predicted_label": 1,
+    "positive_probability": 0.9857455492019653,
+    "decision_confidence": 0.9857455492019653,
+    "text": "you have once again entered the bizarre realm where director adrian lyne holds sway , where all relationships are simultaneously broadly metaphorical , oddly abstract , and excruciatingly literal ."
+  },
+  {
+    "index": 1037,
+    "true_label": 0,
+    "predicted_label": 1,
+    "positive_probability": 0.9977127313613892,
+    "decision_confidence": 0.9977127313613892,
+    "text": "like the tuck family themselves , this movie just goes on and on and on and on"
+  },
+  {
+    "index": 1052,
+    "true_label": 0,
+    "predicted_label": 1,
+    "positive_probability": 0.9893269538879395,
+    "decision_confidence": 0.9893269538879395,
+    "text": "a cellophane-pop remake of the punk classic ladies and gentlemen , the fabulous stains . . . crossroads is never much worse than bland or better than inconsequential ."
+  }
+]

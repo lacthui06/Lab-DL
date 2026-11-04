@@ -1,0 +1,8 @@
+{
+  "source_run": "20261026T155822Z_finetuning_2c2f0401",
+  "source_manifest_sha256": "9e3f61347554cc018d3912ea6df2479d685671251fc893680292838811aa43d2",
+  "analysis_code": {
+    "analysis.py": "878f7317113d0c42d689b6c005aa9b2e4ee505bcf7bcdc415d156b3128513942",
+    "thresholds.py": "8c732600ab1b647e05f24d6869d0a000e5b5a432f9f9cf34fc4b26d1e949a677"
+  }
+}

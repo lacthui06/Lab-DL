@@ -1,0 +1,11 @@
+{
+  "completed_epochs": 10.0,
+  "early_stopping": false,
+  "checkpoint_selection_metric": "validation_loss",
+  "selected_epoch": 9,
+  "best_step": 4959,
+  "best_validation_loss": 0.369328111410141,
+  "global_step": 5510,
+  "amp_skipped_optimizer_steps": 3,
+  "test_used_for_selection": false
+}

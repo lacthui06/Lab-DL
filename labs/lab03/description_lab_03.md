@@ -1,0 +1,372 @@
+# Description — Lab03: Getting started with Hugging Face
+
+**Môn học:** Deep Learning — UTH.
+**Nguồn đề:** ảnh Practice 3 do giảng viên cung cấp trong phiên làm việc.
+**Trạng thái hiện hành:** frozen trial đã chạy đủ 10 epoch; kết quả và quyết định cuối ở Mục 14. Các mục 10–13 ghi diễn tiến thiết kế trước lượt này.
+
+**Vai trò tài liệu:** ghi đề nhận vào, nội dung đã thảo luận, quyết định hiện hành và điều kiện nghiệm thu.
+
+Đề gốc được giữ riêng tại Mục 1, không trộn các yêu cầu mở rộng vào lời giảng viên.
+Các phần sau ghi rõ phạm vi đã thống nhất trong quá trình xây dựng bài.
+Bài làm, phương pháp, hình và phân tích kết quả nằm trong `walkthrough_lab_03.md`.
+Các thảo luận, quyết định và bằng chứng thực nghiệm được trình bày trong walkthrough.
+
+## 1. Đề bài gốc
+
+### Exercise 1: Sentiment Analysis with Hugging Face
+1. Install the Hugging Face transformers library.
+2. Use a pre-trained sentiment analysis model from the Hugging Face Hub.
+3. Tokenize a sample sentence.
+4. Perform sentiment analysis on the sentence.
+
+### Exercise 2: Finetuning a Pretrained Model for Binary Text Classification
+1. Install the necessary Hugging Face libraries (transformers, datasets, evaluate).
+2. Load a simple dataset for binary text classification.
+3. Load a pretrained model and its tokenizer.
+4. Preprocess the dataset to be suitable for the model.
+5. Define training arguments.
+6. Create a Trainer object and finetune the model.
+7. Evaluate the finetuned model.
+
+### Phân biệt đề gốc và phần bổ sung
+
+Đề gốc không chỉ định dataset, backbone, số epochs hoặc cấu trúc thư mục.
+Đề gốc không đặt ngưỡng Accuracy tối thiểu 85%.
+Phạm vi bài gồm roadmap, hai notebook theo luồng dữ liệu/modeling, isolated runs, hình trực quan và quét threshold.
+Các phần bổ sung phải phục vụ giải thích bài và truy vết kết quả, không được dùng để gán ngược một tiêu chí chưa có cho đề giảng viên.
+
+## 2. Phạm vi đã thống nhất
+
+1. Thực hiện đủ hai Exercise bằng Hugging Face và PyTorch.
+2. Exercise 1 dùng mô hình sentiment pretrained SST-2, đối chiếu pipeline và forward thủ công trên cùng câu.
+3. Exercise 2 fine-tune DistilBERT nền trên toàn bộ Rotten Tomatoes với các split chính thức.
+4. Có hai notebook: EDA/preprocessing/feature engineering và modeling (bao gồm cả hai Exercise).
+5. Mỗi notebook bắt đầu bằng roadmap có phase, mục tiêu, module/file tham chiếu và artifact.
+6. Các phase trình bày theo dòng xử lý thực tế; hình và bảng xuất hiện ngay sau phần giải thích tương ứng.
+7. Notebook ưu tiên trực quan hóa và diễn giải thay vì in các khối JSON dài.
+8. Notebook và CLI gọi chung module; không duy trì bản sao thuật toán riêng trong notebook.
+9. Mọi hình, bảng, metric, kết quả suy luận và phân tích sinh ra phải được lưu trong `outputs/`.
+10. Run mới không ghi đè run cũ; có source run ID, config, snapshot, status và manifest để truy vết.
+11. Bài phân loại nhị phân có quét threshold và giải thích đánh đổi Precision/Recall/FPR.
+12. Threshold dùng để vận hành phải được chọn bằng validation, cố định trước khi đọc kết quả test.
+13. Walkthrough là báo cáo đầy đủ có phương pháp, lý do lựa chọn, hình, công thức, kết quả và giới hạn.
+14. Nội dung báo cáo hướng đến chiều sâu tương đương Lab01 hiện hành trên nhánh `main`; khoảng 700 dòng là yêu cầu về mức triển khai, không phải lý do chèn dòng rỗng hoặc lặp lại.
+
+## 3. Thảo luận và sổ quyết định
+
+### D01 — Chọn dữ liệu nào và sử dụng bao nhiêu?
+
+**Thảo luận:** dùng subset làm giảm quy mô và tính đại diện; thí nghiệm dùng đầy đủ official splits.
+**Quyết định:** dùng `cornell-movie-review-data/rotten_tomatoes`, đủ 8.530 train, 1.066 validation và 1.066 test.
+**Lý do:** corpus văn bản ngắn, nhị phân, có split chính thức và vừa ngân sách GPU lab.
+**Kiểm chứng:** loader từ chối kích thước khác hợp đồng; run lưu thống kê và fingerprints.
+
+### D02 — Có chia lại train/validation hoặc lấy mẫu nhỏ không?
+
+**Thảo luận:** lấy mẫu giúp chạy nhanh nhưng thay đổi phạm vi thí nghiệm; tự chia lại làm khó đối chiếu official split.
+**Quyết định:** giữ nguyên ba split, không subsample trong luồng train chính.
+**Lý do:** train cập nhật trọng số, validation chọn checkpoint/threshold, test đánh giá sau lựa chọn.
+**Giới hạn:** official split không tự chứng minh đã kiểm toán toàn bộ duplicate hoặc rò rỉ ngữ nghĩa giữa các tập.
+
+### D03 — Dùng mô hình nào cho mỗi Exercise?
+
+**Thảo luận:** mô hình biết sentiment và backbone chưa fine-tune cho bài toán đích có vai trò khác nhau.
+**Quyết định:** Exercise 1 dùng `distilbert/distilbert-base-uncased-finetuned-sst-2-english`; Exercise 2 dùng `distilbert/distilbert-base-uncased` với đầu phân loại hai nhãn.
+**Lý do:** phần đầu minh họa ứng dụng pretrained; phần sau minh họa transfer learning và cập nhật trọng số thật.
+**Kiểm chứng:** không dùng confidence của đầu phân loại khởi tạo mới làm kết quả sentiment có ý nghĩa.
+
+### D04 — Chuẩn hóa cách mã hóa và padding thế nào?
+
+**Thảo luận:** cần cân bằng khả năng giữ ngữ cảnh và chi phí batch.
+**Quyết định:** WordPiece, truncation `max_length=128`, dynamic padding bằng `DataCollatorWithPadding`.
+**Lý do:** không ép mọi câu ngắn thành chuỗi 128 token trong từng phép tính.
+**Bằng chứng hiện có:** train của run Kaggle có độ dài token tối đa 78; tỉ lệ truncation train bằng 0%, không suy rộng con số này sang split chưa thống kê.
+
+### D05 — Thiết kế huấn luyện và chọn checkpoint ra sao?
+
+**Thảo luận:** cần cấu hình ngắn gọn, dễ tái lập và vừa tài nguyên Tesla T4.
+**Quyết định:** seed 42, ba epochs, train/eval batch 16/32, AdamW, LR `2e-5`, weight decay `0.01`, warmup ratio `0.1`.
+**Lựa chọn:** đánh giá và lưu mỗi epoch; chọn checkpoint theo validation accuracy.
+**Lý do:** chốt tiêu chí trước test, không đổi sang loss sau khi quan sát test để chọn lại kết quả thuận lợi.
+
+### D06 — Có dùng sanity-overfit model trong train chính không?
+
+**Thảo luận:** sanity overfit kiểm tra khả năng học nhưng cũng làm thay đổi trọng số.
+**Quyết định:** bài kiểm tra dùng mô hình disposable; train chính tải backbone mới.
+**Lý do:** phát hiện lỗi forward/loss/gradient mà không tạo bước huấn luyện ngoài dataset trong thí nghiệm chính.
+**Tài nguyên:** local chỉ kiểm thử nhỏ; full training thực hiện trên GPU.
+
+### D07 — Notebook cần trình bày đến mức nào?
+
+**Thảo luận:** bản notebook ngắn và chủ yếu đọc JSON chưa giải thích được bài khó hơn Lab01.
+**Quyết định:** có bảng roadmap ngay đầu, lý thuyết ngắn tại từng phase, tham chiếu module/file và hình/bảng ở đúng bước.
+**Lý do:** người đọc lần theo input, phép biến đổi, output và bằng chứng mà không phải tự đoán JSON thuộc giai đoạn nào.
+**Ranh giới:** notebook minh họa bằng source hiện hành, không sao chép thêm một training loop thứ hai.
+
+### D08 — Quét threshold có mục tiêu gì?
+
+**Thảo luận:** argmax hai logits tương ứng ngưỡng 0,5 khi không có tie, nhưng một operating point có thể cần cân bằng Precision và Recall khác.
+**Quyết định:** quét một lưới threshold định trước trên xác suất Positive của validation sau khi đã chọn checkpoint.
+**Tiêu chí:** tối đa validation Macro F1; khi hòa chọn ngưỡng gần 0,5 hơn, tiếp tục hòa thì chọn ngưỡng nhỏ hơn.
+**Lý do:** quy tắc chọn và tie-break rõ ràng, không lấy threshold tối ưu từ test.
+
+### D09 — Đánh giá test sau quét threshold thế nào?
+
+**Thảo luận:** dùng test để chọn threshold làm test trở thành tập tuning.
+**Quyết định:** lưu threshold đã chọn trong `decision_threshold.json`, cố định quyết định, rồi đánh giá test tại ngưỡng đó.
+**So sánh:** giữ metrics argmax gốc và metrics tại threshold validation chọn thành hai nhóm riêng; mốc sweep 0,5 dùng quy tắc >= được lưu riêng khi cần đối chiếu boundary.
+**Báo cáo:** giữ cả lợi ích và đánh đổi khi đã đo: threshold 0,8 thêm một mẫu test đúng, giảm FP nhưng giảm Recall/Binary F1; không đổi checkpoint hay chọn lại threshold theo test.
+
+### D10 — Hoàn tất khoảng trống validation của run lịch sử thế nào?
+
+**Thảo luận:** chỉ có metrics tổng hợp không đủ tái tính threshold sweep; cần giữ validation scores đầy đủ.
+**Quyết định:** sau checkpoint selection, predict toàn bộ validation và lưu policy ngay trong run training; không dùng test để chọn ngưỡng.
+**Đã thực thi:** training run `20261026T155822Z_finetuning_2c2f0401` lưu 1.066 validation records, chọn 0,8 theo Macro F1 0,8526632715 và gắn SHA256 weights trùng run train gốc.
+**Ranh giới:** test sensitivity vẫn là descriptive; test đã quan sát trong phát triển nên phiên mở rộng không được gọi là một blind confirmatory experiment mới.
+
+### D11 — Những output nào phải thành artifact?
+
+**Thảo luận:** chỉ hiển thị trong notebook hoặc giữ số liệu trong RAM không đủ để truy vết và đóng gói.
+**Quyết định:** mọi hình, bảng, metric, dự đoán và diagnostics sinh từ notebook/source phải ghi dưới `outputs/` với nguồn run xác định.
+**Định dạng:** hình PNG để xem, JSON hoặc bảng máy đọc cho tái kiểm tra; notebook hiển thị từ chính artifact vừa lưu.
+**Bảo toàn:** không sửa run Kaggle lịch sử; diagnostics dẫn xuất nằm riêng, giữ liên kết đến source run.
+
+### D12 — Các hình mở rộng cần giải thích điều gì?
+
+**Thảo luận:** năm hình ban đầu chưa đủ cho vai trò threshold và phân tích nhị phân.
+**Quyết định:** bổ sung ROC/PR, reliability/calibration, phân bố xác suất theo nhãn, phân bố lớp/độ dài review, metrics theo lớp, validation sweep và hình so sánh operating point test 0,5/0,8.
+**Lý do:** mỗi hình trả lời một câu hỏi cụ thể về khả năng phân biệt, confidence, lỗi lớp và chi phí operating point.
+**Giới hạn:** review length có thể được đo bằng số từ hoặc ký tự từ text đã lưu; không gọi đó là token length nếu chưa chạy tokenizer.
+
+### D13 — Giữ mô hình và bằng chứng ở đâu?
+
+**Thảo luận:** weights lớn vượt giới hạn Git thông thường và làm repository tăng kích thước.
+**Quyết định:** Git giữ source, config, notebook có output và artifacts nhẹ; checkpoint được lưu riêng trong ZIP kết quả Kaggle.
+**Truy vết:** giữ SHA256 weights trong manifest và policy; không coi file không có mặt là đã kiểm tra tại môi trường kiểm chứng.
+**Đã khôi phục:** run evaluation Kaggle `20261026T160058Z_evaluation_07c24854` tải đúng `best_model/` và chạy lại toàn test; Git giữ predictions, measured loss và runtime để rà soát, không giữ weights.
+
+### D14 — Độ đầy đủ của báo cáo được xác nhận bằng gì?
+
+**Thảo luận:** số dòng nhiều nhưng thiếu lý do, điều kiện so sánh hoặc bằng chứng vẫn chưa là báo cáo đầy đủ.
+**Quyết định:** walkthrough có ba phần thống nhất: đặc tả/cơ sở, phương pháp/thực nghiệm, kết quả/chẩn đoán; liên kết các quyết định D01–D14.
+**Độ sâu:** giải thích tensor contracts, logits/loss, optimizer/scheduler, lựa chọn checkpoint/threshold, hình, lỗi ngôn ngữ và giới hạn.
+**Tính trung thực:** phân biệt điều đã chạy với tính năng mới, không gán kết quả giả định cho run Kaggle cũ.
+
+## 4. Roadmap notebook và module tham chiếu
+
+Mỗi notebook dùng bảng roadmap riêng phù hợp phạm vi; bản tích hợp trình bày toàn bộ các phase dưới đây.
+Cột artifact phải phân biệt file sinh khi train với file đọc hoặc diagnostics dẫn xuất khi view.
+
+| Phase | Câu hỏi / công việc | Module/file thực thi | Sản phẩm dưới `outputs/` |
+|---|---|---|---|
+| P01 | Cấu hình, seed và môi trường | `src/workflow.py`, `src/utils/runs.py`, `config/config.json` | Config snapshot, environment snapshot, console log |
+| P02 | Pretrained sentiment pipeline | `src/models/classifier.py`, `scripts/run_exercise1.py` | Dự đoán pipeline/manual |
+| P03 | Tokenization và logits | `src/models/classifier.py` | Bảng token/ID/mask và xác suất |
+| P04 | Kiểm tra official dataset | `src/datasets/loader.py` | Kích thước split, thống kê lớp/dữ liệu |
+| P05 | Phân tích độ dài và preprocessing | `src/datasets/loader.py`, `src/utils/plots.py` | Thống kê, phân bố độ dài, truncation |
+| P06 | Xây model và sanity gate | `src/models/classifier.py`, `src/training/trainer.py`, `tests/` | Bằng chứng sanity, cấu hình model |
+| P07 | Fine-tuning và chọn checkpoint | `src/training/trainer.py`, `src/workflow.py` | History, train metrics, learning curves |
+| P08 | Validation threshold sweep | `src/training/thresholds.py` | Lưới ngưỡng, hình trade-off, `decision_threshold.json` |
+| P09 | Test với quyết định đã cố định | `src/workflow.py`, `src/training/metrics.py` | Predictions, metrics argmax và ngưỡng đã chọn |
+| P10 | Chẩn đoán nhị phân và confidence | `src/analysis.py` | ROC/PR, calibration, phân bố xác suất, per-class panel |
+| P11 | Sensitivity và phân tích lỗi | `src/analysis.py`, `src/utils/plots.py` | Test sensitivity mô tả, mẫu đúng/sai và bảng lỗi |
+| P12 | Save/load và tính toàn vẹn | `src/models/classifier.py`, `src/evidence.py` | Reload check, SHA256 audit |
+| P13 | Tổng hợp và trình bày | Notebook, `walkthrough_lab_03.md` | Các bảng/hình dẫn xuất liên kết source run |
+
+## 5. Hợp đồng dữ liệu và thực nghiệm
+
+Input text là chuỗi; labels 0/1 tương ứng Negative/Positive.
+Tokenizer tạo `input_ids` và `attention_mask`; batch sau collator có shape `(B,S)` và labels `(B,)`.
+Model trả logits `(B,2)`; cross-entropy nhận logits, không cần softmax thủ công trước loss.
+Softmax được dùng khi báo xác suất, vẽ curves hoặc áp threshold trên cột Positive.
+
+Threshold dùng quy tắc `p_positive >= threshold` để dự đoán Positive.
+Quy tắc này được ghi rõ vì trường hợp xác suất đúng bằng threshold cần kết quả xác định.
+Ngưỡng 0,5 và argmax có thể khác nhau tại tie chính xác; không bỏ qua trường hợp này trong tests.
+Precision/Recall/F1 nhị phân lấy Positive làm lớp dương; Macro metrics trung bình đều hai lớp.
+TPR/FPR theo từng lớp được tính theo cách one-vs-rest, không đánh đồng FPR với phần bù Precision.
+
+Baseline hằng Negative trên test cân bằng đạt accuracy 50% và Macro F1 33,33%.
+Đây là baseline từ nhãn, không phải kết quả của một classifier head khởi tạo ngẫu nhiên.
+Metric không được báo cáo ở run gốc phải ghi “not logged” thay vì mượn giá trị từ run khác.
+
+## 6. Hợp đồng trực quan hóa và lưu trữ
+
+Các hình cũ được giữ nguyên: learning curves, confusion matrix, metrics bar, token-length distribution và sample predictions.
+Hình mới từ `src/analysis.py` phải chỉ rõ source run, split và loại score được dùng.
+ROC/PR đánh giá ranking; calibration đánh giá quan hệ giữa score và tần suất đúng; chúng không thay thế nhau.
+Threshold sensitivity mô tả việc thay đổi quyết định và không biến test thành tập chọn threshold.
+Bảng số liệu cần hiển thị chọn lọc cạnh hình để người đọc kiểm tra các điểm quan trọng.
+
+Các bảng/hình phải có file tương ứng dưới `outputs/`; không chỉ tồn tại dưới dạng cell output.
+Artifacts dẫn xuất phải có metadata hoặc tên thư mục gắn source run và quy trình sinh.
+Không ghi đè predictions, metrics hoặc manifest của run lịch sử khi thêm diagnostics.
+Manifest gốc có thể liệt kê weights không commit; audit phải báo rõ thiếu có chủ đích.
+File ZIP tải kết quả chỉ là tiện ích lưu trữ, không phải nội dung thuật toán bắt buộc của bài nộp.
+
+## 7. Bằng chứng lịch sử 3 epoch đã kiểm chứng
+
+Run fine-tuning gốc là `20261026T155822Z_finetuning_2c2f0401`.
+Run mới dùng đủ official splits, ba epochs và 1.602 optimizer steps; selection được thực hiện trên validation trong cùng workflow.
+Test argmax gốc đạt **83,9587% Accuracy**, **84,0634% Binary F1**, **83,9580% Macro F1**, đúng 895/1.066 mẫu.
+Run fine-tuning lưu test loss 0,5443162918; evaluation sau reload lưu 0,5442677736. Hai số đo được giữ riêng theo nguồn.
+
+| Bước đã chạy | Run / nguồn | Bằng chứng chính |
+|---|---|---|
+| Validation selection trong training | `20261026T155822Z_finetuning_2c2f0401` | 1.066 validation predictions, grid 19 điểm, policy 0,8, checkpoint identity |
+| Full-test checkpoint reevaluation | `20261026T160058Z_evaluation_07c24854` | 1.066 test predictions, metrics argmax/policy, measured loss và runtime |
+| Inference có policy | `20261026T160111Z_inference_7f2b16f0` | Probability, nhãn, threshold và metadata nguồn validation |
+| Diagnostics dẫn xuất | `20261026T161957Z_analysis_b336c410` | ROC/PR, calibration, probability distribution, test sensitivity descriptive |
+
+Validation Macro F1 tại 0,5 là **0,8432787665**; tại ngưỡng được chọn 0,8 là **0,8526632715**.
+Validation Accuracy tăng từ **0,8433395872** lên **0,8527204503**, thêm 10 mẫu đúng.
+Cách chọn đã chốt trước evaluation: tối đa validation Macro F1, hòa thì gần 0,5, tiếp tục hòa thì threshold nhỏ hơn.
+Policy ghi split, objective, grid, sample count và weights SHA256; eval/infer kiểm tra identity trước khi áp dụng.
+
+| Test operating point | Accuracy | Binary Precision | Binary Recall | Binary F1 | Macro F1 |
+|---|---:|---:|---:|---:|---:|
+| Argmax gốc | 83,9587% | 83,5185% | 84,6154% | 84,0634% | 83,9580% |
+| Validation-selected 0,8 | 84,0525% | 86,5191% | 80,6754% | 83,4951% | 84,0343% |
+
+Test tại 0,8 có **TN 466, FP 67, FN 103, TP 430**: đúng 896/1.066 mẫu.
+So với argmax, FP giảm 22 nhưng FN tăng 21; Accuracy tăng một mẫu, Macro F1 tăng khoảng 0,0763 điểm phần trăm, Binary F1 giảm khoảng 0,5682 điểm phần trăm.
+Không kết luận đây là cải thiện lớn, có ý nghĩa thống kê hoặc phù hợp mọi chi phí ứng dụng.
+Threshold 0,8 được giữ vì protocol validation, không chọn lại từ đường test sensitivity.
+
+Checkpoint reevaluation ghi **test loss 0,5442677736**, runtime **1,8309 giây**, throughput **582,234 mẫu/giây** trên Tesla T4.
+Đây là loss đo thật sau reload, tách với **NLL 0,5442964394** tái tính offline từ saved probabilities và loss **0,5443162918** của fine-tuning trước checkpoint reload.
+Threshold chỉ đổi quyết định thành nhãn; nó không thay cross-entropy của cùng probability records.
+Kết quả argmax sau reload khớp metrics gốc, còn weights SHA256 trong policy khớp manifest training run.
+
+Inference cùng policy trả Negative cho “The acting was excellent, but the story was disappointing.”, confidence **0,9933324**, `P(Positive)=0,0066675888`.
+Full-test reload có bằng chứng Kaggle; chế độ view hiển thị artifacts đã lưu, còn model inference cần checkpoint riêng.
+Bản báo cáo giữ test diagnostics descriptive và không gọi phiên mở rộng là blind test mới sau khi benchmark đã được quan sát.
+
+## 8. Điều kiện nghiệm thu
+
+| Nhóm | Điều kiện cần đạt | Cách kiểm tra |
+|---|---|---|
+| Đề bài | Đủ hai Exercise | Roadmap, code và output theo phase |
+| Data | Full official splits, nhãn đúng | Loader contract và artifacts thống kê |
+| Notebook | Roadmap đầu bài, module tham chiếu, giải thích và hình | Thực thi toàn bộ notebook ở view; kiểm tra links |
+| Artifact | Mọi output tính toán có file trong `outputs/` | Đối chiếu bảng/hình với thư mục dẫn xuất |
+| Training | Cùng workflow giữa notebook và CLI | Tests, history và config snapshot |
+| Threshold | Chọn trên validation, tie-break xác định | Đã có 1.066 validation scores, policy 0,8 và selection metadata |
+| Test isolation | Test không được truyền vào hàm chọn threshold | Guard split, code review, tests; selection trước evaluation riêng |
+| Checkpoint reload | Toàn test được đo sau khi tải weights đúng identity | Đã có evaluation run, predictions, test loss và runtime; weights ngoài Git |
+| Trình bày | Walkthrough đủ chiều sâu, khoảng 700 dòng trở lên | Rà soát nội dung, số dòng và nguồn số liệu |
+| Tính trung thực | Phân biệt measured, derived, pending và not logged | Báo cáo/metadata không mâu thuẫn |
+| Git | Source, notebook có output, artifacts nhẹ; không weights/cache | Checklist pre-commit và staged diff |
+
+Hoàn tất phần mềm và hoàn tất bằng chứng thực nghiệm là hai trạng thái cần ghi riêng.
+Không đánh dấu threshold validation đã đo chỉ vì unit test trên dữ liệu giả lập đã pass.
+Không đánh dấu checkpoint đã được tái đánh giá toàn test chỉ vì đã kiểm tra một câu; trạng thái hoàn tất hiện dựa trên evaluation run 1.066 mẫu riêng, không dựa vào one-example reload check gốc.
+
+## 9. Tài liệu tham chiếu
+
+- `labs/lab01/description_lab_01.md` và `walkthrough_lab_01.md` trên nhánh `main`: cấu trúc thảo luận, roadmap và mức chi tiết báo cáo.
+- `docs/dl_flow.md`, `docs/dl_data.md`, `docs/dl_training.md`: luồng thí nghiệm, data contract và huấn luyện.
+- `docs/eda.md`, `docs/feature.md`: cách đặt câu hỏi dữ liệu và kiểm soát preprocessing.
+- https://huggingface.co/docs/transformers/en/training
+- https://huggingface.co/blog/sentiment-analysis-python
+- https://huggingface.co/datasets/cornell-movie-review-data/rotten_tomatoes
+
+Quy trình đọc kết quả phải hỗ trợ cả bộ run phục hồi checkpoint và một run train mới có policy riêng. Run mới lưu loss đo thật, bảng/hình so sánh threshold và metric theo lớp; inference không liên quan không được làm sai ghép nguồn. Kiểm thử notebook trên fixture chỉ chứng minh nhánh trình bày hoạt động, không thay cho bằng chứng GPU.
+
+
+## 10. Thảo luận và quyết định cho thí nghiệm 10 epoch
+
+### 10.1. Vấn đề cần giải quyết
+
+Learning curves lịch sử chỉ có ba mốc cuối epoch, chưa thể hiện rõ diễn biến learning rate, gradient và validation trong từng epoch. Train accuracy tiếp tục tăng trong khi validation gần đứng yên, validation loss tăng ở epoch cuối. Không đủ bằng chứng để gọi ba epoch là tối ưu.
+
+### 10.2. Những lựa chọn đã chốt trước khi chạy
+
+| Câu hỏi | Lựa chọn | Lý do / đánh đổi |
+|---|---|---|
+| Có chạy đủ 10 epoch không? | Có, mọi candidate đủ 10; không early stopping | Quan sát giai đoạn học và overfit đầy đủ; tốn GPU hơn nhưng có giới hạn |
+| Có lấy weights epoch 10 không? | Không mặc định; lấy validation Macro-F1 tốt nhất | Tách ngân sách quan sát khỏi lựa chọn model |
+| Quan sát theo step thế nào? | Log 25 step, eval/save 100 step và cuối epoch | Đủ chi tiết mà không đánh giá toàn bộ train ở mọi step |
+| So train loss với val loss thế nào? | Vẽ train-eval cùng val; optimization loss ở hình riêng | Tránh đánh đồng dropout-on/window average với eval loss |
+| Baseline đủ mạnh chưa? | Bổ sung TF-IDF word unigram/bigram + Logistic Regression | Có mô hình học từ dữ liệu, mạnh hơn baseline hằng |
+| Chọn C của baseline ở đâu? | Validation, grid 0.1/1/10 | Từ vựng/IDF vẫn fit chỉ trên train |
+| LR nào tối ưu? | Thử 1e-5, 2e-5, 3e-5 cùng seed và ngân sách | Đánh giá bằng chứng thay vì đoán; không gọi tối ưu toàn cục |
+| Objective chọn model? | Validation Macro-F1 argmax | Quan tâm cả hai lớp; tiêu chí công bố trước test |
+| Objective chọn threshold? | Validation Macro-F1 trên grid 19 điểm | Giữ protocol và tie-break rõ ràng; không chọn từ test |
+| Có refit train+val sau selection? | Không | Giữ validation thật cho threshold và checkpoint selection |
+| Tối ưu GPU gì? | AMP FP16, dynamic padding bội 8, model-only save | Giảm compute/I/O; chưa đo thì không tuyên bố tăng throughput |
+| Dùng T4 x2 không? | Chỉ GPU đầu tiên | Dễ kiểm soát batch hiệu dụng, seed, checkpoint và debug |
+| Đo bất định gì? | Bootstrap test phân tầng cho accuracy/Macro-F1 | Chỉ bất định lấy mẫu, chưa đo biến thiên seed |
+| Đóng gói ra sao? | Review nhẹ + checkpoint riêng | Review có toàn bộ ảnh/số liệu/log; trọng số ngoài Git |
+
+### 10.3. Nghiệm thu phiên mở rộng đã chạy thật
+
+Study `20261026T184219Z_study_94f2ba7b` đã hoàn tất cả ba LR, mỗi LR đủ 10 epoch. Review ZIP xác minh 128 file khớp SHA256, có đủ raw logs và preflight 72 tests pass trên Kaggle. Code hashes khớp revision `ca58b27` đã công bố trước khi chạy.
+
+LR 3e-5 thắng trên validation Macro-F1 85,6473%, checkpoint step 1700 / epoch 3,184. Threshold validation được chốt ở 0,5. Candidate không có test predictions; study chỉ đọc full test sau frozen selection.
+
+Test winner đúng 889/1.066, Accuracy 83,3959%, Macro-F1 83,3952%, Binary-F1 83,2861%. Kết quả hơn TF-IDF nhưng thấp hơn argmax lịch sử 6 mẫu; không thay đổi winner dựa trên so sánh test này.
+
+Notebook 05 và notebook tích hợp hiển thị hình thực; artifacts nhẹ, original manifests và logs được giữ để audit/report. Checkpoint không có trong review ZIP, vì vậy kiểm chứng local là kiểm toán records/hash, không phải chạy lại weights. Lượt chạy GPU có exact saved-weight verification ở mỗi candidate và study tải lại winner để đo test.
+
+Phiên này giải quyết yêu cầu đủ 10 epoch, step logging, baseline và threshold sweep. Nhiều seed, near-duplicate semantic audit, calibration fitting và đánh giá ngoài chưa quan sát vẫn chưa thực hiện. Không cần train lại chỉ để bổ sung trình bày/report.
+
+## 11. Yêu cầu trình bày epoch và phiên regularization tiếp theo
+
+Training loop Lab01 trong repo được tham chiếu cho cách tổng kết: mỗi epoch chạy hết train và validation, in một dòng kết quả, vẽ đường học theo epoch. Lab03 dùng cùng cách trình bày, giữ Hugging Face Trainer theo yêu cầu đề bài; không sao chép nguyên si learning rate hay kiến trúc MLP của Lab01 sang Transformer.
+
+Biểu đồ chính chỉ lấy cuối epoch 1–10. Các điểm validation giữa epoch của study cũ vẫn có trong raw history và dashboard phụ, không bị xóa. `epoch_presentation` xuất PNG mới từ đúng dữ liệu, không sửa source manifest/weights. Checkpoint đã chọn step 1700 của study cũ không đổi chỉ vì biểu đồ mới không vẽ điểm giữa epoch.
+
+Phiên tiếp theo: hai LR 5e-6/1e-5, weight decay 0.1 và dropout encoder/attention 0.2, classifier 0.3. Giữ full splits, seed 42, cross-entropy, 10 epoch và criterion validation Macro-F1. Không thêm label smoothing để tránh thay công thức loss trong lượt này. Có thể giảm học thuộc nhưng cũng có nguy cơ underfit; chưa chạy GPU thì không kết luận đã khắc phục overfitting hoặc tăng accuracy.
+
+Notebook 06 là template chạy mới; notebook 05 giữ bằng chứng đã đo của study trước. Hai trạng thái phải được phân biệt khi nộp bài và thảo luận.
+
+## 12. Feature engineering và synthetic train augmentation
+
+Bổ sung train augmentation theo lexicon cùng cực tính, tối đa 25% dữ liệu gốc, một biến thể trên mỗi parent. Bỏ câu phủ định/tương phản, giữ nguyên punctuation/ngữ cảnh còn lại, loại trùng train/heldout và cân bằng số mẫu thêm giữa hai lớp. TF-IDF fit trên cùng effective train pool với Transformer; validation/test không tăng mẫu, không fit vocabulary trên heldout.
+
+Mọi biến thể kế thừa label từ parent nên có nguy cơ label noise khi ngữ cảnh làm thay đổi sắc thái. Có preview và records để review, không gọi đó là dữ liệu thật mới được gán nhãn. Không nhân đôi y nguyên mẫu rồi tuyên bố tăng thông tin. Phạm vi kiểm thử gồm chống trùng, bảo toàn heldout, tính xác định theo seed và pipeline dùng effective train size. Profile augmented đã có kết quả GPU; xem Mục 14 để phân biệt với frozen trial mới nhất.
+
+## 13. Notebook trình bày theo 10 giai đoạn
+
+Chốt bố cục 10 cell code với Markdown trước mỗi cell, roadmap/module đầu notebook và hiển thị ảnh ngay tại phase tương ứng. Tách EDA dữ liệu gốc khỏi augmentation, training curves khỏi test diagnostics và phần đọc checkpoint/threshold khỏi phần đọc test metrics. Không chia workflow thành các lần chọn ngưỡng sau khi đã xem test: cell 7 thực thi đúng protocol, cell 8–9 giải thích records đã chốt.
+
+
+## 14. Thảo luận và quyết định cuối sau hai lượt regularization
+
+### D20 — Mục tiêu ưu tiên: giảm overfitting hay accuracy cao nhất lịch sử?
+
+**Thảo luận:** lượt full fine-tuning có augmentation chạy đủ 10 epoch vẫn đạt train accuracy 98.98%, validation 84.52% ở cuối; validation loss tăng từ 0.3525 lên 0.7379. Tăng dropout/decay và thêm mẫu không bảo đảm hết học thuộc.
+
+**Quyết định:** thử đóng băng embedding và bốn tầng encoder đầu; LR riêng encoder 2e-6, head 1e-5; dropout 0.2/0.2/0.4, decay 0.1. Giữ augmentation hiện tại để không ép thêm mẫu nhiễu. Chấp nhận accuracy có thể giảm, không gọi regularization mạnh nhất là tối ưu mặc định.
+
+**Bằng chứng:** frozen trial `20261027T095655Z_frozen_trial_d8d09116` hoàn thành 10 epoch; train/validation accuracy cuối 84.25%/83.77%, loss 0.3581/0.3696. Có 274 synthetic samples, train 8.804; heldout giữ nguyên 1.066/1.066.
+
+### D21 — Chọn checkpoint theo loss hay Macro-F1?
+
+**Thảo luận:** mô hình có thể dự đoán cùng số nhãn đúng nhưng tự tin hơn khi sai, làm loss tăng. Chỉ theo Macro-F1 có thể giữ checkpoint xác suất kém hơn.
+
+**Quyết định:** profile frozen công bố trước criterion minimum validation loss; chạy đủ 10 epoch rồi reload checkpoint tốt nhất. Tiêu chí này khác study lịch sử chọn Macro-F1; không đổi nhãn protocol cũ. Epoch 9 được chọn, không thay bằng epoch 10 vì accuracy của epoch 10 cao hơn.
+
+### D22 — Threshold có cần khác 0.5 không?
+
+**Quyết định:** không ép khác 0.5. Quét validation theo grid/tie-break có sẵn sau checkpoint selection. Frozen chọn 0.45; full augmented chọn 0.65; các thí nghiệm có thể chọn 0.5. Test không tham gia chọn.
+
+### D23 — Kết luận nghiệm thu nào được phép?
+
+Frozen test accuracy 82.83%, Binary F1 83.23%, Macro-F1 82.82%, loss 0.412560. So với augmented full fine-tuning: accuracy giảm 1.31 điểm phần trăm, test loss/ECE thấp hơn. Đây là kết quả cả cấu hình, không chứng minh riêng freeze hay augmentation tạo ra cải thiện. Một seed, test đã được quan sát và synthetic label noise là giới hạn bắt buộc nêu.
+
+**Tiêu chí hoàn thành:** đủ hai Exercise, full splits, 10 epoch thực, roadmap/module, ảnh inline đồng thời lưu outputs/, threshold validation-only, báo cáo có decisions/error analysis, manifest/source verification và checkpoint lưu riêng. Không đặt điều kiện accuracy >=85% hoặc tuyệt đối không overfit vốn không có trong đề gốc.
+
+### D24 — Notebook và artifact phải phục vụ report thế nào?
+
+Bản tích hợp và Exercise 2 đọc frozen trial làm kết quả chính; notebook study cũ có nhãn lịch sử. Ảnh hiển thị từ artifact nguồn hoặc run phân tích dẫn xuất đã kiểm toán. `outputs/published/index.md` và `artifact_catalog.json` cung cấp hình/bảng dùng ngay cho report; không cần sinh lại đồ thị mỗi lần.
+
+
+## 15. Quyết định tinh gọn còn hai notebook
+
+Gom toàn bộ EDA → preprocessing → feature engineering vào 01_eda_preprocessing_feature_engineering.ipynb. Gom pretrained sentiment, baseline, training, threshold, evaluation và lỗi vào 02_modeling.ipynb. Không tạo notebook hoặc helper copy-cell riêng theo từng LR/phiên train.
+
+Modeling hỗ trợ view/train trên cùng notebook, chọn device auto/cuda/cpu; training gọi cùng script/module với CLI. Local CPU được hỗ trợ khi chủ động chạy; kiểm thử phần mềm dùng fixture nhỏ, không full CPU training. Mọi hình hiển thị ngay trên notebook và có artifact trong outputs/.
+
+Các mục mô tả notebook 04–08 ở phần lịch sử là diễn tiến trước khi gom, không phải các file cần chạy hiện tại. Run kết quả gốc và cấu hình khoa học vẫn giữ nguyên. Chỉ bỏ snapshot notebook/render và proof phần mềm cũ bị lặp; không phá manifests khoa học.

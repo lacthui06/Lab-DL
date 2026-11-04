@@ -1,0 +1,112 @@
+{
+  "frozen_embeddings": true,
+  "frozen_encoder_layers": 4,
+  "total_parameters": 66955010,
+  "trainable_parameters": 14767874,
+  "optimizer_groups": [
+    {
+      "lr": 2e-06,
+      "weight_decay": 0.1,
+      "parameter_names": [
+        "distilbert.transformer.layer.4.attention.q_lin.weight",
+        "distilbert.transformer.layer.4.attention.k_lin.weight",
+        "distilbert.transformer.layer.4.attention.v_lin.weight",
+        "distilbert.transformer.layer.4.attention.out_lin.weight",
+        "distilbert.transformer.layer.4.ffn.lin1.weight",
+        "distilbert.transformer.layer.4.ffn.lin2.weight",
+        "distilbert.transformer.layer.5.attention.q_lin.weight",
+        "distilbert.transformer.layer.5.attention.k_lin.weight",
+        "distilbert.transformer.layer.5.attention.v_lin.weight",
+        "distilbert.transformer.layer.5.attention.out_lin.weight",
+        "distilbert.transformer.layer.5.ffn.lin1.weight",
+        "distilbert.transformer.layer.5.ffn.lin2.weight"
+      ],
+      "betas": [
+        0.9,
+        0.999
+      ],
+      "eps": 1e-08,
+      "amsgrad": false,
+      "foreach": null,
+      "maximize": false,
+      "capturable": false,
+      "differentiable": false,
+      "fused": null
+    },
+    {
+      "lr": 2e-06,
+      "weight_decay": 0.0,
+      "parameter_names": [
+        "distilbert.transformer.layer.4.attention.q_lin.bias",
+        "distilbert.transformer.layer.4.attention.k_lin.bias",
+        "distilbert.transformer.layer.4.attention.v_lin.bias",
+        "distilbert.transformer.layer.4.attention.out_lin.bias",
+        "distilbert.transformer.layer.4.sa_layer_norm.weight",
+        "distilbert.transformer.layer.4.sa_layer_norm.bias",
+        "distilbert.transformer.layer.4.ffn.lin1.bias",
+        "distilbert.transformer.layer.4.ffn.lin2.bias",
+        "distilbert.transformer.layer.4.output_layer_norm.weight",
+        "distilbert.transformer.layer.4.output_layer_norm.bias",
+        "distilbert.transformer.layer.5.attention.q_lin.bias",
+        "distilbert.transformer.layer.5.attention.k_lin.bias",
+        "distilbert.transformer.layer.5.attention.v_lin.bias",
+        "distilbert.transformer.layer.5.attention.out_lin.bias",
+        "distilbert.transformer.layer.5.sa_layer_norm.weight",
+        "distilbert.transformer.layer.5.sa_layer_norm.bias",
+        "distilbert.transformer.layer.5.ffn.lin1.bias",
+        "distilbert.transformer.layer.5.ffn.lin2.bias",
+        "distilbert.transformer.layer.5.output_layer_norm.weight",
+        "distilbert.transformer.layer.5.output_layer_norm.bias"
+      ],
+      "betas": [
+        0.9,
+        0.999
+      ],
+      "eps": 1e-08,
+      "amsgrad": false,
+      "foreach": null,
+      "maximize": false,
+      "capturable": false,
+      "differentiable": false,
+      "fused": null
+    },
+    {
+      "lr": 1e-05,
+      "weight_decay": 0.1,
+      "parameter_names": [
+        "pre_classifier.weight",
+        "classifier.weight"
+      ],
+      "betas": [
+        0.9,
+        0.999
+      ],
+      "eps": 1e-08,
+      "amsgrad": false,
+      "foreach": null,
+      "maximize": false,
+      "capturable": false,
+      "differentiable": false,
+      "fused": null
+    },
+    {
+      "lr": 1e-05,
+      "weight_decay": 0.0,
+      "parameter_names": [
+        "pre_classifier.bias",
+        "classifier.bias"
+      ],
+      "betas": [
+        0.9,
+        0.999
+      ],
+      "eps": 1e-08,
+      "amsgrad": false,
+      "foreach": null,
+      "maximize": false,
+      "capturable": false,
+      "differentiable": false,
+      "fused": null
+    }
+  ]
+}

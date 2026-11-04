@@ -1,0 +1,15 @@
+{
+  "source_repository": "https://github.com/lacthui06/Lab-DL.git",
+  "source_commit": "3f7e3dd2ecc74bdea689fc114b1f4167cd477766",
+  "runs": {
+    "exercise1": "20261026T155744Z_exercise1_65dfe784",
+    "exercise1_analysis": "20261026T155746Z_exercise1_analysis_205bf966",
+    "finetuning": "20261026T155822Z_finetuning_2c2f0401",
+    "analysis": "20261026T160023Z_analysis_163a53b0",
+    "evaluation": "20261026T160058Z_evaluation_07c24854",
+    "inference": "20261026T160111Z_inference_7f2b16f0",
+    "notebook_render": "20261026T160130Z_notebook_render_f8e70da2"
+  },
+  "report_index": "labs/lab03/outputs/published/20261026T155822Z_finetuning_2c2f0401/index.md",
+  "checkpoint_included": false
+}

@@ -1,0 +1,58 @@
+{
+  "study_run": "20261026T184219Z_study_94f2ba7b",
+  "winner": {
+    "run_id": "20261026T185804Z_candidate_8308037d",
+    "learning_rate": 3e-05,
+    "selection_split": "validation",
+    "macro_f1": 0.8564726691922859,
+    "loss": 0.7027483582496643,
+    "completed_epochs": 10.0,
+    "best_step": 1700
+  },
+  "test_accuracy": 0.8339587242026266,
+  "test_macro_f1": 0.8339515641459571,
+  "threshold": 0.5,
+  "measured_test_loss": 0.7980755567550659,
+  "probability_diagnostics": {
+    "roc_auc": 0.918416411758287,
+    "average_precision": 0.9259894498013682,
+    "brier_score": 0.1506736755358776,
+    "confidence_ece": 0.14607097334307081,
+    "nll": 0.7980772048253766,
+    "threshold": 0.5,
+    "selection_split": "validation",
+    "bootstrap_95_percentile_ci": {
+      "accuracy": [
+        0.8095684803001876,
+        0.8564727954971857
+      ],
+      "macro_f1": [
+        0.809568212168358,
+        0.8564696378079979
+      ]
+    },
+    "bootstrap_repeats": 2000,
+    "ci_scope": "fixed model, fixed threshold, stratified test sampling; excludes training-seed uncertainty"
+  },
+  "paired_comparison": {
+    "same_test_cohort_verified": true,
+    "historical_correct": 895,
+    "study_correct": 889,
+    "both_correct": 847,
+    "both_wrong": 129,
+    "corrected_by_study": 42,
+    "new_errors_in_study": 48,
+    "accuracy_difference_study_minus_historical": -0.005628517823639775,
+    "paired_stratified_bootstrap_95_ci": [
+      -0.02345215759849906,
+      0.012195121951219513
+    ],
+    "bootstrap_repeats": 2000,
+    "bootstrap_seed": 42,
+    "selection_performed": false,
+    "scope": "descriptive comparison of two fixed predictions on previously inspected test; not a controlled epoch-only ablation"
+  },
+  "checkpoint_weights_loaded_locally": false,
+  "full_gpu_training_repeated_locally": false,
+  "threshold_reselected_on_test": false
+}

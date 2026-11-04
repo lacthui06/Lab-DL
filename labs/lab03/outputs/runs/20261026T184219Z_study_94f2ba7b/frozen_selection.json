@@ -1,0 +1,16 @@
+{
+  "winner": {
+    "run_id": "20261026T185804Z_candidate_8308037d",
+    "learning_rate": 3e-05,
+    "selection_split": "validation",
+    "macro_f1": 0.8564726691922859,
+    "loss": 0.7027483582496643,
+    "completed_epochs": 10.0,
+    "best_step": 1700
+  },
+  "threshold": 0.5,
+  "selection_split": "validation",
+  "test_used_for_selection": false,
+  "candidate_manifest_sha256": "20b5707b2b344f8386f1e929460fd6824da7794ef575bb32ce6a94d093fff705",
+  "prior_test_exposure": "The historical 3-epoch test report was already inspected; this is not a new untouched benchmark."
+}

@@ -1,0 +1,116 @@
+{
+  "source_run": "20261025T181532Z_exercise1_71da6f40",
+  "sentence": "I love this wonderful movie!",
+  "tokenization": [
+    {
+      "position": 0,
+      "tokens": "[CLS]",
+      "input_ids": 101,
+      "attention_mask": 1
+    },
+    {
+      "position": 1,
+      "tokens": "i",
+      "input_ids": 1045,
+      "attention_mask": 1
+    },
+    {
+      "position": 2,
+      "tokens": "love",
+      "input_ids": 2293,
+      "attention_mask": 1
+    },
+    {
+      "position": 3,
+      "tokens": "this",
+      "input_ids": 2023,
+      "attention_mask": 1
+    },
+    {
+      "position": 4,
+      "tokens": "wonderful",
+      "input_ids": 6919,
+      "attention_mask": 1
+    },
+    {
+      "position": 5,
+      "tokens": "movie",
+      "input_ids": 3185,
+      "attention_mask": 1
+    },
+    {
+      "position": 6,
+      "tokens": "!",
+      "input_ids": 999,
+      "attention_mask": 1
+    },
+    {
+      "position": 7,
+      "tokens": "[SEP]",
+      "input_ids": 102,
+      "attention_mask": 1
+    }
+  ],
+  "predictions": [
+    {
+      "text": "I love this wonderful movie!",
+      "label": "POSITIVE",
+      "score": 0.9998775720596313,
+      "probabilities": [
+        0.0001224386360263452,
+        0.9998775720596313
+      ]
+    },
+    {
+      "text": "This movie was terrible and boring.",
+      "label": "NEGATIVE",
+      "score": 0.9997683167457581,
+      "probabilities": [
+        0.9997683167457581,
+        0.00023167315521277487
+      ]
+    },
+    {
+      "text": "The acting was good, but the story was disappointing.",
+      "label": "NEGATIVE",
+      "score": 0.9967492818832397,
+      "probabilities": [
+        0.9967492818832397,
+        0.0032507420983165503
+      ]
+    }
+  ],
+  "comparison": [
+    {
+      "text": "I love this wonderful movie!",
+      "pipeline_label": "POSITIVE",
+      "manual_label": "POSITIVE",
+      "pipeline_score": 0.9998775720596313,
+      "manual_score": 0.9998775720596313,
+      "difference": 0.0
+    },
+    {
+      "text": "This movie was terrible and boring.",
+      "pipeline_label": "NEGATIVE",
+      "manual_label": "NEGATIVE",
+      "pipeline_score": 0.9997683167457581,
+      "manual_score": 0.9997683167457581,
+      "difference": 0.0
+    },
+    {
+      "text": "The acting was good, but the story was disappointing.",
+      "pipeline_label": "NEGATIVE",
+      "manual_label": "NEGATIVE",
+      "pipeline_score": 0.9967492818832397,
+      "manual_score": 0.9967492818832397,
+      "difference": 0.0
+    }
+  ],
+  "audit": {
+    "verified_files": 6,
+    "omitted_checkpoint_files": [],
+    "checkpoint_available_locally": false,
+    "run": "20261025T181532Z_exercise1_71da6f40",
+    "compared_sentences": 3
+  }
+}

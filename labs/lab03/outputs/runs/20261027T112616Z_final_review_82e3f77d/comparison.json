@@ -1,0 +1,53 @@
+[
+  {
+    "experiment": "Unregularized 10 epoch",
+    "run_id": "20261026T184219Z_study_94f2ba7b",
+    "threshold": 0.5,
+    "accuracy": 0.8339587242026266,
+    "precision": 0.8384030418250951,
+    "recall": 0.8273921200750469,
+    "binary_f1": 0.8328611898016998,
+    "macro_f1": 0.8339515641459571,
+    "TN": 448,
+    "FP": 85,
+    "FN": 92,
+    "TP": 441,
+    "test_loss": 0.7980755567550659,
+    "confidence_ece": 0.14607097334307081,
+    "brier_score": 0.1506736755358776
+  },
+  {
+    "experiment": "Augmented full fine-tuning",
+    "run_id": "20261027T083010Z_study_99bce559",
+    "threshold": 0.65,
+    "accuracy": 0.8414634146341463,
+    "precision": 0.8395522388059702,
+    "recall": 0.8442776735459663,
+    "binary_f1": 0.8419083255378859,
+    "macro_f1": 0.8414621590060078,
+    "TN": 447,
+    "FP": 86,
+    "FN": 83,
+    "TP": 450,
+    "test_loss": 0.62595134973526,
+    "confidence_ece": 0.13060333597950816,
+    "brier_score": 0.14235564367167772
+  },
+  {
+    "experiment": "Frozen 4 layers",
+    "run_id": "20261027T095655Z_frozen_trial_d8d09116",
+    "threshold": 0.45,
+    "accuracy": 0.8283302063789869,
+    "precision": 0.8136200716845878,
+    "recall": 0.851782363977486,
+    "binary_f1": 0.8322639780018332,
+    "macro_f1": 0.8282357353986112,
+    "TN": 429,
+    "FP": 104,
+    "FN": 79,
+    "TP": 454,
+    "test_loss": 0.41256004571914673,
+    "confidence_ece": 0.037949567720098304,
+    "brier_score": 0.12818295232433452
+  }
+]

@@ -1,0 +1,17 @@
+Run: 20261027T083013Z_candidate_a2759300
+Map:   0%|          | 0/8530 [00:00<?, ? examples/s]Map:  23%|##3       | 2000/8530 [00:00<00:00, 10408.01 examples/s]Map:  47%|####6     | 4000/8530 [00:00<00:00, 6591.80 examples/s] Map:  59%|#####8    | 5000/8530 [00:00<00:00, 7268.04 examples/s]Map:  82%|########2 | 7000/8530 [00:00<00:00, 8498.87 examples/s]Map: 100%|##########| 8530/8530 [00:01<00:00, 9160.83 examples/s]Map: 100%|##########| 8530/8530 [00:01<00:00, 8452.31 examples/s]
+Map:   0%|          | 0/1066 [00:00<?, ? examples/s]Map: 100%|##########| 1066/1066 [00:00<00:00, 10443.85 examples/s]Map: 100%|##########| 1066/1066 [00:00<00:00, 10274.68 examples/s]
+Map:   0%|          | 0/1066 [00:00<?, ? examples/s]Map: 100%|##########| 1066/1066 [00:00<00:00, 10586.94 examples/s]Map: 100%|##########| 1066/1066 [00:00<00:00, 10423.04 examples/s]
+Map:   0%|          | 0/8804 [00:00<?, ? examples/s]Map:  11%|#1        | 1000/8804 [00:00<00:00, 9899.53 examples/s]Map:  34%|###4      | 3000/8804 [00:00<00:00, 10628.69 examples/s]Map:  57%|#####6    | 5000/8804 [00:00<00:00, 10775.52 examples/s]Map:  80%|#######9  | 7000/8804 [00:00<00:00, 10932.17 examples/s]Map: 100%|##########| 8804/8804 [00:00<00:00, 10822.14 examples/s]Map: 100%|##########| 8804/8804 [00:00<00:00, 10741.36 examples/s]
+/kaggle/working/lab03-py312/lib/python3.12/site-packages/torch/autograd/graph.py:823: UserWarning: Memory Efficient attention defaults to a non-deterministic algorithm. To explicitly enable determinism call torch.use_deterministic_algorithms(True, warn_only=False). (Triggered internally at /pytorch/aten/src/ATen/native/transformers/cuda/attention_backward.cu:683.)
+  return Variable._execution_engine.run_backward(  # Calls into the C++ engine to run the backward pass
+Epoch 01/10 | Train Loss (eval): 0.4035 - Acc: 82.97% | Val Loss: 0.4329 - Acc: 80.96% | Val Macro-F1: 0.8092 | LR: 0.0000050
+Epoch 02/10 | Train Loss (eval): 0.3037 - Acc: 87.46% | Val Loss: 0.3815 - Acc: 83.02% | Val Macro-F1: 0.8299 | LR: 0.0000044
+Epoch 03/10 | Train Loss (eval): 0.2468 - Acc: 90.36% | Val Loss: 0.3728 - Acc: 84.05% | Val Macro-F1: 0.8405 | LR: 0.0000039
+Epoch 04/10 | Train Loss (eval): 0.2077 - Acc: 92.21% | Val Loss: 0.3804 - Acc: 84.43% | Val Macro-F1: 0.8443 | LR: 0.0000033
+Epoch 05/10 | Train Loss (eval): 0.1875 - Acc: 93.30% | Val Loss: 0.4081 - Acc: 84.05% | Val Macro-F1: 0.8404 | LR: 0.0000028
+Epoch 06/10 | Train Loss (eval): 0.1804 - Acc: 93.58% | Val Loss: 0.4395 - Acc: 83.77% | Val Macro-F1: 0.8373 | LR: 0.0000022
+Epoch 07/10 | Train Loss (eval): 0.1574 - Acc: 94.42% | Val Loss: 0.4377 - Acc: 84.24% | Val Macro-F1: 0.8422 | LR: 0.0000017
+Epoch 08/10 | Train Loss (eval): 0.1405 - Acc: 95.26% | Val Loss: 0.4549 - Acc: 84.05% | Val Macro-F1: 0.8404 | LR: 0.0000011
+Epoch 09/10 | Train Loss (eval): 0.1309 - Acc: 95.75% | Val Loss: 0.4673 - Acc: 83.96% | Val Macro-F1: 0.8396 | LR: 0.0000006
+Epoch 10/10 | Train Loss (eval): 0.1305 - Acc: 95.72% | Val Loss: 0.4737 - Acc: 83.68% | Val Macro-F1: 0.8367 | LR: 0.0000000

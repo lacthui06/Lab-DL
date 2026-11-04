@@ -1,0 +1,56 @@
+{
+  "primary_result": "frozen_trial",
+  "source_run": "20261027T095655Z_frozen_trial_d8d09116",
+  "test_comparison": [
+    {
+      "policy": "TF-IDF",
+      "accuracy": 0.7898686679174484,
+      "precision": 0.7920604914933838,
+      "recall": 0.7861163227016885,
+      "binary_f1": 0.7890772128060264,
+      "macro_f1": 0.7898657092067516,
+      "test_loss": null
+    },
+    {
+      "policy": "Frozen DistilBERT threshold 0.5",
+      "accuracy": 0.8283302063789869,
+      "precision": 0.8252788104089219,
+      "recall": 0.8330206378986866,
+      "binary_f1": 0.8291316526610645,
+      "macro_f1": 0.8283264295350563,
+      "test_loss": 0.41256004571914673
+    },
+    {
+      "policy": "Frozen DistilBERT validation threshold",
+      "accuracy": 0.8283302063789869,
+      "precision": 0.8136200716845878,
+      "recall": 0.851782363977486,
+      "binary_f1": 0.8322639780018332,
+      "macro_f1": 0.8282357353986112,
+      "test_loss": 0.41256004571914673
+    }
+  ],
+  "historical_three_epoch_test_comparison": [
+    {
+      "policy": "Argmax",
+      "accuracy": 0.8395872420262664,
+      "precision": 0.8351851851851851,
+      "recall": 0.8461538461538461,
+      "binary_f1": 0.8406337371854613,
+      "macro_f1": 0.8395803246833822,
+      "test_loss": 0.5442677736282349
+    },
+    {
+      "policy": "Validation threshold 0.8",
+      "accuracy": 0.8405253283302064,
+      "precision": 0.8651911468812877,
+      "recall": 0.8067542213883677,
+      "binary_f1": 0.8349514563106796,
+      "macro_f1": 0.840343241766955,
+      "test_loss": 0.5442677736282349
+    }
+  ],
+  "measured_test_loss": 0.41256004571914673,
+  "selection_split": "validation",
+  "selected_threshold": 0.45
+}

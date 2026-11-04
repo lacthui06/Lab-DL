@@ -1,0 +1,13 @@
+{
+  "validation_loss": 0.7556254267692566,
+  "validation_accuracy": 0.849906191369606,
+  "validation_binary_precision": 0.849906191369606,
+  "validation_binary_recall": 0.849906191369606,
+  "validation_binary_f1": 0.849906191369606,
+  "validation_macro_precision": 0.849906191369606,
+  "validation_macro_recall": 0.849906191369606,
+  "validation_macro_f1": 0.849906191369606,
+  "validation_runtime": 0.5473,
+  "validation_samples_per_second": 1947.76,
+  "validation_steps_per_second": 62.124
+}
