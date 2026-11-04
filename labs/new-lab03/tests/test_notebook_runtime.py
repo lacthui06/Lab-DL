@@ -4,6 +4,37 @@ from src.notebook_runtime import NotebookSession
 from src.utils.runs import ROOT, hash_file
 
 
+@pytest.mark.parametrize('incomplete_dedicated_clone', [False, True])
+def test_notebook_bootstrap_preserves_existing_clone_and_resolves_own_profile(tmp_path, monkeypatch, incomplete_dedicated_clone):
+    import json
+    working=tmp_path/'kaggle/working';working.mkdir(parents=True)
+    original=working/'Lab-DL';original.mkdir()
+    (original/'keep.txt').write_text('existing results')
+    dedicated=working/'Lab-DL-new-lab03'
+    if incomplete_dedicated_clone:
+        dedicated.mkdir();(dedicated/'keep.txt').write_text('preserve incomplete clone')
+    monkeypatch.chdir(working)
+    calls=[]
+    def clone(command, check):
+        calls.append(command)
+        config=__import__('pathlib').Path(command[-1])/'labs/new-lab03/config/frozen_trial.json'
+        config.parent.mkdir(parents=True)
+        config.write_text('{}')
+    monkeypatch.setattr('subprocess.run',clone)
+    for path in (ROOT/'notebooks').glob('*.ipynb'):
+        notebook=json.loads(path.read_text())
+        source=next(''.join(c['source']) for c in notebook['cells'] if 'REPO_REF = "new-lab03"' in ''.join(c['source']))
+        prefix=source.split('profile = json.loads',1)[0]
+        prefix=prefix.replace('Path("/kaggle/working")',f'Path({str(working)!r})')
+        namespace={};exec(prefix,namespace)
+        resolved=namespace['REPO']
+        assert resolved != original and (resolved/namespace['PROFILE']).is_file()
+        assert (original/'keep.txt').read_text()=='existing results'
+    assert all(command[command.index('--branch')+1]=='new-lab03' for command in calls)
+    if incomplete_dedicated_clone:
+        assert (dedicated/'keep.txt').read_text()=='preserve incomplete clone'
+
+
 def test_view_notebooks_show_saved_images_without_training_or_mutation(monkeypatch,tmp_path):
     import matplotlib.pyplot as plt
     from src.utils.runs import save_json

@@ -92,3 +92,5 @@ Source notebook mặc định prepare/train. Muốn xem lại kết quả, chọ
 | CUDA out of memory | Dừng, giảm batch trong config trước phiên train; ghi lại cấu hình |
 | View thiếu selection | Chạy prepare/train để tạo artifact trước khi view |
 | Không thấy ZIP | Refresh đúng gốc /kaggle/working, xem đường dẫn cell cuối |
+
+Notebook setup kiểm tra đúng `labs/new-lab03/config/frozen_trial.json`, không coi một thư mục clone bất kỳ là đủ. Trên Kaggle dùng clone riêng `/kaggle/working/Lab-DL-new-lab03`; nếu đường dẫn đó chưa đầy đủ, tạo clone có hậu tố riêng và bảo toàn dữ liệu hiện có.

@@ -1,5 +1,5 @@
 {
-  "tests_passed": 93,
+  "tests_passed": 14,
   "tests_failed": 0,
   "tests_skipped": 0,
   "full_training_executed": false,
@@ -16,8 +16,10 @@
     "early_stopping_patience": 2,
     "min_delta": 0.001
   },
-  "evidence": "outputs/verification/pytest.log",
+  "evidence": "outputs/verification/bootstrap_tests.log",
   "lab_directory": "labs/new-lab03",
   "module_imports": "lab-local src and scripts",
-  "local_links_verified": true
+  "local_links_verified": true,
+  "previous_full_suite_tests_passed": 93,
+  "test_scope": "notebook runtime, phases and Kaggle export after bootstrap fix"
 }
