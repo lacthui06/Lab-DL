@@ -1,4 +1,42 @@
 {
-  "active_runs": {},
-  "runs": []
+  "runs": [
+    {
+      "id": "20261104T103500Z_dataset_preview_313da035",
+      "kind": "dataset_preview",
+      "status": "completed"
+    },
+    {
+      "id": "20261104T103514Z_augmentation_preview_c78210d6",
+      "kind": "augmentation_preview",
+      "status": "completed"
+    },
+    {
+      "id": "20261104T110654Z_frozen_trial_00eccdd1",
+      "kind": "frozen_trial",
+      "status": "completed"
+    },
+    {
+      "id": "20261104T110637Z_exercise1_6d992d02",
+      "kind": "exercise1",
+      "status": "completed"
+    },
+    {
+      "id": "20261104T110646Z_exercise1_analysis_a061550c",
+      "kind": "exercise1_analysis",
+      "status": "completed"
+    },
+    {
+      "id": "20261104T112005Z_notebook_render_ee8417a2",
+      "kind": "notebook_render",
+      "status": "completed"
+    }
+  ],
+  "active_runs": {
+    "dataset_preview": "20261104T103500Z_dataset_preview_313da035",
+    "augmentation_preview": "20261104T103514Z_augmentation_preview_c78210d6",
+    "frozen_trial": "20261104T110654Z_frozen_trial_00eccdd1",
+    "exercise1": "20261104T110637Z_exercise1_6d992d02",
+    "exercise1_analysis": "20261104T110646Z_exercise1_analysis_a061550c",
+    "notebook_render": "20261104T112005Z_notebook_render_ee8417a2"
+  }
 }

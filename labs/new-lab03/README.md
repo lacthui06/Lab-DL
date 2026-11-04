@@ -2,7 +2,15 @@
 
 Thí nghiệm phân loại cảm xúc tiếng Anh trên Rotten Tomatoes bằng Hugging Face. Chạy từ pretrained base với ngân sách tối đa **3 epoch**, seed 42, regularization và early stopping theo validation loss.
 
-Chưa có kết quả full GPU cho thí nghiệm này. Hai notebook là bản sẵn sàng thực thi, không chứa cached outputs của lượt chạy khác. Accuracy, loss, threshold, thời gian và bộ nhớ chỉ được báo cáo sau Run All.
+Đã hoàn thành run Kaggle `20261104T110654Z_frozen_trial_00eccdd1`: **3/3 epoch**, checkpoint **epoch3**, threshold validation **0,5**. Test: **Accuracy82,18%, Binary F1 82,11%, Macro-F1 82,18%**, đúng **876/1.066** mẫu. Baseline TF-IDF: **78,99%**.
+
+- [Report hình/bảng/log](outputs/published/index.md), [EDA và feature artifacts](outputs/preparation/index.md).
+- [Phân tích kết quả](walkthrough_lab_03.md#3-kết-quả-bằng-chứng-và-hoàn-thành-báo-cáo).
+- [Kiến trúc hai model dạng text](outputs/published/architecture/model_architectures.txt).
+- [Accuracy chi tiết và generalization gap](outputs/published/result_analysis/learning_detail.png).
+- [Audit thực nghiệm](validation/final_review_audit.json), [selection](outputs/latest_report.json).
+
+Hai notebook có output inline dựng lại ở MODE=view từ artifact của chính run này; không phải một lượt train thêm. Mặc định source vẫn là prepare/train để tái lập; chọn MODE=view trước Run All nếu chỉ đọc lại hình và số liệu. Không cần GPU, tải dataset hoặc checkpoint để xem report.
 
 ## Hai notebook
 
@@ -87,4 +95,4 @@ Notebook01 có `lab03_preparation_<run_id>.zip`. Tải executed notebook của K
 - [Description](description_lab_03.md): đề bài, architecture, discussion và quyết định.
 - [Walkthrough](walkthrough_lab_03.md): phương pháp, lý do, cách đọc kết quả và gate trước kết luận.
 - [Kaggle runbook](KAGGLE_RUNBOOK.md): import, chạy, tải ZIP và xử lý lỗi.
-- [Trạng thái outputs](outputs/README.md): chưa có kết quả mô hình trước khi train.
+- [Trạng thái outputs](outputs/README.md): nguồn run và report đã xác minh.

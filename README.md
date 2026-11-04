@@ -29,7 +29,7 @@ Lab03 retains the completed five-epoch experiment. New Lab03 is a separate three
 - **Lab 01**: [FashionMNIST Classification with PyTorch](labs/lab01/README.md) — local experiments available; final PDF pending.
 - **Lab 02**: Upcoming
 - **Lab 03**: [Hugging Face Sentiment Analysis & Fine-tuning](labs/lab03/README.md) — completed five-epoch experiment.
-- **New Lab 03**: [Three-epoch sentiment experiment](labs/new-lab03/README.md) — separate notebooks, training and outputs.
+- **New Lab 03**: [Three-epoch sentiment experiment](labs/new-lab03/README.md) — verified three-epoch experiment; test accuracy82.18%, separate notebooks and artifacts.
 - **Lab 04**: Upcoming
 
 ---

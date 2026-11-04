@@ -42,4 +42,10 @@ def test_derived_report_checks_per_class_rates_loss_and_patience_without_mutatio
     assert stopping['patience_reached_at_budget'] is False
     assert stopping['counter_was_logged'] is False
     assert (tmp_path/'per_class_metrics.png').is_file()
+    detail=json.loads((tmp_path/'learning_detail.json').read_text())
+    history=json.loads((source/'epoch_history.json').read_text())
+    assert detail['source_run']==source.name
+    assert detail['epochs'][-1]['accuracy_gap_pp']==pytest.approx(
+        100*(history[-1]['train_accuracy']-history[-1]['validation_accuracy']))
+    assert (tmp_path/'learning_detail.png').is_file()
     assert {p.relative_to(source).as_posix():hash_file(p) for p in source.rglob('*') if p.is_file()}==before

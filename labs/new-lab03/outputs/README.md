@@ -1,13 +1,14 @@
-# Outputs — thí nghiệm 3 epoch
+# Outputs — thí nghiệm 3 epoch đã xác minh
 
-Chưa có kết quả full training. Không điền trước accuracy, loss, threshold, thời gian hoặc bộ nhớ.
+Model run: `20261104T110654Z_frozen_trial_00eccdd1`. Hoàn thành3epoch, checkpoint epoch3, validation threshold0,5. Test accuracy82,18%, Binary F182,11%; không thay đổi số đo hoặc bytes raw run.
 
-Khi thực thi notebook, mỗi run tạo thư mục riêng trong `runs/`. Các hình hiển thị inline được đọc từ chính PNG trong thư mục run. Sau modeling, `published/index.md` chứa hình, bảng, log, nguồn và SHA256 để dùng cho report.
+- [Published report](published/index.md): toàn bộ hình/bảng/log, nguồn và SHA256.
+- [EDA/feature preparation](preparation/index.md): quality, nhãn/độ dài, tokenization, TF-IDF và augmentation.
+- [Model selection](latest_report.json), [preparation selection](latest_preparation.json).
+- `runs/`: năm run nguồn đã kiểm tra manifest; checkpoint files được chủ động loại khỏi review ZIP.
+- `architecture/`: module tree dạng text từ pinned configuration; không phải bằng chứng reload weights tại máy review.
+- `imports/`: bundle manifests, archive hashes và import records.
+- `preflight/`:95tests trên Kaggle trước training; source commit a759119.
+- `verification/`: kiểm tra phần mềm sau khi nhập kết quả, khác kết quả huấn luyện.
 
-- `latest_preparation.json`: selection của phiên EDA đã hoàn thành.
-- `latest_report.json`: selection của phiên modeling đã hoàn thành.
-- `architecture/`: module tree dạng text và bảng tham số.
-- `preflight/`: log kiểm thử trước training.
-- `verification/`: bằng chứng kiểm tra phần mềm; không phải kết quả mô hình.
-
-Review ZIP chứa artifact/log; checkpoint ZIP chứa model/tokenizer/policy, lưu riêng.
+Review ZIP không có weights. Reload consistency đã được script kiểm trên Kaggle và lưu reload_check.json; người review không load lại weights không có trong ZIP. Giữ checkpoint ZIP riêng để inference/evaluate về sau.

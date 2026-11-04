@@ -1,0 +1,6 @@
+{
+  "run_id": "20261104T110654Z_frozen_trial_00eccdd1",
+  "weights_included": false,
+  "checkpoint_selection": "validation_loss",
+  "source_commit": "a7591193ad2017b26aaf32c8a1096c6465a0d79a"
+}

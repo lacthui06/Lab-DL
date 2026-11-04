@@ -109,6 +109,20 @@ class NotebookSession:
     def architectures(self):
         """In module tree dạng text; lưu riêng, không sửa artifact nguồn đã audit."""
         output = self.lab/'outputs/architecture/model_architectures.txt'
+        if self.mode == 'view':
+            # View chỉ đọc bằng chứng đã lưu, không tạo model/config thay cho run thật.
+            import hashlib
+            declared = self.read(output.parent/'manifest.json')
+            if set(declared) != {'model_architectures.txt', 'summary.json'}:
+                raise ValueError('Invalid architecture manifest')
+            for name, digest in declared.items():
+                if hashlib.sha256((output.parent/name).read_bytes()).hexdigest() != digest:
+                    raise ValueError('Architecture SHA256 mismatch')
+            from IPython.display import display
+            import pandas as pd
+            display(pd.DataFrame(self.read(output.with_name('summary.json'))['models']))
+            print(output.read_text(encoding='utf-8'))
+            return output
         output.parent.mkdir(parents=True, exist_ok=True)
         code = r'''
 import json, gc

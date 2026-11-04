@@ -204,8 +204,14 @@ Tiêu chí hoàn thành thực nghiệm: pipeline pass gates, có kết quả th
 
 ## 9. Trạng thái thực nghiệm và điều kiện hoàn thành
 
-Code sẵn sàng chạy từ pretrained base. Chưa có kết quả full GPU của thí nghiệm 3 epoch; notebook không chứa cached output của thí nghiệm khác. Không khẳng định hiệu năng hoặc mức overfitting trước khi có history/predictions/log.
+Thí nghiệm `20261104T110654Z_frozen_trial_00eccdd1` đã hoàn thành trên Kaggle TeslaT4. Hoàn thành3/3epoch, chọn epoch3 theo validation loss0,377385; quét19thresholds validation chọn0,5. Test accuracy82,18%, Binary F182,11%, Macro-F182,18%, loss0,414510. Số liệu được tái tính từ saved predictions; source33file khớp commit a759119.
 
-Báo cáo hoàn thành sau khi có review ZIP: kiểm tra integrity, official splits, augmentation thực tế, đúng optimizer/dropout, số epoch thực chạy, checkpoint minimum validation loss, threshold validation-only, test metrics, learning curves, time/sample và RAM/VRAM.
+Dataset giữ8530/1066/1066; augmentation thêm274mẫu cân bằng137/lớp, effective train8804. Không có missing/blank/invalid labels hoặc normalized overlap giữa các split trong audit exact-text. TF-IDF train-only có24083features,207847nonzeros. Max token length78 nên cutoff128 không cắt mẫu train nào.
+
+Cuối epoch3, train/validation accuracy83,60%/83,49%, gap0,109điểm phần trăm; loss0,369313/0,377385. Validation loss giảm cả3epoch. Chưa thấy dấu hiệu overfitting rõ trong cửa sổ này; không bảo đảm hết overfit hoặc cấu hình tối ưu. Dropout, decay, freeze và augmentation được đánh giá như một cấu hình kết hợp, không suy ra hiệu quả nhân quả của từng kỹ thuật.
+
+Hình, bảng và log đã có trong [published report](outputs/published/index.md), [preparation report](outputs/preparation/index.md); hai notebook hiển thị cùng artifact ở MODE=view. Source prepare/train vẫn sẵn sàng tạo run mới, không resume weights của run này.
+
+Review ZIP đã qua kiểm tra integrity, official splits, augmentation, optimizer/dropout, epoch/checkpoint, validation-only threshold, metrics, learning curves và resource telemetry. Không có checkpoint weights trong ZIP; local reviewer chỉ kiểm được manifest/probabilities và bản ghi reload trên Kaggle.
 
 Patience=2 được giữ cố định. Trong budget 3 epoch, cơ chế này có thể kích hoạt từ lần validation thứ ba; không thể kết thúc trước epoch3 khi đánh giá một lần mỗi epoch. Không đổi patience chỉ để tạo ra biểu hiện dừng sớm. Min_delta điều khiển patience, không thay quy tắc chọn checkpoint minimum loss.

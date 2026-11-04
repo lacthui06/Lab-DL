@@ -1,0 +1,19 @@
+{
+  "status": "passed",
+  "model_run": "20261104T110654Z_frozen_trial_00eccdd1",
+  "source_commit": "a7591193ad2017b26aaf32c8a1096c6465a0d79a",
+  "source_files_verified_against_commit": 33,
+  "source_hash_mismatches": [],
+  "preparation_manifest_entries_verified": 61,
+  "modeling_manifest_entries_verified": 170,
+  "raw_run_bytes_modified": false,
+  "weights_available_locally": false,
+  "kaggle_reload_record_weights_exact_match": true,
+  "same_augmentation_records_across_preparation_and_modeling": true,
+  "kaggle_preflight_tests": 95,
+  "kaggle_preflight_failures": 0,
+  "completed_epochs": 3,
+  "selected_epoch": 3,
+  "validation_threshold": 0.5,
+  "test_samples": 1066
+}

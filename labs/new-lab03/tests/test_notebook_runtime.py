@@ -4,6 +4,23 @@ from src.notebook_runtime import NotebookSession
 from src.utils.runs import ROOT, hash_file
 
 
+def test_view_architecture_reads_verified_text_without_instantiating_models(tmp_path, monkeypatch):
+    from src.utils.runs import save_json
+    folder=tmp_path/'labs/new-lab03/outputs/architecture';folder.mkdir(parents=True)
+    (folder/'model_architectures.txt').write_text('Verified module tree fixture')
+    save_json(folder/'summary.json',{'models':[{'role':'exercise1'},{'role':'exercise2'}]})
+    save_json(folder/'manifest.json',{name:hash_file(folder/name) for name in ('model_architectures.txt','summary.json')})
+    save_json(folder.parent/'latest_report.json',{'runs':{'frozen_trial':'selected-fixture'}})
+    session=NotebookSession(tmp_path,mode='view')
+    monkeypatch.setattr(session,'run',lambda *a,**kw:pytest.fail('View must not instantiate models'))
+    monkeypatch.setattr('IPython.display.display',lambda *a:None)
+    before={p.name:hash_file(p) for p in folder.iterdir()}
+    assert session.architectures()==folder/'model_architectures.txt'
+    assert before=={p.name:hash_file(p) for p in folder.iterdir()}
+    (folder/'model_architectures.txt').write_text('tampered')
+    with pytest.raises(ValueError,match='SHA256'):session.architectures()
+
+
 @pytest.mark.parametrize('incomplete_dedicated_clone', [False, True])
 def test_notebook_bootstrap_preserves_existing_clone_and_resolves_own_profile(tmp_path, monkeypatch, incomplete_dedicated_clone):
     import json

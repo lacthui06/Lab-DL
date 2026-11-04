@@ -1,0 +1,8 @@
+{
+  "source_run": "20261104T110637Z_exercise1_6d992d02",
+  "source_manifest_sha256": "5649eb8cce972aeaee6ea103dd553b7e5a67a832683a03e17cfec3e5f59fb192",
+  "analysis_code": {
+    "analysis.py": "40c77b277b44f5bdac1d7120a817ad9010e868508295ea205e43b7e3659a855c",
+    "thresholds.py": "8c732600ab1b647e05f24d6869d0a000e5b5a432f9f9cf34fc4b26d1e949a677"
+  }
+}

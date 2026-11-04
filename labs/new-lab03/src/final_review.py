@@ -144,6 +144,28 @@ def write_results_analysis(run, output):
     save_json(output/'results_summary.json',summary)
     save_json(output/'per_class_metrics.json',metrics)
     save_json(output/'early_stopping_replay.json',stopping)
+    detail=[{'epoch':row['epoch'],'train_accuracy_percent':100*row['train_accuracy'],
+        'validation_accuracy_percent':100*row['validation_accuracy'],
+        'accuracy_gap_pp':100*(row['train_accuracy']-row['validation_accuracy']),
+        'loss_gap':row['validation_loss']-row['train_loss_eval']} for row in history]
+    save_json(output/'learning_detail.json',{'source_run':run.name,
+        'source_manifest_sha256':hash_file(run/'manifest.json'),'epochs':detail,
+        'accuracy_scope':'both cohorts evaluated in eval mode; train includes augmentation'})
+    fig,axes=plt.subplots(1,2,figsize=(12,4))
+    epochs=[row['epoch'] for row in detail]
+    values=[row[key] for row in detail for key in ('train_accuracy_percent','validation_accuracy_percent')]
+    for key,label in [('train_accuracy_percent','Train (eval mode)'),('validation_accuracy_percent','Validation')]:
+        axes[0].plot(epochs,[row[key] for row in detail],marker='o',label=label)
+    axes[0].set(xlabel='Epoch',ylabel='Accuracy (%)',title='Accuracy detail (zoomed axis)',
+        xticks=epochs,ylim=(max(0,min(values)-.5),min(100,max(values)+.5)))
+    axes[0].legend()
+    axes[1].plot(epochs,[row['accuracy_gap_pp'] for row in detail],marker='o',label='Train - validation')
+    axes[1].axhline(0,color='gray',linestyle='--')
+    axes[1].set(xlabel='Epoch',ylabel='Accuracy gap (percentage points)',xticks=epochs,
+        title='Gap alone does not prove absence of overfitting')
+    axes[1].legend()
+    for ax in axes:ax.grid(alpha=.2)
+    finish(fig,output/'learning_detail.png')
     fig,axes=plt.subplots(1,2,figsize=(12,4));x=np.arange(2)
     for i,key in enumerate(('precision','recall','f1')):
         axes[0].bar(x+(i-1)*.24,[100*r[key] for r in metrics],width=.24,label=key)

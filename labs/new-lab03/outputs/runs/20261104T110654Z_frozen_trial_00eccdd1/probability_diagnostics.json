@@ -1,0 +1,21 @@
+{
+  "roc_auc": 0.8957157792100363,
+  "average_precision": 0.9039089129007988,
+  "brier_score": 0.12981390087356887,
+  "confidence_ece": 0.03202628323329545,
+  "nll": 0.41451507721870173,
+  "threshold": 0.5,
+  "selection_split": "validation",
+  "bootstrap_95_percentile_ci": {
+    "accuracy": [
+      0.799249530956848,
+      0.8442776735459663
+    ],
+    "macro_f1": [
+      0.7992318632420863,
+      0.8442639686831137
+    ]
+  },
+  "bootstrap_repeats": 2000,
+  "ci_scope": "fixed model, fixed threshold, stratified test sampling; excludes training-seed uncertainty"
+}

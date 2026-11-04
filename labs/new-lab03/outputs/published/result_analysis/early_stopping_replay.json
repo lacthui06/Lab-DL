@@ -1,0 +1,29 @@
+{
+  "source": "replay of Transformers 4.48.3 callback using config and epoch_history; not a recorded callback counter",
+  "counter_was_logged": false,
+  "epochs": [
+    {
+      "epoch": 1,
+      "validation_loss": 0.3942464590072632,
+      "previous_best_loss": null,
+      "improved_beyond_min_delta": true,
+      "patience_counter": 0
+    },
+    {
+      "epoch": 2,
+      "validation_loss": 0.3801262080669403,
+      "previous_best_loss": 0.3942464590072632,
+      "improved_beyond_min_delta": true,
+      "patience_counter": 0
+    },
+    {
+      "epoch": 3,
+      "validation_loss": 0.3773854374885559,
+      "previous_best_loss": 0.3801262080669403,
+      "improved_beyond_min_delta": true,
+      "patience_counter": 0
+    }
+  ],
+  "enabled": true,
+  "patience_reached_at_budget": false
+}

@@ -1,27 +1,36 @@
 {
-  "tests_passed": 95,
+  "tests_passed": 96,
   "tests_failed": 0,
   "tests_skipped": 0,
-  "test_scope": "full labs/new-lab03/tests suite",
+  "test_scope": "full labs/new-lab03/tests suite after artifact import/report changes",
   "test_evidence": "outputs/verification/pytest.log",
-  "junit_evidence": "outputs/verification/pytest.xml",
-  "full_gpu_training_executed": false,
-  "results_status": "pending_training",
-  "live_github_clone_verified": true,
-  "lab_local_imports_verified": true,
-  "bootstrap_handles_existing_and_incomplete_clones": true,
-  "notebook_cached_outputs": 0,
-  "notebook_defaults": {
-    "01": "prepare/cpu",
-    "02": "train/cuda"
-  },
-  "profile": {
-    "max_epochs": 3,
-    "early_stopping_patience": 2,
-    "min_delta": 0.001
-  },
-  "notebook_sha256": {
-    "02_modeling.ipynb": "dd9fcbb8b803ebda35c766ebdc72694dd195a9eb763b8e3a714c6611b17ed1d8",
-    "01_eda_preprocessing_feature_engineering.ipynb": "c671112cd7d90611c266e5732c7947ad0a34c17d18922df620990b19e10e2e02"
+  "full_gpu_training_executed_here": false,
+  "kaggle_training_completed": true,
+  "kaggle_preflight_tests_passed": 95,
+  "source_run": "20261104T110654Z_frozen_trial_00eccdd1",
+  "requested_epochs": 3,
+  "completed_epochs": 3,
+  "selected_epoch": 3,
+  "threshold": 0.5,
+  "test_accuracy": 0.8217636022514071,
+  "results_status": "verified",
+  "raw_run_bytes_modified": false,
+  "weights_loaded_locally": false,
+  "local_links_verified": true,
+  "notebooks": {
+    "02_modeling.ipynb": {
+      "cells": 26,
+      "inline_pngs": 18,
+      "render_mode": "view",
+      "full_training_executed_here": false,
+      "sha256": "13114d919e1c1233b830f4952984849f2571530d7f50b5e0608e76e9a5069e6c"
+    },
+    "01_eda_preprocessing_feature_engineering.ipynb": {
+      "cells": 22,
+      "inline_pngs": 12,
+      "render_mode": "view",
+      "full_training_executed_here": false,
+      "sha256": "2c722e4167f8d9abc6443446d4c810dc49c5f7573923576507b0f16ded2d2ff2"
+    }
   }
 }

@@ -1,0 +1,44 @@
+[
+  {
+    "epoch": 1,
+    "train_accuracy": 0.8236029077691959,
+    "validation_accuracy": 0.8292682926829268,
+    "train_loss": 0.39042335748672485,
+    "validation_loss": 0.3942464590072632,
+    "train_ms_per_sample": 1.8231276175601974,
+    "epoch_pipeline_ms_per_train_sample": 2.295659726715131,
+    "ram_peak_rss_mib": 1554.3125,
+    "ram_mib_per_batch_slot": 97.14453125,
+    "vram_peak_allocated_mib": 567.46533203125,
+    "vram_peak_reserved_mib": 638.0,
+    "vram_mib_per_batch_slot": 35.466583251953125
+  },
+  {
+    "epoch": 2,
+    "train_accuracy": 0.8348477964561563,
+    "validation_accuracy": 0.8302063789868668,
+    "train_loss": 0.3722260594367981,
+    "validation_loss": 0.3801262080669403,
+    "train_ms_per_sample": 1.766138535892778,
+    "epoch_pipeline_ms_per_train_sample": 2.2455348451840007,
+    "ram_peak_rss_mib": 1732.78515625,
+    "ram_mib_per_batch_slot": 108.299072265625,
+    "vram_peak_allocated_mib": 567.46533203125,
+    "vram_peak_reserved_mib": 638.0,
+    "vram_mib_per_batch_slot": 35.466583251953125
+  },
+  {
+    "epoch": 3,
+    "train_accuracy": 0.8359836437982735,
+    "validation_accuracy": 0.8348968105065666,
+    "train_loss": 0.36931297183036804,
+    "validation_loss": 0.3773854374885559,
+    "train_ms_per_sample": 1.8243560164697863,
+    "epoch_pipeline_ms_per_train_sample": 2.308352300999553,
+    "ram_peak_rss_mib": 1829.0390625,
+    "ram_mib_per_batch_slot": 114.31494140625,
+    "vram_peak_allocated_mib": 567.46533203125,
+    "vram_peak_reserved_mib": 638.0,
+    "vram_mib_per_batch_slot": 35.466583251953125
+  }
+]

@@ -1,0 +1,7 @@
+Run: 20261104T103500Z_dataset_preview_313da035
+Generating train split:   0%|          | 0/8530 [00:00<?, ? examples/s]Generating train split: 100%|##########| 8530/8530 [00:00<00:00, 425101.75 examples/s]
+Generating validation split:   0%|          | 0/1066 [00:00<?, ? examples/s]Generating validation split: 100%|##########| 1066/1066 [00:00<00:00, 300277.24 examples/s]
+Generating test split:   0%|          | 0/1066 [00:00<?, ? examples/s]Generating test split: 100%|##########| 1066/1066 [00:00<00:00, 354907.77 examples/s]
+Official splits: {'train': 8530, 'validation': 1066, 'test': 1066}
+Preprocessing: {'train_samples': 8530, 'fitted_split': 'train', 'token_quantiles': {'0.5': 27.0, '0.9': 43.0, '0.95': 47.0, '0.99': 56.0, '1.0': 78.0}, 'truncation_rates': {'64': 0.0007033997655334115, '96': 0.0, '128': 0.0, '256': 0.0}, 'configured_max_length': 128, 'preserve_negation_punctuation': True, 'normalized_train_conflicting_label_groups': 0}
+Train TF-IDF shape: [8530, 24083]

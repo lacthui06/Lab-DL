@@ -1,0 +1,19 @@
+{
+  "requested_epochs": 3,
+  "completed_epochs": 3.0,
+  "early_stopping": true,
+  "stopped_early": false,
+  "early_stopping_settings": {
+    "enabled": true,
+    "patience": 2,
+    "min_delta": 0.001,
+    "monitor": "validation_loss"
+  },
+  "checkpoint_selection_metric": "validation_loss",
+  "selected_epoch": 3,
+  "best_step": 1653,
+  "best_validation_loss": 0.3773854374885559,
+  "global_step": 1653,
+  "amp_skipped_optimizer_steps": 2,
+  "test_used_for_selection": false
+}

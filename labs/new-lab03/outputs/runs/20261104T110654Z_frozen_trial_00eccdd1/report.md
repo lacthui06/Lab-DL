@@ -1,0 +1,72 @@
+# Frozen DistilBERT trial
+
+Run: `20261104T110654Z_frozen_trial_00eccdd1`
+
+Train completed 3/3 epochs. Best checkpoint: epoch 3 (validation loss).
+
+Embedding and first 4 encoder layers frozen.
+Encoder LR 5e-06; head LR 2e-05.
+
+Threshold: 0.5 (validation Macro-F1).
+
+This configuration is a hypothesis, not a guaranteed improvement.
+One seed only; no causal claim about individual regularization techniques.
+
+```json
+[
+  {
+    "model": "TF-IDF",
+    "threshold": 0.5,
+    "accuracy": 0.7898686679174484,
+    "precision": 0.7920604914933838,
+    "recall": 0.7861163227016885,
+    "specificity": 0.7936210131332082,
+    "FPR": 0.20637898686679174,
+    "binary_f1": 0.7890772128060264,
+    "macro_f1": 0.7898657092067516,
+    "TN": 423,
+    "FP": 110,
+    "FN": 114,
+    "TP": 419,
+    "negative_support": 533,
+    "positive_support": 533,
+    "sample_count": 1066
+  },
+  {
+    "model": "Frozen DistilBERT threshold 0.5",
+    "threshold": 0.5,
+    "accuracy": 0.8217636022514071,
+    "precision": 0.8241965973534972,
+    "recall": 0.8180112570356473,
+    "specificity": 0.8255159474671669,
+    "FPR": 0.17448405253283303,
+    "binary_f1": 0.8210922787193974,
+    "macro_f1": 0.8217610926307267,
+    "TN": 440,
+    "FP": 93,
+    "FN": 97,
+    "TP": 436,
+    "negative_support": 533,
+    "positive_support": 533,
+    "sample_count": 1066
+  },
+  {
+    "model": "Frozen DistilBERT validation threshold",
+    "threshold": 0.5,
+    "accuracy": 0.8217636022514071,
+    "precision": 0.8241965973534972,
+    "recall": 0.8180112570356473,
+    "specificity": 0.8255159474671669,
+    "FPR": 0.17448405253283303,
+    "binary_f1": 0.8210922787193974,
+    "macro_f1": 0.8217610926307267,
+    "TN": 440,
+    "FP": 93,
+    "FN": 97,
+    "TP": 436,
+    "negative_support": 533,
+    "positive_support": 533,
+    "sample_count": 1066
+  }
+]
+```

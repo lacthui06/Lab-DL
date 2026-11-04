@@ -1,0 +1,8 @@
+{
+  "checkpoint_selection_metric": "validation_loss",
+  "selected_epoch": 3,
+  "threshold": 0.5,
+  "selection_split": "validation",
+  "weights_sha256": "abfc53bb1e48a4543cb7b8920853460ddfcb70b1791e082149180513f3d2fc24",
+  "test_used_for_selection": false
+}

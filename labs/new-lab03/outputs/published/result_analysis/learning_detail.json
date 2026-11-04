@@ -1,0 +1,28 @@
+{
+  "source_run": "20261104T110654Z_frozen_trial_00eccdd1",
+  "source_manifest_sha256": "1f11ec6845e6badb10cfedcc2d1d5ba946b0745477aed3d8d9abb55fd2b570a8",
+  "epochs": [
+    {
+      "epoch": 1,
+      "train_accuracy_percent": 82.36029077691958,
+      "validation_accuracy_percent": 82.92682926829268,
+      "accuracy_gap_pp": -0.566538491373092,
+      "loss_gap": 0.00382310152053833
+    },
+    {
+      "epoch": 2,
+      "train_accuracy_percent": 83.48477964561563,
+      "validation_accuracy_percent": 83.02063789868667,
+      "accuracy_gap_pp": 0.4641417469289477,
+      "loss_gap": 0.007900148630142212
+    },
+    {
+      "epoch": 3,
+      "train_accuracy_percent": 83.59836437982734,
+      "validation_accuracy_percent": 83.48968105065666,
+      "accuracy_gap_pp": 0.10868332917068901,
+      "loss_gap": 0.008072465658187866
+    }
+  ],
+  "accuracy_scope": "both cohorts evaluated in eval mode; train includes augmentation"
+}

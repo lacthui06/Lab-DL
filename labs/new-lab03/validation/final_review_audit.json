@@ -1,0 +1,42 @@
+{
+  "status": "passed",
+  "run_id": "20261104T110654Z_frozen_trial_00eccdd1",
+  "manifest": {
+    "verified_files": 62,
+    "omitted_checkpoint_files": [
+      "best_model/config.json",
+      "best_model/decision_threshold.json",
+      "best_model/model.safetensors",
+      "best_model/special_tokens_map.json",
+      "best_model/tokenizer.json",
+      "best_model/tokenizer_config.json",
+      "best_model/training_args.bin",
+      "best_model/training_config.json",
+      "best_model/vocab.txt",
+      "checkpoints/checkpoint-1102/config.json",
+      "checkpoints/checkpoint-1102/model.safetensors",
+      "checkpoints/checkpoint-1102/special_tokens_map.json",
+      "checkpoints/checkpoint-1102/tokenizer.json",
+      "checkpoints/checkpoint-1102/tokenizer_config.json",
+      "checkpoints/checkpoint-1102/trainer_state.json",
+      "checkpoints/checkpoint-1102/training_args.bin",
+      "checkpoints/checkpoint-1102/vocab.txt",
+      "checkpoints/checkpoint-1653/config.json",
+      "checkpoints/checkpoint-1653/model.safetensors",
+      "checkpoints/checkpoint-1653/special_tokens_map.json",
+      "checkpoints/checkpoint-1653/tokenizer.json",
+      "checkpoints/checkpoint-1653/tokenizer_config.json",
+      "checkpoints/checkpoint-1653/trainer_state.json",
+      "checkpoints/checkpoint-1653/training_args.bin",
+      "checkpoints/checkpoint-1653/vocab.txt"
+    ],
+    "omitted_raw_logs": [],
+    "checkpoint_available_locally": false
+  },
+  "selected_epoch": 3,
+  "threshold": 0.5,
+  "test_samples": 1066,
+  "weights_loaded_locally": false,
+  "threshold_reselected_on_test": false,
+  "test_used_for_selection": false
+}
