@@ -1,4 +1,35 @@
 {
-  "active_runs": {},
-  "runs": []
+  "active_runs": {
+    "frozen_trial": "20261103T110437Z_frozen_trial_b021d6eb",
+    "exercise1": "20261103T110425Z_exercise1_f9b5a257",
+    "exercise1_analysis": "20261103T110429Z_exercise1_analysis_f2706089",
+    "notebook_render": "20261103T124802Z_notebook_render_2e7e5fb2"
+  },
+  "runs": [
+    {
+      "id": "20261103T110437Z_frozen_trial_b021d6eb",
+      "kind": "frozen_trial",
+      "status": "completed"
+    },
+    {
+      "id": "20261103T110425Z_exercise1_f9b5a257",
+      "kind": "exercise1",
+      "status": "completed"
+    },
+    {
+      "id": "20261103T110429Z_exercise1_analysis_f2706089",
+      "kind": "exercise1_analysis",
+      "status": "completed"
+    },
+    {
+      "id": "20261103T120307Z_notebook_render_0220937b",
+      "kind": "notebook_render",
+      "status": "completed"
+    },
+    {
+      "id": "20261103T124802Z_notebook_render_2e7e5fb2",
+      "kind": "notebook_render",
+      "status": "completed"
+    }
+  ]
 }

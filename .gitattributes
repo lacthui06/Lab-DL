@@ -21,3 +21,15 @@ labs/lab03/outputs/preparation/** -text
 
 # Raw console logs trong publication giữ nguyên dòng trắng của bằng chứng nguồn.
 labs/lab03/outputs/published/logs/** -whitespace
+
+# New Lab03: preserve artifact bytes independently.
+labs/new-lab03/outputs/runs/** -text
+labs/new-lab03/notebooks/*.ipynb text eol=lf
+labs/new-lab03/outputs/runs/*/console.log -whitespace
+labs/new-lab03/outputs/published/** -text
+labs/new-lab03/outputs/imports/** -text
+labs/new-lab03/outputs/preflight/** -text
+labs/new-lab03/outputs/runs/*/study_report.md -whitespace
+labs/new-lab03/outputs/architecture/** -text
+labs/new-lab03/outputs/preparation/** -text
+labs/new-lab03/outputs/published/logs/** -whitespace

@@ -11,7 +11,7 @@ from labs.lab03.src.evidence import read_json, verify_manifest
 from labs.lab03.src.utils.runs import ROOT, hash_file, save_json
 
 JSON_FILES = {
-    "baseline_architecture.txt", "model_architecture.txt", "artifact_availability.json", "config.json", "test_metrics.json", "test_threshold_metrics.json", "test_runtime_metrics.json",
+    "artifact_availability.json", "config.json", "test_metrics.json", "test_threshold_metrics.json", "test_runtime_metrics.json",
     "train_metrics.json", "trainer_history.json", "data_statistics.json", "provenance.json",
     "reload_check.json", "decision_threshold.json", "validation_metrics.json", "validation_runtime_metrics.json",
     "summary.json", "analysis_summary.json", "tables.json", "threshold_scan.json", "selected_threshold.json",

@@ -1,0 +1,23 @@
+{
+  "artifact_run": "20261103T124802Z_notebook_render_2e7e5fb2",
+  "notebooks": [
+    {
+      "notebook": "01_eda_preprocessing_feature_engineering.ipynb",
+      "mode": "view",
+      "training_executed": false,
+      "notebook_sha256": "b6c537804dac86257d1804638e4edd1379e0773a3666f234a23aa5cf266d102a",
+      "errors": 0,
+      "executed_code_cells": 10,
+      "inline_pngs": 12
+    },
+    {
+      "notebook": "02_modeling.ipynb",
+      "mode": "view",
+      "training_executed": false,
+      "notebook_sha256": "5791e44be01f105a6bf3de65ca735a1c2aeb69da4d7c22d190f3b314843f3edc",
+      "errors": 0,
+      "executed_code_cells": 12,
+      "inline_pngs": 17
+    }
+  ]
+}

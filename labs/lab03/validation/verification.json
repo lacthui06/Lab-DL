@@ -1,20 +1,38 @@
 {
-  "tests_passed": 93,
-  "tests_failed": 0,
-  "tests_skipped": 0,
-  "full_training_executed": false,
-  "results_status": "pending_training",
-  "notebook_code_ast_valid": true,
-  "notebook_cached_outputs": 0,
-  "notebook_defaults": {
-    "01": "prepare/cpu",
-    "02": "train/cuda"
-  },
-  "tests_use_independent_temporary_fixtures": true,
-  "training_profile": {
-    "max_epochs": 3,
-    "early_stopping_patience": 2,
-    "min_delta": 0.001
-  },
-  "evidence": "outputs/verification/pytest.log"
+  "tests": 93,
+  "failures": 0,
+  "errors": 0,
+  "skipped": 0,
+  "runtime_seconds": 20.522,
+  "workflow": "CPU tiny fixtures, SHA256/source and saved Kaggle prediction audit; no full local training",
+  "test_log": "outputs/verification/pytest.log",
+  "junit": "outputs/verification/pytest.xml",
+  "one_batch_sanity": "loss <0.05 and 100% fixture accuracy; disposable fixture model",
+  "training_run": "20261103T110437Z_frozen_trial_b021d6eb",
+  "source_commit": "c02effea2f08e630c37775712cfbc9ac7e6faa8e",
+  "training_source_files_verified": 44,
+  "original_bundle_members_verified": 158,
+  "original_nonpublished_artifacts_preserved": 83,
+  "resource_records_verified": 6,
+  "published_files_verified": 81,
+  "notebooks": [
+    {
+      "name": "01_eda_preprocessing_feature_engineering.ipynb",
+      "inline_pngs": 12,
+      "sha256": "b6c537804dac86257d1804638e4edd1379e0773a3666f234a23aa5cf266d102a",
+      "errors": 0,
+      "training_executed_here": false
+    },
+    {
+      "name": "02_modeling.ipynb",
+      "inline_pngs": 17,
+      "sha256": "5791e44be01f105a6bf3de65ca735a1c2aeb69da4d7c22d190f3b314843f3edc",
+      "errors": 0,
+      "training_executed_here": false
+    }
+  ],
+  "relative_links_verified": 39,
+  "gpu_weights_loaded_locally": false,
+  "full_training_repeated": false,
+  "early_stopping_counter_source": "recomputed from config/history; not logged counter"
 }

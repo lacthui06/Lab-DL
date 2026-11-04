@@ -6,12 +6,12 @@ from labs.lab03.src.final_review import audit_frozen_trial
 from labs.lab03.src.utils.runs import ROOT, hash_file
 
 
-def test_current_bundle_recomputes_metrics_and_detects_tampering(tmp_path, audit_trial, exercise_run):
-    source = audit_trial
-    assert audit_exercise1(exercise_run)['compared_sentences'] == 3
+def test_current_bundle_recomputes_metrics_and_detects_tampering(tmp_path):
+    source = selected_run('frozen_trial')
+    assert audit_exercise1(selected_run('exercise1'))['compared_sentences'] == 3
     audit = audit_frozen_trial(source)
     assert audit['test_samples'] == 1066
-    assert audit['selected_epoch'] == 3 and 0 < audit['threshold'] < 1
+    assert audit['selected_epoch'] == 5 and audit['threshold'] == .45
     target = tmp_path/'run'
     shutil.copytree(source, target)
     path = target/'test_comparison.json'

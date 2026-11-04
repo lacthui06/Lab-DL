@@ -7,8 +7,8 @@ from labs.lab03.src.analysis import ensure_exercise1_analysis
 from labs.lab03.src.evidence import verify_manifest
 
 
-def test_exercise1_visuals_persist_tables_and_comparison(tmp_path, exercise_run):
-    source = exercise_run
+def test_exercise1_visuals_persist_tables_and_comparison(tmp_path):
+    source = ROOT / "outputs/runs/20261103T110425Z_exercise1_f9b5a257"
     out = ensure_exercise1_analysis(source, root=tmp_path)
     summary = json.loads((out / "summary.json").read_text())
     assert len(summary["tokenization"]) == 8
@@ -18,10 +18,10 @@ def test_exercise1_visuals_persist_tables_and_comparison(tmp_path, exercise_run)
     assert ensure_exercise1_analysis(source, root=tmp_path) == out
 
 
-def test_exercise1_visuals_support_more_than_three_sentences(tmp_path, exercise_run):
+def test_exercise1_visuals_support_more_than_three_sentences(tmp_path):
     import shutil
     source = tmp_path / "source"
-    shutil.copytree(exercise_run, source)
+    shutil.copytree(ROOT / "outputs/runs/20261103T110425Z_exercise1_f9b5a257", source)
     path = source / "predictions.json"
     predictions = json.loads(path.read_text())
     predictions["pipeline"].append(dict(predictions["pipeline"][0]))

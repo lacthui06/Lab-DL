@@ -38,13 +38,13 @@ def test_reject_invalid_freezing(count):
         configure_frozen_optimizer(model, config)
 
 
-def test_discriminative_optimizer_trainer_three_tiny_epochs(tiny, tmp_path):
+def test_discriminative_optimizer_trainer_five_tiny_epochs(tiny, tmp_path):
     import json
     from datasets import Dataset, DatasetDict
     from labs.lab03.src.training.trainer import make_trainer
     model, tokenizer = tiny
     cfg = dict(freeze_layers=0, learning_rate=2e-6, head_learning_rate=1e-5,
-        weight_decay=.1, num_train_epochs=3, batch_size=8, eval_batch_size=8,
+        weight_decay=.1, num_train_epochs=5, batch_size=8, eval_batch_size=8,
         warmup_ratio=.1, fp16=False, seed=42, eval_strategy='epoch',
         metric_for_best_model='loss', epoch_console_summary=True, save_only_model=True)
     optimizer, _ = configure_frozen_optimizer(model, cfg)
@@ -54,7 +54,7 @@ def test_discriminative_optimizer_trainer_three_tiny_epochs(tiny, tmp_path):
     trainer.optimizer = optimizer
     trainer.train()
     rows = json.loads((tmp_path/'epoch_history.json').read_text())
-    assert [r['epoch'] for r in rows] == list(range(1, 4))
+    assert [r['epoch'] for r in rows] == list(range(1, 6))
     best = min(rows, key=lambda r: r['validation_loss'])
     assert trainer.state.best_model_checkpoint.endswith('checkpoint-' + str(best['step']))
     assert not trainer.args.greater_is_better
@@ -80,11 +80,9 @@ def test_frozen_trial_artifacts_and_review_zip(tiny, tmp_path, monkeypatch):
         fp16=False, augmentation={'enabled': False})
     out = script.run(cfg, root=tmp_path, allow_cpu_fixture=True)
     selection = json.loads((out/'selection_summary.json').read_text())
-    assert 1 <= selection['completed_epochs'] <= 3 and not selection['test_used_for_selection']
-    assert selection['requested_epochs']==3 and selection['early_stopping'] is True
+    assert 1 <= selection['completed_epochs'] <= 5 and not selection['test_used_for_selection']
+    assert selection['requested_epochs']==5 and selection['early_stopping'] is True
     assert (out/'learning_curves.png').is_file()
-    assert 'DistilBertForSequenceClassification' in (out/'model_architecture.txt').read_text()
-    assert 'TfidfVectorizer' in (out/'baseline_architecture.txt').read_text()
     assert (out/'validation_threshold_curves.png').is_file()
     assert (out/'sample_predictions.png').is_file()
     assert json.loads((out/'sample_predictions.json').read_text())
@@ -93,14 +91,12 @@ def test_frozen_trial_artifacts_and_review_zip(tiny, tmp_path, monkeypatch):
     assert [r['epoch'] for r in resources]==list(range(1,int(selection['completed_epochs'])+1))
     assert all(r['ms_per_sample']>0 and r['ram_peak_rss_mib']>0 for r in resources)
     assert all(r['vram_peak_allocated_mib'] is None for r in resources)
-    assert (out/'performance.png').is_file() and (out/'model_architecture.txt').is_file()
+    assert (out/'performance.png').is_file() and (out/'model_architecture.png').is_file()
     bundle = tmp_path/'outputs'/f'lab03_review_{out.name}.zip'
     with zipfile.ZipFile(bundle) as z:
         manifest = json.loads(z.read('bundle_manifest.json'))
         assert all(hashlib.sha256(z.read(n)).hexdigest() == h for n,h in manifest.items())
         assert not any('/best_model/' in n or '/checkpoints/' in n for n in z.namelist())
-        assert any(n.endswith('/model_architecture.txt') for n in manifest)
-        assert any(n.endswith('/baseline_architecture.txt') for n in manifest)
     checkpoint = tmp_path/'outputs'/f'lab03_checkpoint_{out.name}.zip'
     with zipfile.ZipFile(checkpoint) as z:
         assert 'best_model/model.safetensors' in z.namelist()

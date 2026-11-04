@@ -18,7 +18,7 @@
     "batch_size": 16,
     "eval_batch_size": 32,
     "learning_rate": 5e-06,
-    "num_train_epochs": 3,
+    "num_train_epochs": 5,
     "weight_decay": 0.1,
     "warmup_ratio": 0.1,
     "fp16": true,
@@ -53,8 +53,9 @@
     "early_stopping": {
       "enabled": true,
       "patience": 2,
-      "min_delta": 0.001
+      "min_delta": 0.001,
+      "monitor": "validation_loss"
     }
   },
-  "experiment_name": "three_epoch_binary_sentiment"
+  "experiment_name": "frozen_regularized_five_epoch_early_stopping"
 }

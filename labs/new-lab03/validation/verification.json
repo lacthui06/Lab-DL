@@ -1,0 +1,23 @@
+{
+  "tests_passed": 93,
+  "tests_failed": 0,
+  "tests_skipped": 0,
+  "full_training_executed": false,
+  "results_status": "pending_training",
+  "notebook_code_ast_valid": true,
+  "notebook_cached_outputs": 0,
+  "notebook_defaults": {
+    "01": "prepare/cpu",
+    "02": "train/cuda"
+  },
+  "tests_use_independent_temporary_fixtures": true,
+  "training_profile": {
+    "max_epochs": 3,
+    "early_stopping_patience": 2,
+    "min_delta": 0.001
+  },
+  "evidence": "outputs/verification/pytest.log",
+  "lab_directory": "labs/new-lab03",
+  "module_imports": "lab-local src and scripts",
+  "local_links_verified": true
+}

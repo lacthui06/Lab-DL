@@ -21,8 +21,6 @@
 
 Đề không bắt buộc một mức accuracy cụ thể. Các quyết định dataset, baseline, architecture, regularization, threshold, resource monitoring và artifact dưới đây làm rõ thiết kế thực nghiệm.
 
-Thí nghiệm chạy **tối đa 3 epoch**, early stopping theo validation loss. Kết quả chỉ được ghi sau khi thực thi, không đặt trước accuracy hoặc threshold.
-
 ## 2. Phạm vi và sản phẩm
 
 Hai notebook có roadmap/module tham chiếu ở đầu:
@@ -141,7 +139,7 @@ Synthetic labels kế thừa parent là weak labels, không coi là ground truth
 ### D09 — Freeze và discriminative LR?
 
 **Thảo luận:** corpus nhỏ có thể gây thay đổi quá mức pretrained weights; head mới cần học nhanh hơn.
-**Quyết định:** freeze embeddings và4 blocks đầu; encoderLR5e-6, headLR2e-5.
+**Quyết định:** freeze embeddings và4blocks đầu; encoderLR5e-6, headLR2e-5.
 **Kiểm chứng:** requires_grad/optimizer groups, trainable parameters và LR history.
 
 ### D10 — Regularization nào?
@@ -152,11 +150,11 @@ Synthetic labels kế thừa parent là weak labels, không coi là ground truth
 
 ### D11 — Ngân sách epoch và early stopping?
 
-**Quyết định:** tối đa 3 epoch, evaluate/save mỗi epoch; early stopping theo validation loss, patience2/min_delta0.001.
+**Quyết định:** tối đa5epoch, evaluate/save mỗi epoch; early stopping theo validation loss, patience2/min_delta0.001.
 **Lý do:** dừng khi validation không đủ cải thiện để tiết kiệm compute và hạn chế train tiếp không hữu ích.
 **Kiểm chứng:** requested/completed/stopped_early, consecutive epoch history, checkpoint và log.
 
-Min_delta điều khiển patience; checkpoint vẫn chọn loss thấp nhất thực tế. Evaluate(train) không được tính thành validation failure. Biểu đồ phản ánh đúng số epoch thực chạy; với budget3/patience2, lượt hoàn thành bình thường đi tới epoch3.
+Min_delta điều khiển patience; checkpoint vẫn chọn loss thấp nhất thực tế. Evaluate(train) không được tính thành validation failure. Có thể có ít hơn5điểm trên biểu đồ.
 
 ### D12 — Chọn checkpoint bằng gì?
 
@@ -170,7 +168,7 @@ Min_delta điều khiển patience; checkpoint vẫn chọn loss thấp nhất t
 
 **Quyết định:** giữ0.5 làm mốc, quét19ngưỡng0.05–0.95 bước0.05 trên validation Macro-F1; hòa chọn gần0.5 rồi nhỏ hơn.
 **Lý do:** threshold quyết định precision/recall trade-off, không nhất thiết0.5 là operating point tốt cho objective.
-**Kiểm chứng:** scan đủ19 điểm, selected policy/hash và figure inline.
+**Kiểm chứng:** scan đủ19điểm, selected policy/hash và figure inline.
 
 Không ép chọn khác0.5. Test không tham gia sweep/selection.
 
@@ -202,10 +200,17 @@ Review ZIP không có weights; checkpoint ZIP giữ riêng cho evaluate/infer. K
 
 Tiêu chí hoàn thành thực nghiệm: pipeline pass gates, có kết quả thật với policy validation-only, dữ liệu/weights/log/hash nhất quán, ảnh inline và published dùng được sau pull. Không đặt điều kiện accuracy tùy ý hoặc bảo đảm hoàn toàn không overfit.
 
-## 9. Trạng thái thực nghiệm và điều kiện hoàn thành
+## 9. Kết quả bàn giao đã kiểm chứng
 
-Code sẵn sàng chạy từ pretrained base. Chưa có kết quả full GPU của thí nghiệm 3 epoch; notebook không chứa cached output của thí nghiệm khác. Không khẳng định hiệu năng hoặc mức overfitting trước khi có history/predictions/log.
+Run `20261103T110437Z_frozen_trial_b021d6eb` đã hoàn thành5epoch, chọn epoch5 theo validation loss; validation threshold0,45. Test accuracy83,11%, Binary F1 83,30%; baseline accuracy78,99%. EDA/feature pipeline, regularization, threshold và resource monitoring đều có artifact thật trong [published report](outputs/published/index.md). Phân tích kết quả, giới hạn và liên kết ảnh ở Section3 của [walkthrough](walkthrough_lab_03.md).
 
-Báo cáo hoàn thành sau khi có review ZIP: kiểm tra integrity, official splits, augmentation thực tế, đúng optimizer/dropout, số epoch thực chạy, checkpoint minimum validation loss, threshold validation-only, test metrics, learning curves, time/sample và RAM/VRAM.
+Hai notebook lưu ảnh inline và hỗ trợ MODE=view để pull về đọc ngay. Khi train mới chọn MODE=train/DEVICE=cuda; notebook EDA chọn MODE=prepare để tạo mới, có ZIP riêng. Không cần chạy lại training để lấy hình hoặc chỉ số report. Weights không nằm trong review ZIP; checkpoint inference cần ZIP checkpoint riêng.
 
-Patience=2 được giữ cố định. Trong budget 3 epoch, cơ chế này có thể kích hoạt từ lần validation thứ ba; không thể kết thúc trước epoch3 khi đánh giá một lần mỗi epoch. Không đổi patience chỉ để tạo ra biểu hiện dừng sớm. Min_delta điều khiển patience, không thay quy tắc chọn checkpoint minimum loss.
+
+## 10. Bằng chứng hoàn thiện theo lớp và kiến trúc
+
+Negative precision/TPR/F1/FPR là83,88%/81,99%/82,92%/15,76%; Positive là82,39%/84,24%/83,30%/18,01%, mỗi lớp533mẫu. [Bảng và hình dẫn xuất](outputs/published/result_analysis/per_class_metrics.png) bổ sung cho confusion counts, không thay đổi policy/test predictions nguồn.
+
+Counter early stopping không được ghi trực tiếp. Tái hiện callback theo config/history cho0/0/0/1/2, đạt patience đúng epoch5; run vẫn hoàn thành5/5 vì đó cũng là biên ngân sách. Không dừng trước ngân sách không đồng nghĩa patience chưa đạt ngưỡng.
+
+Cả hai model có module tree dạng text và bảng tham số ở đầu modeling, đồng thời được lưu/publish với SHA256. Requires_grad là thuộc tính gradient; Exercise1 không tối ưu weights, Exercise2 học14.767.874/66.955.010parameters. Cấu trúc view lấy từ pinned config, không phải phép reload weights.

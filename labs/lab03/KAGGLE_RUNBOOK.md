@@ -5,16 +5,16 @@
 Kaggle → New Notebook → File → Import Notebook → GitHub, dán:
 
 ```text
-https://github.com/lacthui06/Lab-DL/blob/new-lab03/labs/lab03/notebooks/02_modeling.ipynb
+https://github.com/lacthui06/Lab-DL/blob/lab03/labs/lab03/notebooks/02_modeling.ipynb
 ```
 
-Notebook và code trên branch phải đồng bộ: cell setup clone `lacthui06/Lab-DL`, branch `new-lab03`.
+Notebook và code trên branch phải đồng bộ: cell setup clone `lacthui06/Lab-DL`, branch `lab03`.
 Dùng một phiên Kaggle mới để clone đầy đủ source.
 
 ## 2. Bật tài nguyên
 
 Trong Settings, bật GPU và Internet. Tài khoản Kaggle cần hoàn thành xác minh theo yêu cầu dịch vụ.
-Notebook 01 mặc định MODE=prepare/DEVICE=cpu; notebook 02 mặc định MODE=train/DEVICE=cuda. Import xong có thể Run All; cấu hình modeling đã đặt:
+Notebook đã lưu kết quả và mặc định MODE=view. Chỉ khi muốn train mới, đổi cell setup:
 
 ```python
 MODE = "train"
@@ -29,12 +29,12 @@ Kaggle tạo Python3.12 riêng; mọi lệnh ML chạy qua interpreter đó, ker
 1. Setup và CPU fixture preflight/sanity overfit.
 2. Pretrained sentiment và pipeline/manual comparison.
 3. Official data contract, augmentation và TF-IDF baseline.
-4. DistilBERT fine-tuning tối đa 3 epoch, early stopping validation loss.
+4. DistilBERT fine-tuning tối đa5epoch, early stopping validation loss.
 5. Reload checkpoint, threshold sweep validation, khóa policy.
 6. Test, confusion/ROC/PR/calibration và error analysis.
 7. Performance, save/load verification, publish và ZIP.
 
-Mỗi giai đoạn có bảng/ảnh inline đồng thời lưu file. Early stopping patience1/min_delta0.001 có thể dừng trước 3 epoch; không thêm điểm giả lên learning curves.
+Mỗi giai đoạn có bảng/ảnh inline đồng thời lưu file. Early stopping patience2/min_delta0.001 có thể dừng trước5epoch; không thêm điểm giả lên learning curves.
 
 ## 4. Lựa chọn dùng Kaggle CLI
 
@@ -77,7 +77,7 @@ python labs/lab03/scripts/render_notebooks.py --kernel python3
 ```
 
 Lệnh render chuyển MODE sang view trong bộ nhớ khi thực thi, không train hoặc tải dữ liệu.
-Source notebook mặc định prepare/train. Muốn xem lại kết quả, chọn MODE=view trước Run All; gói Kaggle CLI giữ MODE=train và xóa cached outputs.
+Source notebook giữ MODE=view để xem kết quả an toàn; gói Kaggle CLI tự chuyển MODE=train và xóa cached outputs.
 
 ## 7. Troubleshooting
 

@@ -135,6 +135,7 @@ def performance_data(run):
 
 def write_performance(run, output):
     import matplotlib.pyplot as plt
+    from matplotlib.patches import FancyBboxPatch
     from .utils.plots import finish
     output = Path(output);rows,summary = performance_data(run)
     save_json(output/'performance_history.json',rows);save_json(output/'performance_summary.json',summary)
@@ -156,6 +157,23 @@ def write_performance(run, output):
         ax.set_title(title)
     for ax in axes:ax.grid(alpha=.2)
     finish(fig,output/'performance.png')
+    fig,ax = plt.subplots(figsize=(13,5));ax.axis('off')
+    labels = [f'Tokens + mask\n[B,L], L <= 128',f'Embedding\n[B,L,{spec["hidden_size"]}]\nFROZEN',
+        f'Encoder layers 1-{spec["freeze_layers"]}\nFROZEN' if spec['freeze_layers'] else 'No frozen encoder blocks',
+        f'Encoder layers {spec["freeze_layers"]+1}-{spec["layers"]}\nTRAINABLE',
+        f'[CLS] vector\n[B,{spec["hidden_size"]}]',f'Linear {spec["hidden_size"]} + ReLU\nDropout {spec["dropout"]["seq_classif_dropout"]}',
+        f'Linear {spec["num_labels"]} logits\nCross-entropy / softmax']
+    for i,label in enumerate(labels):
+        col,row = i%4,i//4;xpos=col*.25;ypos=.65-row*.47
+        ax.add_patch(FancyBboxPatch((xpos+.01,ypos),.22,.27,boxstyle='round,pad=0.01',facecolor='#e2eff6' if i in (1,2) else '#e5f2e2',transform=ax.transAxes))
+        ax.text(xpos+.12,ypos+.135,label,ha='center',va='center',fontsize=9,transform=ax.transAxes)
+        if i<6:
+            end=((col+1)*.25,ypos+.135) if col<3 else (.12,.45)
+            arrow = {'arrowstyle':'->'}
+            if col==3:arrow['connectionstyle']='angle,angleA=-90,angleB=180,rad=12'
+            ax.annotate('',xy=end,xytext=(xpos+.235,ypos+.135),xycoords='axes fraction',arrowprops=arrow)
+    ax.set_title('Frozen DistilBERT: declared base architecture and saved training policy',pad=10)
+    finish(fig,output/'model_architecture.png')
     return summary
 
 

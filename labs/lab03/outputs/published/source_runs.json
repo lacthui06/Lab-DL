@@ -1,0 +1,19 @@
+{
+  "runs": {
+    "frozen_trial": "20261103T110437Z_frozen_trial_b021d6eb",
+    "exercise1": "20261103T110425Z_exercise1_f9b5a257",
+    "exercise1_analysis": "20261103T110429Z_exercise1_analysis_f2706089"
+  },
+  "source_manifests": {
+    "frozen_trial": "1bd245cf7bc079c3aacb6be5d4284ce076e027b4ed9565ccf80db38f6772eb80",
+    "exercise1": "4f809ed55fdba290aeeddc9383c4262345a673f10946a1f22ad8983ff1c2fbd6",
+    "exercise1_analysis": "2796e89db6c242c4244646f073f12777b9d24b1326f7a0cd60335b626e904e8e"
+  },
+  "availability_sha256": {},
+  "exporter_sha256": "98424e8865e69b7ead5ff5fe75ff1af2e3bb6f2f3ccb3f65ef849f90a5875b6f",
+  "primary_result": "frozen_trial",
+  "results_analysis_code_sha256": "f052d35e7328a8fcf3866228db6d0dd9565a9411becbe81c53ad9ddcd8ce38c1",
+  "architecture_manifest_sha256": "977bce7849fd762c2ff5c3769b625f12e8db60d443104a23218574a323b18c5d",
+  "weights_included": false,
+  "raw_logs_included": true
+}

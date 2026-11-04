@@ -28,3 +28,8 @@ labs/
 - **Section 3 (Results & Final Technical Report):** Governed by the `documentation-and-adrs` rule — Provides comparative evaluation matrices, confusion matrix interpretation, decision traceability back to Mục 1.0, and conclusions ready for submission.
 
 For Lab01, software change journals and troubleshooting logs stay local, outside Git and the report. Current report evidence is in `lab01/outputs/published/`; original runs are retained locally.
+
+## Sentiment experiments
+
+- [`lab03/`](lab03/README.md): completed five-epoch implementation and its artifacts.
+- [`new-lab03/`](new-lab03/README.md): independent three-epoch experiment with its own notebooks, configuration and outputs.

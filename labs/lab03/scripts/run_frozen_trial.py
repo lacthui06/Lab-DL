@@ -111,7 +111,6 @@ def run(config, root=ROOT, allow_cpu_fixture=False, device='auto'):
             effective['train'], raw['validation'], baseline_settings, config['seed'])
         save_json(out/'baseline_validation_candidates.json', candidates)
         save_json(out/'baseline_policy.json', baseline_policy)
-        (out/'baseline_architecture.txt').write_text(str(baseline), encoding='utf-8')
         model, tokenizer = load_model(e['model_name'], e['model_revision'],
             finetuning=True, overrides=e['model_overrides'])
         from labs.lab03.src.data_preparation import export_data_review
@@ -125,7 +124,6 @@ def run(config, root=ROOT, allow_cpu_fixture=False, device='auto'):
             'num_labels':model.config.num_labels,'freeze_layers':e['freeze_layers'],
             'dropout':{k:getattr(model.config,k) for k in ['dropout','attention_dropout','seq_classif_dropout']},
             'source':'actual loaded model.config; recorded before training'})
-        (out/'model_architecture.txt').write_text(str(model) + '\n\n' + json.dumps(freezing, indent=2), encoding='utf-8')
         print('Trainable parameters:', freezing['trainable_parameters'], '/', freezing['total_parameters'])
         ds = tokenize_data(effective, tokenizer, e['max_length'])
         trainer = make_trainer(model, tokenizer, ds, {**e, 'seed': config['seed'], 'record_resources':True}, out)

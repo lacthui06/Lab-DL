@@ -105,3 +105,9 @@ labs/lab03/outputs/.published-*/
 
 # Lab03: gói kernel Kaggle được sinh lại bằng scripts/export_kaggle_kernel.py
 labs/lab03/kaggle/
+
+# New Lab03 generated/local files
+labs/new-lab03/internal_changes.md
+labs/new-lab03/outputs/publication_history/
+labs/new-lab03/outputs/.published-*/
+labs/new-lab03/kaggle/

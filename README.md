@@ -20,15 +20,16 @@ Repository containing source code, engineering workflows, and practical lab exer
 
 ---
 
-Lab03 uses its own pinned dependencies in `labs/lab03/requirements.txt` and a separate Python 3.12 environment; do not replace the Lab01 environment with these pins.
+Lab03 and New Lab03 use their own pinned dependencies in `labs/lab03/requirements.txt` and `labs/new-lab03/requirements.txt`, with separate Python 3.12 environments; do not replace the Lab01 environment with these pins.
 
-Lab03 has two notebooks with phase roadmaps, inline visualizations and saved artifacts: EDA/preprocessing/feature engineering, then binary sentiment modeling. The active training profile uses at most 3 epochs with validation-loss early stopping and validation-only threshold selection. Results are published from each completed run and documented in the Lab03 walkthrough.
+Lab03 retains the completed five-epoch experiment. New Lab03 is a separate three-epoch experiment in `labs/new-lab03/`, with two notebooks, inline visualizations and independent artifacts. Both use validation-only checkpoint and threshold selection.
 
 ## Lab Directory
 
 - **Lab 01**: [FashionMNIST Classification with PyTorch](labs/lab01/README.md) — local experiments available; final PDF pending.
 - **Lab 02**: Upcoming
-- **Lab 03**: [Hugging Face Sentiment Analysis & Fine-tuning](labs/lab03/README.md) — full Rotten Tomatoes, executed notebooks and verified Kaggle artifacts.
+- **Lab 03**: [Hugging Face Sentiment Analysis & Fine-tuning](labs/lab03/README.md) — completed five-epoch experiment.
+- **New Lab 03**: [Three-epoch sentiment experiment](labs/new-lab03/README.md) — separate notebooks, training and outputs.
 - **Lab 04**: Upcoming
 
 ---

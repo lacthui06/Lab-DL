@@ -1,0 +1,55 @@
+{
+  "primary_result": "frozen_trial",
+  "source_run": "20261103T110437Z_frozen_trial_b021d6eb",
+  "test_comparison": [
+    {
+      "policy": "TF-IDF",
+      "accuracy": 0.7898686679174484,
+      "precision": 0.7920604914933838,
+      "recall": 0.7861163227016885,
+      "binary_f1": 0.7890772128060264,
+      "macro_f1": 0.7898657092067516,
+      "test_loss": 0.5173709105267964
+    },
+    {
+      "policy": "Frozen DistilBERT threshold 0.5",
+      "accuracy": 0.8292682926829268,
+      "precision": 0.8305084745762712,
+      "recall": 0.8273921200750469,
+      "binary_f1": 0.8289473684210527,
+      "macro_f1": 0.829267691701163,
+      "test_loss": 0.409902423620224
+    },
+    {
+      "policy": "Frozen DistilBERT validation threshold",
+      "accuracy": 0.8311444652908068,
+      "precision": 0.8238532110091743,
+      "recall": 0.8424015009380863,
+      "binary_f1": 0.8330241187384044,
+      "macro_f1": 0.8311230650618018,
+      "test_loss": 0.409902423620224
+    }
+  ],
+  "measured_test_loss": 0.409902423620224,
+  "test_loss_source": "TF-IDF: recomputed log_loss from saved probabilities; Transformer: measured test loss",
+  "selection_split": "validation",
+  "selected_threshold": 0.45,
+  "performance": {
+    "source_run": "20261103T110437Z_frozen_trial_b021d6eb",
+    "train_samples_per_epoch": 8804,
+    "test_samples": 1066,
+    "train_batch_size_per_device": 16,
+    "eval_batch_size_per_device": 32,
+    "pure_train_resources_available": true,
+    "test_eval_ms_per_sample": 0.4263602251407129,
+    "test_eval_timing_scope": "Trainer.predict full test, includes batching/transfer/evaluation overhead; not single-request latency",
+    "epoch_pipeline_timing_scope": "epoch start through validation callback; includes train, full train-eval and validation; excludes later checkpoint save",
+    "memory_status": "measured",
+    "memory_normalization": "MiB per batch slot = process/device peak divided by nominal batch slots; shared model memory included; not MiB divided by dataset size",
+    "cuda_device_available_in_source": true,
+    "source_device": "Tesla T4",
+    "execution_device": "cuda:0",
+    "training_ram_complete": true,
+    "training_vram_complete": true
+  }
+}
