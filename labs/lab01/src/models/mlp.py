@@ -7,7 +7,7 @@ import torch.nn as nn
 
 class FashionMLP(nn.Module):
     """Pure Multi-Layer Perceptron using only 3 basic layer types: Flatten, Linear, ReLU.
-
+    
     Default architecture:
         Flatten -> Linear(784, 256) -> ReLU -> Linear(256, 128) -> ReLU -> Linear(128, 10).
     """

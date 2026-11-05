@@ -166,3 +166,4 @@ def sanity_overfit_check(
         final_acc = (preds == targets).float().mean().item() * 100.0
 
     return (final_loss < target_loss and final_acc >= 90.0), final_loss, final_acc
+

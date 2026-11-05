@@ -29,6 +29,73 @@ Nguồn đối chiếu: ảnh `Screenshot 2026-10-25 201146.png`, slide trang 23
 
 CIFAR-10, ResNet18 và DenseNet121 là lựa chọn của bài làm. Ảnh đề không bắt buộc CIFAR-10, độ phân giải 224 hay phải chạy đủ VGG/ResNet/DenseNet. Source dùng API `weights=...` để tải weights ImageNet thay cho cờ `pretrained=True` cũ. Đặc tả, kiểm tra đáp ứng đề và giới hạn bằng chứng nằm trong [walkthrough_lab_02.md](walkthrough_lab_02.md).
 
+## Các quyết định đã ghi nhận và lý do chọn kiến trúc
+
+Đây là bản tổng hợp từ source, cấu hình run scheduled đã chọn và các quyết định đã ghi ở tài liệu này; không phải trích nguyên văn lịch sử chat. Không coi mọi lựa chọn kỹ thuật là yêu cầu của giảng viên. Khi có khác biệt, config/metadata của từng run mô tả điều kiện thực thi của run đó.
+
+| Chủ đề | Quyết định hiện hành và lý do | Giới hạn hoặc phương án đã thay thế |
+|---|---|---|
+| Dataset/split | CIFAR-10 RGB; 45.000 train, 5.000 validation, 10.000 test; lưu indices, seed 42 | Test không chọn cấu hình; một seed chưa đánh giá độ ổn định |
+| Backbone | ResNet18 và DenseNet121, weights ImageNet1K_V1 tường minh; thay classifier 10 lớp | Đây là lựa chọn bài làm; đề không bắt buộc chạy VGG hoặc chứng minh hai mạng tối ưu |
+| Preprocessing | Run scheduled resize 64×64, normalize theo pretrained weights; giữ RGB | 64 là điều kiện thực nghiệm tiết kiệm tính toán, không đồng nhất benchmark chuẩn 224; feature thủ công ở EDA không nối vào classifier |
+| Hai giai đoạn | Học classifier từ pooled features trước; fine-tune từ best head checkpoint | Head cache không đồng nghĩa mọi fine-tune đều dùng cache |
+| Freeze/BatchNorm | Scheduled mở các module đã liệt kê bên dưới, dưới 50% tham số; BN running statistics luôn cố định | Frozen weights không có nghĩa module không thực hiện forward; BN affine ở phần mở vẫn học |
+| Regularization | Dropout 0,2; crop/flip chỉ fine-tune train; validation/test deterministic | Không ghép cache cố định với augmentation mới mỗi lượt |
+| Optimizer/scheduler | Scheduled: AdamW, head 1e-3, fine backbone 1e-4/head 1e-3; cosine ratio xuống 0,1 | Run lịch sử có search/cấu hình khác; không gọi scheduled là optimizer ablation |
+| Selection | Checkpoint: val accuracy, hòa xét val loss rồi epoch sớm; stopping theo val loss | Hai tiêu chí khác nhau; không chọn theo test |
+| Monitoring/save-load | History, TensorBoard artifacts, checkpoint metadata và roundtrip đã lưu | Xem notebook không khởi động server hoặc thực hiện lại full-test sau load |
+| Benchmark bổ sung | Training batch 1 riêng, checkpoint bất biến, process riêng; giữ inference một ảnh đã có | Số CPU training và T4 inference có phạm vi/thiết bị khác nhau, không ghép thành cùng phép đo |
+
+### Vì sao ResNet18 và DenseNet121?
+
+ResNet18 dùng residual connection: block học phần hiệu chỉnh rồi cộng với nhánh tắt. Mạng có bốn stage, mỗi stage hai BasicBlock, thuận tiện khảo sát thay head và mở các block cuối. DenseNet121 nối các feature map trước vào đầu vào layer sau trong cùng dense block; điều này cho phép tái sử dụng đặc trưng với số tham số khác ResNet. Cặp này phục vụ mục tiêu học hai kiểu kết nối và fine-tuning, không phải kết quả tìm kiếm kiến trúc tối ưu.
+
+DenseNet ít tham số hơn trong cấu hình này nhưng concatenation, activation và đường truyền gradient có thể làm thời gian/bộ nhớ khác kỳ vọng. So sánh hiện tại thay đồng thời kiến trúc và recipe unfreeze; không quy toàn bộ chênh lệch cho residual hay dense connection. Resize 64 vẫn dùng stem ImageNet nguyên bản, không tự thay stem thành CNN riêng cho CIFAR.
+
+### Kiến trúc theo layer/module của model thực tế
+
+Các mô tả sau là cấu trúc của `build_model(..., dropout=0.2)` cho run scheduled; convolution mặc định không bias trừ classifier. Tên trong ngoặc là tên module để tra source và checkpoint. Bảng tensor tham số và toàn bộ `str(model)` được notebook mở rộng từ `parameters.csv` và `architecture.txt` của đúng run, không dựng một sơ đồ khác rồi gọi là kiến trúc đã chạy.
+
+**ResNet18:**
+
+| Thứ tự | Layer/module | Kênh và phép toán |
+|---|---|---|
+| 1 | `conv1`, `bn1`, `relu`, `maxpool` | Conv 7×7, 3→64, stride 2/pad 3; BN64; ReLU; MaxPool3 stride 2/pad 1 |
+| 2 | `layer1.0`, `layer1.1` | Hai BasicBlock 64→64; mỗi block Conv3→BN→ReLU→Conv3→BN→cộng identity→ReLU |
+| 3 | `layer2.0`, `layer2.1` | 64→128 rồi 128→128; block đầu stride 2 và nhánh tắt Conv1 stride 2 + BN |
+| 4 | `layer3.0`, `layer3.1` | 128→256 rồi 256→256; block đầu downsample như trên |
+| 5 | `layer4.0`, `layer4.1` | 256→512 rồi 512→512; block đầu downsample như trên |
+| 6 | `avgpool`, flatten | AdaptiveAvgPool(1,1), mỗi ảnh thành vector 512 |
+| 7 | `fc.0`, `fc.1` | Dropout(0,2) → Linear(512,10), bias=True; output logits |
+
+Mỗi BasicBlock có các tên con `conv1`, `bn1`, `relu`, `conv2`, `bn2`; ba block đổi kênh có thêm `downsample.0` (Conv1) và `downsample.1` (BN). Conv3 dùng padding 1; stride 2 ở conv1 của block đầu stage 2–4. Đầu vào 64×64 cho các mốc spatial 32→16→16→8→4→2→1 trước classifier. Scheduled chỉ mở `layer4.1` và `fc`; phần còn lại freeze.
+
+**DenseNet121:**
+
+| Thứ tự | Layer/module | Kênh và phép toán |
+|---|---|---|
+| 1 | `features.conv0/norm0/relu0/pool0` | Conv7 3→64 stride 2/pad 3; BN64; ReLU; MaxPool3 stride 2/pad 1 |
+| 2 | `features.denseblock1` | 6 DenseLayer; growth rate 32: 64→256 |
+| 3 | `features.transition1` | BN256→ReLU→Conv1 256→128→AvgPool2 stride 2 |
+| 4 | `features.denseblock2` | 12 DenseLayer: 128→512 |
+| 5 | `features.transition2` | BN512→ReLU→Conv1 512→256→AvgPool2 stride 2 |
+| 6 | `features.denseblock3` | 24 DenseLayer: 256→1024 |
+| 7 | `features.transition3` | BN1024→ReLU→Conv1 1024→512→AvgPool2 stride 2 |
+| 8 | `features.denseblock4`, `features.norm5` | 16 DenseLayer: 512→1024; BN1024 |
+| 9 | Functional ReLU, adaptive average pool, flatten | ReLU→AdaptiveAvgPool(1,1)→vector 1024; các phép functional không hiện như module riêng trong str(model) |
+| 10 | `classifier.0`, `classifier.1` | Dropout(0,2)→Linear(1024,10), bias=True; output logits |
+
+Mỗi `denselayerN` gồm `norm1`→`relu1`→`conv1` (1×1, C→128)→`norm2`→`relu2`→`conv2` (3×3, 128→32, padding 1). Đầu vào layer thứ N có C=C_đầu_block+32×(N−1); nối 32 kênh mới với các feature trước. Các khoảng `denselayer1..6/12/24/16` gồm mọi layer theo quy tắc này. DenseLayer mặc định không có dropout nội bộ; dropout 0,2 ở classifier. Với ảnh 64, spatial sau stem là 16, qua ba transition là 8→4→2; cuối cùng pool về 1. Danh sách mở xen kẽ scheduled và số tham số được giữ ở mục cấu hình bên dưới.
+
+### Hợp đồng benchmark training batch size 1 được duyệt
+
+- Chọn tường minh run và `finetune/best.pt` của hai model; cùng index thuộc selected train split, kiểm checksum split trong checkpoint. Không dùng test để đo training.
+- Process riêng/model; batch 1, FP32, full-image forward. Giữ freeze, dropout và BN theo metadata; dùng preprocessing deterministic, không augmentation để đầu vào giống nhau. Đây là microbenchmark khác pipeline train có augmentation.
+- Tạo optimizer mới với loại, weight decay và LR ban đầu của recipe; không phục hồi optimizer state hoặc scheduler, không gọi đây là tiếp tục training tại best epoch.
+- Một bước đầu đo memory có optimizer allocation; warmup 3, timing 10 bước riêng; CUDA đồng bộ nếu chọn GPU. Timing gồm zero_grad/forward/loss/backward/step; không gồm IO, preprocessing, transfer, validation, load model hoặc ghi file.
+- RSS baseline/peak/tăng thêm tính bằng MiB, lấy mẫu 1 ms nên có thể bỏ lỡ đỉnh; gồm runtime và model. VRAM allocated/reserved chỉ từ CUDA allocator, CPU ghi null. Batch 1 không biến RSS thành bộ nhớ riêng của ảnh.
+- Checkpoint chỉ đọc, kết quả ở thư mục mới và từ chối ghi đè. Test phải kiểm freeze/BN, checkpoint bất biến, cấu hình sai, đơn vị và notebook không tự benchmark. Benchmark không thay accuracy, history hoặc thời gian train cũ.
+
 ## Thay đổi được xác nhận ngày 30/10/2026 — cấu hình scheduled
 
 Đây là yêu cầu bổ sung của bài làm, không phải nội dung đề gốc hay kết quả đã chạy. Source hỗ trợ công thức này qua `config/scheduled.json`; full training do người dùng tự khởi chạy. Không gán kết quả của run cũ cho cấu hình dưới đây. Sau khi run hoàn tất, `scripts/execute_notebook.py` dựng phần Modeling theo artifact của run mới, lưu bản notebook trước và sau thực thi theo hash nội dung.

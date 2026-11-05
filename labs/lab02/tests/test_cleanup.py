@@ -64,7 +64,7 @@ def _source_graph(root):
 def test_all_production_modules_reachable_and_documented():
     """CLI/notebook roots count; tests and archived snapshots cannot rescue dead modules."""
     scripts={p.stem for p in (ROOT/'scripts').glob('*.py')}
-    assert scripts=={'run','infer','analyze_data','download_assets','execute_notebook','finalize','resume_interrupted','benchmark_inference'}
+    assert scripts=={'run','infer','analyze_data','download_assets','execute_notebook','finalize','resume_interrupted','benchmark_inference','benchmark_training'}
     units,seen,referenced=_source_graph(ROOT)
     assert {n for n in units if n=='src' or n.startswith('src.')}<=seen
     readme=(ROOT/'README.md').read_text(encoding='utf-8')
@@ -79,10 +79,8 @@ def test_all_production_modules_reachable_and_documented():
                     if isinstance(node,ast.FunctionDef) and not node.name.startswith('_'):
                         if node.name not in referenced:
                             unreferenced.add((relative,node.name))
-    # The roadmap now calls lr_search and roundtrip; retain the remaining exported view.
-    # A new unused function is still a failure, and removing an old exception requires review.
-    assert unreferenced == {('src/utils/notebook_views.py',name)
-                            for name in ('tensorboard_evidence',)}
+    # Every public production function must have a caller; no unused-view exception.
+    assert not unreferenced
 
 
 def test_source_graph_resolves_relative_imports_and_detects_nested_orphan(tmp_path):

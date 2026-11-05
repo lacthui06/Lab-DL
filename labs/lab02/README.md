@@ -54,7 +54,7 @@ Các namespace `src.training` và `src.utils` chỉ nạp module khi export đư
 
 Test graph bắt module production bị bỏ rơi, public function không có tham chiếu tĩnh và file thiếu link README. Tham chiếu trong test hoặc snapshot không được tính làm caller production. Docstring giải thích vai trò; không thêm import giả để giữ file.
 
-Graph kiểm tra cả package con và relative import. Roadmap Modeling đã gọi `lr_search` và `roundtrip`; view export `tensorboard_evidence` vẫn chưa có caller production tĩnh, được giữ làm ngoại lệ chờ rà soát API riêng. Snapshot của finalize/resume liệt kê đệ quy các file Python/JSON trong `src/`, `scripts/`, `tests/`, `config/`; bỏ qua cache và artifact trong outputs.
+Graph kiểm tra cả package con và relative import. Roadmap Modeling gọi `lr_search` và `roundtrip`; mọi public function trong production phải có caller, không giữ ngoại lệ cho view không dùng. TensorBoard event export và monitoring hiện có vẫn được giữ. Snapshot của finalize/resume liệt kê đệ quy các file Python/JSON trong `src/`, `scripts/`, `tests/`, `config/`; bỏ qua cache và artifact trong outputs.
 
 ## Reproduce
 
@@ -215,3 +215,18 @@ python scripts/benchmark_inference.py run --checkpoint checkpoints/densenet121.p
 ```
 
 Mỗi model có benchmark ID riêng, gồm status/config/environment/source hashes, `latency_samples.csv`, `stage_samples.csv`, `summary.json`, `prediction.json` và checksum manifest. CLI yêu cầu CUDA thực, không tự chuyển sang CPU. `--device cpu` chỉ dành cho kiểm thử hoặc phép đo CPU được ghi nhãn riêng; không dùng thay kết quả Kaggle GPU. Kết quả này không cập nhật registry run training hay ghi đè metric lịch sử. Thu hồi toàn bộ thư mục kết quả và notebook đã chạy trước khi kết thúc phiên Kaggle.
+## Kiến trúc và benchmark training batch 1 bổ sung
+
+Module đo: [training_benchmark.py](src/utils/training_benchmark.py). CLI: [benchmark_training.py](scripts/benchmark_training.py). View chỉ đọc artifact: [notebook_views.py](src/utils/notebook_views.py).
+
+Các quyết định, lý do chọn ResNet18/DenseNet121 và cấu trúc từng layer/module nằm trong [description](description_lab_02.md). Mục 2 notebook Modeling đọc kiến trúc đầy đủ và bảng tensor tham số của run; cột `head_stage_trainable` chỉ mô tả stage head, còn phần mở fine-tune lấy từ metadata/comparison.
+
+Chạy từ root repository, sau khi có dữ liệu CIFAR-10 và hai checkpoint của run được chọn trong [cấu hình benchmark](config/training_benchmark.json):
+
+```bash
+MPLBACKEND=Agg .venv/bin/python labs/lab02/scripts/benchmark_training.py
+```
+
+Đây là vài bước training CPU batch 1, không full training. CLI không download dữ liệu/weights, không sửa checkpoint và từ chối output đã tồn tại. Muốn đo lại, chọn tên output mới trong config; muốn CUDA phải chọn `device=cuda` và chạy ở môi trường CUDA thật. Không tự thay GPU bằng CPU. Chỉ chọn run/checkpoint thực có, không tự lấy run mới nhất.
+
+Mục 8b notebook chỉ đọc [evidence](outputs/published/training_benchmark/scheduled64_cpu_batch1), kiểm manifest và nguồn checkpoint; Run All không benchmark. Timing gồm forward/loss/backward/step với batch đã ở thiết bị. Optimizer mới dùng LR đầu recipe; đây không phải resume. Không augmentation; giữ dropout/freeze/BN theo checkpoint. RSS gồm Python/runtime; CPU VRAM không khả dụng. Inference T4 ở mục 8 có phạm vi riêng.

@@ -294,3 +294,21 @@ Chưa tạo PDF. Báo cáo xuất sau này có mục tiêu >=25 trang, dựa tr�
 Notebook modeling còn hiển thị loss/accuracy train-validation và history của refit sau search. Phần cuối Save / Load the Model thực hiện lưu/tải thật, giữ model trong biến LOADED_MODEL và lưu bằng chứng so sánh xác suất vào run riêng; cell này tạo artifact cả ở MODE=view, không train lại.
 
 Sau search, notebook hiển thị loss/accuracy train-validation của cả ba optimizer từ best completed trial riêng, kèm best parameters và CSV history. Model được load lại ở cuối được đánh giá toàn bộ test, xuất metric/report/probabilities và lưới 16 ảnh đúng/sai có nhãn thật, dự đoán và xác suất.
+
+## Kiến trúc và hiệu năng training theo mẫu
+
+Notebook modeling mặc định `MODE=view`: in từng model dạng `FashionMLP(Sequential(...))`, bảng layer/số tham số, loss/accuracy train–validation theo epoch, rồi đọc bảng đo tài nguyên training. Lý do chọn ba kiến trúc được giải thích trong [description](description_lab_01.md#kiến-trúc-mô-hình-và-lý-do-lựa-chọn).
+
+[Source đo và hiển thị](src/utils/performance.py) dùng checkpoint bản sao trong process riêng. Benchmark batch 128 trước đây giữ ở `training_benchmark`; mục notebook hiện hành dùng `single_sample_training_benchmark` với batch size 1, warmup 3, lặp đo 10 và 2 thread. `RESOURCE_MODE=view` đọc kết quả; `RESOURCE_MODE=train` chỉ đo lại vài bước benchmark, độc lập với MODE của các cell huấn luyện model. Hai notebook được lưu với MODE=view; khi đổi MODE toàn notebook sang train, các cell model vẫn huấn luyện đầy đủ theo cấu hình.
+
+- [Bảng training_performance.csv](outputs/published/training_performance/training_performance.csv): ms/sample, samples/s, peak RSS/batch và phần tăng RSS/batch; VRAM allocated/batch chỉ có khi đo CUDA.
+- [Phương pháp đo](outputs/published/training_performance/methodology.json): RAM là process RSS lấy mẫu mỗi 1 ms; thời gian là median batch sau warmup. Hai phép đo chạy riêng. Không gồm IO, transfer, validation hay trích feature; không coi kết quả mới là thời gian của run training cũ.
+- Kiến trúc TXT: [SmallMLP](outputs/published/architectures/SmallMLP/model_architecture.txt), [MainMLP](outputs/published/architectures/MainMLP/model_architecture.txt), [MainMLP_FE](outputs/published/architectures/MainMLP_FE/model_architecture.txt).
+
+Test hợp đồng nằm ở [test_performance.py](tests/test_performance.py): kiến trúc đúng cấu hình, không làm đổi RNG, checkpoint bất biến, đọc được config lịch sử thiếu kiến trúc, đúng mẫu số/đơn vị và CPU không ghi VRAM giả.
+
+### Training batch size 1: bảng và biểu đồ trực tiếp trong notebook
+
+Mục “Chi phí training trên đúng 1 mẫu” nằm ngay sau MainMLP_FE, trước ROC/PR so sánh ba model. Dùng `single_sample_training_benchmark` với batch size 1, không quy đổi từ batch 128. `RESOURCE_MODE=view` đọc kết quả; đổi riêng RESOURCE_MODE sang train nếu chỉ muốn benchmark lại vài bước. Không cần đổi MODE toàn notebook.
+
+Kết quả: [CSV batch size 1](outputs/published/training_performance_single_sample/training_performance.csv), [biểu đồ tài nguyên](outputs/published/training_performance_single_sample/training_resources.png), [phương pháp](outputs/published/training_performance_single_sample/methodology.json). Bảng hiển thị đầy đủ cột với đơn vị, không bị pandas rút gọn; VRAM CPU ghi không khả dụng. Bộ nhớ là sampled RSS cả process và phần tăng so baseline, không phải bộ nhớ độc lập của riêng ảnh.

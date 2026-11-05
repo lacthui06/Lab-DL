@@ -1,0 +1,16 @@
+{
+  "training_run": "outputs/runs/20261030T052121Z_cifar10_scheduled64_b895bfc1",
+  "models": [
+    "resnet18",
+    "densenet121"
+  ],
+  "device": "cpu",
+  "seed": 42,
+  "batch_size": 1,
+  "warmup": 3,
+  "repeats": 10,
+  "threads": 2,
+  "sample_interval": 0.001,
+  "train_position": 0,
+  "output": "outputs/published/training_benchmark/scheduled64_cpu_batch1"
+}

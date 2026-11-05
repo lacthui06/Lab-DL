@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-10-26T09:45:10.926035+00:00",
+  "generated_at": "2026-11-02T05:26:30.138982+00:00",
   "sources": {
     "preparation": "outputs/runs/20261022T122157Z_preparation_dcaece7b",
     "comparison": "outputs/runs/20261022T145033Z_comparison_c83937e3",
@@ -10,8 +10,13 @@
     "tuning": "outputs/runs/20261022T130101Z_optimizer_tuning_d8986ca8",
     "final": "outputs/runs/20261022T130609Z_MainMLP_0f179a92",
     "optimizer_results": "outputs/runs/20261022T145040Z_optimizer_results_da3a081a",
+    "training_performance": "outputs/runs/20261102T045736Z_training_performance_e7394840",
+    "training_performance_single_sample": "outputs/runs/20261102T052421Z_training_performance_2ccbc171",
     "best_optimizer_curves": "outputs/runs/20261022T151640Z_best_optimizer_learning_curves_cbe88b2e",
-    "loaded_model_test": "outputs/runs/20261022T151641Z_model_save_load_2f8d78d9"
+    "loaded_model_test": "outputs/runs/20261022T151641Z_model_save_load_2f8d78d9",
+    "architectures/SmallMLP": "outputs/runs/20261102T045843Z_architecture_SmallMLP_096b15fe",
+    "architectures/MainMLP": "outputs/runs/20261102T045843Z_architecture_MainMLP_104bce18",
+    "architectures/MainMLP_FE": "outputs/runs/20261102T045843Z_architecture_MainMLP_FE_73fa19a9"
   },
   "files": [
     {
@@ -2457,6 +2462,108 @@
       "sha256": "eb9e7e702224f388e859f9975f3b5f6af0d83353ed2185e3d2713eee88705134"
     },
     {
+      "path": "training_performance/config.json",
+      "bytes": 914,
+      "source_sha256": "78cf507baaa89dbd3ee0189e874d1bd927ae242d4f9d0abe052091dfcf5a6382",
+      "sha256": "5b4c2346f4a907145a4bb0b7aad0fed724bdeb05a71456a0be151d7274014d9b"
+    },
+    {
+      "path": "training_performance/environment_snapshot.json",
+      "bytes": 464,
+      "source_sha256": "06eb65ab6c6622474e4a80bac0d955433ee4cb929a63b1f50d64fb7e57a763f0",
+      "sha256": "31926d27b257f6e8510621ec2d0f8e95e823fbc8fdedb67d23531c6eaf2bfa65"
+    },
+    {
+      "path": "training_performance/measurement_0.json",
+      "bytes": 862,
+      "source_sha256": "89d4a4b46912e2d28c03f2184e97f7fceb98950ad2c6d2ec221790b43158b68e",
+      "sha256": "dfd8d728482d0b889815e2d85a4254940e0639af9e3c4a34eb262312de63ece8"
+    },
+    {
+      "path": "training_performance/measurement_1.json",
+      "bytes": 841,
+      "source_sha256": "61ba656a52c184f3cd48b082d6157b19ba8c85d5adca07cb1a4520688f5aeaea",
+      "sha256": "cc1c10ca9db93987d1b0f6b160cd3eb4c2fb8fe423f849f6d77fdcf4867edc20"
+    },
+    {
+      "path": "training_performance/measurement_2.json",
+      "bytes": 855,
+      "source_sha256": "95eaab16954e27f6d45ae416878fab0a0a7f272f567f1d7a39bb6f04d4838c86",
+      "sha256": "42165b2db2730237ef1e300094bca430dd11fab91bc4d7302277f59e3a50d096"
+    },
+    {
+      "path": "training_performance/methodology.json",
+      "bytes": 914,
+      "source_sha256": "78cf507baaa89dbd3ee0189e874d1bd927ae242d4f9d0abe052091dfcf5a6382",
+      "sha256": "5b4c2346f4a907145a4bb0b7aad0fed724bdeb05a71456a0be151d7274014d9b"
+    },
+    {
+      "path": "training_performance/status.json",
+      "bytes": 156,
+      "source_sha256": "6e9717647733ebd4fc74dfebee3d14d1eab2305f4b3a718f30b10631ed5e49fc",
+      "sha256": "39a8180ab09f53a7914706dffbd971ee558ae6b34d8bb0d51578852e0d408707"
+    },
+    {
+      "path": "training_performance/training_performance.csv",
+      "bytes": 766,
+      "source_sha256": "ad9ddde5a22690cc8dd901c3cbe69d3b6b3375b3b784364b3b32665ad4f259a2",
+      "sha256": "ad9ddde5a22690cc8dd901c3cbe69d3b6b3375b3b784364b3b32665ad4f259a2"
+    },
+    {
+      "path": "training_performance_single_sample/config.json",
+      "bytes": 912,
+      "source_sha256": "0b2e4003aec2e7de233291cc3f5cfb6df268b17f1c80395ce8497a4620008976",
+      "sha256": "2fecf55dd4b66fa6272b8b90fd7bba4c2d612beac77cc772f4514a795dbf5b71"
+    },
+    {
+      "path": "training_performance_single_sample/environment_snapshot.json",
+      "bytes": 464,
+      "source_sha256": "06eb65ab6c6622474e4a80bac0d955433ee4cb929a63b1f50d64fb7e57a763f0",
+      "sha256": "31926d27b257f6e8510621ec2d0f8e95e823fbc8fdedb67d23531c6eaf2bfa65"
+    },
+    {
+      "path": "training_performance_single_sample/measurement_0.json",
+      "bytes": 852,
+      "source_sha256": "cbba8f6a2802d0b98f1940aee8276a65b602faff11343ce0b4f5357c7d61aacc",
+      "sha256": "877216d4939c9dce2ac9f64ce070094e7fabc2161fdf45ba61b4a5297f215437"
+    },
+    {
+      "path": "training_performance_single_sample/measurement_1.json",
+      "bytes": 835,
+      "source_sha256": "85493769b3b0cfd072896853aea417605bfa44d8ec84e6b6b7e1b7f9565c9c1c",
+      "sha256": "eeeaf82de587cb5eb9f7b9361e1d2246e6d604b641fec734875ed3c4ad355eb9"
+    },
+    {
+      "path": "training_performance_single_sample/measurement_2.json",
+      "bytes": 842,
+      "source_sha256": "c9d4e7b9f87b62441cd1b011a64bb46c0493ac71cbcd2f8e00fa00f085a3fe4c",
+      "sha256": "ac4ec7edf157889feb00b14d0992e91c18746c16b464b26449f149cf1c153cb1"
+    },
+    {
+      "path": "training_performance_single_sample/methodology.json",
+      "bytes": 912,
+      "source_sha256": "0b2e4003aec2e7de233291cc3f5cfb6df268b17f1c80395ce8497a4620008976",
+      "sha256": "2fecf55dd4b66fa6272b8b90fd7bba4c2d612beac77cc772f4514a795dbf5b71"
+    },
+    {
+      "path": "training_performance_single_sample/status.json",
+      "bytes": 156,
+      "source_sha256": "8ec64c759922356ca0b48f5f972648233d350a88d641c54e74a32f68b0c9f2a8",
+      "sha256": "55a6b4821b601140513c806a58679790356c06482f70a1c253f1149ca97ad2b8"
+    },
+    {
+      "path": "training_performance_single_sample/training_performance.csv",
+      "bytes": 710,
+      "source_sha256": "05e47179f2d6113d0d9c722dee27c64c794334ac3923aef695d5b2917403ff04",
+      "sha256": "05e47179f2d6113d0d9c722dee27c64c794334ac3923aef695d5b2917403ff04"
+    },
+    {
+      "path": "training_performance_single_sample/training_resources.png",
+      "bytes": 69514,
+      "source_sha256": "43f81f7bff16d717f62fe11d41da674c85498de3db478f17388104db27f79b09",
+      "sha256": "43f81f7bff16d717f62fe11d41da674c85498de3db478f17388104db27f79b09"
+    },
+    {
       "path": "best_optimizer_curves/best_optimizer_history.csv",
       "bytes": 3051,
       "source_sha256": "916acd3584494500a2702d6ee465d79fa08f7dae5ba7130ac03c9afa2151f66c",
@@ -2557,8 +2664,98 @@
       "bytes": 391449,
       "source_sha256": "ae70fc4c768d4d88b22b181305416ac993e37d56740a6ca4d7aec14fb20cd35e",
       "sha256": "ae70fc4c768d4d88b22b181305416ac993e37d56740a6ca4d7aec14fb20cd35e"
+    },
+    {
+      "path": "architectures/SmallMLP/config.json",
+      "bytes": 86,
+      "source_sha256": "7898652ae6aae37bea281bd9187e9ad712597a87fa9e9489ffd9263ed10b8a8e",
+      "sha256": "aa1bc39b3cda724d7d6471fb3cbedaa784ac5b447181f88008cdde900c39b98f"
+    },
+    {
+      "path": "architectures/SmallMLP/environment_snapshot.json",
+      "bytes": 464,
+      "source_sha256": "06eb65ab6c6622474e4a80bac0d955433ee4cb929a63b1f50d64fb7e57a763f0",
+      "sha256": "31926d27b257f6e8510621ec2d0f8e95e823fbc8fdedb67d23531c6eaf2bfa65"
+    },
+    {
+      "path": "architectures/SmallMLP/layers.csv",
+      "bytes": 134,
+      "source_sha256": "bb016831d1a91c1d5ead9e42c161a93a79e1bcc027e8d768c1a0dbf08e351688",
+      "sha256": "bb016831d1a91c1d5ead9e42c161a93a79e1bcc027e8d768c1a0dbf08e351688"
+    },
+    {
+      "path": "architectures/SmallMLP/model_architecture.txt",
+      "bytes": 226,
+      "source_sha256": "a325a49fb13394250c333222b6601f77c92e71946df1db7d17fd3a68bb02eb4b",
+      "sha256": "a325a49fb13394250c333222b6601f77c92e71946df1db7d17fd3a68bb02eb4b"
+    },
+    {
+      "path": "architectures/SmallMLP/status.json",
+      "bytes": 156,
+      "source_sha256": "b03bc020c750311d97605972bc408008a9a3af70be5650f30b317a20b8b94054",
+      "sha256": "17596ddfcf70ee95d439a68b6dd2ddbfe8c59be34089988f836cef857615d764"
+    },
+    {
+      "path": "architectures/MainMLP/config.json",
+      "bytes": 95,
+      "source_sha256": "eab5a65fb1dc8ef932b80dd1485507634c90597a5ee36a45078614b0cf6f479b",
+      "sha256": "cc323e1df938732cc8fe40a4034d239992a6e80e4d119fb4b82675c1345c674c"
+    },
+    {
+      "path": "architectures/MainMLP/environment_snapshot.json",
+      "bytes": 464,
+      "source_sha256": "06eb65ab6c6622474e4a80bac0d955433ee4cb929a63b1f50d64fb7e57a763f0",
+      "sha256": "31926d27b257f6e8510621ec2d0f8e95e823fbc8fdedb67d23531c6eaf2bfa65"
+    },
+    {
+      "path": "architectures/MainMLP/layers.csv",
+      "bytes": 176,
+      "source_sha256": "c05cb2cd401d0f02d9749eb7a01629f8e0a69ad573662a908934445f51145c76",
+      "sha256": "c05cb2cd401d0f02d9749eb7a01629f8e0a69ad573662a908934445f51145c76"
+    },
+    {
+      "path": "architectures/MainMLP/model_architecture.txt",
+      "bytes": 306,
+      "source_sha256": "490a140c28a43263d285c2a0896d1894604fd2dadf026361cd3a283dec78ed54",
+      "sha256": "490a140c28a43263d285c2a0896d1894604fd2dadf026361cd3a283dec78ed54"
+    },
+    {
+      "path": "architectures/MainMLP/status.json",
+      "bytes": 156,
+      "source_sha256": "4dc4bb7bb8579f3db3da33fac324acd58cb671b433d9dd93e7bb363770b09954",
+      "sha256": "07004e6ea956f98093f309a79e531fcf40253c1c9661e2fe6fa14a94ba8156cb"
+    },
+    {
+      "path": "architectures/MainMLP_FE/config.json",
+      "bytes": 98,
+      "source_sha256": "418d725d1c1f40f8e4340ea430fd513542e47fdd42e1a272baec2eae6997f6c0",
+      "sha256": "c7ea410935b13108d50131fab0c303b10a452a77f5efb5feaa18f7dc5818e347"
+    },
+    {
+      "path": "architectures/MainMLP_FE/environment_snapshot.json",
+      "bytes": 464,
+      "source_sha256": "06eb65ab6c6622474e4a80bac0d955433ee4cb929a63b1f50d64fb7e57a763f0",
+      "sha256": "31926d27b257f6e8510621ec2d0f8e95e823fbc8fdedb67d23531c6eaf2bfa65"
+    },
+    {
+      "path": "architectures/MainMLP_FE/layers.csv",
+      "bytes": 176,
+      "source_sha256": "ec3b039b41528bab419446cc5ea5b9d3115cd82986e438e2589f3c3adf7acace",
+      "sha256": "ec3b039b41528bab419446cc5ea5b9d3115cd82986e438e2589f3c3adf7acace"
+    },
+    {
+      "path": "architectures/MainMLP_FE/model_architecture.txt",
+      "bytes": 306,
+      "source_sha256": "b3a9ef3c5766cf6b2502666a3e6c1a6d1ed4401ccc7b899aa59c886e5b476ccb",
+      "sha256": "b3a9ef3c5766cf6b2502666a3e6c1a6d1ed4401ccc7b899aa59c886e5b476ccb"
+    },
+    {
+      "path": "architectures/MainMLP_FE/status.json",
+      "bytes": 156,
+      "source_sha256": "952887cca7720d2766de7aba548e281334f8651100d8580a1921371e57ba9c5d",
+      "sha256": "5457639f4d03c374f2d4966da3483b2404d1caf301e1ba939cf9a7a2822c932c"
     }
   ],
-  "excluded_count": 136,
+  "excluded_count": 146,
   "note": "Report evidence only; original run paths in configs are provenance, not executable dataset paths."
 }

@@ -33,6 +33,7 @@ B đo từ đọc PNG đến JSON sau khi model nạp sẵn: median ResNet 3,761
 - [2.8. Thiết kế search và chọn model bằng validation](#28-thiết-kế-search-và-chọn-model-bằng-validation)
 - [2.9. Metric đa lớp, ROC và Precision–Recall](#29-metric-đa-lớp-roc-và-precisionrecall)
 - [2.10. Cách đo thời gian, RAM và VRAM](#210-cách-đo-thời-gian-ram-và-vram)
+- [2.11. Benchmark training batch size 1](#211-benchmark-training-batch-size-1)
 - [3.1. So sánh tổng thể các cấu hình đã chạy](#31-so-sánh-tổng-thể-các-cấu-hình-đã-chạy)
 - [3.2. Đường học và lựa chọn checkpoint](#32-đường-học-và-lựa-chọn-checkpoint)
 - [3.3. Metric theo lớp và confusion matrix](#33-metric-theo-lớp-và-confusion-matrix)
@@ -42,7 +43,8 @@ B đo từ đọc PNG đến JSON sau khi model nạp sẵn: median ResNet 3,761
 - [3.7. Chi phí huấn luyện và đánh giá](#37-chi-phí-huấn-luyện-và-đánh-giá)
 - [3.8. Save/load và bằng chứng inference](#38-saveload-và-bằng-chứng-inference)
 - [3.9. Benchmark một ảnh khi model đã nạp sẵn](#39-benchmark-một-ảnh-khi-model-đã-nạp-sẵn)
-- [3.10. Kết luận, giới hạn và hướng phát triển](#310-kết-luận-giới-hạn-và-hướng-phát-triển)
+- [3.10. Benchmark training đúng một mẫu](#310-benchmark-training-đúng-một-mẫu)
+- [3.11. Kết luận, giới hạn và hướng phát triển](#311-kết-luận-giới-hạn-và-hướng-phát-triển)
 
 ## 1. ĐẶC TẢ, CƠ SỞ VÀ THIẾT KẾ
 
@@ -251,6 +253,14 @@ ROC quét score qua nhiều ngưỡng: X=FPR/Y=TPR; PR: X=recall/Y=precision. Le
 Benchmark B bắt đầu sau load model/checkpoint; batch 1, FP32, eval/inference_mode, TF32 tắt. Total đo độc lập đọc/giải mã PNG → preprocessing → CPU/GPU transfer → forward → softmax/kết quả về CPU → chuỗi JSON; loại in terminal/ghi báo cáo. CUDA đồng bộ ở biên đo.
 
 Ghi request đầu riêng; warm-up 20, total 100 lượt. Stage diagnostics 20 lượt riêng có sync từng bước; không cộng stage suy ra total. Bộ nhớ dùng 20 lượt khác để sampler không nhiễu latency chính: RSS lấy mẫu 1 ms; reset CUDA peaks trước memory pass. Cùng ảnh có OS cache. RSS gồm process/model/thư viện; allocated/reserved là allocator, không phải toàn CUDA context hoặc cấu hình tối thiểu.
+
+### 2.11. Benchmark training batch size 1
+
+Phép đo bổ sung dùng `finetune/best.pt` của run S, cùng train index 0 (nhãn frog), resize 64×64, CPU FP32, 2 thread, seed 42. [Cấu hình](config/training_benchmark.json) chọn run tường minh; [CLI](scripts/benchmark_training.py) chạy hai process độc lập. Hash tensor đầu vào của hai model được kiểm tra bằng nhau, split khớp checksum trong checkpoint. Không augmentation trong microbenchmark; dropout 0,2 vẫn hoạt động và BatchNorm running statistics cố định. Freeze theo `scheduled_tail`, full-image forward cả hai.
+
+Khởi tạo optimizer AdamW mới từ best validation weights, dùng LR đầu recipe (backbone 1e-4, head 1e-3), weight decay 1e-4; không load optimizer state hoặc chạy scheduler. Đây là chi phí vài bước training trên trọng số đã học, không phải resume, đo hội tụ, hay tái hiện chính xác mọi epoch. Một bước đầu đo memory để bao gồm optimizer allocation; 3 warmup rồi 10 bước timing không bật sampler. Mỗi timing gồm zero_grad, forward, CrossEntropyLoss, backward và optimizer.step; không gồm IO, preprocessing, transfer, validation hoặc lưu artifact. CUDA được hỗ trợ nhưng lượt này không có CUDA, VRAM ghi null.
+
+RAM baseline/peak/tăng thêm là sampled process RSS, gồm runtime, model và dataset đã nạp; lấy mẫu 1 ms có thể bỏ lỡ đỉnh ngắn. CUDA allocated/reserved nếu chạy GPU chỉ phản ánh allocator, không phải tổng VRAM card. CLI từ chối ghi đè output đã tồn tại, hash checkpoint trước/sau và lưu manifest/source hashes. Notebook chỉ đọc evidence; nội dung kiến trúc từng layer/module, lý do chọn và các quyết định được liên kết tại [description](description_lab_02.md#các-quyết-định-đã-ghi-nhận-và-lý-do-chọn-kiến-trúc). Bảng parameter tensor trong notebook ghi rõ trainability của stage head; phần mở fine-tune đọc từ comparison của run, tránh hiểu nhầm cột head là trạng thái mọi stage.
 
 ## 3. KẾT QUẢ, THẢO LUẬN VÀ KẾT LUẬN
 
@@ -510,7 +520,20 @@ Kết quả được tích hợp tại mục 8 của [notebook Modeling](noteboo
 
 <div style="break-before: page; page-break-before: always;"></div>
 
-### 3.10. Kết luận, giới hạn và hướng phát triển
+### 3.10. Benchmark training đúng một mẫu
+
+Evidence [CSV](outputs/published/training_benchmark/scheduled64_cpu_batch1/training_performance.csv), [phương pháp](outputs/published/training_benchmark/scheduled64_cpu_batch1/methodology.json) và [provenance](outputs/published/training_benchmark/scheduled64_cpu_batch1/provenance.json) thuộc phép đo riêng trên CPU; không thay thế accuracy/history/fit time của S hoặc benchmark inference T4 ở 3.9.
+
+| Model | Median (ms/bước, batch 1) | Mean (ms) | P95 (ms) | Sampled RSS peak (MiB) | RSS tăng (MiB) | VRAM |
+|---|---:|---:|---:|---:|---:|---|
+| ResNet18 | 29,6003 | 29,7193 | 30,7659 | 721,9219 | 49,2969 | Không khả dụng |
+| DenseNet121 | 58,0292 | 57,4342 | 61,6784 | 677,6719 | 3,2188 | Không khả dụng |
+
+![Training batch 1: timing và sampled RSS](outputs/published/training_benchmark/scheduled64_cpu_batch1/training_resources.png)
+
+Biểu đồ có ba panel: median training step, RSS peak toàn process và RSS tăng trong bước memory đầu. DenseNet có median dài hơn khoảng 28,4290 ms trong lượt này; RSS peak và mức tăng quan sát được thấp hơn. Không quy RSS tăng riêng cho activation hoặc dung lượng kiến trúc: nó chịu ảnh hưởng allocator, vùng nhớ runtime đã cấp phát và sampling. Số tham số trainable khác nhau, chỉ một mẫu lặp, một phiên/model và optimizer mới nên chưa xác lập thứ hạng hiệu năng tổng quát, footprint tối thiểu hay chất lượng hội tụ. Mười lượt trong một process không thay thế nhiều phiên độc lập.
+
+### 3.11. Kết luận, giới hạn và hướng phát triển
 
 Trong S, DenseNet đạt chất lượng cao hơn ResNet và được chọn bằng validation. Đổi lại, train/test CPU và median inference T4 dài hơn trong các phép đo tương ứng. Thiết bị/phạm vi timing được báo cáo riêng; không dùng CPU training để suy latency GPU.
 

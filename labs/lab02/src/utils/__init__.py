@@ -13,7 +13,7 @@ _MODULE_EXPORTS = {
     ".notebook_views": (
         "architecture_summary", "architecture_visual", "class_metrics", "context",
         "efficiency", "epoch_budget", "errors", "evidence", "fine_search", "learning_curves",
-        "lr_search", "monitoring_status", "quality_cost", "roc_pr", "roundtrip", "tensorboard_evidence",
+        "lr_search", "monitoring_status", "quality_cost", "roc_pr", "roundtrip",
     ),
     ".reporting": (
         "export_evaluation", "plot_learning_curves", "save_figure",

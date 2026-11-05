@@ -175,40 +175,66 @@ def architecture_visual(run: Path, output: Path) -> None:
         'Head-only updates the classifier; fine-tuning also updates the configured final blocks. '
         'Frozen blocks still compute features. BatchNorm running statistics stay fixed. '
         'Parameter counts do not determine accuracy or runtime.</p>'))
+    display(HTML('<p>ResNet18 uses residual addition to learn corrections to a block input; '
+        'DenseNet121 concatenates earlier feature maps, encouraging feature reuse. '
+        'They provide two connectivity patterns for this transfer-learning exercise; '
+        'fewer parameters do not guarantee lower latency. Both use explicit ImageNet weights '
+        'and a replacement 10-class head. These choices are experimental, not proof of optimality.</p>'))
     for name in table.model.unique():
+        layers = pd.read_csv(run / name / 'parameters.csv')
+        display(HTML(f'<details><summary>{name}: parameter tensors by layer '
+            '(trainability column describes saved HEAD stage)</summary>'+
+            layers.to_html(index=False, escape=True)+'</details>'))
         content = html.escape((run / name / 'architecture.txt').read_text(encoding='utf-8'))
         display(HTML(f'<details><summary>{name}: full saved architecture</summary>'
                      f'<pre style="max-height:260px;overflow:auto">{content}</pre></details>'))
 
 
-def tensorboard_evidence(run: Path) -> None:
-    """Render saved scalars without overlapping stage epochs or rewriting old evidence."""
-    from matplotlib.ticker import MaxNLocator, PercentFormatter
-    path = run/'tensorboard_scalars.csv'
-    if not path.exists():
-        display(HTML('No exported scalars. Open live TensorBoard using the event files for this run.'))
-        return
-    data = pd.read_csv(path)
-    models = pd.read_csv(run/'comparison.csv').model.unique()
-    fig, axes = plt.subplots(4, len(models), figsize=(12, 12), squeeze=False)
-    for j, name in enumerate(models):
-        for stage_index, (stage, key) in enumerate([('Head', 'head'), ('Fine-tune', 'finetune')]):
-            for metric_index, metric in enumerate(['loss', 'accuracy']):
-                ax = axes[stage_index*2+metric_index, j]
-                for split, color, style in [('train', '#2563eb', '-o'), ('val', '#d97706', '--s')]:
-                    rows = data[(data['model'] == name) & (data['stage'] == key) &
-                                (data['tag'] == f'{split}_{metric}')].sort_values('epoch')
-                    ax.plot(rows.epoch, rows.value, style, color=color, label=split)
-                ax.set(title=f'{name} | {stage} | {metric}', xlabel='Epoch within stage', ylabel=metric)
-                ax.xaxis.set_major_locator(MaxNLocator(integer=True))
-                if metric == 'accuracy':
-                    ax.yaxis.set_major_formatter(PercentFormatter(1))
-                ax.legend(fontsize=8)
-                ax.grid(alpha=.2)
-    fig.suptitle('Saved TensorBoard scalars; separate stages; not a live dashboard')
-    plt.tight_layout(rect=(0, 0, 1, .97))
-    display(fig)
-    plt.close(fig)
+def training_benchmark(run: Path, evidence: Path, output: Path, verify=True) -> None:
+    """Read explicit training evidence without importing torch or running training."""
+    from .delivery import file_hash
+    evidence = Path(evidence)
+    if verify:
+        status = json.loads((evidence/'status.json').read_text())
+        if status.get('status') != 'completed':
+            raise ValueError('Training benchmark evidence is incomplete')
+        manifest = json.loads((evidence/'manifest.json').read_text())
+        required = {'config.json', 'methodology.json', 'training_performance.csv', 'provenance.json',
+                    'resnet18/measurement.json', 'densenet121/measurement.json', 'status.json'}
+        if not required <= manifest.keys():
+            raise ValueError('Training benchmark manifest is incomplete')
+        for name, checksum in manifest.items():
+            path = (evidence/name).resolve()
+            if not path.is_relative_to(evidence.resolve()) or file_hash(path) != checksum:
+                raise ValueError('Training benchmark checksum mismatch: '+name)
+        provenance = json.loads((evidence/'provenance.json').read_text())
+        if provenance['training_run'] != run.name:
+            raise ValueError('Training benchmark belongs to another training run')
+        for name, checksum in provenance['checkpoints'].items():
+            path = run/name/'finetune/best.pt'
+            if path.exists() and file_hash(path) != checksum:
+                raise ValueError('Training checkpoint differs from benchmark source')
+    table = pd.read_csv(evidence/'training_performance.csv')
+    measurements = [json.loads((evidence/name/'measurement.json').read_text()) for name in table.model]
+    table.insert(5, 'baseline_rss_mib', [v['memory']['baseline_rss_bytes']/2**20 for v in measurements])
+    table['peak_reserved_mib'] = [None if v['memory']['peak_reserved_bytes'] is None else
+                                 v['memory']['peak_reserved_bytes']/2**20 for v in measurements]
+    display(table.style.hide(axis='index').format(precision=4, na_rep='Unavailable'))
+    fields = [('median_ms', 'Training step (ms/sample)'), ('peak_rss_mib', 'Process peak RSS (MiB)'),
+              ('rss_increase_mib', 'RSS increase (MiB)')]
+    if table.peak_allocated_mib.notna().any():
+        fields.append(('peak_allocated_mib', 'CUDA allocated peak (MiB)'))
+    fig, axes = plt.subplots(1, len(fields), figsize=(5*len(fields), 4), squeeze=False)
+    for ax, (field, title) in zip(axes[0], fields):
+        bars = ax.bar(table.model, table[field], color=['#2563eb', '#d97706'])
+        ax.bar_label(bars, fmt='%.3f')
+        ax.set(title=title, ylim=(0, max(table[field].max()*1.2, .001)))
+    fig.suptitle('Training only | batch 1 | fixed train image | fresh optimizer | sampled process RSS')
+    fig.tight_layout()
+    _save(fig, output, 'training_resources')
+    display(HTML('<p>Separate from inference and historical fit time. CPU VRAM is unavailable. '
+                 'RSS includes Python/runtime; sampled peaks may miss short allocations. '
+                 'No augmentation; freeze/BatchNorm follow checkpoint metadata.</p>'))
 
 
 def monitoring_status(run: Path) -> None:

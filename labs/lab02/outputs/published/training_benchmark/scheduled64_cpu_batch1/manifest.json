@@ -1,0 +1,10 @@
+{
+  "config.json": "c571794589b72b57c0a0720c22c3740cb19019aa3bdcfa5e5265ea49c952dcec",
+  "densenet121/measurement.json": "391c9bd0ecee16a3e1db94f8e0782bb71d43ab33c7c30a0178e4633efcd899b9",
+  "methodology.json": "7ba78c561547281310842c48570420fdf14e850fc33d90336d6fa7047bf4530e",
+  "provenance.json": "c6873ae857c68f17df298d4b1293847197c6d1462d814113f54bb41be57dc4f6",
+  "resnet18/measurement.json": "3bc1c4a86e345950a70d64feef98ccae1d4f1526f4efe764c95d1ed2ef32811b",
+  "status.json": "7ccc76c79702d3036f1f73acdf5cc4c333fa7d9721df7437015a74558db32533",
+  "training_performance.csv": "aa945824a1d4bb5aedf35e52dbd5d6ebff0e2a55e1ccb825f722f58b06d86d62",
+  "training_resources.png": "0f0b69ec73cb09629ad1c1a617cf305622569f8ce582ec2aff3a9794864e502f"
+}

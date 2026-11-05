@@ -293,6 +293,23 @@ def test_unexecuted_fine_grid_is_explanatory_table_not_results(tmp_path, monkeyp
     assert tables[1]['Head search batches'].iloc[0] == '[64, 128]'
 
 
+def test_training_benchmark_view_and_template_never_start_training(tmp_path):
+    import importlib.util
+    import nbformat
+    spec = importlib.util.spec_from_file_location('execute_training_view', ROOT/'scripts/execute_notebook.py')
+    cli = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(cli)
+    for notebook in (cli.scheduled_notebook(nbformat), json.loads(
+            (ROOT/'notebooks/02_lab02_modeling.ipynb').read_text())):
+        sources = [''.join(c['source']) for c in notebook['cells'] if c['cell_type']=='code']
+        source = next(s for s in sources if 'view.training_benchmark(' in s)
+        assert 'subprocess' not in source and 'benchmark_steps' not in source
+        assert 'benchmark_training.py' in source
+    from src.utils import notebook_views as view
+    with unittest.TestCase().assertRaises(FileNotFoundError):
+        view.training_benchmark(tmp_path, tmp_path/'missing', tmp_path)
+
+
 def test_learning_plot_separates_stages_and_preserves_original_histories(tmp_path, monkeypatch):
     from matplotlib.figure import Figure
     from src.utils.reporting import plot_learning_curves
