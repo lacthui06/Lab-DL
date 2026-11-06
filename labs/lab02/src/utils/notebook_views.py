@@ -181,13 +181,11 @@ def architecture_visual(run: Path, output: Path) -> None:
         'fewer parameters do not guarantee lower latency. Both use explicit ImageNet weights '
         'and a replacement 10-class head. These choices are experimental, not proof of optimality.</p>'))
     for name in table.model.unique():
-        layers = pd.read_csv(run / name / 'parameters.csv')
-        display(HTML(f'<details><summary>{name}: parameter tensors by layer '
-            '(trainability column describes saved HEAD stage)</summary>'+
-            layers.to_html(index=False, escape=True)+'</details>'))
-        content = html.escape((run / name / 'architecture.txt').read_text(encoding='utf-8'))
-        display(HTML(f'<details><summary>{name}: full saved architecture</summary>'
-                     f'<pre style="max-height:260px;overflow:auto">{content}</pre></details>'))
+        arch_path = run / name / 'architecture.txt'
+        if arch_path.exists():
+            content = html.escape(arch_path.read_text(encoding='utf-8'))
+            display(HTML(f'<details><summary>{name}: full saved architecture</summary>'
+                         f'<pre style="max-height:260px;overflow:auto">{content}</pre></details>'))
 
 
 def training_benchmark(run: Path, evidence: Path, output: Path, verify=True) -> None:

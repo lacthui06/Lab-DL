@@ -1,6 +1,0 @@
-{
-  "model": "resnet18",
-  "stage": "head",
-  "batch_size": 64,
-  "lr": 0.001
-}

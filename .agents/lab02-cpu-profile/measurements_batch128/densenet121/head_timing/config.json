@@ -1,6 +1,0 @@
-{
-  "model": "densenet121",
-  "stage": "head",
-  "batch_size": 128,
-  "lr": 0.001
-}
