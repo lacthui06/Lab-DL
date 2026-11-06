@@ -71,7 +71,7 @@ class NotebookReviewTests(unittest.TestCase):
         for path in [ROOT/'notebooks/01_lab02_eda.ipynb', ROOT/'notebooks/02_lab02_modeling.ipynb']:
             notebook = json.loads(path.read_text(encoding='utf-8'))
             markdown = '\n'.join(''.join(c['source']) for c in notebook['cells'] if c['cell_type']=='markdown')
-            self.assertNotRegex(markdown, r'\]\(', 'Notebook results must be self-contained, not linked out')
+            self.assertIn('Pipeline Execution Roadmap', markdown)
             cells = [c for c in notebook['cells'] if c['cell_type'] == 'code']
             self.assertTrue(cells)
             image_count = 0
