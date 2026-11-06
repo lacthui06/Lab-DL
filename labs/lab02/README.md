@@ -9,7 +9,7 @@ So sánh ResNet18 và DenseNet121 pretrained, head-only và fine-tune. Kết qu�
 - [walkthrough_lab_02.md](walkthrough_lab_02.md): báo cáo theo cấu trúc Lab01: đặc tả/thiết kế → phương pháp thực nghiệm → kết quả/thảo luận.
 - [01_lab02_eda.ipynb](notebooks/01_lab02_eda.ipynb): raw → integrity → pixel/spatial EDA → preprocessing → handcrafted features; chỉ dùng `src.datasets.eda`, không nạp mạng.
 - [02_lab02_modeling.ipynb](notebooks/02_lab02_modeling.ipynb): roadmap như Lab01, output ngay từng bước; đã tích hợp latency một ảnh, RAM RSS và VRAM ở mục 8. Bản [Kaggle](notebooks/02_lab02_modeling-kaggle.ipynb) có cùng bố cục.
-- [03_lab02_single_image_benchmark.ipynb](notebooks/03_lab02_single_image_benchmark.ipynb): bản thực thi T4 gốc được giữ làm bằng chứng. Kết quả xem trực tiếp trong notebook 02; không cần chạy lại 03. Xem [provenance](outputs/published/single_image_benchmark/20261102T184034Z_kaggle/provenance.json).
+- Single-image benchmark: kết quả đo latency T4 và bộ nhớ được tích hợp trực tiếp tại mục 8 của [02_lab02_modeling.ipynb](notebooks/02_lab02_modeling.ipynb). Xem [provenance](outputs/published/single_image_benchmark/20261102T184034Z_kaggle/provenance.json).
 - [config/](config/): [full.json](config/full.json) cho GPU 224×224; [cpu_pilot.json](config/cpu_pilot.json) kiểm tra nhỏ; [cpu_full.json](config/cpu_full.json) mô tả run CPU lịch sử; [tuned.json](config/tuned.json) là cấu hình tuning chạy được; thiết kế và lý do nằm trong walkthrough.
 - [requirements.txt](requirements.txt): phiên bản cố định từ Windows; cài trên Linux/Kaggle chưa kiểm chứng.
 - [outputs/selected_run.json](outputs/selected_run.json): run được chọn. `outputs/runs/` là bằng chứng gốc; `outputs/review/` chứa biểu đồ trình bày mới, không ghi đè run gốc.

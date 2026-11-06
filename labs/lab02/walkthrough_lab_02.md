@@ -78,7 +78,7 @@ Không gọi train-pool 50.000 là tập train cập nhật gradient 45.000.
 
 ### 1.3. Kiến trúc phần mềm và luồng dữ liệu
 
-[README](README.md) hướng dẫn sử dụng; [EDA](notebooks/01_lab02_eda.ipynb) khảo sát dữ liệu; [modeling](notebooks/02_lab02_modeling.ipynb) đọc artifact; [benchmark](notebooks/03_lab02_single_image_benchmark.ipynb) thực thi inference CUDA riêng.
+[README](README.md) hướng dẫn sử dụng; [EDA](notebooks/01_lab02_eda.ipynb) khảo sát dữ liệu; [modeling](notebooks/02_lab02_modeling.ipynb) đọc artifact và benchmark inference.
 
 ```text
 src/
@@ -516,7 +516,7 @@ Giới hạn: chỉ lặp một ảnh, có OS cache, một phiên GPU và không
 
 ![Ảnh đầu vào B](outputs/published/single_image_benchmark/20261102T184034Z_kaggle/input.png)
 
-Kết quả được tích hợp tại mục 8 của [notebook Modeling](notebooks/02_lab02_modeling.ipynb), đọc artifact đã kiểm checksum và khớp nguồn training run. [Notebook thực thi T4 gốc](notebooks/03_lab02_single_image_benchmark.ipynb) được giữ làm bằng chứng. Nguồn đo là [benchmark_inference.py](scripts/benchmark_inference.py); protocol ở 2.10. Bằng chứng xuất riêng trong outputs/published giữ provenance gói thực thi.
+Kết quả được tích hợp tại mục 8 của [notebook Modeling](notebooks/02_lab02_modeling.ipynb), đọc artifact đã kiểm checksum và khớp nguồn training run. Bản thực thi Kaggle T4 gốc được lưu chứng thực tại [provenance](outputs/published/single_image_benchmark/20261102T184034Z_kaggle/provenance.json). Nguồn đo là [benchmark_inference.py](scripts/benchmark_inference.py); protocol ở 2.10. Bằng chứng xuất riêng trong outputs/published giữ provenance gói thực thi.
 
 <div style="break-before: page; page-break-before: always;"></div>
 

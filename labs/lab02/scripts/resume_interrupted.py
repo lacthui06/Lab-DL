@@ -82,9 +82,9 @@ def main(argv=None):
             destination=run/'resume_source_snapshot'/relative
             destination.parent.mkdir(parents=True,exist_ok=True)
             shutil.copy2(source,destination)
-            hashes[str(relative)]=file_hash(source)
+            hashes[relative.as_posix()]=file_hash(source)
         write_json(run/'resume_source_hashes.json',hashes)
-        write_json(run/'manifest.json',{str(p.relative_to(run)):file_hash(p) for p in run.rglob('*')
+        write_json(run/'manifest.json',{p.relative_to(run).as_posix():file_hash(p) for p in run.rglob('*')
             if p.is_file() and p.name!='manifest.json'})
 
 
