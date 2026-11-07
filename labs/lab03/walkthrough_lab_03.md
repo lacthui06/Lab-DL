@@ -298,7 +298,7 @@ Lưu train_token_lengths để kiểm chứng các kết luận về padding/tru
 ### 2.8. Cutoff sensitivity
 
 Tính tỷ lệ train có token length vượt64/96/128/256.
-Configured max_length128 là upper bound khi tokenize.
+Configured max_length128 là upper bound khi tokenize. EDA ghi P50/P75/P90/P95/P99/max, số lượng và tỷ lệ Train vượt cutoff; nếu tỷ lệ vượt đạt 5% thì nêu khuyến nghị đánh giá cutoff lớn hơn hoặc chiến lược truncation trên Validation, không tự đổi theo Test. Nếu ít hơn thì giữ cấu hình hiện tại, tránh thêm xử lý không cần bằng chứng.
 
 Nếu một câu bị cắt, phần cuối có thể chứa kết luận hoặc đảo nghĩa.
 Nếu max_length quá lớn, padding và memory có thể tăng không cần thiết.
@@ -314,6 +314,7 @@ Không áp dụng xóa stopwords/punctuation đại trà trước pretrained tok
 
 Regex negation/contrast dùng để khảo sát train và bảo vệ augmentation.
 Đây là heuristic, có thể bỏ sót trường hợp ngôn ngữ phức tạp.
+Artifact mới thống kê số review có cue, số lần xuất hiện theo nhóm phủ định/tương phản và ví dụ Train theo nhãn. Chênh lệch tần suất là liên hệ mô tả, không đo causal effect.
 
 Không đưa heuristic này thành nhãn mới cho validation/test.
 Không kết luận model sai vì một từ chỉ dựa trên việc từ đó xuất hiện trong câu.
@@ -346,8 +347,8 @@ Validation/test không được dùng fit vocabulary hoặc IDF.
 
 ### 2.12. Diễn giải sparse feature figures
 
-Top mean TF-IDF theo lớp mô tả mức feature trung bình trong corpus.
-Nó không phải classifier coefficient và không phải causal importance.
+Top 25 mean TF-IDF theo lớp mô tả mức feature trung bình trong corpus; biểu đồ delta Positive − Negative giúp thấy term/bigram lệch về nhãn nào.
+Đây không phải classifier coefficient và không phải causal importance.
 
 Sparse matrix shape, nonzeros và density được lưu.
 Sparse array bytes gồm data/indices/indptr, không gồm mọi Python/model overhead.

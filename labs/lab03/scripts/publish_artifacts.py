@@ -25,7 +25,7 @@ JSON_FILES = {
     "inference_predictions.json", "baseline_validation_candidates.json", "baseline_validation_policy.json", "checkpoint_reference.json",
     "performance_history.json", "performance_summary.json", "performance_source.json", "resource_history.json",
     "test_resource_metrics.json", "model_architecture.json", "environment_snapshot.json", "source_commit.json",
-    "data_source_provenance.json", "data_quality.json", "preprocessing_statistics.json", "text_signals.json", "tokenization_examples.json", "feature_summary.json",
+    "data_source_provenance.json", "data_quality.json", "preprocessing_statistics.json", "text_signals.json", "negation_contrast.json", "tokenization_examples.json", "feature_summary.json",
 }
 
 
@@ -52,7 +52,8 @@ def publish_artifacts(settings=None, output_dir=None, source_root=ROOT):
     architecture_files=[]
     if (architecture/'manifest.json').is_file():
         declared=read_json(architecture/'manifest.json')
-        if set(declared)!={'model_architectures.txt','summary.json'}:
+        required={'model_architectures.txt','summary.json'}
+        if not required.issubset(declared) or set(declared)-required-{'parameter_allocation.png'}:
             raise ValueError('Invalid architecture manifest')
         for name,digest in declared.items():
             if not (architecture/name).is_file() or hash_file(architecture/name)!=digest:
@@ -164,6 +165,8 @@ def publish_artifacts(settings=None, output_dir=None, source_root=ROOT):
             lines += ['','## Kiến trúc hai model','',
                 '[Toàn bộ module tree dạng text](architecture/model_architectures.txt) · [Thông số và provenance](architecture/summary.json)',
                 '', 'Đây là cấu trúc từ config đã pin, không phải phép xác thực reload checkpoint. Exercise1 chỉ inference, không tối ưu weights.']
+            if (architecture/'parameter_allocation.png').is_file():
+                lines += ['', '![Phân bổ tham số](architecture/parameter_allocation.png)', '']
         lines += ['','## Log nguồn đã publish','',
             'Các log dưới đây được copy nguyên byte từ run nguồn và có SHA256 trong catalog/manifest. Log thiếu trong nguồn giữ khai báo artifact_availability; không sinh log thay thế.','']
         lines += [f"- [{item['role']}: {Path(item['file']).name}]({item['file']})" for item in catalog if item['kind']=='log']

@@ -17,7 +17,12 @@ def finish(fig, path):
 def plot_lengths(lengths, cutoff, path):
     fig, ax = plt.subplots(figsize=(9, 4))
     sns.histplot(lengths, bins=40, kde=len(set(lengths)) > 1, ax=ax)
+    overflow = int(np.sum(np.asarray(lengths) > cutoff))
+    fraction = overflow / len(lengths) if len(lengths) else 0.0
     ax.axvline(cutoff, color="red", linestyle="--", label=f"max_length={cutoff}")
+    ax.axvspan(cutoff, max(cutoff + 1, int(np.max(lengths)) if len(lengths) else cutoff + 1),
+               color="#d9534f", alpha=.09, label="Region truncated by tokenizer")
+    ax.set_title(f"Train above cutoff: {overflow:,}/{len(lengths):,} ({fraction:.2%})")
     ax.set(xlabel="Tokens before truncation", ylabel="Training examples")
     ax.legend()
     finish(fig, path)

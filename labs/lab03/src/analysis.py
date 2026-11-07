@@ -12,24 +12,36 @@ from .utils.plots import finish
 
 def _table_image(rows, columns, path, title, widths=None):
     """Bảng PNG có nguồn JSON song hành; không chỉ hiển thị trong notebook."""
-    fig, ax = plt.subplots(figsize=(14, max(2.6, .65 * (len(rows) + 2))))
-    ax.axis("off")
-    body = []
+    widths = widths or [1 / len(columns)] * len(columns)
+    wrap_widths = [max(12, int(82 * width)) for width in widths]
+    body = []; row_lines = []
     for row in rows:
         cells = []
-        for key in columns:
+        line_count = 1
+        for key, wrap_width in zip(columns, wrap_widths):
             value = row.get(key, "")
             if isinstance(value, float): value = f"{value:.5f}"
-            cells.append(textwrap.fill(str(value), 65 if key == "text" else 30))
+            rendered = textwrap.fill(str(value), wrap_width, break_long_words=True, break_on_hyphens=False)
+            cells.append(rendered)
+            line_count = max(line_count, rendered.count("\n") + 1)
         body.append(cells)
+        row_lines.append(line_count)
+    fig_height = max(3.2, .30 * (1.25 + sum(row_lines)) + 1.4)
+    fig, ax = plt.subplots(figsize=(14, fig_height))
+    ax.axis("off")
     table = ax.table(cellText=body, colLabels=columns, loc="center", cellLoc="left", colWidths=widths)
-    table.auto_set_font_size(False); table.set_fontsize(9)
+    table.auto_set_font_size(False); table.set_fontsize(8.5)
+    weights = [1.25, *[max(1, count) for count in row_lines]]
+    scale = .88 / sum(weights)
     for (i, _), cell in table.get_celld().items():
-        cell.set_height(.83 / (len(rows) + 1))
+        cell.set_height(scale * weights[i])
+        cell.PAD = .025
         if i == 0: cell.set_facecolor("#cfe2f3")
         elif i % 2: cell.set_facecolor("#f3f6fa")
     ax.set_title(title, pad=18)
-    finish(fig, path)
+    fig.subplots_adjust(left=.025, right=.975, top=.88, bottom=.06)
+    fig.savefig(path, dpi=160, bbox_inches="tight", pad_inches=.12)
+    plt.close(fig)
 
 
 def _cache_key(source_run):

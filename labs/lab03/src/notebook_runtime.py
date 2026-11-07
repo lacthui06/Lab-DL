@@ -158,8 +158,36 @@ save_json(folder/'manifest.json',{name:hash_file(folder/name) for name in ('mode
         self.run('-c', code, self.mode)
         from IPython.display import display
         import pandas as pd
-        display(pd.DataFrame(self.read(output.with_name('summary.json'))['models']))
+        summaries = self.read(output.with_name('summary.json'))['models']
+        display(pd.DataFrame(summaries))
         print(output.read_text(encoding='utf-8'))
+        # Exercise1 chạy inference, vì vậy không có tham số nào được tối ưu trong lab.
+        # Exercise2 hiển thị phần frozen/trainable theo cấu hình fine-tuning.
+        import matplotlib.pyplot as plt
+        import numpy as np
+        allocation = self.lab/'outputs/architecture/parameter_allocation.png'
+        labels = ['Exercise1\ninference', 'Exercise2\nfine-tuning']
+        totals = [row['total_parameters']/1e6 for row in summaries]
+        optimized = [row['parameters_optimized_in_this_lab']/1e6 for row in summaries]
+        frozen = [total - trainable for total, trainable in zip(totals, optimized)]
+        fig, ax = plt.subplots(figsize=(9, 4.5))
+        y = np.arange(len(labels))
+        ax.barh(y, frozen, color='#cbd5e1', label='Not optimized in this lab')
+        ax.barh(y, optimized, left=frozen, color='#2563eb', label='Optimized during training')
+        for i, (total, count) in enumerate(zip(totals, optimized)):
+            percent = 100*count/(total*1e6) if total else 0
+            ax.text(total+.25, i, f'{count*1e6:,.0f} optimized ({percent:.2f}%)', va='center', fontsize=8)
+        ax.set(yticks=y, yticklabels=labels, xlabel='Parameters (millions)',
+            title='Parameter allocation; segments do not represent layer order')
+        ax.grid(axis='x', alpha=.2); ax.legend(loc='lower right')
+        fig.tight_layout(); fig.savefig(allocation, dpi=160, bbox_inches='tight'); plt.close(fig)
+        from .utils.runs import hash_file, save_json
+        manifest_path = allocation.parent/'manifest.json'
+        manifest = self.read(manifest_path)
+        manifest['parameter_allocation.png'] = hash_file(allocation)
+        save_json(manifest_path, manifest)
+        from IPython.display import Image
+        display(Image(filename=str(allocation)))
         return output
 
     def train(self):
@@ -239,7 +267,11 @@ save_json(folder/'manifest.json',{name:hash_file(folder/name) for name in ('mode
         if self.kaggle:
             display(HTML(f'<a href="/files/{quote(path.name)}" download="{path.name}">Tải {path.name}</a>'))
         else:
-            display(FileLink(os.path.relpath(path, Path.cwd())))
+            try:
+                link_path = os.path.relpath(path, Path.cwd())
+            except ValueError:  # Windows rejects relative paths across drive letters.
+                link_path = str(path.resolve())
+            display(FileLink(link_path))
 
     def export(self):
         if self.mode == 'view':

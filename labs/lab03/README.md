@@ -39,12 +39,13 @@ Cấu hình: **tối đa 5 epoch**, early stopping theo validation loss, patienc
 
 - Official splits: **8.530 train / 1.066 validation / 1.066 test**; seed 42; không subsample hoặc chia lại test.
 - Giữ phủ định/punctuation; WordPiece tokenizer đã pin; max length 128 và dynamic padding.
+- Notebook01 báo quantile/token overflow thực tế trên Train, so sánh cue phủ định/tương phản theo label kèm ví dụ, và trực quan top-25 mean TF-IDF cùng chênh lệch giữa hai lớp. Chạy `MODE="prepare"` để tái tạo artifact EDA mới.
 - Train-only augmentation bằng thay từ/cụm cùng cực tính, loại câu có phủ định/tương phản, dedup, cân bằng variants; tối đa 25%, không ép đủ bằng sao chép.
 - Baseline: TF-IDF unigram/bigram + Logistic Regression; fit train-only, chọn C bằng validation Macro-F1.
 - DistilBERT base: embedding và 4/6 encoder blocks frozen; encoder/head LR 5e-6/2e-5; dropout 0.2/0.2/0.4; AdamW decay 0.1; warmup 10%; gradient clipping 1.
 - Max 5 epoch + early stopping; chọn checkpoint bằng minimum validation loss.
 - Quét 19 thresholds trên validation Macro-F1, khóa policy rồi test.
-- Đo accuracy/loss theo epoch, time/sample, RAM RSS và CUDA peak/batch slot; hiển thị learning curves, architecture, metrics, confusion, ROC/PR, calibration và sample predictions.
+- Đo accuracy/loss theo epoch, time/sample, RAM RSS và CUDA peak/batch slot; hiển thị learning curves, architecture và phân bổ frozen/trainable parameters, metrics, confusion, ROC/PR, calibration và sample predictions.
 - Save/reload consistency, raw log, environment/config/source hashes và SHA256 manifest.
 
 Các kỹ thuật là lựa chọn được định trước để kiểm chứng bằng thực nghiệm; không bảo đảm không overfit hoặc luôn hơn baseline.

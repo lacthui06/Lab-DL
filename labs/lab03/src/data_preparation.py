@@ -8,6 +8,11 @@ from .utils.plots import finish,plot_lengths
 from .analysis import _table_image
 
 
+NEGATION_CONTRAST = PROTECTED
+NEGATION_CUES = re.compile(r"\b(?:not|no|never|neither|nor|hardly|barely|without)\b|n['’]t\b", re.I)
+CONTRAST_CUES = re.compile(r"\b(?:but|however|although|despite|yet)\b", re.I)
+
+
 def make_tfidf(settings):
     return TfidfVectorizer(ngram_range=tuple(settings['ngram_range']),
         min_df=settings['min_df'],max_features=settings['max_features'],sublinear_tf=True)
@@ -33,17 +38,47 @@ def export_data_review(raw, tokenizer, settings, output):
         raise ValueError('Nonempty train strings required before feature extraction')
     ids=tokenizer(text,truncation=False)['input_ids']
     lengths=np.asarray([len(row) for row in ids]);words=np.asarray([len(t.split()) for t in text])
+    cutoff=int(settings['max_length'])
+    quantiles={str(q):float(np.quantile(lengths,q)) for q in (.5,.75,.9,.95,.99,1.)}
+    overflow_count=int(np.sum(lengths>cutoff))
+    overflow_fraction=overflow_count/len(lengths)
+    # Gợi ý chỉ dựa vào tỷ lệ bị cắt trong Train; mặc định không đổi cách tokenize.
+    truncation_recommendation=(
+        'Review a longer max_length or an explicitly evaluated truncation strategy; '
+        'do not change preprocessing based on test results.'
+        if overflow_fraction >= .05 else
+        'Keep the configured cutoff; the observed train overflow is below 5%. '
+        'Do not add a special truncation strategy without evidence.'
+    )
     statistics={'train_samples':len(text),'fitted_split':'train',
-        'token_quantiles':{str(q):float(np.quantile(lengths,q)) for q in (.5,.9,.95,.99,1.)},
+        'token_quantiles':quantiles,
         'truncation_rates':{str(cut):float(np.mean(lengths>cut)) for cut in (64,96,128,256)},
-        'configured_max_length':settings['max_length'],
+        'configured_max_length':cutoff,'configured_cutoff_overflow_count':overflow_count,
+        'configured_cutoff_overflow_fraction':overflow_fraction,
+        'configured_cutoff_decision':truncation_recommendation,
         'preserve_negation_punctuation':True,'normalized_train_conflicting_label_groups':0}
     labelsets={}
     for t,y in zip(text,labels):labelsets.setdefault(normalized(t),set()).add(int(y))
     statistics['normalized_train_conflicting_label_groups']=sum(len(v)>1 for v in labelsets.values())
     signals=[]
+    cue_rows=[]
+    cue_examples=[]
     for label in (0,1):
         chosen=[t for t,y in zip(text,labels) if y==label]
+        matches=[m.group(0).casefold() for t in chosen for m in NEGATION_CONTRAST.finditer(t)]
+        cue_rows.append({'label':label,'samples':len(chosen),
+            'reviews_with_negation_or_contrast':sum(bool(NEGATION_CONTRAST.search(t)) for t in chosen),
+            'review_fraction':sum(bool(NEGATION_CONTRAST.search(t)) for t in chosen)/len(chosen),
+            'negation_cue_matches':sum(bool(NEGATION_CUES.fullmatch(c)) for c in matches),
+            'contrast_cue_matches':sum(bool(CONTRAST_CUES.fullmatch(c)) for c in matches)})
+        selected=0
+        for i,(t,y) in enumerate(zip(text,labels)):
+            if int(y)!=label:continue
+            found=[m.group(0) for m in NEGATION_CONTRAST.finditer(t)]
+            if found and selected<4:
+                cue_examples.append({'index':i,'label':label,'cues':', '.join(found),
+                    'text':t[:220]+('...' if len(t)>220 else '')})
+                selected+=1
         signals.append({'label':label,'samples':len(chosen),
             'mean_words':float(words[labels==label].mean()),'mean_tokens':float(lengths[labels==label].mean()),
             'negation_or_contrast_fraction':sum(bool(PROTECTED.search(t)) for t in chosen)/len(chosen),
@@ -52,6 +87,9 @@ def export_data_review(raw, tokenizer, settings, output):
         'action':'audit only; official splits unchanged; no fitting with heldout text/labels'})
     save_json(output/'preprocessing_statistics.json',statistics)
     save_json(output/'text_signals.json',signals)
+    save_json(output/'negation_contrast.json',{'fitted_split':'train','labels':cue_rows,
+        'examples':cue_examples,
+        'interpretation':'Descriptive association with labels only; counts do not establish causal impact.'})
     _table_image(quality,['split','samples','missing_or_nonstring','empty_or_whitespace','normalized_duplicate_rows','invalid_binary_labels'],
         output/'data_quality.png','Data contract and quality counts; no automatic heldout-driven filtering',widths=[.15,.12,.2,.2,.2,.13])
     fig,axes=plt.subplots(1,2,figsize=(12,4))
@@ -61,6 +99,8 @@ def export_data_review(raw, tokenizer, settings, output):
     axes[0].set(xlabel='Whitespace words',ylabel='Train examples')
     axes[1].axvline(settings['max_length'],ls='--',color='black',label='Configured cutoff')
     axes[1].set(xlabel='WordPiece tokens incl. special tokens',ylabel='Train examples')
+    axes[1].axvspan(settings['max_length'],max(settings['max_length']+1,int(lengths.max())),
+        color='#d9534f',alpha=.09,label='Region truncated by tokenizer')
     for ax in axes:ax.legend();ax.grid(alpha=.2)
     finish(fig,output/'lengths_by_class.png')
     fig,axes=plt.subplots(1,2,figsize=(11,4))
@@ -69,6 +109,18 @@ def export_data_review(raw, tokenizer, settings, output):
     axes[1].bar(['Negative','Positive'],[100*r['negation_or_contrast_fraction'] for r in signals])
     axes[1].set(ylabel='Train reviews (%)',title='Negation/contrast: preserve linguistic cues')
     finish(fig,output/'preprocessing_diagnostics.png')
+    fig,axes=plt.subplots(1,2,figsize=(10,4.5))
+    x=np.arange(2)
+    axes[0].bar(x,[r['review_fraction']*100 for r in cue_rows],color=['#b44','#387'])
+    axes[0].set(xticks=x,xticklabels=['Negative (0)','Positive (1)'],ylabel='Reviews (%)',
+        title='Reviews containing ≥1 cue')
+    axes[1].bar(x-.18,[r['negation_cue_matches'] for r in cue_rows],.36,label='Negation')
+    axes[1].bar(x+.18,[r['contrast_cue_matches'] for r in cue_rows],.36,label='Contrast')
+    axes[1].set(xticks=x,xticklabels=['Negative (0)','Positive (1)'],ylabel='Cue matches',
+        title='Total cue occurrences')
+    axes[1].legend()
+    for ax in axes:ax.grid(axis='y',alpha=.2)
+    finish(fig,output/'negation_contrast_by_label.png')
     indices=[]
     for label in (0,1):indices.extend(np.flatnonzero(labels==label)[:2].tolist())
     encoded=tokenizer([text[i] for i in indices],padding=True,truncation=True,max_length=settings['max_length'])
@@ -103,19 +155,39 @@ def export_data_review(raw, tokenizer, settings, output):
     feature_settings={'ngram_range':[1,2],'min_df':2,'max_features':50000}
     vectorizer=make_tfidf(feature_settings);matrix=vectorizer.fit_transform(text)
     names=vectorizer.get_feature_names_out();terms=[]
+    means_by_label=[]
     for label in (0,1):
         means=np.asarray(matrix[labels==label].mean(axis=0)).ravel()
-        for index in np.argsort(means)[-12:][::-1]:
+        means_by_label.append(means)
+        for index in np.argsort(means)[-25:][::-1]:
             terms.append({'label':label,'term':str(names[index]),'mean_tfidf':float(means[index])})
+    delta=means_by_label[1]-means_by_label[0]
+    ordered_delta=np.argsort(delta)
+    delta_indices=(list(ordered_delta) if len(ordered_delta)<=30 else
+        list(ordered_delta[:15])+list(ordered_delta[-15:][::-1]))
+    delta_terms=[{'term':str(names[i]),'mean_tfidf_negative':float(means_by_label[0][i]),
+        'mean_tfidf_positive':float(means_by_label[1][i]),
+        'delta_positive_minus_negative':float(delta[i])} for i in delta_indices]
     features={'fitted_split':'train','settings':feature_settings,'train_shape':list(matrix.shape),'nnz':int(matrix.nnz),
         'density':float(matrix.nnz/(matrix.shape[0]*matrix.shape[1])),
         'sparse_array_storage_bytes':int(matrix.data.nbytes+matrix.indices.nbytes+matrix.indptr.nbytes),
-        'storage_note':'array footprint only, not process RAM peak','terms':terms}
+        'storage_note':'array footprint only, not process RAM peak','terms':terms,
+        'class_delta_terms':delta_terms,
+        'class_delta_interpretation':'Descriptive mean TF-IDF difference; not causal and not classifier coefficients.'}
     save_json(output/'feature_summary.json',features)
-    fig,axes=plt.subplots(1,2,figsize=(13,5))
+    fig,axes=plt.subplots(1,2,figsize=(15,9))
     for label,ax in enumerate(axes):
         group=[r for r in terms if r['label']==label][::-1]
         ax.barh([r['term'] for r in group],[r['mean_tfidf'] for r in group])
-        ax.set(title=f'Train mean TF-IDF, label {label}',xlabel='Mean feature value')
+        ax.set(title=f'Train mean TF-IDF, label {label} (top 25)',xlabel='Mean feature value')
+        ax.tick_params(axis='y',labelsize=8)
     finish(fig,output/'tfidf_features.png')
+    selected=sorted(delta_terms,key=lambda row:row['delta_positive_minus_negative'])
+    fig,ax=plt.subplots(figsize=(10,7))
+    ax.barh([r['term'] for r in selected],[r['delta_positive_minus_negative'] for r in selected],
+        color=['#b44' if r['delta_positive_minus_negative']<0 else '#387' for r in selected])
+    ax.axvline(0,color='black',linewidth=.8)
+    ax.set(xlabel='Mean TF-IDF: Positive − Negative',title='Train-only features with largest class differences')
+    ax.grid(axis='x',alpha=.2)
+    finish(fig,output/'tfidf_class_delta.png')
     return statistics,features
