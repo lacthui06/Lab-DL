@@ -8,7 +8,7 @@ import sys
 import uuid
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 from labs.lab03.src.evidence import read_json, verify_manifest
-from labs.lab03.src.utils.runs import ROOT, hash_file, save_json
+from labs.lab03.src.utils.runs import ROOT, hash_file, hash_text_file, save_json
 
 JSON_FILES = {
     "artifact_availability.json", "config.json", "test_metrics.json", "test_threshold_metrics.json", "test_runtime_metrics.json",
@@ -56,8 +56,12 @@ def publish_artifacts(settings=None, output_dir=None, source_root=ROOT):
         if not required.issubset(declared) or set(declared)-required-{'parameter_allocation.png'}:
             raise ValueError('Invalid architecture manifest')
         for name,digest in declared.items():
-            if not (architecture/name).is_file() or hash_file(architecture/name)!=digest:
+            if not (architecture/name).is_file():
                 raise ValueError('Architecture SHA256 mismatch')
+            path=architecture/name
+            actuals={hash_file(path)}
+            if path.suffix in {'.txt','.json'}:actuals.add(hash_text_file(path))
+            if digest not in actuals:raise ValueError('Architecture SHA256 mismatch')
             architecture_files.append(architecture/name)
         architecture_files.append(architecture/'manifest.json')
     provenance = {"runs": selected, "source_manifests": {k: hash_file(p/'manifest.json') for k,p in paths.items()},

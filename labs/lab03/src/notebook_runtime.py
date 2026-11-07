@@ -148,12 +148,12 @@ for role in ('exercise1', 'exercise2'):
     gc.collect()
 text = '\n'.join(sections)
 (lab/'outputs/architecture/model_architectures.txt').write_text(text, encoding='utf-8')
-from labs.lab03.src.utils.runs import save_json, hash_file
+from labs.lab03.src.utils.runs import save_json, hash_file, hash_text_file
 folder = lab/'outputs/architecture'
 save_json(folder/'summary.json',{'models':summaries,'construction_mode':mode,
     'weights_loaded':False,'source':'pinned model configuration; module structure only',
     'config_sha256':hash_file(lab/'config/frozen_trial.json')})
-save_json(folder/'manifest.json',{name:hash_file(folder/name) for name in ('model_architectures.txt','summary.json')})
+save_json(folder/'manifest.json',{name:hash_text_file(folder/name) for name in ('model_architectures.txt','summary.json')})
 '''
         self.run('-c', code, self.mode)
         from IPython.display import display

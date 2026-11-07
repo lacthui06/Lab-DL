@@ -24,6 +24,11 @@ def hash_file(path):
     with Path(path).open("rb") as stream:
         return hashlib.file_digest(stream, "sha256").hexdigest()
 
+def hash_text_file(path):
+    """Hash UTF-8 text with LF-normalized newlines for cross-platform manifests."""
+    data = Path(path).read_bytes().replace(b"\r\n", b"\n")
+    return hashlib.sha256(data).hexdigest()
+
 def snapshot():
     return {"python": sys.version, "platform": platform.platform(),
             "cuda_available": torch.cuda.is_available(),
