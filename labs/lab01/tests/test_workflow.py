@@ -77,3 +77,23 @@ def test_inference_uses_saved_architecture(tmp_path,monkeypatch):
     assert (exported/"loaded_model_test_samples.png").is_file()
     assert (exported/"loaded_model_test_samples.csv").is_file()
     assert np.load(exported/"test_predictions.npz")["probabilities"].shape==(10,10)
+
+
+def test_load_model_and_resolve_run_path():
+    from src.inference import load_model, resolve_run_path
+    from src.models.mlp import FashionMLP
+
+    final_run = resolve_run_path("final")
+    assert (final_run / "config.json").is_file()
+    assert (final_run / "best.pt").is_file()
+
+    main_run = resolve_run_path("MainMLP")
+    assert (main_run / "config.json").is_file()
+    assert (main_run / "best.pt").is_file()
+
+    model = load_model("final")
+    assert isinstance(model, FashionMLP)
+    assert not model.training
+
+    with pytest.raises(FileNotFoundError):
+        resolve_run_path("non_existent_model_12345")

@@ -82,6 +82,10 @@ labs/*/outputs/eda/tables/spatial_features.csv
 **/outputs/models/*
 **/outputs/checkpoints/*
 
+# Deliverable models for Lab 01 (lightweight pure MLP checkpoints < 1MB each for submission)
+!labs/lab01/models/*.pt
+!labs/lab01/models/*.json
+
 # Logs & Output runs
 wandb/
 runs/

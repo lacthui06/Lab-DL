@@ -393,7 +393,7 @@ Cấu hình comparison chính là 10 epoch, batch 128, seed 42, Adam LR 0,001 v�
 
 ### 2.11. Sanity overfit, checkpoint và môi trường
 
-Trước mỗi model, probe instance được yêu cầu overfit tám mẫu trong 120 bước. Điều kiện sanity gồm loss dưới 0,15 và accuracy theo ngưỡng kiểm tra. Đây là kiểm tra input–gradient–optimizer, không phải đánh giá held-out. Sau đó reset seed, model và loader để probe không trở thành khởi tạo đã học trước.
+Trước mỗi model, probe instance được yêu cầu overfit tám mẫu trong 120 bước. Điều kiện sanity gồm loss dưới 0,20 và accuracy trên 80%. Đây là kiểm tra input–gradient–optimizer, không phải đánh giá held-out. Sau đó reset seed, model và loader để probe không trở thành khởi tạo đã học trước.
 
 | Model | Passed | Loss sanity | Accuracy (%) |
 | --- | --- | --- | --- |
