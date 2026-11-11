@@ -1,6 +1,7 @@
 # Deep Learning Labs
 
-Repository containing source code, engineering workflows, and practical lab exercises for Deep Learning coursework.
+- **Tác giả:** Thái Anh Lạc
+- **Mô tả:** Repository chứa toàn bộ mã nguồn, quy trình kỹ thuật thực nghiệm và bài tập thực hành môn Học Sâu (Deep Learning).
 
 ---
 
@@ -39,7 +40,8 @@ Each practical lab is organized into modular directories and a single living doc
 
 - `config/`: Declarative YAML configurations (`config.yaml`, `augmentations.yaml`, `experiments.yaml`).
 - `data/`: Experimental datasets (ignored by git).
-- `notebooks/`: Jupyter Notebooks for interactive execution, analysis, and visualization.
+- `models/`: Production-ready deliverable checkpoints (`*.pt`), `manifest.json` (audit provenance), and quick-load guide.
+- `notebooks/`: Jupyter Notebooks for interactive execution, analysis, and visualization. All notebooks follow the mandatory Pipeline Execution Roadmap standard at the first cell.
 - `src/`: Modular, production-ready Python subpackages (`datasets/`, `models/`, `training/`, `utils/`).
 - `scripts/`: Command-line entry points (`train.py`, `eval.py`, `infer.py`).
 - `tests/`: Mandatory TDD test suites (`test_datasets.py`, `test_models.py`, `test_training.py`).
