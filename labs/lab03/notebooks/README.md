@@ -11,9 +11,9 @@ Hệ thống notebook của Lab 03 được tách nhỏ thành 3 notebook chuyê
 
 | Notebook | Tên File | Vai Trò & Playbook Tham Chiếu | Chế Độ Mặc Định |
 | :---: | :--- | :--- | :---: |
-| **01** | [`01_eda.ipynb`](01_eda.ipynb) | Khám phá dữ liệu chuyên sâu 6 bước theo [`docs/eda.md`](../../docs/eda.md) (Schema, Stats 5 số, Phân phối, **Box plot Negative vs Positive**, **Dò Outlier IQR**) | `view` (đổi `prepare` để chạy lại) |
-| **02** | [`02_feature_engineering.ipynb`](02_feature_engineering.ipynb) | Kỹ nghệ đặc trưng theo [`docs/feature.md`](../../docs/feature.md) (Capping Outliers `max_length=128`, TF-IDF Scaling, **Feature Selection Chi-Square $\chi^2$**, Text Augmentation) | `view` (đổi `prepare` để chạy lại) |
-| **03** | [`03_modeling.ipynb`](03_modeling.ipynb) | Huấn luyện mô hình Transformer & Đánh giá theo [`docs/dl_training.md`](../../docs/dl_training.md) (Baseline TF-IDF, DistilBERT Fine-tune, Frozen Backbone, Quét 19 ngưỡng tối ưu) | `view` (đổi `train` để chạy lại) |
+| **01** | [`01_eda.ipynb`](01_eda.ipynb) | Khám phá dữ liệu chuyên sâu 6 bước theo [`docs/eda.md`](../../../docs/eda.md) (Schema, Stats 5 số, Phân phối, **Box plot Negative vs Positive**, **Dò Outlier IQR**) | `view` (đổi `prepare` để chạy lại) |
+| **02** | [`02_feature_engineering.ipynb`](02_feature_engineering.ipynb) | Kỹ nghệ đặc trưng theo [`docs/feature.md`](../../../docs/feature.md) (Capping Outliers `max_length=128`, TF-IDF Scaling, **Feature Selection Chi-Square $\chi^2$**, Text Augmentation) | `view` (đổi `prepare` để chạy lại) |
+| **03** | [`03_modeling.ipynb`](03_modeling.ipynb) | Huấn luyện mô hình Transformer & Đánh giá theo [`docs/dl_training.md`](../../../docs/dl_training.md) (Baseline TF-IDF, DistilBERT Fine-tune, Frozen Backbone, Quét 19 ngưỡng tối ưu) | `view` (đổi `train` để chạy lại) |
 
 ---
 
