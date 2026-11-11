@@ -8,18 +8,179 @@ import matplotlib.pyplot as plt
 from sklearn.metrics import classification_report, log_loss, accuracy_score
 from .training.comparison import CONFIGS, loaders
 from .models.mlp import FashionMLP
-from .utils.helpers import DEVICE,CLASS_NAMES,load_checkpoint,save_checkpoint
-from .utils.runs import Run,write_json
+from .utils.helpers import DEVICE, CLASS_NAMES, SOURCE_DIR, MODELS_DIR, load_checkpoint, save_checkpoint
+from .utils.runs import Run, write_json
 
 
-def load_trained_run(path,data_path=None):
-    path=Path(path);cfg=json.loads((path/"config.json").read_text())
-    default_dim,default_hidden=CONFIGS[cfg["name"]]
-    dim,hidden=cfg.get("in_features",default_dim),cfg.get("hidden_dims",default_hidden)
-    model=FashionMLP(in_features=dim,hidden_dims=hidden)
-    load_checkpoint(model,path/"best.pt",DEVICE);model.eval()
-    _,_,test=loaders(data_path or cfg["data_path"],cfg["name"],cfg["seed"],cfg["batch_size"])
-    return model,test
+def resolve_run_path(target="final"):
+    """Resolve a model name ('final', 'MainMLP', 'SmallMLP', 'MainMLP_FE') or path to a run directory."""
+    if isinstance(target, Path):
+        p = target
+    else:
+        p = Path(str(target).strip())
+
+    # 1. Direct path check (absolute or relative to current working directory)
+    if p.is_file() and p.name == "best.pt":
+        return p.parent
+    if (p / "config.json").exists() and (p / "best.pt").exists():
+        return p
+
+    # 1b. Check models/manifest.json for source run mapping
+    manifest_path = MODELS_DIR / "manifest.json"
+    if manifest_path.exists():
+        try:
+            m = json.loads(manifest_path.read_text(encoding="utf-8"))
+            minfo = m.get("models", {})
+            target_str = str(target).strip()
+            target_lower = target_str.lower()
+            alias_map = {"final": m.get("winner_name", "final"), "best": m.get("winner_name", "final"), "winner": m.get("winner_name", "final")}
+            lookup_key = alias_map.get(target_lower, target_str)
+            for k, info in minfo.items():
+                if k.lower() == lookup_key.lower() or k == lookup_key:
+                    cand = Path(info.get("source_run", ""))
+                    if (cand / "config.json").exists() and (cand / "best.pt").exists():
+                        return cand
+        except Exception:
+            pass
+
+    # 2. Check relative to SOURCE_DIR
+    candidate = SOURCE_DIR / p
+    if candidate.is_file() and candidate.name == "best.pt":
+        return candidate.parent
+    if (candidate / "config.json").exists() and (candidate / "best.pt").exists():
+        return candidate
+
+    # 3. Logical name check in config/workflow.json
+    workflow_path = SOURCE_DIR / "config" / "workflow.json"
+    if workflow_path.exists():
+        try:
+            wf = json.loads(workflow_path.read_text(encoding="utf-8"))
+            runs = wf.get("runs", {})
+            models = runs.get("models", {})
+            target_str = str(target).strip()
+            target_lower = target_str.lower()
+            key_map = {
+                "final": runs.get("final"),
+                "winner": runs.get("final"),
+                "best": runs.get("final"),
+                "smallmlp": models.get("SmallMLP"),
+                "mainmlp": models.get("MainMLP"),
+                "mainmlp_fe": models.get("MainMLP_FE"),
+            }
+            for k, rel_path in models.items():
+                if k.lower() == target_lower or k == target_str:
+                    key_map[target_str] = rel_path
+                    break
+
+            mapped = key_map.get(target_str) or key_map.get(target_lower)
+            if mapped:
+                resolved = SOURCE_DIR / mapped
+                if (resolved / "config.json").exists() and (resolved / "best.pt").exists():
+                    return resolved
+        except Exception:
+            pass
+
+    # 4. Search by run directory prefix/substring under outputs/runs
+    runs_dir = SOURCE_DIR / "outputs" / "runs"
+    if runs_dir.exists():
+        target_str = str(target).strip()
+        matches = [m for m in runs_dir.glob(f"*{target_str}*") if (m / "config.json").exists() and (m / "best.pt").exists()]
+        if matches:
+            matches.sort(key=lambda x: x.name, reverse=True)
+            return matches[0]
+
+    raise FileNotFoundError(
+        f"Cannot find model or checkpoint for '{target}'. "
+        f"Valid names: 'final', 'SmallMLP', 'MainMLP', 'MainMLP_FE', "
+        f"or a valid path containing config.json and best.pt."
+    )
+
+
+def load_model(target="final", device=None):
+    """Loads a trained FashionMLP model directly by name, path, or from models/ in eval mode.
+
+    Args:
+        target: Model name ('final', 'MainMLP', 'SmallMLP', 'MainMLP_FE') or path to checkpoint / run directory.
+        device: Torch device (defaults to DEVICE).
+
+    Returns:
+        FashionMLP model loaded with weights and set to eval().
+    """
+    device = device or DEVICE
+    target_str = str(target).strip()
+    target_lower = target_str.lower()
+
+    # 1. Direct checkpoint check in models/
+    direct_pt = None
+    if isinstance(target, Path) and target.is_file() and target.suffix == ".pt":
+        direct_pt = target
+    elif (MODELS_DIR / f"{target_str}.pt").exists():
+        direct_pt = MODELS_DIR / f"{target_str}.pt"
+    elif target_lower in ("final", "winner", "best") and (MODELS_DIR / "best_model.pt").exists():
+        direct_pt = MODELS_DIR / "best_model.pt"
+
+    if direct_pt is not None:
+        state = torch.load(str(direct_pt), map_location=device, weights_only=False)
+        state_dict = state.get("model_state_dict", state)
+        meta = state.get("metadata", {})
+        linear = [v for k, v in state_dict.items() if k.endswith(".weight") and v.ndim == 2]
+        dim = meta.get("in_features", linear[0].shape[1])
+        hidden = meta.get("hidden_dims", [w.shape[0] for w in linear[:-1]])
+        classes = meta.get("num_classes", linear[-1].shape[0])
+        model = FashionMLP(in_features=dim, hidden_dims=hidden, num_classes=classes)
+        model.load_state_dict(state_dict)
+        model.to(device)
+        model.eval()
+
+        val_acc = meta.get("val_acc")
+        acc_text = ""
+        if isinstance(val_acc, (int, float)):
+            val_pct = val_acc if val_acc > 1.0 else val_acc * 100
+            acc_text = f" (best val acc: {val_pct:.2f}%)"
+
+        try:
+            rel = direct_pt.relative_to(SOURCE_DIR)
+        except ValueError:
+            rel = direct_pt
+        print(f"Loaded model directly from {rel}{acc_text}")
+        return model
+
+    # 2. Fall back to run-based resolution
+    run_path = resolve_run_path(target)
+    config = json.loads((run_path / "config.json").read_text(encoding="utf-8"))
+    model_name = config.get("name", "MainMLP")
+    default_dim, default_hidden = CONFIGS.get(model_name, (784, (256, 128)))
+    dim = config.get("in_features", default_dim)
+    hidden = config.get("hidden_dims", default_hidden)
+    model = FashionMLP(in_features=dim, hidden_dims=hidden)
+    ckpt_path = run_path / "best.pt"
+    meta = load_checkpoint(model, ckpt_path, device)
+    model.eval()
+
+    val_acc = meta.get("val_acc")
+    acc_text = ""
+    if isinstance(val_acc, (int, float)):
+        val_pct = val_acc if val_acc > 1.0 else val_acc * 100
+        acc_text = f" (best val acc: {val_pct:.2f}%)"
+
+    try:
+        rel = ckpt_path.relative_to(SOURCE_DIR)
+    except ValueError:
+        rel = ckpt_path
+    print(f"Loaded {model_name} from {rel}{acc_text}")
+    return model
+
+
+def load_trained_run(path, data_path=None):
+    path = resolve_run_path(path)
+    cfg = json.loads((path / "config.json").read_text())
+    default_dim, default_hidden = CONFIGS[cfg["name"]]
+    dim, hidden = cfg.get("in_features", default_dim), cfg.get("hidden_dims", default_hidden)
+    model = FashionMLP(in_features=dim, hidden_dims=hidden)
+    load_checkpoint(model, path / "best.pt", DEVICE)
+    model.eval()
+    _, _, test = loaders(data_path or cfg["data_path"], cfg["name"], cfg["seed"], cfg["batch_size"])
+    return model, test
 
 
 def evaluate_run(path,data_path=None):

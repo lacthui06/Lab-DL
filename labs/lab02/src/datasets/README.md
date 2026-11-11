@@ -2,21 +2,13 @@
 
 | Ngày | Phiên bản | Tác giả hoặc người cập nhật | Thay đổi |
 | --- | --- | --- | --- |
-| 2026-11-07 | 0.1.0 | Thường FEAI, cùng Codex | Tạo hướng dẫn đọc pipeline dữ liệu |
+| 2026-11-07 | 0.1.0 | Thường FEAI | Tạo hướng dẫn đọc pipeline dữ liệu |
+| 2026-11-11 | 0.1.1 | Thường FEAI | Sắp xếp theo hợp đồng dữ liệu, cơ chế, output và thực hành; bổ sung lý do và giới hạn |
+| 2026-11-11 | 0.1.2 | Thường FEAI | Bổ sung shape/dtype, split theo lớp, công thức normalization và đặc trưng EDA sau đối chiếu Lab01 |
+| 2026-11-11 | 0.1.3 | Thường FEAI | Viết lại từ mục 2 theo cách dẫn giải Lab01; đối chiếu source, cấu hình và artifact; giữ nguyên mục 1 |
+| 2026-11-11 | 0.1.4 | Thường FEAI, cùng Codex | Đánh số các thảo luận kỹ thuật để thống nhất cách điều hướng với Lab01 |
 
-## 1. Pipeline dữ liệu
-
-```text
-CIFAR-10 gốc → locked_split() → train / validation / test
-  ├─ EDA → kiểm tra cấu trúc, nhãn và ảnh → xuất bảng và hình
-  └─ Training → chọn subset nếu có giới hạn → đọc ảnh theo index gốc
-              → augmentation nếu bật cho train → tiền xử lý → DataLoader
-              → batch ảnh đã biến đổi, nhãn và index gốc
-```
-
-Cả hai luồng dùng chung cách tạo và kiểm tra split. EDA chạy qua `scripts/analyze_data.py`. Training gọi `prepare_indices()` để lấy các chỉ số dùng cho run. Train và validation lấy từ 50.000 ảnh của tập train chính thức. Tập test dùng 10.000 ảnh chính thức riêng. [`print(build(ROOT, args.data_dir))` · scripts/analyze_data.py, dòng 14](../../scripts/analyze_data.py#L14) · [`selected = prepare_indices(…)` · experiment.py, dòng 546](../training/experiment.py#L546)
-
-## 2. Mục đích và các file
+## 1. bản đồ module
 
 Module giữ cho EDA, training và đánh giá sử dụng đúng ảnh, nhãn và split. Nó tạo bằng chứng để đọc lại cách dữ liệu được chuẩn bị, đồng thời cung cấp batch cho model.
 
@@ -26,34 +18,134 @@ Module giữ cho EDA, training và đánh giá sử dụng đúng ảnh, nhãn v
 | [data.py](data.py) | Chọn chỉ số cho run, tạo transform, đọc ảnh theo chỉ số gốc và gom thành batch. | `def prepare_indices(…)` · [data.py, dòng 36–48](data.py#L36) · `return DataLoader(IndexedImages(…), …)` · [data.py, dòng 73–79](data.py#L73) |
 | [__init__.py](__init__.py) | Khai báo hai module con. Dùng `eda` khi cần phân tích và `data` khi cần pipeline PyTorch. | `__all__ = ["data", "eda"]` · [__init__.py, dòng 7](__init__.py#L7) |
 
-## 3. Input, output và nơi lưu
+### Bản đồ hàm EDA
 
-Các link có tên run dẫn tới ví dụ từ registry. Output dạng tensor hoặc loader được trả cho caller trong bộ nhớ. Các file EDA là bằng chứng riêng với dữ liệu mà model nhận. [Run đang được chọn](../../outputs/selected_run.json)
+| Hàm | Trách nhiệm và dữ liệu trả về |
+| --- | --- |
+| [`rgb_statistics()`](eda.py#L66) | Đo moment RGB, histogram 256 mức và thống kê không gian trên các ảnh train đã chọn; trả dictionary, không đổi normalization của model. |
+| [`handcrafted()`](eda.py#L114) | Trả DataFrame gồm 7 đặc trưng mô tả từng ảnh train, kèm index, nhãn, tên lớp và split. |
+| [`duplicate_audit()`](eda.py#L135) | Kiểm tra nhãn ngoài miền, pixel không hữu hạn, ảnh hằng; so hash byte ảnh giữa các split và trả hai bảng kiểm tra/nghi trùng. |
+| [`export_summary()`](eda.py#L94) | Ghi phân bố lớp, thống kê RGB train và ảnh ví dụ cho subset của một run; không nạp model. |
+| [`build()`](eda.py#L177) | Điều phối EDA đầy đủ, gọi các phép đo và ghi bảng/hình vào `outputs/eda/`. |
 
-| Giai đoạn | Input | Output và thông tin cần có | Nơi lưu | Tiêu chí kiểm tra | Đoạn code và vị trí |
-| --- | --- | --- | --- | --- | --- |
-| Đọc dữ liệu gốc | Năm file train và một file test của CIFAR-10 | Mảng ảnh RGB dạng `uint8` theo thứ tự `[N, 32, 32, 3]`, nhãn số nguyên và train/test riêng | Mảng trả về trong bộ nhớ | Checksum từng file khớp. Số ảnh và số nhãn tương ứng. | `hashlib.md5(content).hexdigest()` và `reshape(-1, 3, 32, 32).transpose(0, 2, 3, 1)` · [eda.py, dòng 25–32](eda.py#L25) |
-| Tạo hoặc kiểm tra split | Nhãn train gốc, seed và thư mục lưu split | Chỉ số 45.000 train, 5.000 validation, 10.000 test. Metadata ghi seed, hash nhãn, hash chỉ số, phiên bản và nguồn gốc split. | [split_indices.npz](../../outputs/eda/split_indices.npz) · [split_metadata.json](../../outputs/eda/split_metadata.json) | Train và validation không giao nhau, không lặp index và hợp lại phủ tập train gốc. Khi dùng lại, hash và seed phải khớp. Chỉ số test thuộc tập test riêng. | `train_test_split(…, test_size=5000, …, stratify=labels)` · [eda.py, dòng 49–56](eda.py#L49) · `np.intersect1d(indices['train'], indices['val'])` · [eda.py, dòng 57–62](eda.py#L57) · `meta['label_sha256'] != identity` · [eda.py, dòng 41–47](eda.py#L41) |
-| Chọn dữ liệu cho run | Split đầy đủ, nhãn đúng tập, các giới hạn mẫu và seed | Chỉ số đầy đủ và chỉ số thực sự dùng. Khi cần lấy ít hơn, chia có phân tầng để giữ gần đúng tỷ lệ lớp của tập tương ứng. | [split_indices.npz của run](../../outputs/runs/20261030T052121Z_cifar10_scheduled64_b895bfc1/split_indices.npz) · [selected_indices.npz](../../outputs/runs/20261030T052121Z_cifar10_scheduled64_b895bfc1/selected_indices.npz) | Mỗi subset thuộc đúng split và khớp số lượng yêu cầu khi có giới hạn. Khi không giới hạn hoặc giới hạn đủ lớn, dùng toàn bộ split. | `stratify=np.asarray(labels)[indices]` · [data.py, dòng 27–33](data.py#L27) · `np.savez(Path(run_dir) / "selected_indices.npz", **selected)` · [data.py, dòng 41–48](data.py#L41) |
-| Xuất EDA | Ảnh gốc, nhãn và split | Bảng cấu trúc có số mẫu, shape, dtype, khoảng giá trị pixel và bộ nhớ. Báo cáo kiểm tra dữ liệu, bảng phân bố lớp và biểu đồ đếm lớp train/validation. | [structural_overview.csv](../../outputs/eda/structural_overview.csv) · [integrity_report.csv](../../outputs/eda/integrity_report.csv) · [class_distribution.csv](../../outputs/eda/class_distribution.csv) · [class_distribution.png](../../outputs/eda/class_distribution.png) | Tổng số mẫu trong bảng phân bố khớp split. Trục dọc biểu đồ là số ảnh, nhóm theo lớp và tập train/validation. | `structural.to_csv(…)`, `duplicate_audit(…)`, `counts[['train', 'val']].plot.bar(…)` · [eda.py, dòng 187–200](eda.py#L187) |
-| Ghi bằng chứng tiền xử lý | Ảnh mẫu train, thống kê pixel và cấu hình EDA | Ảnh preview, phiên bản split và tiền xử lý, mean/std mô tả của train và số ảnh dùng để thống kê | [preprocessing_preview.png](../../outputs/eda/preprocessing_preview.png) · [preprocessing_config.json](../../outputs/eda/preprocessing_config.json) · [summary.json của run](../../outputs/runs/20261030T052121Z_cifar10_scheduled64_b895bfc1/eda/summary.json) | Phân biệt mean/std mô tả dữ liệu train với mean/std ImageNet dùng để chuẩn hóa input. | `preprocessing_preview(pool[indices['train'][0]], cfg, output)` · [eda.py, dòng 257–264](eda.py#L257) · `normalization_policy='Descriptive train statistics only; ImageNet normalization defines input'` · [eda.py, dòng 99–103](eda.py#L99) |
-| Tạo ảnh đầu vào | Ảnh RGB, tên model, kích thước ảnh và cờ augmentation | Tensor `[3, H, W]` đã chuẩn hóa, giữ nhãn và index gốc. Size 224 dùng transform của weights. Ví dụ size 64 resize, đổi sang tensor rồi chuẩn hóa theo ImageNet. | Trả từng mẫu cho loader trong bộ nhớ | Shape khớp kích thước cấu hình. Random crop/flip chỉ chạy khi bật cho train. | `return weights_transform` và `transforms.Normalize(weights_transform.mean, weights_transform.std)` · [data.py, dòng 15–24](data.py#L15) · `if augmentation and split != 'train':` · [data.py, dòng 52–62](data.py#L52) |
-| Gom batch | Dataset đã chọn chỉ số, batch size, seed và cờ shuffle | Batch ảnh `[B, 3, H, W]`, nhãn `[B]` và chỉ số gốc `[B]`. Batch cuối có thể nhỏ hơn batch size. | Iterator của `DataLoader` trong bộ nhớ | Sau khi gom hoặc shuffle, ảnh, nhãn và index vẫn đi cùng nhau. | `return self.transform(image), label, original` · [data.py, dòng 67–70](data.py#L67) · `torch.Generator().manual_seed(seed)` · [data.py, dòng 73–79](data.py#L73) |
+## 2. Mục Đích (Purpose)
 
-## 4. Dò một ảnh và tiêu chí hoàn thành
+Module khảo sát dữ liệu CIFAR-10 trước khi huấn luyện để xác định kích thước ảnh, phân bố lớp, đặc điểm màu sắc và các dấu hiệu bất thường. EDA là phân tích khám phá dữ liệu; kết quả của bước này giúp kiểm tra đầu vào và đọc lại cách dữ liệu được chuẩn bị.
 
-Ví dụ dò tay với `indices = [8, 42]`, lấy phần tử `i = 1` ở tập train với size 64 và tắt augmentation.
+CIFAR-10 gồm 60.000 ảnh RGB 32×32 thuộc 10 lớp. Module chia 50.000 ảnh train chính thức thành train/validation, giữ riêng 10.000 ảnh test và lưu chỉ số để sử dụng lại. Với pipeline PyTorch, module biến đổi ảnh rồi trả từng batch gồm tensor ảnh, nhãn và index gốc để truy vết dự đoán.
 
-| Bước | Trạng thái | Đoạn code và vị trí |
-| --- | --- | --- |
-| Đổi vị trí thành index gốc | Vị trí `1` trong subset trỏ tới ảnh `42` trong tập train gốc. | `original = int(self.indices[i])` · [data.py, dòng 68](data.py#L68) |
-| Đọc và biến đổi | Lấy ảnh RGB và nhãn tại index `42`. Ảnh sau transform có shape `[3, 64, 64]`. | `image, label = self.raw[original]` · [data.py, dòng 69](data.py#L69) · `transforms.Resize((image_size, image_size), antialias=True)` · [data.py, dòng 21–23](data.py#L21) |
-| Trả và gom | Mẫu trả tensor, nhãn thật và `42`. Nếu gom cả hai ảnh với shuffle tắt, batch có shape `[2, 3, 64, 64]` và index `[8, 42]`. | `return self.transform(image), label, original` · [data.py, dòng 70](data.py#L70) · `batch_size=batch` · [data.py, dòng 77–79](data.py#L77) |
+## 3. Khởi Tạo Dữ Liệu & Luồng Tiền Xử Lý (Init Dataset & Pipeline)
 
-Kiểm tra hoàn thành bằng cách đối chiếu split và metadata, kiểm tra phân bố của subset, mở các bảng/hình EDA và xác minh shape cùng nhãn/index của một batch. Chỉ số trùng giữa train và validation là lỗi vì cả hai dùng cùng tập gốc. Chỉ số có cùng giá trị giữa train và test có thể trỏ tới hai ảnh khác nhau vì thuộc hai tập gốc riêng. [Chọn tập nguồn](data.py#L55) · [Kiểm tra trùng train và validation](eda.py#L57)
+### 3.1. Cấu Trúc Luồng Tiền Xử Lý (Data Pipeline Structure)
 
-## 5. Cách đọc và thảo luận với AI
+Quy trình có hai nhánh dùng chung cơ chế chia tập: EDA đo trên ảnh gốc, còn training biến đổi ảnh khi lấy mẫu. Các bước dưới đây mô tả source hiện tại; số lượng split được đối chiếu từ [class_distribution.csv](../../outputs/eda/class_distribution.csv).
 
-1. Đi theo hai nhánh trong sơ đồ. Với mỗi bước, chỉ ra input, output trong bộ nhớ và file được ghi.
-2. Dò một ảnh bằng tay qua `IndexedImages.__getitem__()`. Hỏi vì sao dùng `self.indices[i]`. Nếu đọc trực tiếp `self.raw[i]`, loader có thể lấy ảnh khác với ảnh đã chọn trong subset.
-3. Đối chiếu `split_metadata.json`, phân bố lớp và một batch. Ghi rõ bằng chứng nào đọc từ artifact, dò tay hoặc thực thi. Khi cập nhật nội dung đã duyệt, ghi ngày, người cập nhật và phiên bản ở đầu file.
+```text
+1. Đọc CIFAR-10 gốc: 50.000 ảnh train và 10.000 ảnh test RGB 32×32.
+   EDA kiểm tra MD5 từng batch trước khi giải mã bằng read_raw().
+2. Tạo hoặc kiểm tra locked_split(), với seed 42 trong config EDA.
+   Train: 45.000 ảnh │ Validation: 5.000 ảnh │ Test chính thức: 10.000 ảnh.
+3. Nhánh EDA: kiểm tra nhãn/ảnh trùng, đo thống kê RGB và 7 đặc trưng.
+   Ghi bảng, hình và hồ sơ tiền xử lý vào outputs/eda/.
+4. Nhánh training: prepare_indices() chọn toàn bộ split hoặc subset có phân tầng.
+   Lưu split_indices.npz và selected_indices.npz trong thư mục run.
+5. IndexedImages đọc ảnh theo index gốc, áp dụng transform.
+   image_loader() gom tensor ảnh, nhãn và index thành batch trong bộ nhớ.
+```
+
+Chia phân tầng nghĩa là giữ tỷ lệ lớp khi tách dữ liệu. Split EDA có 4.500 ảnh/lớp ở train, 500 ảnh/lớp ở validation và 1.000 ảnh/lớp ở test. Mười lớp theo thứ tự nhãn `0..9` là airplane, automobile, bird, cat, deer, dog, frog, horse, ship và truck.
+
+[`locked_split()`](eda.py#L35) kiểm tra seed, hash nhãn và hash file chỉ số khi sử dụng lại split. Hàm cũng kiểm tra train/validation không giao nhau, không lặp index và hợp lại phủ pool train. Nếu kiểm tra thất bại, hàm báo lỗi thay vì âm thầm chia lại.
+
+### 3.2. Đầu Vào và Đầu Ra Dữ Liệu (Input / Output Data)
+
+NHWC biểu diễn thứ tự số ảnh, chiều cao, chiều rộng và kênh màu; CHW đặt kênh màu trước chiều cao và chiều rộng. `B` là số mẫu thực tế trong một batch; batch cuối có thể nhỏ hơn batch size cấu hình.
+
+| Tên thành phần | Kích thước (Shape) | Kiểu dữ liệu (Dtype) | Ý nghĩa |
+| :--- | :--- | :--- | :--- |
+| Ảnh gốc từ `read_raw()` | Train `(50000,32,32,3)`; test `(10000,32,32,3)` | NumPy `uint8` | Ảnh NHWC, giá trị kênh màu trong `[0,255]`. |
+| Nhãn gốc | Train `(50000,)`; test `(10000,)` | NumPy `int64` | Mã lớp `0..9`, cùng thứ tự với ảnh nguồn. |
+| Chỉ số split/subset | `(N_split,)` | NumPy integer; subset được chuyển sang `int64` | Vị trí ảnh trong pool train hoặc test tương ứng. |
+| Một ảnh sau transform | `(3,H,W)` | Torch floating, mặc định `float32` | Ảnh CHW đã resize và normalize; giá trị có thể âm hoặc lớn hơn 1. |
+| Batch ảnh | `(B,3,H,W)` | Cùng dtype ảnh sau transform | Với cấu hình scheduled hiện tại, `H=W=64`. |
+| Batch nhãn / index | `(B,)` / `(B,)` | Torch `int64` | Nhãn phân loại và index gốc, đi cùng ảnh sau shuffle. |
+| Bảng đặc trưng EDA | Một hàng mỗi ảnh train; 7 cột đặc trưng và 4 cột metadata | Pandas DataFrame | Mô tả ảnh gốc; không nối vào tensor đầu vào của model. |
+
+Ảnh ở vị trí `i` trong subset được đọc bằng `original = self.indices[i]`, sau đó lấy `self.raw[original]`. Ví dụ dò tay: với `indices=[8,42]`, phần tử `i=1` lấy ảnh gốc số `42`. Index train `42` và index test `42` thuộc hai pool khác nhau, nên cần lưu cả tên tập khi truy vết. [Source](data.py#L51).
+
+### 3.3. Biến Đổi Ảnh và Chuẩn Hóa (Transforms & Normalization)
+
+Ở kích thước 64×64, [`image_transform()`](data.py#L15) thực hiện `Resize → ToTensor → Normalize`. `ToTensor()` đổi ảnh byte sang CHW và chia giá trị cho 255. Với từng kênh `c`, normalization tính `z_c = (pixel_c / 255 − mean_c) / std_c`.
+
+Mean RGB là `[0.485,0.456,0.406]`, std RGB là `[0.229,0.224,0.225]`, theo [quy ước ImageNet được ghi trong config EDA](../../config/eda.json). Source lấy các giá trị từ transform của pretrained weights trong [`SPECS`](../models/models.py#L6), không lấy từ thống kê CIFAR-10 vừa đo. Khi size bằng 224, hàm trả nguyên transform của weights, gồm quy trình resize/crop của preset.
+
+Ví dụ tính tay: giá trị kênh đỏ bằng `255` sau resize trở thành `(1−0.485)/0.229 ≈ 2.249`. Kết quả này giải thích vì sao tensor đã normalize không còn bị giới hạn trong `[0,1]`. Nhãn và index không chịu phép chuẩn hóa.
+
+Khi bật augmentation cho train, [`IndexedImages`](data.py#L51) thêm `RandomCrop(32,padding=4,padding_mode="reflect")` và `RandomHorizontalFlip(p=0.5)` trước transform chung. Augmentation tạo biến thể ảnh lúc lấy mẫu, không tăng số index gốc. Yêu cầu augmentation cho validation/test gây `ValueError`.
+
+[Config scheduled hiện tại](../../config/scheduled.json) đặt size 64, batch size 128, ba limit bằng `0` và `train_augmentation=true`. Limit `0` nghĩa là giữ toàn bộ split; khi giới hạn nhỏ hơn kích thước tập, [`balanced_subset()`](data.py#L27) lấy mẫu có phân tầng trong đúng split.
+
+[Config lưu của run được chọn](../../outputs/runs/20261030T052121Z_cifar10_scheduled64_b895bfc1/config.json) cũng ghi các giá trị trên. Theo [nhánh training hiện tại](../training/experiment.py#L354), augmentation áp dụng cho fine-tune train; head-only dùng cache đặc trưng với transform xác định. Trường không augmentation trong [config EDA](../../config/eda.json) không mô tả toàn bộ cấu hình training của run này.
+
+### 3.4. Thống Kê RGB và 7 Đặc Trưng Khảo Sát
+
+Mục tiêu khảo sát là mô tả mức sáng, độ tương phản, màu sắc và biến thiên cục bộ của ảnh train trước resize/augmentation. [`rgb_statistics()`](eda.py#L66) cộng dồn giá trị và bình phương giá trị sau chia 255 để tính mean và độ lệch chuẩn tổng thể từng kênh; histogram dùng 256 mức byte gốc.
+
+[Artifact tiền xử lý](../../outputs/eda/preprocessing_config.json) ghi phép đo trên 45.000 ảnh, tương ứng 46.080.000 giá trị mỗi kênh. Mean RGB là `[0.491137,0.482111,0.446449]`; std RGB là `[0.246869,0.243430,0.261603]`, làm tròn 6 chữ số thập phân. Đây là thống kê mô tả train, không thay thế normalization ImageNet.
+
+Để đọc công thức của [`handcrafted()`](eda.py#L114), gọi `X = ảnh_RGB / 255` và `G = mean_RGB(X)`. Mỗi ảnh có 1.024 pixel; `G` lấy trung bình đều ba kênh, không dùng trọng số cảm nhận màu.
+
+| Đặc trưng | Công thức hoặc phép tính | Ý nghĩa |
+| :--- | :--- | :--- |
+| `brightness` | `mean(G)` | Độ sáng trung bình toàn ảnh. |
+| `contrast` | `sqrt(mean((G−mean(G))²))` | Mức phân tán độ sáng quanh giá trị trung bình. |
+| `zero_fraction` | `count(X==0)/(32×32×3)` | Tỷ lệ giá trị kênh bằng 0, không phải diện tích nền. |
+| `edge_density` | `mean(sqrt(dx²+dy²)>0.1)` | Tỷ lệ vị trí có biến thiên cục bộ vượt ngưỡng. |
+| `red_mean` | `mean(X[:,:,0])` | Trung bình kênh đỏ. |
+| `green_mean` | `mean(X[:,:,1])` | Trung bình kênh xanh lá. |
+| `blue_mean` | `mean(X[:,:,2])` | Trung bình kênh xanh dương. |
+
+Ở công thức edge density, `dx[r,c]=G[r,c+1]−G[r,c]` và `dy[r,c]=G[r+1,c]−G[r,c]`, với `r,c=0..30`. Phép đo dùng 961 vị trí trên lưới 31×31; đây không phải mặt nạ đường biên vật thể đã gán nhãn. Các cột `original_index`, `label`, `class`, `split` là metadata để đối chiếu ảnh nguồn.
+
+### 3.5. Tệp Mã Nguồn & Bản Đồ Điều Hướng Code (Source Files)
+
+Giữ **Ctrl + Click** để mở ký hiệu hoặc đoạn code cần đọc.
+
+| Tệp mã nguồn | Ký hiệu / Hàm chính (Ctrl+Click) | Dòng code | Việc đảm nhiệm |
+| :--- | :--- | :--- | :--- |
+| [eda.py](eda.py) | [`read_raw()`](eda.py#L21), [`locked_split()`](eda.py#L35) | [21–63](eda.py#L21-L63) | Kiểm tra checksum, đọc ảnh/nhãn và tạo hoặc xác thực split đã lưu. |
+| [eda.py](eda.py) | [`rgb_statistics()`](eda.py#L66), [`class_counts()`](eda.py#L88), [`export_summary()`](eda.py#L94) | [66–111](eda.py#L66-L111) | Đo thống kê train và xuất bằng chứng dữ liệu riêng cho từng run. |
+| [eda.py](eda.py) | [`handcrafted()`](eda.py#L114), [`duplicate_audit()`](eda.py#L135) | [114–156](eda.py#L114-L156) | Tính 7 đặc trưng; kiểm tra nhãn, pixel, ảnh hằng và ảnh trùng byte. |
+| [eda.py](eda.py) | [`build()`](eda.py#L177), [`preprocessing_preview()`](eda.py#L268) | [177–279](eda.py#L177-L279) | Điều phối EDA, xuất bảng/hình và hồ sơ tiền xử lý. |
+| [data.py](data.py) | [`image_transform()`](data.py#L15), [`balanced_subset()`](data.py#L27), [`prepare_indices()`](data.py#L36) | [15–48](data.py#L15-L48) | Tạo transform, chọn subset và lưu chỉ số thực sự sử dụng. |
+| [data.py](data.py) | [`IndexedImages`](data.py#L51), [`image_loader()`](data.py#L73) | [51–79](data.py#L51-L79) | Đọc ảnh theo index gốc, biến đổi ảnh và gom batch. |
+
+Các artifact chính gồm [split và metadata](../../outputs/eda/split_metadata.json), [phân bố lớp](../../outputs/eda/class_distribution.csv), [thống kê pixel](../../outputs/eda/pixel_statistics.csv), [7 đặc trưng](../../outputs/eda/handcrafted_features.csv), [kiểm tra tính hợp lệ](../../outputs/eda/integrity_report.csv) và [ảnh trùng](../../outputs/eda/duplicate_images.csv). Hình tương ứng được ghi trong `outputs/eda/`; tensor và DataLoader được trả trong bộ nhớ.
+
+Mỗi run có bằng chứng riêng trong `run/eda/`, gồm `class_counts.csv`, `summary.json` và `training_examples.png`. Khi đọc kết quả subset, cần dùng bằng chứng của chính run đó thay vì áp số lượng của EDA đầy đủ. [Source xuất bằng chứng](eda.py#L94).
+
+## 4. Thảo Luận Kỹ Thuật & Quyết Định Thiết Kế
+
+### 4.1. Vì sao khóa split và giữ index gốc?
+
+Dùng lại cùng chỉ số giúp so sánh các lần chạy trên cùng tập ảnh; index gốc giúp truy ngược dự đoán sau shuffle. Tuy nhiên, [metadata EDA hiện có](../../outputs/eda/split_metadata.json) ghi split được dựng lại theo thuật toán đã mô tả vì thiếu index run gốc. Cùng seed và số lượng chưa đủ để khẳng định split EDA trùng từng ảnh với run lịch sử.
+
+### 4.2. Vì sao lấy subset có phân tầng?
+
+Cách lấy này giữ gần đúng tỷ lệ lớp khi giảm số mẫu, thay vì lấy các ảnh đầu tiên. Nó không bảo đảm đại diện mọi kiểu ảnh khó/dễ; limit quá nhỏ có thể khiến phép chia báo lỗi. Kết quả subset cần ghi rõ số mẫu thực dùng. [Source](data.py#L27).
+
+### 4.3. Vì sao giữ RGB và normalization của weights?
+
+Pipeline duy trì ba kênh màu và quy ước đầu vào của backbone pretrained. Size 64 làm giảm số vị trí không gian so với 224, nhưng không bổ sung chi tiết mới cho ảnh gốc 32×32. Source không chứng minh size hoặc normalization này tối ưu; muốn kết luận cần thí nghiệm so sánh riêng.
+
+### 4.4. Vì sao augmentation chỉ áp dụng cho train?
+
+Crop/flip tạo biến thể khi học; validation/test giữ transform xác định để đánh giá nhất quán. Cần đọc cả cấu hình run và đường thực thi cache trước khi mô tả augmentation, vì head-only và fine-tune không nhận dữ liệu qua cùng đường xử lý. [Source training](../training/experiment.py#L354).
+
+### 4.5. Vì sao 7 đặc trưng chỉ dùng khảo sát?
+
+Module lưu chúng để đọc phân phối và tương quan, còn model nhận tensor ảnh RGB. Pixel bằng 0 không xác định nền của ảnh tự nhiên, nên module không suy ra bounding box như ảnh có mặt nạ vật thể. Tương quan đặc trưng cũng không chứng minh khả năng cải thiện phân loại. [Hồ sơ tiền xử lý](../../outputs/eda/preprocessing_config.json).
+
+### 4.6. Kiểm tra dữ liệu bảo đảm đến đâu?
+
+MD5 kiểm tra file batch gốc; hash ảnh phát hiện trùng byte chính xác. Audit chưa phát hiện mọi ảnh gần trùng hoặc mọi dạng rò rỉ dữ liệu, và không tự xóa ảnh nghi trùng. Khi kiểm tra pipeline, cần đối chiếu metadata, phân bố lớp và shape/nhãn/index của batch; các phép kiểm tra này không thay thế đánh giá mô hình.

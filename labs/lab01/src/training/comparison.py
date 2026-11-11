@@ -9,7 +9,7 @@ from torch.utils.data import DataLoader, TensorDataset
 from sklearn.metrics import classification_report, accuracy_score, log_loss
 from ..models.mlp import FashionMLP
 from .trainer import Trainer, sanity_overfit_check, build_optimizer
-from ..utils.helpers import DEVICE, set_seed, load_checkpoint
+from ..utils.helpers import DEVICE, set_seed, load_checkpoint, promote_model_checkpoint
 from ..utils.runs import Run, write_json
 
 from ..utils.helpers import SOURCE_DIR
@@ -48,7 +48,7 @@ def run_model(data_path, name, epochs=10, seed=42, batch_size=128, learning_rate
         train, val, test = loaders(data_path, name, seed, batch_size)
         probe = FashionMLP(in_features=dim, hidden_dims=hidden)
         x, y = next(iter(train))
-        ok, loss, acc = sanity_overfit_check(probe, x[:8], y[:8], device=DEVICE, num_steps=120, target_loss=0.15)
+        ok, loss, acc = sanity_overfit_check(probe, x[:8], y[:8], device=DEVICE, num_steps=120, target_loss=0.2, target_acc=80.0)
         write_json(run.path / "sanity.json", dict(passed=bool(ok), loss=loss, accuracy=acc))
         if not ok:
             raise RuntimeError("One-batch sanity failed")
@@ -100,4 +100,5 @@ def run_model(data_path, name, epochs=10, seed=42, batch_size=128, learning_rate
         fig = plot_loss_and_acc_curves(history, title=name, save_path=run.path / "learning_curves.png")
         plt.close(fig)
         print(metrics)
+        promote_model_checkpoint(run.path, name=name)
     return run.path

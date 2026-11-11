@@ -24,7 +24,7 @@ Repository containing source code, engineering workflows, and practical lab exer
 
 - **Lab 01**: [FashionMNIST Classification with PyTorch](labs/lab01/README.md) — local experiments available; final PDF pending.
 - **Lab 02**: [CIFAR-10 Transfer Learning](labs/lab02/README.md) — ResNet18 and DenseNet121, EDA/modeling notebooks, experiments and saved results.
-- **Lab 03**: Upcoming
+- **Lab 03**: [Hugging Face Sentiment Analysis & Fine-tuning](https://github.com/lacthui06/Lab-DL/tree/lab03/labs/lab03) — notebooks and experiment results on the `lab03` branch.
 - **Lab 04**: Upcoming
 
 ---

@@ -8,7 +8,7 @@ import pandas as pd
 import torch
 import matplotlib.pyplot as plt
 from ..models.mlp import FashionMLP
-from ..utils.helpers import DEVICE, SOURCE_DIR, set_seed
+from ..utils.helpers import DEVICE, SOURCE_DIR, set_seed, promote_model_checkpoint
 from ..utils.plots import draw_confusion_counts
 
 SEARCH = json.loads((SOURCE_DIR/"config/workflow.json").read_text(encoding="utf-8"))["search"]
@@ -191,6 +191,7 @@ def refit_winner(data_path,tuning_path,epochs=10,seed=42,batch_size=128):
                        learning_rate=winner["lr"],optimizer_name=winner["optimizer"],
                        weight_decay=winner["weight_decay"],momentum=winner.get("momentum",.9))
         write_json(run.path/"refit_run.json",{"path":str(path.resolve())})
+    promote_model_checkpoint(path, name="final", is_winner=True, force=True)
     return path
 
 

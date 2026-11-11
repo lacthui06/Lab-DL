@@ -41,3 +41,23 @@ events.out.tfevents.*
 
 # Small locked index artifact, not image data or a learned feature cache.
 !labs/lab02/outputs/eda/split_indices.npz
+*.pickle
+**/outputs/models/*
+**/outputs/checkpoints/*
+
+# Deliverable models for Lab 01 (lightweight pure MLP checkpoints < 1MB each for submission)
+!labs/lab01/models/*.pt
+!labs/lab01/models/*.json
+
+# Logs & Output runs
+wandb/
+runs/
+lightning_logs/
+.tensorboard/
+
+# Local-only technical change journals
+
+# Curated report evidence (raw runs remain ignored).
+!labs/lab01/outputs/published/
+!labs/lab01/outputs/published/**/
+!labs/lab01/outputs/published/**/*.csv

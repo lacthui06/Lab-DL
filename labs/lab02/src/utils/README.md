@@ -4,6 +4,7 @@
 | --- | --- | --- | --- |
 | 2026-11-07 | 0.1.0 | Thường FEAI, cùng Codex | Tạo hướng dẫn đọc module |
 | 2026-11-07 | 0.1.1 | Thường FEAI, cùng Codex | Mô tả rõ nhiệm vụ từng file và rút gọn link source |
+| 2026-11-11 | 0.1.2 | Thường FEAI, cùng Codex | Tổ chức theo mẫu utils Lab01; giải thích cơ chế báo cáo, kiểm chứng và phạm vi benchmark theo source và artifact Lab02 |
 
 ## 1. Pipeline và mục đích
 
@@ -22,51 +23,104 @@ Checkpoint và một mẫu
 
 Module gom các chức năng để kiểm tra, trình bày và đo kết quả của Lab02. Training gọi phần báo cáo sau khi đánh giá các checkpoint. Notebook đọc các artifact đã có và có thể tạo hình trình bày. Các phép đo benchmark do CLI riêng thực thi. [Training gọi xuất đánh giá](../training/experiment.py#L429) · [Điểm vào finalize](../../scripts/finalize.py#L6)
 
-## 2. Nhiệm vụ từng file
+## 2. Mục Đích (Purpose)
 
-| File | Trách nhiệm | Source chính |
-| --- | --- | --- |
-| `reporting.py` | Nhận xác suất dự đoán, nhãn thật và index test để tính metric, xuất báo cáo theo lớp và vẽ confusion matrix. Đọc lịch sử train/validation để vẽ loss và accuracy theo epoch, rồi tổng hợp kết quả theo model và giai đoạn. | [`export_evaluation()` · L28](reporting.py#L28) |
-| `costs.py` | Đọc kết quả và lịch sử của run để tách chi phí tìm cấu hình khỏi chi phí chạy lại recipe đã chọn. Đề xuất model dựa trên validation và chỉ dùng thời gian để phân hạng khi các cấu hình có cùng kiểu thực thi. | [`cost_table()` · L7](costs.py#L7) |
-| `delivery.py` | Xác định đường dẫn dữ liệu và run, ghi JSON và tính hash file. Khi finalize, kiểm tra split, dự đoán, metric và log của run hoàn thành rồi xuất bằng chứng kiểm chứng, ROC/PR và manifest. | [`finalize_run()` · L71](delivery.py#L71) |
-| `notebook_views.py` | Xác định run cần trình bày, đọc bảng kết quả, lịch sử train và bằng chứng benchmark đã lưu. Từ đó dựng bảng và hình cho notebook, đồng thời lưu hình vào thư mục review của run. | [`context()` · L16](notebook_views.py#L16) |
-| `training_benchmark.py` | Khôi phục model từ checkpoint và chuẩn bị một ảnh train cùng nhãn. Đo thời gian của bước forward, tính loss, backward và optimizer update trên batch đã ở thiết bị. Đo bộ nhớ ở lượt riêng. | [`benchmark_steps()` · L52](training_benchmark.py#L52) |
-| `inference_benchmark.py` | Nhận một ảnh và model đã nạp ở chế độ đánh giá. Đo yêu cầu đầu tiên, các yêu cầu sau warm-up, thời gian từng công đoạn và bộ nhớ ở lượt riêng. Trả số liệu cho CLI ghi thành artifact. | [`benchmark_loaded_model()` · L113](inference_benchmark.py#L113) |
-| `constants.py` | Cung cấp thứ tự tên lớp để ánh xạ chỉ số dự đoán, checksum để kiểm tra các file CIFAR-10 gốc và các hằng số chung như số lớp, số kênh, kích thước ảnh mặc định và seed. | [`CLASSES`, `CHECKSUMS` · L7](constants.py#L7) |
-| `__init__.py` | Khai báo các tên có thể import từ `src.utils`. Khi caller yêu cầu một tên, file nạp module tương ứng và lưu kết quả để những lần truy cập tiếp theo dùng lại. | [`__getattr__()` · L27](__init__.py#L27) |
+Lab02 khảo sát hai mô hình ResNet18 và DenseNet121 trên CIFAR-10, với hai giai đoạn: chỉ học bộ phân loại cuối (head-only) và mở một phần backbone để học tiếp (fine-tune). Module utils giúp chuyển kết quả của các giai đoạn này thành bằng chứng có thể đọc, kiểm tra và đối chiếu. [Mục tiêu thực nghiệm](reporting.py#L170)
 
-## 3. Input, output và nơi lưu
+Các công cụ được tổ chức để trả lời ba câu hỏi: mô hình dự đoán thế nào, cần bao nhiêu chi phí thực nghiệm và các số liệu có truy được về đúng lần chạy hay không. Artifact là các tệp được lưu sau khi chạy, chẳng hạn bảng metric, xác suất dự đoán, biểu đồ và cấu hình.
 
-Các link theo run dùng run CIFAR-10 `20261030T052121Z_cifar10_scheduled64_b895bfc1` làm ví dụ. Hai benchmark có bộ bằng chứng riêng. [Registry](../../outputs/selected_run.json)
+Module còn hỗ trợ đo chi phí của một bước training và một yêu cầu inference. Hai phép đo có phạm vi khác nhau, nên phải đọc cùng cấu hình và phương pháp đo trước khi so sánh.
 
-### Báo cáo và chi phí
+## 3. Khởi Tạo & Các Công Cụ Nền Tảng (Init Utils & Toolset)
 
-| Giai đoạn | Input | Output và thông tin cần có | Nơi lưu | Tiêu chí kiểm tra | Đoạn code và vị trí |
-| --- | --- | --- | --- | --- | --- |
-| Xuất đánh giá test | Xác suất `[N, 10]`, nhãn `[N]`, index gốc `[N]` và dữ liệu test | Số mẫu, accuracy, loss, macro precision/recall/F1, dự đoán theo ảnh, báo cáo từng lớp và confusion matrix. Hình có hàng là nhãn thật, cột là dự đoán, màu theo tỷ lệ trong hàng và số đếm ghi trên ô. | [metrics.json](../../outputs/runs/20261030T052121Z_cifar10_scheduled64_b895bfc1/resnet18/finetune/metrics.json) · [test_predictions.npz](../../outputs/runs/20261030T052121Z_cifar10_scheduled64_b895bfc1/resnet18/finetune/test_predictions.npz) · [classification_report.csv](../../outputs/runs/20261030T052121Z_cifar10_scheduled64_b895bfc1/resnet18/finetune/classification_report.csv) · [confusion_matrix.png](../../outputs/runs/20261030T052121Z_cifar10_scheduled64_b895bfc1/resnet18/finetune/confusion_matrix.png) | Nhãn và index khớp tập test đã chọn. Tổng số đếm bằng `N`. Metric tính lại từ dự đoán khớp file JSON. | `predictions = probabilities.argmax(1)` và `counts = confusion_matrix(labels, predictions, …)` · [reporting.py, dòng 28–56](reporting.py#L28) |
-| Vẽ biểu đồ | `history.csv`, summary và cấu hình epoch, hoặc `comparison.csv` | Loss và accuracy theo epoch cho train/validation của từng stage. Biểu đồ tổng hợp so test accuracy và macro F1 giữa model và stage. | [learning_curves.png](../../outputs/runs/20261030T052121Z_cifar10_scheduled64_b895bfc1/resnet18/learning_curves.png) · [comparison.png](../../outputs/runs/20261030T052121Z_cifar10_scheduled64_b895bfc1/comparison.png) | Số điểm khớp số epoch đã chạy. Khi có `best_epoch`, mốc checkpoint khớp summary. Mỗi cột so sánh khớp hàng model/stage tương ứng. | `ax.plot(history.epoch, …)` · [reporting.py, dòng 95–110](reporting.py#L95) · `ax.bar(names, comparison[col], …)` · [reporting.py, dòng 136–145](reporting.py#L136) |
-| Tổng hợp chi phí và đề xuất | Bảng so sánh, summary head-only, metric validation, chính sách chọn và kiểu thực thi | Bảng thời gian trích đặc trưng, toàn bộ trial, recipe đã chọn và test riêng. Đề xuất model ghi validation accuracy/loss, chi phí recipe và cờ `time_comparable`. | [cost_comparison.csv](../../outputs/runs/20261030T052121Z_cifar10_scheduled64_b895bfc1/cost_comparison.csv) · [validation_recommendation.json](../../outputs/runs/20261030T052121Z_cifar10_scheduled64_b895bfc1/validation_recommendation.json) | Chi phí pipeline cộng trích đặc trưng và các trial. Chi phí recipe cộng trích đặc trưng và các trial được chọn. Chỉ dùng thời gian để xếp hạng khi cùng kiểu thực thi. | `selected_recipe_training_seconds=extraction+selected_head+…` · [costs.py, dòng 18–25](costs.py#L18) · `comparable = len({r['execution'] for r in records}) == 1` · [costs.py, dòng 44–53](costs.py#L44) · `cost_table(run, comparison).to_csv(…)` · [reporting.py, dòng 130–135](reporting.py#L130) |
+### 3.1. Cấu Trúc Các Nhóm Công Cụ Hỗ Trợ (Toolset Structure)
 
-### Kiểm chứng và trình bày artifact
+```text
+1. Hằng số & Truy cập tiện ích:
+   constants + __init__ → tên lớp, checksum và nạp module khi được yêu cầu.
 
-| Giai đoạn | Input | Output và thông tin cần có | Nơi lưu | Tiêu chí kiểm tra | Đoạn code và vị trí |
-| --- | --- | --- | --- | --- | --- |
-| Xác định run và dữ liệu | Thư mục lab, đường dẫn tường minh, biến cấu hình và registry | Đường dẫn tuyệt đối cho caller. Dữ liệu ưu tiên đối số, rồi `LAB02_DATA`, rồi `root/data`. CLI finalize lấy run tường minh hoặc registry. Notebook hỗ trợ `LAB02_RUN`. | Giá trị `Path` trong bộ nhớ · [selected_run.json](../../outputs/selected_run.json) | Đường dẫn trỏ tới run chủ định, độc lập với thư mục gọi CLI. | `Path(explicit or os.getenv('LAB02_DATA') or root/'data')` · [delivery.py, dòng 37–47](delivery.py#L37) · `run = Path(os.environ.get('LAB02_RUN', selected['run']))` · [notebook_views.py, dòng 28–33](notebook_views.py#L28) |
-| Finalize | Run hoàn thành, cấu hình CIFAR-10, split, dự đoán và log TensorBoard | Kết quả kiểm chứng, manifest hash, ROC/PR theo lớp và bảng scalar đã trích. Các hình ROC/PR dùng xác suất theo lớp và nhãn test. | [verification.json](../../outputs/runs/20261030T052121Z_cifar10_scheduled64_b895bfc1/verification.json) · [manifest.json](../../outputs/runs/20261030T052121Z_cifar10_scheduled64_b895bfc1/manifest.json) · [roc_pr.png](../../outputs/runs/20261030T052121Z_cifar10_scheduled64_b895bfc1/resnet18/finetune/roc_pr.png) · [roc_pr_metrics.csv](../../outputs/runs/20261030T052121Z_cifar10_scheduled64_b895bfc1/resnet18/finetune/roc_pr_metrics.csv) · [tensorboard_scalars.csv](../../outputs/runs/20261030T052121Z_cifar10_scheduled64_b895bfc1/tensorboard_scalars.csv) | Split và dự đoán khớp chỉ số đã chọn, xác suất hữu hạn và tổng mỗi hàng gần 1, metric tính lại khớp, manifest kiểm tra được. | `np.testing.assert_allclose(probs.sum(1), 1, atol=1e-6)` · [delivery.py, dòng 126–135](delivery.py#L126) · `fig.savefig(folder / 'roc_pr.png', …)` · [delivery.py, dòng 166–168](delivery.py#L166) · `write_json(run / "manifest.json", manifest)` · [delivery.py, dòng 285–286](delivery.py#L285) |
-| Hiển thị notebook | Artifact của run và bằng chứng benchmark được chỉ định | Bảng hiển thị và các hình trình bày, ví dụ chất lượng/chi phí, đường học hoặc benchmark. Notebook lấy số đo từ artifact có sẵn. | [quality_cost.png](../../outputs/review/20261030T052121Z_cifar10_scheduled64_b895bfc1/quality_cost.png) · [learning_curves_resnet18.png](../../outputs/review/20261030T052121Z_cifar10_scheduled64_b895bfc1/learning_curves_resnet18.png) · [single_image_benchmark.png](../../outputs/review/20261030T052121Z_cifar10_scheduled64_b895bfc1/single_image_benchmark.png) | Hình và bảng truy được về run hoặc bộ benchmark tương ứng. Khi đổi run, dùng đúng thư mục review của run mới. | `save_figure(fig, output / f'{name}.png', …)` · [notebook_views.py, dòng 36–42](notebook_views.py#L36) · `def single_image_benchmark(…)` · [notebook_views.py, dòng 375](notebook_views.py#L375) |
+2. Báo cáo chất lượng & Chi phí:
+   reporting → metric, confusion matrix, ảnh dự đoán và đường học.
+   costs → chi phí toàn bộ tìm kiếm, chi phí recipe đã chọn và đề xuất theo validation.
 
-`complete_delivery()` bổ sung kiểm thử, finalize, thực thi hai notebook và kiểm tra inference. Nó ghi log và bổ sung bằng chứng vào run. [delivery.py, dòng 308–370](delivery.py#L308)
+3. Kiểm chứng & Bàn giao:
+   delivery → xác định run, kiểm tra bằng chứng, xuất ROC/PR và manifest hash.
 
-### Benchmark
+4. Trình bày trong notebook:
+   notebook_views → đọc artifact của run và lưu hình vào outputs/review/<run_id>/.
 
-| Giai đoạn | Input | Output và thông tin cần có | Nơi lưu | Tiêu chí kiểm tra | Đoạn code và vị trí |
-| --- | --- | --- | --- | --- | --- |
-| Đo một bước training | Checkpoint fine-tune, config, một ảnh train đã chuẩn hóa, nhãn và thiết bị | Mẫu thời gian bước `forward → loss → backward → optimizer.step()`, median/mean/P95, RSS và CUDA peak khi có. Config và provenance ghi seed, batch size, warm-up, thiết bị và hash checkpoint. | [methodology.json](../../outputs/published/training_benchmark/scheduled64_cpu_batch1/methodology.json) · [config.json](../../outputs/published/training_benchmark/scheduled64_cpu_batch1/config.json) · [measurement.json](../../outputs/published/training_benchmark/scheduled64_cpu_batch1/resnet18/measurement.json) · [training_performance.csv](../../outputs/published/training_benchmark/scheduled64_cpu_batch1/training_performance.csv) · [training_resources.png](../../outputs/published/training_benchmark/scheduled64_cpu_batch1/training_resources.png) · [provenance.json](../../outputs/published/training_benchmark/scheduled64_cpu_batch1/provenance.json) | Hai model nhận cùng chỉ số ảnh và cùng hash tensor. Batch đã ở trên thiết bị. Số đo theo bước và loại trừ tải model, tiền xử lý, truyền dữ liệu và validation. | `loss = torch.nn.functional.cross_entropy(model(images), targets)` · [training_benchmark.py, dòng 68–73](training_benchmark.py#L68) · `writer.writerows(rows)` · [scripts/benchmark_training.py, dòng 76–87](../../scripts/benchmark_training.py#L76) |
-| Đo inference một ảnh | Model đã nạp ở chế độ eval, ảnh PNG, số lượt warm-up/lặp và cấu hình lấy mẫu bộ nhớ | Latency yêu cầu đầu, phân phối sau warm-up, số đo từng công đoạn, dự đoán, RSS và CUDA allocated/reserved khi có. Tổng latency gồm đọc ảnh đến tạo chuỗi JSON, loại trừ tải model và ghi kết quả ra đĩa. | [config.json](../../outputs/published/single_image_benchmark/20261102T184034Z_kaggle/resnet18/config.json) · [environment_snapshot.json](../../outputs/published/single_image_benchmark/20261102T184034Z_kaggle/resnet18/environment_snapshot.json) · [latency_samples.csv](../../outputs/published/single_image_benchmark/20261102T184034Z_kaggle/resnet18/latency_samples.csv) · [stage_samples.csv](../../outputs/published/single_image_benchmark/20261102T184034Z_kaggle/resnet18/stage_samples.csv) · [summary.json](../../outputs/published/single_image_benchmark/20261102T184034Z_kaggle/resnet18/summary.json) · [manifest.json](../../outputs/published/single_image_benchmark/20261102T184034Z_kaggle/resnet18/manifest.json) | Kiểm tra ảnh và checkpoint qua hash, đúng batch 1, FP32, thiết bị và số lượt đo. Đọc thời gian các công đoạn cùng phương pháp đo vì chúng được thu riêng với tổng latency. | `elapsed, prediction, _ = _timed_request(session, image)` · [inference_benchmark.py, dòng 130–141](inference_benchmark.py#L130) · `write_json(run/'summary.json', summary)` · [scripts/benchmark_inference.py, dòng 107–128](../../scripts/benchmark_inference.py#L107) |
+5. Đo chi phí tính toán:
+   training_benchmark → đo một bước cập nhật trọng số trên một ảnh.
+   inference_benchmark → đo một yêu cầu dự đoán với model đã nạp.
+```
 
-## 4. Tiêu chí hoàn thành và cách đọc
+`resolve_run()` lấy run được truyền tường minh hoặc đọc registry; notebook cho phép chọn qua `LAB02_RUN`. Cách này giúp gắn bảng và hình với một run xác định, thay vì tự lấy thư mục mới nhất. [Đường dẫn run](delivery.py#L42) · [Ngữ cảnh notebook](notebook_views.py#L16)
 
-1. **Truy được output về input.** Từ metric hoặc hình, xác định đúng run, model và stage. Từ benchmark, xác định thêm thiết bị, cấu hình đo và checkpoint. Kiểm tra trạng thái và manifest trước khi dùng số liệu.
-2. **Dò một dự đoán.** Nếu nhãn thật của một ảnh là `3` và điểm cao nhất thuộc lớp `5`, ảnh đó tăng một đếm ở hàng `3`, cột `5` của confusion matrix. Đây là ví dụ dò tay. [Tính lớp dự đoán và ma trận](reporting.py#L30)
-3. **Dò một hàng chi phí.** Ví dụ giả định trích đặc trưng 10 giây, tìm head 8 giây, head được chọn 3 giây, tìm fine-tune 20 giây và fine-tune được chọn 12 giây. Chi phí pipeline là 38 giây, còn recipe được chọn là 25 giây. Đối chiếu hai công thức trước khi diễn giải biểu đồ. [Hai cột chi phí](costs.py#L18)
-4. **Giữ đúng phạm vi đo.** Thời gian một bước training, thời gian fit cả run và latency một yêu cầu inference có đầu vào và phạm vi đo khác nhau. Khi trao đổi với AI, yêu cầu chỉ ra file, dòng thực thi và artifact chứng minh từng số liệu. Ghi ngày, người cập nhật và phiên bản sau khi nội dung bổ sung được duyệt.
+Registry hiện trỏ tới `20261030T052121Z_cifar10_scheduled64_b895bfc1`. Config lưu trong run ghi ảnh 64×64, batch head 128 và ngân sách 12 epoch head / tối đa 20 epoch fine-tune. Đây là cấu hình của run; số epoch thực chạy phải đọc từ history và summary, không suy ra từ ngân sách. [Registry](../../outputs/selected_run.json) · [Config đã lưu](../../outputs/runs/20261030T052121Z_cifar10_scheduled64_b895bfc1/config.json) · [Cách đọc epoch](reporting.py#L95)
+
+### 3.2. Đầu Vào và Đầu Ra của Các Tiện Ích (Input / Output Utils)
+
+Trong bảng, `<run>` là thư mục run được chọn; `<model>/<stage>` xác định mô hình và giai đoạn. Thư mục kết quả head-only mang tên `head_selected`, còn fine-tune mang tên `finetune`.
+
+| Công cụ / Tiện ích | Dữ liệu đầu vào tiếp nhận | Sản phẩm đầu ra (Artifact Path) | Ý nghĩa sử dụng |
+| :--- | :--- | :--- | :--- |
+| Báo cáo đánh giá (`reporting`) | Xác suất `[N, 10]`, nhãn thật `[N]`, index gốc `[N]` và dữ liệu test | `<run>/<model>/<stage>/metrics.json`, `test_predictions.npz`, `classification_report.csv`, `confusion_counts.csv`, `confusion_matrix.png` | Tính accuracy, loss và macro precision/recall/F1; lưu dự đoán để kiểm tra lại. Macro là trung bình các chỉ số tính riêng cho từng lớp, với trọng số ngang nhau. |
+| Đồ thị học tập (`reporting`) | `history.csv`, `training_summary.json` và config của run | `<run>/<model>/learning_curves.png` | Tách head-only và fine-tune thành hai hàng, mỗi hàng có loss và accuracy của train/validation; đánh dấu checkpoint được chọn khi có dữ liệu. |
+| Chi phí và đề xuất (`costs`) | Bảng so sánh, summary head, kết quả validation và chính sách chọn | `<run>/cost_comparison.csv`, `validation_recommendation.json` | Phân biệt chi phí toàn bộ tìm kiếm với chi phí thực hiện recipe đã chọn; chỉ dùng thời gian để phân hạng khi kiểu thực thi trùng nhau. |
+| Kiểm chứng (`delivery`) | Run hoàn thành, config, split, dự đoán, metric, roundtrip và log TensorBoard | `<run>/verification.json`, `manifest.json`, `tensorboard_scalars.csv`; `<model>/<stage>/roc_pr.png`, `roc_pr_metrics.csv` | Đối chiếu bằng chứng và tạo manifest chứa mã hash của tệp. ROC/PR One-vs-Rest đánh giá lần lượt từng lớp so với các lớp còn lại. |
+| Trình bày (`notebook_views`) | Artifact của run và bộ bằng chứng benchmark được chỉ định | `outputs/review/<run_id>/*.png` và bảng hiển thị trong notebook | Dựng hình trình bày từ dữ liệu đã lưu; các hàm xem benchmark đọc số đo có sẵn. |
+| Benchmark training | Checkpoint fine-tune, config và một ảnh train cùng nhãn đã đưa lên thiết bị | `outputs/published/training_benchmark/<benchmark_id>/`: `measurement.json` theo model, `training_performance.csv`, `training_resources.png`, config và provenance | Đo thời gian bước cập nhật trọng số và bộ nhớ ở lượt riêng; không đại diện cho thời gian huấn luyện cả mô hình. |
+| Benchmark inference | Model đã nạp ở chế độ eval, một ảnh PNG và cấu hình đo | `outputs/published/single_image_benchmark/<benchmark_id>/<model>/`: `summary.json`, `latency_samples.csv`, `stage_samples.csv`, config và manifest | Đo yêu cầu đầu tiên, thời gian sau warm-up và bộ nhớ ở lượt riêng; không bao gồm thời gian tải model. |
+
+### 3.3. Tệp Mã Nguồn & Bản Đồ Điều Hướng Code (Source Files)
+
+Giữ phím **`Ctrl + Click`** để mở ký hiệu hoặc vị trí mã nguồn trong trình soạn thảo.
+
+| Tệp mã nguồn | Ký hiệu / Hàm chính (Ctrl+Click) | Dòng code | Việc đảm nhiệm |
+| :--- | :--- | :--- | :--- |
+| [`reporting.py`](reporting.py) | [`export_evaluation()`](reporting.py#L28)<br>[`plot_learning_curves()`](reporting.py#L80)<br>[`write_final_report()`](reporting.py#L214) | [L28](reporting.py#L28), [L80](reporting.py#L80), [L214](reporting.py#L214) | Xuất metric, dự đoán và biểu đồ; tổng hợp báo cáo Markdown/HTML với phần chẩn đoán do delivery cung cấp. |
+| [`costs.py`](costs.py) | [`cost_table()`](costs.py#L7)<br>[`validation_recommendation()`](costs.py#L29) | [L7](costs.py#L7), [L29](costs.py#L29) | Tính hai phạm vi chi phí và đề xuất mô hình dựa trên validation, có xét khả năng so sánh thời gian. |
+| [`delivery.py`](delivery.py) | [`resolve_run()`](delivery.py#L42)<br>[`finalize_run()`](delivery.py#L71)<br>[`complete_delivery()`](delivery.py#L308) | [L42](delivery.py#L42), [L71](delivery.py#L71), [L308](delivery.py#L308) | Xác định run, kiểm chứng artifact và tạo bằng chứng bàn giao; luồng đầy đủ còn chạy kiểm thử, notebook và kiểm tra inference. |
+| [`notebook_views.py`](notebook_views.py) | [`context()`](notebook_views.py#L16)<br>[`training_benchmark()`](notebook_views.py#L191)<br>[`single_image_benchmark()`](notebook_views.py#L375) | [L16](notebook_views.py#L16), [L191](notebook_views.py#L191), [L375](notebook_views.py#L375) | Chọn ngữ cảnh trình bày, đọc artifact và dựng bảng/hình cho notebook. |
+| [`training_benchmark.py`](training_benchmark.py) | [`prepare_training()`](training_benchmark.py#L29)<br>[`benchmark_steps()`](training_benchmark.py#L52)<br>[`measure_checkpoint()`](training_benchmark.py#L105) | [L29](training_benchmark.py#L29), [L52](training_benchmark.py#L52), [L105](training_benchmark.py#L105) | Khôi phục model và chính sách train từ checkpoint, chuẩn bị một ảnh rồi đo thời gian và bộ nhớ của bước training. |
+| [`inference_benchmark.py`](inference_benchmark.py) | [`timing_summary()`](inference_benchmark.py#L19)<br>[`_RSSSampler`](inference_benchmark.py#L41)<br>[`benchmark_loaded_model()`](inference_benchmark.py#L113) | [L19](inference_benchmark.py#L19), [L41](inference_benchmark.py#L41), [L113](inference_benchmark.py#L113) | Tổng hợp phân phối thời gian, lấy mẫu RAM của tiến trình và đo yêu cầu dự đoán với model đã nạp. |
+| [`constants.py`](constants.py) | [`CLASSES`](constants.py#L7)<br>[`CHECKSUMS`](constants.py#L20) | [L7](constants.py#L7), [L20](constants.py#L20) | Giữ thứ tự 10 lớp CIFAR-10, checksum dữ liệu và các hằng số chung. |
+| [`__init__.py`](__init__.py) | [`__getattr__()`](__init__.py#L27) | [L27](__init__.py#L27) | Nạp module khi tên được yêu cầu, rồi lưu kết quả để các lần truy cập sau dùng lại. |
+
+## 4. Các Thảo Luận & Quyết Định Kỹ Thuật (Discussions from Description)
+
+### 4.1. Vì sao phải tách chi phí tìm kiếm khỏi chi phí recipe đã chọn?
+
+Mục tiêu là phân biệt công sức tìm cấu hình với chi phí thực hiện lại cấu hình đã chọn. Recipe ở đây là tổ hợp thiết lập huấn luyện, chẳng hạn optimizer, learning rate và batch size.
+
+`cost_table()` tính chi phí toàn pipeline bằng thời gian trích đặc trưng cộng toàn bộ trial head và fine-tune. Chi phí recipe chỉ cộng trích đặc trưng, head được chọn và fine-tune được chọn nếu có; thời gian test nằm ở cột riêng. [Công thức chi phí](costs.py#L12)
+
+Config hiện tại `scheduled.json` và config lưu trong run được chọn đều ghi một learning rate head `0.001` và một batch size `128`. Vì vậy, không mô tả run này như đã khảo sát nhiều tổ hợp LR/batch chỉ vì module có khả năng tổng hợp search. [Config hiện tại](../../config/scheduled.json) · [Config của run](../../outputs/runs/20261030T052121Z_cifar10_scheduled64_b895bfc1/config.json)
+
+Đề xuất mô hình dùng validation; test phục vụ đánh giá sau lựa chọn. Nếu các mô hình có kiểu thực thi khác nhau, hàm đề xuất xếp theo validation accuracy rồi loss và ghi `time_comparable=false`. Điều này tránh dùng thời gian từ hai cách thực thi khác nhau làm căn cứ phân hạng. [Chính sách đề xuất](costs.py#L29)
+
+### 4.2. Vì sao confusion matrix dùng màu theo tỷ lệ nhưng vẫn ghi số đếm?
+
+Mục tiêu là thấy cả lớp nào bị nhầm nhiều và có bao nhiêu ảnh bị nhầm. Mỗi hàng tương ứng nhãn thật, mỗi cột tương ứng nhãn dự đoán.
+
+`export_evaluation()` tính ma trận số đếm rồi chuẩn hóa từng hàng để tô màu. Chữ trên ô vẫn là số ảnh thực tế; `confusion_counts.csv` giữ số đếm để đối chiếu. Nếu nhãn thật là `cat` nhưng dự đoán là `dog`, số đếm ở hàng `cat`, cột `dog` tăng một. [Cách dựng ma trận](reporting.py#L42)
+
+Lưới dự đoán lấy tối đa 8 ảnh đúng và 8 ảnh sai đầu tiên để minh họa. Đây là lựa chọn có chủ đích, nên tỷ lệ đúng trong lưới không đại diện cho accuracy của toàn tập test. [Cách chọn ảnh](reporting.py#L58)
+
+### 4.3. Vì sao benchmark training và inference phải có giao thức riêng?
+
+Benchmark training khảo sát chi phí cập nhật trọng số: `forward → loss → backward → optimizer.step()`. Ảnh và nhãn đã ở trên thiết bị trước khi đo; tải checkpoint, tiền xử lý, truyền dữ liệu và validation nằm ngoài phạm vi. Optimizer được tạo mới ở learning rate ban đầu của recipe, nên đây không phải phép tiếp tục nguyên trạng một phiên train. [Bước đo](training_benchmark.py#L52) · [Phương pháp đã lưu](../../outputs/published/training_benchmark/scheduled64_cpu_batch1/methodology.json)
+
+Config benchmark training hiện tại và config đã lưu đều ghi CPU, batch 1, seed 42, 2 luồng, 3 bước warm-up và 10 bước đo. Warm-up là các lượt chạy trước khi thu thời gian chính thức. CLI tạo tiến trình riêng cho từng model và kiểm tra hai model nhận cùng index ảnh, cùng hash tensor đầu vào. [Config hiện tại](../../config/training_benchmark.json) · [Config đã lưu](../../outputs/published/training_benchmark/scheduled64_cpu_batch1/config.json) · [CLI đo](../../scripts/benchmark_training.py#L66)
+
+Benchmark inference đo từ đọc/giải mã PNG đến tạo chuỗi JSON, với model đã nạp ở chế độ eval. Config ResNet18 trong bộ bằng chứng `20261102T184034Z_kaggle` ghi ảnh 64×64, batch 1, FP32, 20 lượt warm-up và 100 lượt đo tổng latency; lượt đo từng công đoạn và bộ nhớ đều là 20. Đây là cấu hình đã lưu của bộ đo đó. [Config đã lưu](../../outputs/published/single_image_benchmark/20261102T184034Z_kaggle/resnet18/config.json) · [Giao thức inference](inference_benchmark.py#L113)
+
+Thời gian từng công đoạn được thu ở lượt riêng, nên không cộng chúng để suy ra tổng latency. RSS là RAM đang được tiến trình sử dụng, có cả môi trường chạy; lấy mẫu có thể bỏ lỡ đỉnh ngắn. CUDA allocated/reserved chỉ phản ánh bộ cấp phát của PyTorch. Các số đo trên một ảnh không chứng minh tốc độ trên mọi đầu vào hoặc lượng RAM/VRAM tối thiểu cần có. [Giới hạn phép đo](inference_benchmark.py#L113)
+
+### 4.4. Vì sao cần kiểm chứng trước khi dùng artifact trong báo cáo?
+
+Một bảng metric chỉ có ý nghĩa khi gắn đúng split, mô hình và checkpoint. `finalize_run()` đối chiếu index test, nhãn gốc, xác suất hữu hạn, tổng xác suất mỗi hàng và accuracy/macro F1 tính lại; đồng thời kiểm tra bằng chứng lưu/nạp và tổng số đếm confusion matrix. [Các bước đối chiếu](delivery.py#L121)
+
+Sau đó, hàm xuất ROC/PR, bằng chứng TensorBoard, kết quả kiểm chứng và manifest hash. Manifest giúp phát hiện tệp thay đổi so với thời điểm lập manifest; nó không tự chứng minh thiết kế thí nghiệm là đúng. [Xuất ROC/PR](delivery.py#L149) · [Lập manifest](delivery.py#L283)
+
+Đọc notebook từ artifact đã lưu và chạy lại luồng bàn giao là hai nhu cầu khác nhau. `complete_delivery()` còn chạy kiểm thử, thực thi notebook và kiểm tra inference, nên cần dữ liệu/checkpoint tương ứng. Việc đã đọc được hình không đồng nghĩa toàn bộ luồng này vừa được kiểm chứng lại. [Luồng bàn giao đầy đủ](delivery.py#L308)

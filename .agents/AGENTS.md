@@ -30,7 +30,7 @@ Mọi kết quả phải tái lập được. Cố định seed cho toàn bộ t
 Các cổng quan trọng phải vượt qua checklist tương ứng trong `.agents/checklists/` trước khi đi tiếp: `new_lab_bootstrap.md` khi bắt đầu lab mới, `pre_commit.md` trước khi commit, `pre_kaggle_upload.md` trước khi lên Kaggle GPU, và `pre_submission.md` trước khi nộp bài. Checklist biến quy tắc "nên làm" thành bước "phải đủ mới đi tiếp".
 
 ### 1.8. Tái sử dụng khung mẫu (Template Reuse)
-Khi bắt đầu lab mới, agent phải dùng khung mẫu trong `.agents/templates/` (`walkthrough_template.md`, `description_lab_template.md`, `lab_readme_template.md`) thay vì tự phát minh lại cấu trúc. Mọi lab phải có cùng cấu trúc để đảm bảo tính đồng nhất và giảm công rà soát.
+Khi bắt đầu lab mới, agent phải dùng khung mẫu trong `.agents/templates/` (`walkthrough_template.md`, `description_lab_template.md`, `lab_readme_template.md`, `submodule_readme_template.md`) thay vì tự phát minh lại cấu trúc. Mọi lab phải có cùng cấu trúc để đảm bảo tính đồng nhất và giảm công rà soát.
 
 ### 1.9. Tài liệu sống duy nhất (Hợp nhất 3 Rule)
 Nội dung báo cáo của một lab có đúng MỘT nguồn biên tập: `walkthrough_lab_0X.md`. File này duy trì liên kết tường minh với 3 rule cốt lõi:
@@ -44,6 +44,15 @@ Mỗi lần chạy lưu artifact/log vào `outputs/runs/<run_id>/`. Bộ `output
 
 ### 1.10. Chính sách không Emoji/Icon
 Nghiêm cấm emoji hoặc icon đồ họa trong mọi source code (`.py`, `.sh`), câu lệnh `print()`, log formatter, docstring, comment code, hoặc markdown cell trong Jupyter Notebook (`.ipynb`). Mọi tiêu đề và chỉ báo trạng thái phải dùng text kỹ thuật thuần ASCII/UTF-8 sạch, tương thích trên mọi môi trường terminal và pipeline CI/CD.
+
+### 1.11. Định tuyến thảo luận kỹ thuật vào Submodule README
+Mọi thảo luận và quyết định kỹ thuật trong quá trình trao đổi được cập nhật trực tiếp vào Mục 4 của `README.md` mô-đun tương ứng theo phân vùng trách nhiệm:
+- **Dữ liệu & Tiền xử lý** (Augmentation, Handcrafted Features, Custom Dataset, DataLoader): Thảo luận tại `labs/lab0X/src/datasets/README.md`.
+- **Kiến trúc mô hình** (Backbone, Layers, Activation, Dropout, Tham số): Thảo luận tại `labs/lab0X/src/models/README.md`.
+- **Huấn luyện & Tối ưu hóa** (Optimizer, Scheduler, Loss, Optuna Tuning, Search Space): Thảo luận tại `labs/lab0X/src/training/README.md`.
+- **Tiện ích hệ thống** (Checkpointing, Logging, Visualization, Helpers): Thảo luận tại `labs/lab0X/src/utils/README.md`.
+- **Chiến lược kiểm thử** (TDD, Mocking, Safety Gates, Dimension checks): Thảo luận tại `labs/lab0X/tests/README.md`.
+- **Ranh giới:** Quyết định thiết kế và đánh đổi kỹ thuật nằm ở README mô-đun; toàn bộ bảng kết quả và chỉ số thực nghiệm sau khi chạy thuộc về `walkthrough_lab_0X.md`.
 
 ---
 

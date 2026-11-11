@@ -67,6 +67,14 @@ from .utils import (
     set_seed,
     write_json,
 )
+from .inference import (
+    evaluate_run,
+    infer_sample,
+    load_model,
+    load_trained_run,
+    resolve_run_path,
+    save_load_model,
+)
 
 __all__ = [
     "BASE_DIR",
@@ -128,4 +136,10 @@ __all__ = [
     "draw_confusion_counts",
     "plot_loss_and_acc_curves",
     "plot_eda_figures",
+    "load_model",
+    "load_trained_run",
+    "resolve_run_path",
+    "save_load_model",
+    "evaluate_run",
+    "infer_sample",
 ]
