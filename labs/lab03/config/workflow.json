@@ -3,7 +3,7 @@
     "frozen_trial": "20261103T110437Z_frozen_trial_b021d6eb",
     "exercise1": "20261103T110425Z_exercise1_f9b5a257",
     "exercise1_analysis": "20261103T110429Z_exercise1_analysis_f2706089",
-    "notebook_render": "20261103T124802Z_notebook_render_2e7e5fb2"
+    "notebook_render": "20261111T100401Z_notebook_render_83564330"
   },
   "runs": [
     {
@@ -28,6 +28,21 @@
     },
     {
       "id": "20261103T124802Z_notebook_render_2e7e5fb2",
+      "kind": "notebook_render",
+      "status": "completed"
+    },
+    {
+      "id": "20261111T100252Z_notebook_render_1a0bfcc4",
+      "kind": "notebook_render",
+      "status": "failed"
+    },
+    {
+      "id": "20261111T100328Z_notebook_render_b83bcc67",
+      "kind": "notebook_render",
+      "status": "failed"
+    },
+    {
+      "id": "20261111T100401Z_notebook_render_83564330",
       "kind": "notebook_render",
       "status": "completed"
     }

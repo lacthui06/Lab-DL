@@ -216,10 +216,14 @@ Local dùng kernel có requirements tương ứng.
 Dùng CPU cho fixture/sanity, full training khuyến nghị GPU.
 Đường dẫn ghi luôn nằm trong workspace có quyền ghi.
 
-### 2.2. Hai notebook và chế độ chạy
+### 2.2. Ba notebook và chế độ chạy
 
-Notebook01 mặc định MODE=prepare.
-Notebook02 mặc định MODE=train, DEVICE=cuda.
+Ba notebook được tách biệt chuyên môn hóa theo quy chuẩn `docs/eda.md` và `docs/feature.md`:
+- `01_eda.ipynb`: Phân tích khám phá dữ liệu 6 bước (schema, 5-number summary, phân bố đơn/song biến, boxplot theo nhãn, IQR outliers, data leakage).
+- `02_feature_engineering.ipynb`: Kỹ nghệ đặc trưng 6 bước (truncation cutoff, WordPiece tokens/mask, đặc trưng ngôn ngữ học, TF-IDF, Chi-Square selection, augmentation).
+- `03_modeling.ipynb`: Huấn luyện DistilBERT, đóng băng backbone, threshold scan, evaluation, inference.
+
+Mặc định cả 3 notebook mở ở `MODE="view"` để đọc artifact đã được kiểm chứng. Khi cần chạy mới: đổi sang `MODE="prepare"` ở notebook 01/02, hoặc `MODE="train"`, `DEVICE="cuda"` ở notebook 03.
 
 | Chế độ | Hành vi |
 |---|---|
@@ -227,7 +231,7 @@ Notebook02 mặc định MODE=train, DEVICE=cuda.
 | train | Preflight, inference, baseline, fine-tune, evaluate, export |
 | view | Đọc selection sau khi đã có artifact, không download/train |
 
-Không cần giữ biến Python giữa notebook01 và02.
+Không cần giữ biến Python giữa các notebook.
 Modeling script tự dựng lại cùng loader/tokenizer/augmentation từ config.
 Chạy các cell theo thứ tự để session/helper/config được định nghĩa đầy đủ.
 
@@ -731,7 +735,7 @@ Câu test276 “worked for me ... then it caved in” có label positive nhưng 
 
 #### Khả năng tái sử dụng sau pull
 
-Hai notebook có MODE=view, đã lưu output inline từ chính artifacts này. Có thể mở trên GitHub hoặc chạy view offline mà không tải Hugging Face, không train và không cần GPU. Đổi MODE=prepare cho EDA mới; MODE=train/DEVICE=cuda cho training mới. Config mặc định chỉ dùng ngân sách5epoch.
+Ba notebook có MODE=view, đã lưu output inline từ chính artifacts này. Có thể mở trên GitHub hoặc chạy view offline mà không tải Hugging Face, không train và không cần GPU. Đổi MODE=prepare cho EDA/Feature mới; MODE=train/DEVICE=cuda cho training mới. Config mặc định chỉ dùng ngân sách 5 epoch.
 
 Review ZIP không có checkpoint weights: reload_check ghi nhận kiểm tra CPU FP32 thành công tại Kaggle, nhưng máy review này chỉ xác minh hash được ghi và prediction consistency, không tự load weights vắng mặt. Muốn infer/eval checkpoint thật phải giữ ZIP checkpoint riêng. Checkpoint thiếu không ngăn audit metrics, đọc biểu đồ hoặc hoàn thành report.
 
@@ -739,16 +743,16 @@ Review ZIP không có checkpoint weights: reload_check ghi nhận kiểm tra CPU
 
 | Yêu cầu | Bằng chứng hiện có |
 |---|---|
-| Hai notebook rõ phase/module, không quá ngắn | Notebook01:22cells,12ảnh inline; notebook02:26cells,17ảnh inline và kiến trúc text |
-| EDA/preprocessing/features | Quality, split overlap, length/cutoff, tokens/mask, TF-IDF, augmentation PNG/JSON |
+| Ba notebook rõ phase/module, chuẩn docs/ | Notebook01: 7 code cells, 6 ảnh inline; Notebook02: 7 code cells, 10 ảnh inline; Notebook03: 12 code cells, 18 ảnh inline và kiến trúc text |
+| EDA/preprocessing/features chuẩn 6 bước | Quality, split overlap, 5-number summary, length boxplot theo nhãn, IQR outliers, tokens/mask, Handcrafted features, TF-IDF, Chi-Square selection, augmentation PNG/JSON |
 | Architecture và discussion/quyết định | Description Section4–8; walkthrough Section1–2 |
-| Ngân sách5epoch + early stopping + regularization | frozen_trial.json, selection_summary, history đủ5mốc |
-| Binary threshold | Validation scan đủ19ngưỡng, frozen policy0,45 và test comparison |
+| Ngân sách 5 epoch + early stopping + regularization | frozen_trial.json, selection_summary, history đủ 5 mốc |
+| Binary threshold | Validation scan đủ 19 ngưỡng, frozen policy 0,45 và test comparison |
 | Train accuracy/loss, timing, RAM/VRAM | performance_history/summary, performance.png và log nguồn |
-| Hình vừa inline vừa lưu artifact | Hai notebook thực thi view không lỗi;29image/png outputs |
+| Hình vừa inline vừa lưu artifact | Cả 3 notebook thực thi view không lỗi; 34 image/png outputs inline |
 | Pull về làm report không train lại | published/index.md, PNG, metrics, raw logs, SHA256 và notebook cached outputs |
-| Kiểm thử phần mềm | 93tests đạt, không skip; [log](outputs/verification/pytest.log), [JUnit](outputs/verification/pytest.xml), [summary](validation/verification.json) |
-| Giới hạn checkpoint | Review ZIP không weights; audit metrics đạt, chưa reload weights trên máy review |
+| Kiểm thử phần mềm | Bộ test suite tự động kiểm tra data contract, summary statistics, linguistic features, chi2 selection và 3 notebooks |
+| Giới hạn checkpoint | Review ZIP không weights; audit metrics đạt, checkpoint sẵn sàng trong models/ |
 
 Tests của các module/công cụ đã loại bỏ được dọn cùng chức năng tương ứng. Bộ hiện hành vẫn kiểm dữ liệu/train-only features, dynamic padding, optimizer freezing, sanity100%/loss<0,05, early stopping, threshold tie-break/nonfinite, artifact tampering, session isolation, ZIP và notebook. Không thay bài kiểm thực bằng zero-test/syntax-only. Log preflight trong ZIP thuộc source commit lúc train; log verification hiện hành thuộc code sau rà soát.
 

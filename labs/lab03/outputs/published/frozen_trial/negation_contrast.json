@@ -1,0 +1,72 @@
+{
+  "fitted_split": "train",
+  "labels": [
+    {
+      "label": 0,
+      "samples": 4265,
+      "reviews_with_negation_or_contrast": 1626,
+      "review_fraction": 0.381242672919109,
+      "negation_cue_matches": 1320,
+      "contrast_cue_matches": 821
+    },
+    {
+      "label": 1,
+      "samples": 4265,
+      "reviews_with_negation_or_contrast": 1222,
+      "review_fraction": 0.2865181711606096,
+      "negation_cue_matches": 857,
+      "contrast_cue_matches": 769
+    }
+  ],
+  "examples": [
+    {
+      "index": 4269,
+      "label": 0,
+      "cues": "but",
+      "text": "a visually flashy but narratively opaque and emotionally vapid exercise in style and mystification ."
+    },
+    {
+      "index": 4272,
+      "label": 0,
+      "cues": "not",
+      "text": "not so much farcical as sour ."
+    },
+    {
+      "index": 4274,
+      "label": 0,
+      "cues": "but",
+      "text": "all the more disquieting for its relatively gore-free allusions to the serial murders , but it falls down in its attempts to humanize its subject ."
+    },
+    {
+      "index": 4275,
+      "label": 0,
+      "cues": "never",
+      "text": "a sentimental mess that never rings true ."
+    },
+    {
+      "index": 2,
+      "label": 1,
+      "cues": "but",
+      "text": "effective but too-tepid biopic"
+    },
+    {
+      "index": 4,
+      "label": 1,
+      "cues": "n't",
+      "text": "emerges as something rare , an issue movie that's so honest and keenly observed that it doesn't feel like one ."
+    },
+    {
+      "index": 7,
+      "label": 1,
+      "cues": "no",
+      "text": "perhaps no picture ever made has more literally showed that the road to hell is paved with good intentions ."
+    },
+    {
+      "index": 8,
+      "label": 1,
+      "cues": "but",
+      "text": "steers turns in a snappy screenplay that curls at the edges ; it's so clever you want to hate it . but he somehow pulls it off ."
+    }
+  ],
+  "interpretation": "Descriptive association with labels only; counts do not establish causal impact."
+}

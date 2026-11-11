@@ -1,0 +1,132 @@
+{
+  "fitted_split": "train",
+  "top_k": 25,
+  "terms": [
+    {
+      "term": "too",
+      "chi2_score": 19.72930141597039,
+      "p_value": 8.922280274342338e-06
+    },
+    {
+      "term": "bad",
+      "chi2_score": 15.336423037394232,
+      "p_value": 8.996512602302712e-05
+    },
+    {
+      "term": "dull",
+      "chi2_score": 9.691630291059198,
+      "p_value": 0.0018510923088769882
+    },
+    {
+      "term": "boring",
+      "chi2_score": 8.601149456516172,
+      "p_value": 0.0033595089965328773
+    },
+    {
+      "term": "performances",
+      "chi2_score": 8.212766548000776,
+      "p_value": 0.004159668218145005
+    },
+    {
+      "term": "moving",
+      "chi2_score": 7.524682094518122,
+      "p_value": 0.006085929362991991
+    },
+    {
+      "term": "touching",
+      "chi2_score": 7.1802992181990675,
+      "p_value": 0.007370841388670112
+    },
+    {
+      "term": "portrait",
+      "chi2_score": 7.167884210164166,
+      "p_value": 0.00742202610713074
+    },
+    {
+      "term": "feels",
+      "chi2_score": 6.535473308751999,
+      "p_value": 0.010574408510740716
+    },
+    {
+      "term": "tv",
+      "chi2_score": 6.241580982509405,
+      "p_value": 0.012478503441551665
+    },
+    {
+      "term": "unfunny",
+      "chi2_score": 6.112397970893885,
+      "p_value": 0.013423688158456825
+    },
+    {
+      "term": "flat",
+      "chi2_score": 6.086969203301293,
+      "p_value": 0.013618249424425627
+    },
+    {
+      "term": "engrossing",
+      "chi2_score": 6.052602052092524,
+      "p_value": 0.01388581932648497
+    },
+    {
+      "term": "just",
+      "chi2_score": 6.030073962480509,
+      "p_value": 0.014064143914044525
+    },
+    {
+      "term": "wonderful",
+      "chi2_score": 6.005143354578012,
+      "p_value": 0.014264235038849825
+    },
+    {
+      "term": "portrait of",
+      "chi2_score": 5.928453372675667,
+      "p_value": 0.01489831201605819
+    },
+    {
+      "term": "culture",
+      "chi2_score": 5.861073847788323,
+      "p_value": 0.015479347210231552
+    },
+    {
+      "term": "solid",
+      "chi2_score": 5.8309833561452145,
+      "p_value": 0.015746319236127643
+    },
+    {
+      "term": "pretentious",
+      "chi2_score": 5.813798309168845,
+      "p_value": 0.01590091440583995
+    },
+    {
+      "term": "no",
+      "chi2_score": 5.74256365531258,
+      "p_value": 0.016558606649246913
+    },
+    {
+      "term": "beautiful",
+      "chi2_score": 5.666763491370791,
+      "p_value": 0.01728932621800104
+    },
+    {
+      "term": "only",
+      "chi2_score": 5.640364936210421,
+      "p_value": 0.01755155342677834
+    },
+    {
+      "term": "silly",
+      "chi2_score": 5.532970488973368,
+      "p_value": 0.01866139723124812
+    },
+    {
+      "term": "enjoyable",
+      "chi2_score": 5.52565217714225,
+      "p_value": 0.018739616023863162
+    },
+    {
+      "term": "mess",
+      "chi2_score": 5.476550456773722,
+      "p_value": 0.019273256709046567
+    }
+  ],
+  "method": "Chi-Square (chi2) test on train TF-IDF matrix vs sentiment labels"
+}

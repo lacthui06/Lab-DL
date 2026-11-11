@@ -78,6 +78,71 @@
       "mean_tfidf": 0.014051453933988774
     },
     {
+      "label": 0,
+      "term": "for",
+      "mean_tfidf": 0.012817000248759916
+    },
+    {
+      "label": 0,
+      "term": "film",
+      "mean_tfidf": 0.011978330922090183
+    },
+    {
+      "label": 0,
+      "term": "with",
+      "mean_tfidf": 0.011286971212388348
+    },
+    {
+      "label": 0,
+      "term": "its",
+      "mean_tfidf": 0.011169453999756749
+    },
+    {
+      "label": 0,
+      "term": "an",
+      "mean_tfidf": 0.010499190404854385
+    },
+    {
+      "label": 0,
+      "term": "be",
+      "mean_tfidf": 0.009882877663891593
+    },
+    {
+      "label": 0,
+      "term": "like",
+      "mean_tfidf": 0.00957760580326503
+    },
+    {
+      "label": 0,
+      "term": "not",
+      "mean_tfidf": 0.009487159841527053
+    },
+    {
+      "label": 0,
+      "term": "on",
+      "mean_tfidf": 0.009087088669671064
+    },
+    {
+      "label": 0,
+      "term": "too",
+      "mean_tfidf": 0.009030275334095715
+    },
+    {
+      "label": 0,
+      "term": "you",
+      "mean_tfidf": 0.00899813023441603
+    },
+    {
+      "label": 0,
+      "term": "more",
+      "mean_tfidf": 0.008919155063845757
+    },
+    {
+      "label": 0,
+      "term": "by",
+      "mean_tfidf": 0.008741981433004736
+    },
+    {
       "label": 1,
       "term": "the",
       "mean_tfidf": 0.03615348098022657
@@ -136,6 +201,381 @@
       "label": 1,
       "term": "as",
       "mean_tfidf": 0.012955264848235422
+    },
+    {
+      "label": 1,
+      "term": "but",
+      "mean_tfidf": 0.012617420410740854
+    },
+    {
+      "label": 1,
+      "term": "its",
+      "mean_tfidf": 0.012068269827690712
+    },
+    {
+      "label": 1,
+      "term": "of the",
+      "mean_tfidf": 0.011784142429660058
+    },
+    {
+      "label": 1,
+      "term": "for",
+      "mean_tfidf": 0.011470125212570828
+    },
+    {
+      "label": 1,
+      "term": "this",
+      "mean_tfidf": 0.011407136717128652
+    },
+    {
+      "label": 1,
+      "term": "you",
+      "mean_tfidf": 0.010774124445207714
+    },
+    {
+      "label": 1,
+      "term": "movie",
+      "mean_tfidf": 0.010234814672192786
+    },
+    {
+      "label": 1,
+      "term": "on",
+      "mean_tfidf": 0.008414543728814264
+    },
+    {
+      "label": 1,
+      "term": "be",
+      "mean_tfidf": 0.007717748146096773
+    },
+    {
+      "label": 1,
+      "term": "by",
+      "mean_tfidf": 0.007624791367689947
+    },
+    {
+      "label": 1,
+      "term": "at",
+      "mean_tfidf": 0.00754699946106653
+    },
+    {
+      "label": 1,
+      "term": "one",
+      "mean_tfidf": 0.0074842411659119135
+    },
+    {
+      "label": 1,
+      "term": "has",
+      "mean_tfidf": 0.007358749284243036
+    }
+  ],
+  "class_delta_terms": [
+    {
+      "term": "too",
+      "mean_tfidf_negative": 0.009030275334095715,
+      "mean_tfidf_positive": 0.0019147777900689418,
+      "delta_positive_minus_negative": -0.007115497544026773
+    },
+    {
+      "term": "movie",
+      "mean_tfidf_negative": 0.015258635546375035,
+      "mean_tfidf_positive": 0.010234814672192786,
+      "delta_positive_minus_negative": -0.005023820874182249
+    },
+    {
+      "term": "bad",
+      "mean_tfidf_negative": 0.005956339223999122,
+      "mean_tfidf_positive": 0.0009668539359425763,
+      "delta_positive_minus_negative": -0.004989485288056546
+    },
+    {
+      "term": "just",
+      "mean_tfidf_negative": 0.0075169217651991594,
+      "mean_tfidf_positive": 0.003559583450092274,
+      "delta_positive_minus_negative": -0.003957338315106885
+    },
+    {
+      "term": "like",
+      "mean_tfidf_negative": 0.00957760580326503,
+      "mean_tfidf_positive": 0.005726048893309562,
+      "delta_positive_minus_negative": -0.0038515569099554685
+    },
+    {
+      "term": "to",
+      "mean_tfidf_negative": 0.02465843122580827,
+      "mean_tfidf_positive": 0.020842527602156043,
+      "delta_positive_minus_negative": -0.003815903623652226
+    },
+    {
+      "term": "no",
+      "mean_tfidf_negative": 0.006605390285758877,
+      "mean_tfidf_positive": 0.003007692126399457,
+      "delta_positive_minus_negative": -0.0035976981593594196
+    },
+    {
+      "term": "so",
+      "mean_tfidf_negative": 0.007882245303608489,
+      "mean_tfidf_positive": 0.004447866625420637,
+      "delta_positive_minus_negative": -0.0034343786781878514
+    },
+    {
+      "term": "or",
+      "mean_tfidf_negative": 0.007282396182847682,
+      "mean_tfidf_positive": 0.003886027158234571,
+      "delta_positive_minus_negative": -0.0033963690246131112
+    },
+    {
+      "term": "only",
+      "mean_tfidf_negative": 0.00544802150254761,
+      "mean_tfidf_positive": 0.0022560790337004767,
+      "delta_positive_minus_negative": -0.0031919424688471336
+    },
+    {
+      "term": "than",
+      "mean_tfidf_negative": 0.008708508363682059,
+      "mean_tfidf_positive": 0.005882199153357536,
+      "delta_positive_minus_negative": -0.0028263092103245225
+    },
+    {
+      "term": "the movie",
+      "mean_tfidf_negative": 0.006450089660829324,
+      "mean_tfidf_positive": 0.0036450986249374076,
+      "delta_positive_minus_negative": -0.0028049910358919168
+    },
+    {
+      "term": "dull",
+      "mean_tfidf_negative": 0.0030346045723535606,
+      "mean_tfidf_positive": 0.0002871851230863298,
+      "delta_positive_minus_negative": -0.0027474194492672307
+    },
+    {
+      "term": "more",
+      "mean_tfidf_negative": 0.008919155063845757,
+      "mean_tfidf_positive": 0.006176495474508346,
+      "delta_positive_minus_negative": -0.00274265958933741
+    },
+    {
+      "term": "this",
+      "mean_tfidf_negative": 0.014051453933988774,
+      "mean_tfidf_positive": 0.011407136717128652,
+      "delta_positive_minus_negative": -0.002644317216860122
+    },
+    {
+      "term": "and",
+      "mean_tfidf_negative": 0.025050296862644147,
+      "mean_tfidf_positive": 0.03313653580206996,
+      "delta_positive_minus_negative": 0.008086238939425814
+    },
+    {
+      "term": "of",
+      "mean_tfidf_negative": 0.026040861659075498,
+      "mean_tfidf_positive": 0.031156495783728325,
+      "delta_positive_minus_negative": 0.005115634124652827
+    },
+    {
+      "term": "of the",
+      "mean_tfidf_negative": 0.008326195132983336,
+      "mean_tfidf_positive": 0.011784142429660058,
+      "delta_positive_minus_negative": 0.0034579472966767225
+    },
+    {
+      "term": "film",
+      "mean_tfidf_negative": 0.011978330922090183,
+      "mean_tfidf_positive": 0.015282815627874043,
+      "delta_positive_minus_negative": 0.00330448470578386
+    },
+    {
+      "term": "performances",
+      "mean_tfidf_negative": 0.0011480607787261235,
+      "mean_tfidf_positive": 0.004423543927805528,
+      "delta_positive_minus_negative": 0.0032754831490794042
+    },
+    {
+      "term": "with",
+      "mean_tfidf_negative": 0.011286971212388348,
+      "mean_tfidf_positive": 0.014297622060172226,
+      "delta_positive_minus_negative": 0.003010650847783878
+    },
+    {
+      "term": "an",
+      "mean_tfidf_negative": 0.010499190404854385,
+      "mean_tfidf_positive": 0.013488220907682237,
+      "delta_positive_minus_negative": 0.0029890305028278524
+    },
+    {
+      "term": "funny",
+      "mean_tfidf_negative": 0.002940689548656571,
+      "mean_tfidf_positive": 0.005691362952103825,
+      "delta_positive_minus_negative": 0.002750673403447254
+    },
+    {
+      "term": "best",
+      "mean_tfidf_negative": 0.002170613181070591,
+      "mean_tfidf_positive": 0.00460625130781624,
+      "delta_positive_minus_negative": 0.002435638126745649
+    },
+    {
+      "term": "fun",
+      "mean_tfidf_negative": 0.0016440883081088485,
+      "mean_tfidf_positive": 0.004029116227783988,
+      "delta_positive_minus_negative": 0.0023850279196751395
+    },
+    {
+      "term": "moving",
+      "mean_tfidf_negative": 0.0004107964339994721,
+      "mean_tfidf_positive": 0.00278548852673178,
+      "delta_positive_minus_negative": 0.0023746920927323082
+    },
+    {
+      "term": "the best",
+      "mean_tfidf_negative": 0.0007195915155038544,
+      "mean_tfidf_positive": 0.0028525587531169827,
+      "delta_positive_minus_negative": 0.0021329672376131283
+    },
+    {
+      "term": "drama",
+      "mean_tfidf_negative": 0.00195857381874329,
+      "mean_tfidf_positive": 0.004078997150215846,
+      "delta_positive_minus_negative": 0.0021204233314725558
+    },
+    {
+      "term": "look",
+      "mean_tfidf_negative": 0.0015722525167215277,
+      "mean_tfidf_positive": 0.0036325708921336125,
+      "delta_positive_minus_negative": 0.002060318375412085
+    },
+    {
+      "term": "life",
+      "mean_tfidf_negative": 0.0023151789275949954,
+      "mean_tfidf_positive": 0.004336195071401669,
+      "delta_positive_minus_negative": 0.002021016143806673
+    }
+  ],
+  "class_delta_interpretation": "Descriptive mean TF-IDF difference; not causal and not classifier coefficients.",
+  "chi2_selected_terms": [
+    {
+      "term": "too",
+      "chi2_score": 19.72930141597039,
+      "p_value": 8.922280274342338e-06
+    },
+    {
+      "term": "bad",
+      "chi2_score": 15.336423037394232,
+      "p_value": 8.996512602302712e-05
+    },
+    {
+      "term": "dull",
+      "chi2_score": 9.691630291059198,
+      "p_value": 0.0018510923088769882
+    },
+    {
+      "term": "boring",
+      "chi2_score": 8.601149456516172,
+      "p_value": 0.0033595089965328773
+    },
+    {
+      "term": "performances",
+      "chi2_score": 8.212766548000776,
+      "p_value": 0.004159668218145005
+    },
+    {
+      "term": "moving",
+      "chi2_score": 7.524682094518122,
+      "p_value": 0.006085929362991991
+    },
+    {
+      "term": "touching",
+      "chi2_score": 7.1802992181990675,
+      "p_value": 0.007370841388670112
+    },
+    {
+      "term": "portrait",
+      "chi2_score": 7.167884210164166,
+      "p_value": 0.00742202610713074
+    },
+    {
+      "term": "feels",
+      "chi2_score": 6.535473308751999,
+      "p_value": 0.010574408510740716
+    },
+    {
+      "term": "tv",
+      "chi2_score": 6.241580982509405,
+      "p_value": 0.012478503441551665
+    },
+    {
+      "term": "unfunny",
+      "chi2_score": 6.112397970893885,
+      "p_value": 0.013423688158456825
+    },
+    {
+      "term": "flat",
+      "chi2_score": 6.086969203301293,
+      "p_value": 0.013618249424425627
+    },
+    {
+      "term": "engrossing",
+      "chi2_score": 6.052602052092524,
+      "p_value": 0.01388581932648497
+    },
+    {
+      "term": "just",
+      "chi2_score": 6.030073962480509,
+      "p_value": 0.014064143914044525
+    },
+    {
+      "term": "wonderful",
+      "chi2_score": 6.005143354578012,
+      "p_value": 0.014264235038849825
+    },
+    {
+      "term": "portrait of",
+      "chi2_score": 5.928453372675667,
+      "p_value": 0.01489831201605819
+    },
+    {
+      "term": "culture",
+      "chi2_score": 5.861073847788323,
+      "p_value": 0.015479347210231552
+    },
+    {
+      "term": "solid",
+      "chi2_score": 5.8309833561452145,
+      "p_value": 0.015746319236127643
+    },
+    {
+      "term": "pretentious",
+      "chi2_score": 5.813798309168845,
+      "p_value": 0.01590091440583995
+    },
+    {
+      "term": "no",
+      "chi2_score": 5.74256365531258,
+      "p_value": 0.016558606649246913
+    },
+    {
+      "term": "beautiful",
+      "chi2_score": 5.666763491370791,
+      "p_value": 0.01728932621800104
+    },
+    {
+      "term": "only",
+      "chi2_score": 5.640364936210421,
+      "p_value": 0.01755155342677834
+    },
+    {
+      "term": "silly",
+      "chi2_score": 5.532970488973368,
+      "p_value": 0.01866139723124812
+    },
+    {
+      "term": "enjoyable",
+      "chi2_score": 5.52565217714225,
+      "p_value": 0.018739616023863162
+    },
+    {
+      "term": "mess",
+      "chi2_score": 5.476550456773722,
+      "p_value": 0.019273256709046567
     }
   ]
 }

@@ -13,6 +13,82 @@ NEGATION_CUES = re.compile(r"\b(?:not|no|never|neither|nor|hardly|barely|without
 CONTRAST_CUES = re.compile(r"\b(?:but|however|although|despite|yet)\b", re.I)
 
 
+def compute_summary_statistics(values):
+    """Tính 5-number summary (Min, Q1, Median, Q3, Max), Mean, Std và IQR Outliers theo docs/eda.md."""
+    arr = np.asarray(values, dtype=float)
+    if len(arr) == 0:
+        return {}
+    q1 = float(np.quantile(arr, 0.25))
+    median = float(np.median(arr))
+    q3 = float(np.quantile(arr, 0.75))
+    iqr = q3 - q1
+    lower_bound = q1 - 1.5 * iqr
+    upper_bound = q3 + 1.5 * iqr
+    outliers = arr[(arr < lower_bound) | (arr > upper_bound)]
+    return {
+        'count': int(len(arr)),
+        'mean': float(np.mean(arr)),
+        'std': float(np.std(arr)),
+        'min': float(np.min(arr)),
+        'q1': q1,
+        'median': median,
+        'q3': q3,
+        'max': float(np.max(arr)),
+        'iqr': float(iqr),
+        'lower_bound': float(lower_bound),
+        'upper_bound': float(upper_bound),
+        'outlier_count': int(len(outliers)),
+        'outlier_fraction': float(len(outliers) / len(arr))
+    }
+
+
+def extract_linguistic_features(texts):
+    """Trích xuất các đặc trưng ngôn ngữ học (Linguistic/Handcrafted features) theo docs/feature.md Bước 5."""
+    features = []
+    punc_regex = re.compile(r'[!?.,;:\'"\(\)\[\]{}]')
+    for t in texts:
+        if not isinstance(t, str):
+            t = str(t)
+        char_len = len(t)
+        words = t.split()
+        word_count = len(words)
+        avg_word_len = (sum(len(w) for w in words) / word_count) if word_count > 0 else 0.0
+        upper_chars = sum(1 for c in t if c.isupper())
+        punc_chars = len(punc_regex.findall(t))
+        features.append({
+            'char_count': char_len,
+            'word_count': word_count,
+            'avg_word_length': float(avg_word_len),
+            'uppercase_ratio': float(upper_chars / max(1, char_len)),
+            'punctuation_ratio': float(punc_chars / max(1, char_len)),
+            'digit_fraction': float(bool(re.search(r'\d', t))),
+            'negation_cue_count': len(NEGATION_CUES.findall(t)),
+            'contrast_cue_count': len(CONTRAST_CUES.findall(t))
+        })
+    return features
+
+
+def select_chi2_features(matrix, labels, feature_names, top_k=25):
+    """Lựa chọn đặc trưng phân loại bằng kiểm định Chi-Square (chi2) theo docs/feature.md Bước 6."""
+    from sklearn.feature_selection import chi2
+    unique_labels = np.unique(labels)
+    if len(unique_labels) < 2 or matrix.shape[1] == 0:
+        return []
+    chi2_scores, p_values = chi2(matrix, labels)
+    chi2_scores = np.nan_to_num(chi2_scores, nan=0.0)
+    p_values = np.nan_to_num(p_values, nan=1.0)
+    k = min(top_k, len(feature_names))
+    top_indices = np.argsort(chi2_scores)[-k:][::-1]
+    results = []
+    for idx in top_indices:
+        results.append({
+            'term': str(feature_names[idx]),
+            'chi2_score': float(chi2_scores[idx]),
+            'p_value': float(p_values[idx])
+        })
+    return results
+
+
 def make_tfidf(settings):
     return TfidfVectorizer(ngram_range=tuple(settings['ngram_range']),
         min_df=settings['min_df'],max_features=settings['max_features'],sublinear_tf=True)
@@ -38,6 +114,7 @@ def export_data_review(raw, tokenizer, settings, output):
         raise ValueError('Nonempty train strings required before feature extraction')
     ids=tokenizer(text,truncation=False)['input_ids']
     lengths=np.asarray([len(row) for row in ids]);words=np.asarray([len(t.split()) for t in text])
+    chars=np.asarray([len(t) for t in text])
     cutoff=int(settings['max_length'])
     quantiles={str(q):float(np.quantile(lengths,q)) for q in (.5,.75,.9,.95,.99,1.)}
     overflow_count=int(np.sum(lengths>cutoff))
@@ -52,6 +129,11 @@ def export_data_review(raw, tokenizer, settings, output):
     )
     statistics={'train_samples':len(text),'fitted_split':'train',
         'token_quantiles':quantiles,
+        'summary_statistics':{
+            'words': compute_summary_statistics(words),
+            'tokens': compute_summary_statistics(lengths),
+            'chars': compute_summary_statistics(chars)
+        },
         'truncation_rates':{str(cut):float(np.mean(lengths>cut)) for cut in (64,96,128,256)},
         'configured_max_length':cutoff,'configured_cutoff_overflow_count':overflow_count,
         'configured_cutoff_overflow_fraction':overflow_fraction,
@@ -103,6 +185,21 @@ def export_data_review(raw, tokenizer, settings, output):
         color='#d9534f',alpha=.09,label='Region truncated by tokenizer')
     for ax in axes:ax.legend();ax.grid(alpha=.2)
     finish(fig,output/'lengths_by_class.png')
+    # Bivariate analysis: Boxplot so sánh phân bố độ dài từ & tokens theo nhãn
+    fig,axes=plt.subplots(1,2,figsize=(11,4.5))
+    axes[0].boxplot([words[labels==0],words[labels==1]],tick_labels=['Negative (0)','Positive (1)'],patch_artist=True,
+                    boxprops=dict(facecolor='#d9edf7',color='#31708f'),
+                    medianprops=dict(color='#a94442',linewidth=1.5))
+    axes[0].set(title='Whitespace Words Distribution by Label',ylabel='Word count')
+    axes[0].grid(axis='y',alpha=0.2)
+    axes[1].boxplot([lengths[labels==0],lengths[labels==1]],tick_labels=['Negative (0)','Positive (1)'],patch_artist=True,
+                    boxprops=dict(facecolor='#dff0d8',color='#3c763d'),
+                    medianprops=dict(color='#a94442',linewidth=1.5))
+    axes[1].axhline(cutoff,color='red',linestyle='--',label=f'Cutoff ({cutoff})')
+    axes[1].set(title='WordPiece Tokens Distribution by Label',ylabel='Token count')
+    axes[1].legend()
+    axes[1].grid(axis='y',alpha=0.2)
+    finish(fig,output/'lengths_boxplot.png')
     fig,axes=plt.subplots(1,2,figsize=(11,4))
     axes[0].bar(list(statistics['truncation_rates']),[100*v for v in statistics['truncation_rates'].values()])
     axes[0].set(xlabel='Token cutoff',ylabel='Train truncated (%)',title='Cutoff sensitivity, train only')
@@ -190,4 +287,54 @@ def export_data_review(raw, tokenizer, settings, output):
     ax.set(xlabel='Mean TF-IDF: Positive − Negative',title='Train-only features with largest class differences')
     ax.grid(axis='x',alpha=.2)
     finish(fig,output/'tfidf_class_delta.png')
+    # Trích xuất và trực quan hóa đặc trưng ngôn ngữ học (Linguistic Features)
+    ling_feats = extract_linguistic_features(text)
+    ling_summary = {}
+    for key in ['char_count', 'word_count', 'avg_word_length', 'uppercase_ratio', 'punctuation_ratio', 'digit_fraction', 'negation_cue_count', 'contrast_cue_count']:
+        vals_0 = [f[key] for f, y in zip(ling_feats, labels) if y == 0]
+        vals_1 = [f[key] for f, y in zip(ling_feats, labels) if y == 1]
+        m0 = float(np.mean(vals_0)) if vals_0 else 0.0
+        m1 = float(np.mean(vals_1)) if vals_1 else 0.0
+        all_vals = vals_0 + vals_1
+        ling_summary[key] = {
+            'label_0_mean': m0,
+            'label_1_mean': m1,
+            'overall_mean': float(np.mean(all_vals)) if all_vals else 0.0
+        }
+    save_json(output/'linguistic_features.json', {
+        'fitted_split': 'train',
+        'metrics': ling_summary,
+        'description': 'Linguistic and handcrafted features extracted according to docs/feature.md Step 5'
+    })
+    fig, axes = plt.subplots(1, 3, figsize=(14, 4))
+    ratios = ['uppercase_ratio', 'punctuation_ratio', 'avg_word_length']
+    titles = ['Uppercase Ratio', 'Punctuation Ratio', 'Avg Word Length (chars)']
+    for ax, r_key, tit in zip(axes, ratios, titles):
+        means = [ling_summary[r_key]['label_0_mean'], ling_summary[r_key]['label_1_mean']]
+        bars = ax.bar(['Negative (0)', 'Positive (1)'], means, color=['#b44', '#387'])
+        ax.bar_label(bars, fmt='%.3f' if 'ratio' in r_key else '%.2f')
+        ax.set(title=tit, ylabel='Mean value')
+        ax.grid(axis='y', alpha=0.2)
+    finish(fig, output/'linguistic_features.png')
+
+    # Lựa chọn đặc trưng phân loại bằng kiểm định Chi-Square
+    chi2_terms = select_chi2_features(matrix, labels, names, top_k=25)
+    features['chi2_selected_terms'] = chi2_terms
+    save_json(output/'chi2_features.json', {
+        'fitted_split': 'train',
+        'top_k': len(chi2_terms),
+        'terms': chi2_terms,
+        'method': 'Chi-Square (chi2) test on train TF-IDF matrix vs sentiment labels'
+    })
+    save_json(output/'feature_summary.json', features)
+    fig, ax = plt.subplots(figsize=(10, max(4, int(0.28 * len(chi2_terms) + 2))))
+    if chi2_terms:
+        rev_chi2 = chi2_terms[::-1]
+        ax.barh([r['term'] for r in rev_chi2], [r['chi2_score'] for r in rev_chi2], color='#2b5c8f')
+        ax.set(xlabel='Chi-Square Score (Higher = Stronger Association with Sentiment)',
+               title='Top TF-IDF Features Selected by Chi-Square Test (Train only)')
+    else:
+        ax.text(0.5, 0.5, 'Insufficient distinct features/classes for Chi-Square test', ha='center', va='center')
+    ax.grid(axis='x', alpha=0.2)
+    finish(fig, output/'chi2_features.png')
     return statistics,features

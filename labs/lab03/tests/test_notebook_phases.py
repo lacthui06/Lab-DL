@@ -1,4 +1,4 @@
-"""Hai notebook phải phân vai rõ, có view/train và cell code hợp lệ."""
+"""Ba notebook phân vai rõ ràng (EDA, Feature Engineering, Modeling), có view/train và cell code hợp lệ."""
 import ast
 import json
 import runpy
@@ -8,25 +8,28 @@ import nbformat
 from labs.lab03.src.utils.runs import ROOT,run_context
 
 
-def test_only_two_notebooks_cover_preparation_and_modeling():
+def test_three_notebooks_cover_eda_feature_and_modeling():
     paths=sorted((ROOT/'notebooks').glob('*.ipynb'))
-    assert [p.name for p in paths]==['01_eda_preprocessing_feature_engineering.ipynb','02_modeling.ipynb']
+    assert [p.name for p in paths]==['01_eda.ipynb','02_feature_engineering.ipynb','03_modeling.ipynb']
     for path in paths:
         notebook=nbformat.read(path,as_version=4);nbformat.validate(notebook)
-        assert 'Module/file' in notebook.cells[0].source
+        first_cell_src = notebook.cells[0].source
+        assert 'Pipeline Execution Roadmap' in first_cell_src or 'Bảng Lộ Trình' in first_cell_src or 'Module' in first_cell_src
         codes=[c.source for c in notebook.cells if c.cell_type=='code']
         for source in codes:ast.parse(source)
         assert sum(any(f'MODE = "{mode}"' in source for mode in ('view', 'train', 'prepare')) for source in codes)==1
         assert 'session.setup()' in codes[0]
-    preparation=nbformat.read(paths[0],as_version=4)
-    modeling=nbformat.read(paths[1],as_version=4)
-    assert 'session.prepare()' in '\n'.join(c.source for c in preparation.cells)
-    assert 'session.train()' not in '\n'.join(c.source for c in preparation.cells)
+    eda=nbformat.read(paths[0],as_version=4)
+    fe=nbformat.read(paths[1],as_version=4)
+    modeling=nbformat.read(paths[2],as_version=4)
+    assert 'session.prepare()' in '\n'.join(c.source for c in eda.cells)
+    assert 'session.train()' not in '\n'.join(c.source for c in eda.cells)
+    assert 'session.train()' not in '\n'.join(c.source for c in fe.cells)
     source='\n'.join(c.source for c in modeling.cells)
     assert source.count('session.train()')==1
     assert 'session.preflight()' in source and 'session.export()' in source
-    for notebook in (preparation,modeling):
-        assert len(notebook.cells)>=20
+    assert len(eda.cells)>=10 and len(fe.cells)>=10 and len(modeling.cells)>=20
+    for notebook in (eda,fe,modeling):
         assert all(not any(o.output_type == 'error' for o in c.outputs) for c in notebook.cells if c.cell_type=='code')
         text='\n'.join(c.source for c in notebook.cells)
         assert '10 epoch' not in text and '10epoch' not in text and 'lịch sử' not in text

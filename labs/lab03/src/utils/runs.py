@@ -29,6 +29,12 @@ def hash_text_file(path):
     data = Path(path).read_bytes().replace(b"\r\n", b"\n")
     return hashlib.sha256(data).hexdigest()
 
+def _pkg_version(name):
+    try:
+        return importlib.metadata.version(name)
+    except importlib.metadata.PackageNotFoundError:
+        return "not_installed"
+
 def snapshot():
     return {"python": sys.version, "platform": platform.platform(),
             "cuda_available": torch.cuda.is_available(),
@@ -39,7 +45,7 @@ def snapshot():
             "deterministic_algorithms": torch.are_deterministic_algorithms_enabled(),
             "deterministic_warn_only": torch.is_deterministic_algorithms_warn_only_enabled(),
             "device": torch.cuda.get_device_name(0) if torch.cuda.is_available() else "cpu",
-            "versions": {n: importlib.metadata.version(n) for n in
+            "versions": {n: _pkg_version(n) for n in
              ["torch", "transformers", "datasets", "evaluate", "accelerate", "numpy", "scikit-learn"]}}
 
 class Tee:

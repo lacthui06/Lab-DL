@@ -3,10 +3,58 @@
   "fitted_split": "train",
   "token_quantiles": {
     "0.5": 27.0,
+    "0.75": 35.0,
     "0.9": 43.0,
     "0.95": 47.0,
     "0.99": 56.0,
     "1.0": 78.0
+  },
+  "summary_statistics": {
+    "words": {
+      "count": 8530,
+      "mean": 20.99284876905041,
+      "std": 9.370544279327936,
+      "min": 1.0,
+      "q1": 14.0,
+      "median": 20.0,
+      "q3": 27.0,
+      "max": 59.0,
+      "iqr": 13.0,
+      "lower_bound": -5.5,
+      "upper_bound": 46.5,
+      "outlier_count": 51,
+      "outlier_fraction": 0.005978898007033997
+    },
+    "tokens": {
+      "count": 8530,
+      "mean": 27.368347010550995,
+      "std": 11.26835953348798,
+      "min": 3.0,
+      "q1": 19.0,
+      "median": 27.0,
+      "q3": 35.0,
+      "max": 78.0,
+      "iqr": 16.0,
+      "lower_bound": -5.0,
+      "upper_bound": 59.0,
+      "outlier_count": 37,
+      "outlier_fraction": 0.004337631887456037
+    },
+    "chars": {
+      "count": 8530,
+      "mean": 113.97162954279015,
+      "std": 51.049238505342124,
+      "min": 4.0,
+      "q1": 76.0,
+      "median": 111.0,
+      "q3": 149.0,
+      "max": 267.0,
+      "iqr": 73.0,
+      "lower_bound": -33.5,
+      "upper_bound": 258.5,
+      "outlier_count": 6,
+      "outlier_fraction": 0.0007033997655334115
+    }
   },
   "truncation_rates": {
     "64": 0.0007033997655334115,
@@ -15,6 +63,9 @@
     "256": 0.0
   },
   "configured_max_length": 128,
+  "configured_cutoff_overflow_count": 0,
+  "configured_cutoff_overflow_fraction": 0.0,
+  "configured_cutoff_decision": "Keep the configured cutoff; the observed train overflow is below 5%. Do not add a special truncation strategy without evidence.",
   "preserve_negation_punctuation": true,
   "normalized_train_conflicting_label_groups": 0
 }

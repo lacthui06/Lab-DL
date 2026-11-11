@@ -20,27 +20,28 @@ Hai notebook đã có output inline; chọn `MODE="view"` để xem offline. Sou
 Import notebook modeling từ GitHub:
 
 ```text
-https://github.com/lacthui06/Lab-DL/blob/lab03/labs/lab03/notebooks/02_modeling.ipynb
+https://github.com/lacthui06/Lab-DL/blob/lab03/labs/lab03/notebooks/03_modeling.ipynb
 ```
 
 Bật **GPU + Internet**, rồi **Run All**. Để train mới, đổi cell setup thành `MODE="train"`, `DEVICE="cuda"`; bắt đầu từ pretrained base, tải official dataset và thực hiện trọn pipeline. Không cần cung cấp checkpoint đầu vào.
 
-Cấu hình: **tối đa 5 epoch**, early stopping theo validation loss, patience 2, min_delta 0.001. Số epoch thực chạy có thể ít hơn 5. Notebook01 có ZIP EDA riêng ở cuối khi MODE=prepare. Kết quả, selected checkpoint và threshold được lấy từ chính phiên thực thi.
+Cấu hình: **tối đa 5 epoch**, early stopping theo validation loss, patience 2, min_delta 0.001. Số epoch thực chạy có thể ít hơn 5. Kết quả, selected checkpoint và threshold được lấy từ chính phiên thực thi.
 
-## Hai notebook
+## Ba notebook chuyên biệt
 
-| Notebook | Nội dung | Chế độ mặc định |
+| Notebook | Nội dung chính | Chế độ mặc định |
 |---|---|---|
-| [01 — EDA, preprocessing, feature engineering](notebooks/01_eda_preprocessing_feature_engineering.ipynb) | Quality/leakage audit, nhãn/độ dài, cutoff, tokens/IDs/mask, TF-IDF, augmentation | `view` (đổi `prepare` để tạo mới) |
-| [02 — Modeling](notebooks/02_modeling.ipynb) | Pretrained sentiment, baseline, fine-tune, performance, threshold, evaluation, errors, export | `view` (đổi `train` để tạo mới) |
+| [01 — EDA](notebooks/01_eda.ipynb) | Phân tích 6 bước theo docs/eda.md: Tổng quan schema, 5-number summary, phân bố đơn/song biến, Boxplot độ dài theo nhãn, dò ngoại lệ IQR, kiểm toán missing/leakage | `view` (đổi `prepare` để tạo mới) |
+| [02 — Feature Engineering](notebooks/02_feature_engineering.ipynb) | Kỹ nghệ đặc trưng 6 bước theo docs/feature.md: Truncation cutoff, WordPiece tokenization, Handcrafted linguistic features, TF-IDF vectorization, Chi-Square feature selection, text augmentation | `view` (đổi `prepare` để tạo mới) |
+| [03 — Modeling](notebooks/03_modeling.ipynb) | Huấn luyện và đánh giá: Kiến trúc DistilBERT, Pretrained SST-2, baseline so sánh, fine-tune với frozen backbone, quét threshold, ma trận nhầm lẫn, phân tích lỗi, xuất bản artifact | `view` (đổi `train` để tạo mới) |
 
-Ảnh được hiển thị từ cùng PNG đã lưu trong `outputs/runs/<run_id>/`. Sau khi có kết quả, `MODE="view"` đọc selection trong `outputs/latest_preparation.json` hoặc `outputs/latest_report.json`; không train để lấy lại hình. Notebook01 không phải điều kiện bắt buộc trước notebook02: script modeling tự thực hiện cùng data/feature pipeline.
+Ảnh được hiển thị từ cùng PNG đã lưu trong `outputs/runs/<run_id>/`. Sau khi có kết quả, `MODE="view"` đọc selection trong `outputs/latest_preparation.json` hoặc `outputs/latest_report.json`; không train để lấy lại hình. Các notebook dữ liệu (01, 02) không phải điều kiện bắt buộc trước notebook03: script modeling tự thực hiện cùng data/feature pipeline.
 
 ## Phương pháp
 
 - Official splits: **8.530 train / 1.066 validation / 1.066 test**; seed 42; không subsample hoặc chia lại test.
 - Giữ phủ định/punctuation; WordPiece tokenizer đã pin; max length 128 và dynamic padding.
-- Notebook01 báo quantile/token overflow thực tế trên Train, so sánh cue phủ định/tương phản theo label kèm ví dụ, và trực quan top-25 mean TF-IDF cùng chênh lệch giữa hai lớp. Chạy `MODE="prepare"` để tái tạo artifact EDA mới.
+- Notebook01 & 02 báo cáo đầy đủ 5-number summary (Min, Q1, Median, Q3, Max, Mean, Std), phát hiện outlier IQR, so sánh boxplot độ dài câu theo nhãn, trích xuất đặc trưng ngôn ngữ học (uppercase, punctuation, word length) và lựa chọn top-25 đặc trưng bằng kiểm định Chi-Square ($\chi^2$).
 - Train-only augmentation bằng thay từ/cụm cùng cực tính, loại câu có phủ định/tương phản, dedup, cân bằng variants; tối đa 25%, không ép đủ bằng sao chép.
 - Baseline: TF-IDF unigram/bigram + Logistic Regression; fit train-only, chọn C bằng validation Macro-F1.
 - DistilBERT base: embedding và 4/6 encoder blocks frozen; encoder/head LR 5e-6/2e-5; dropout 0.2/0.2/0.4; AdamW decay 0.1; warmup 10%; gradient clipping 1.

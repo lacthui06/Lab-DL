@@ -1,0 +1,46 @@
+{
+  "fitted_split": "train",
+  "metrics": {
+    "char_count": {
+      "label_0_mean": 112.77209847596717,
+      "label_1_mean": 115.17116060961312,
+      "overall_mean": 113.97162954279015
+    },
+    "word_count": {
+      "label_0_mean": 20.93763188745604,
+      "label_1_mean": 21.048065650644784,
+      "overall_mean": 20.99284876905041
+    },
+    "avg_word_length": {
+      "label_0_mean": 4.476714909397889,
+      "label_1_mean": 4.576159844763044,
+      "overall_mean": 4.526437377080466
+    },
+    "uppercase_ratio": {
+      "label_0_mean": 0.0,
+      "label_1_mean": 5.68163524334716e-06,
+      "overall_mean": 2.84081762167358e-06
+    },
+    "punctuation_ratio": {
+      "label_0_mean": 0.029879891024504904,
+      "label_1_mean": 0.028771992208356988,
+      "overall_mean": 0.029325941616430942
+    },
+    "digit_fraction": {
+      "label_0_mean": 0.05720984759671747,
+      "label_1_mean": 0.046424384525205156,
+      "overall_mean": 0.051817116060961316
+    },
+    "negation_cue_count": {
+      "label_0_mean": 0.3094958968347011,
+      "label_1_mean": 0.20093786635404454,
+      "overall_mean": 0.2552168815943728
+    },
+    "contrast_cue_count": {
+      "label_0_mean": 0.19249706916764361,
+      "label_1_mean": 0.18030480656506448,
+      "overall_mean": 0.18640093786635403
+    }
+  },
+  "description": "Linguistic and handcrafted features extracted according to docs/feature.md Step 5"
+}

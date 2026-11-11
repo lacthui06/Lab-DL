@@ -1,4 +1,5 @@
 {
-  "model_architectures.txt": "e9a05dc60f2860a9e7b99d48a24f026af1bfd51b14b8f520dc75ca96d35421e4",
-  "summary.json": "3a2573a3390d96e127a397a47ece764f61886cc33da9520b1259517f027ae63f"
+  "model_architectures.txt": "4d94fca5034ecaafbc73c50aad4d8491b962bdac72fad9f3a54e2a6e75afd689",
+  "summary.json": "b1541e36c4439307232be5648849c84ec598f3664c8a6d63edc04b53c7851c3e",
+  "parameter_allocation.png": "3b870c880a61c93b8efabcbb31e163c70433b5ab19c3540138df416bc39f5c6f"
 }
