@@ -1,150 +1,70 @@
-# Walkthrough & Full-Flow Technical Report — Lab 0X
+# Báo cáo Lab 0X — <tên bài lab>
 
-> **Lab Title:** Lab 0X — <tên bài lab>
-> **Status:** [ ] In Progress | [ ] Completed
-> **Primary Objective:** <một câu mô tả mục tiêu chính và kết quả đạt được>
-> **Workflow Playbook References:** `docs/dl_flow.md` | `docs/dl_data.md` | `docs/dl_training.md` | `docs/eda.md` | `docs/eda-image.md` | `docs/feature.md` | `docs/feature-image.md`
-> **Unified 3-Rule Standard (Single Living Walkthrough Architecture):**
-> - **Rule 1 (`spec-driven-development`):** Ánh xạ trực tiếp vào **Section 1 — Technical Specification & Flow Design**.
-> - **Rule 2 (`walkthrough-and-experiment-tracking`):** Ánh xạ trực tiếp vào **Section 2 — Full-Flow Experiment Lineage & Changelog**.
-> - **Rule 3 (`documentation-and-adrs`):** Ánh xạ trực tiếp vào **Section 3 — Comparative Results, Error Diagnostics & Final Submission Report**.
+Nguồn báo cáo duy nhất của lab. Viết bằng văn phong học thuật, dùng số liệu và ảnh thực từ artifacts đã chọn. Không thêm dòng phiên bản/ngày biên tập nếu không có yêu cầu. Nhật ký sửa code, lỗi môi trường và console log giữ local, ngoài báo cáo.
 
----
+## 1. Bài toán và thiết kế tổng thể
 
-## 1. TECHNICAL SPECIFICATION & FLOW DESIGN (Rule: spec-driven-development)
+### 1.0. Đề bài và phạm vi đã thống nhất
+Tóm tắt đề gốc và yêu cầu mở rộng từ description, mục tiêu, ràng buộc, giả định chưa kiểm chứng. Chuyển thảo luận thành lý do phương pháp, không chép hội thoại.
 
-### 1.0. Brief Interpretation and Clarifications
-Bản tóm tắt cách hiểu đề bài gốc trong `description_lab_0X.md`, kèm các điểm đã được làm rõ và hướng giải quyết đã chốt. Mục này là vết truy vết cho mọi quyết định đặc tả phía sau.
+### 1.1. Dữ liệu và hợp đồng tensor
+Nguồn dataset, nhãn, kích thước, dtype, đầu vào/đầu ra; train/validation/test, seed, cách chống leakage.
 
-- **Cách hiểu đề bài:** <tóm tắt mục tiêu, phạm vi, ràng buộc, sản phẩm cần nộp>
-- **Điểm đã làm rõ:** <mỗi dòng nêu điểm mơ hồ và hướng giải quyết đã thống nhất>
-- **Giả định còn lại:** <giả định chưa được xác nhận, nếu có>
+### 1.2. Pipeline Execution Roadmap
+Ánh xạ từng giai đoạn tới module/hàm có thật và artifact thực. Phân biệt notebook gọi backend gộp với cell tự thực hiện từng giai đoạn.
 
-### 1.1. Master Flow Design
-Sơ đồ luồng end-to-end của pipeline, từ nạp dữ liệu tới quyết định chọn mô hình cuối.
+### 1.3. Thiết kế so sánh
+Baseline và các cấu hình, câu hỏi thực nghiệm, biến được kiểm soát, metric chính và tiêu chí lựa chọn bằng validation.
 
-### 1.2. Problem Formulation and Modality
-- **Modality:** <Computer Vision / NLP / Tabular / Audio>
-- **Task Formulation:** <loại bài toán và danh sách lớp mục tiêu nếu có>
-- **Input Tensor Contract:** <shape và dtype của tensor đầu vào>
-- **Output Contract:** <shape và ý nghĩa của đầu ra>
+## 2. Phương pháp và thiết kế thí nghiệm
 
-### 1.3. Data Contract and Partitioning Strategy
-- **Raw Volume:** <số lượng mẫu, độ phân giải>
-- **Class Distribution:** <cân bằng hay mất cân bằng, tỷ lệ cụ thể>
-- **Partitioning Strategy:** <tỷ lệ chia Train/Val/Test, phương pháp chia, seed>
-- **Feature Normalization:** <các bước chuẩn hóa và giá trị thống kê dùng để chuẩn hóa>
+### 2.1. EDA
+Tính toàn vẹn, phân bố nhãn, mẫu đại diện, đặc điểm dữ liệu theo modality. Mỗi hình có diễn giải thực tế và ý nghĩa cho xử lý dữ liệu.
 
-### 1.4. Baseline Model and Target Metrics
-- **Baseline Model:** <kiến trúc baseline tối thiểu>
-- **Primary Metric:** <metric chính>
-- **Acceptance Threshold:** <ngưỡng định lượng tối thiểu để coi là đạt>
+### 2.2. Preprocessing
+Các phép biến đổi theo đúng thứ tự, scaler/statistics chỉ fit trên train; cách áp dụng cho validation/test; augmentation nếu thực sự dùng.
 
-### 1.5. Loss Function and Optimization Design
-- **Loss Function:** <hàm loss và lý do chọn>
-- **Optimizer:** <optimizer và learning rate>
-- **Scheduler:** <lịch điều chỉnh learning rate>
+### 2.3. Feature engineering
+Định nghĩa/công thức, lý do chọn, ví dụ tính và kiểm chứng toàn bộ dữ liệu; phân bố, tương quan và giới hạn. Ghi rõ đặc trưng nào thực sự đi vào model.
 
-### 1.6. Execution Environment Constraints
-- **Compute Target:** <local CPU/GPU hoặc Kaggle GPU Tesla T4>
-- **Python Requirement:** <khoảng phiên bản suy ra từ `Requires-Python` của các pin, ví dụ `>=3.12, !=3.14.1`; ghi dạng comment trong `requirements.txt`>
-- **Python Interpreter (verified):** <phiên bản CPython đã chạy thật, ví dụ 3.13.15; ghi lại phiên bản thực tế của mỗi lần chạy vào `outputs/logs/environment_snapshot.json`>
-- **Library Versions:** <PyTorch, Torchvision, NumPy, Scikit-learn cùng phiên bản chính xác>
-- **Filesystem Compatibility:** <đường dẫn input chỉ đọc và working ghi được>
-- **Memory Constraints:** <ngân sách VRAM và cấu hình AMP>
+### 2.4. Mô hình
+Kiến trúc, số tầng ẩn, kích thước tensor và cách tính số tham số cho từng cấu hình.
 
----
+### 2.5. Huấn luyện và tìm siêu tham số
+Loss, optimizer, momentum, scheduler và thời điểm step; epochs, batch, sanity test, seed, search space, sampler/pruner, ngân sách và checkpoint selection. Không chọn cấu hình bằng test.
 
-## 2. FULL-FLOW EXPERIMENT LINEAGE & CHANGELOG (Rule: walkthrough-and-experiment-tracking)
+### 2.6. Môi trường và tái lập
+Local CPU/GPU hoặc Kaggle theo cấu hình; phiên bản thực từ snapshot của run, khác biệt và giới hạn kiểm chứng. Không suy diễn đã chạy Kaggle nếu chỉ chạy local.
 
-### 2.1. Flow Comparison Matrix
+## 3. Kết quả, thảo luận và kết luận
 
-| Run | Data | Preprocessing & Augmentation | Model | Training Strategy | Test Loss | Test Acc | Macro F1 | Best Checkpoint |
-|---|---|---|---|---|---|---|---|---|
-| Run #1 Baseline | | | | | | | | |
-| Run #2 Tuned | | | | | | | | |
-| Run #3 Final | | | | | | | | |
+### 3.1. So sánh mô hình
+Một bảng kết quả chính: validation selection, test loss/accuracy, macro F1/precision/recall, tham số và thời gian khi đo được. Phân biệt điểm phần trăm với phần trăm tương đối.
 
-Với bài toán phân loại, ngoài bảng trên phải có thêm bảng metric theo từng lớp (bắt buộc cho mọi run, không chỉ Accuracy):
+### 3.2. Hội tụ
+Train/validation loss và accuracy; giải thích khoảng cách, epoch tốt nhất và dấu hiệu overfitting từ hình và history thực.
 
-| Run | Class | Precision | Recall (TPR) | F1 | FPR |
-|---|---|---|---|---|---|
-| | | | | | |
+### 3.3. Đánh giá theo lớp
+Precision/recall/F1 và support, confusion matrix có số đếm và màu chuẩn hóa. TPR là recall; FPR có thể ở bảng, không bắt buộc biểu đồ riêng. Phân tích cặp lớp nhầm lẫn và mẫu đúng/sai có confidence.
 
-Ghi chú: mọi metric theo lớp ghi kèm tên lớp; chênh lệch giữa các run ghi dạng delta tuyệt đối; metric chưa có trong artifact ghi "not logged", không bịa số.
+### 3.4. ROC và Precision–Recall
+Dùng khi có xác suất và phù hợp bài toán; với Lab01 là một hình hai panel OvR mỗi model. Ghi rõ aggregation, ROC-AUC và AP, không nhầm AP với trapezoidal PR-AUC.
 
-### 2.2. Changelog per Run
+### 3.5. So sánh optimizer và tuning
+Fixed LR so với search; best parameters, trạng thái trial, tiến trình và đường cong các optimizer. Giải thích tuned có thể kém baseline, mức thực sự dùng TPE và các giới hạn ngân sách.
 
-Với mỗi Run, trả lời đủ 3 câu hỏi bắt buộc:
-- **Thay đổi gì?** <giai đoạn pipeline nào đã thay đổi so với run trước>
-- **Vì sao?** <lý do kỹ thuật>
-- **Tác động định lượng?** <chênh lệch metric cụ thể>
+### 3.6. Save/load và kiểm chứng test
+Kiến trúc, định dạng checkpoint, full test sau load, sai số so sánh và lưới dự đoán. Nêu có/không lưu optimizer/scheduler state nếu bàn về resume.
 
-#### Run #1 Baseline
-- Thay đổi gì:
-- Vì sao:
-- Tác động định lượng:
+### 3.7. Kết luận và giới hạn
+Kết quả trả lời từng câu hỏi, một seed/ngân sách search nếu có, giới hạn khẳng định nhân quả và hướng thí nghiệm tiếp. Không đưa log gỡ lỗi phần mềm.
 
-#### Run #2 Tuned
-- Thay đổi gì:
-- Vì sao:
-- Tác động định lượng:
+### 3.8. Nguồn và provenance
+Tài liệu chính thức và nguồn dataset; dẫn ảnh/bảng trong outputs/published/, truy run gốc qua provenance. Nội dung chưa có bằng chứng phải ghi rõ, không điền số giả.
 
-#### Run #3 Final
-- Thay đổi gì:
-- Vì sao:
-- Tác động định lượng:
+## Quy tắc biên tập PDF
 
-### 2.3. Artifact Harvesting Log
-- **Checkpoint tốt nhất:** `outputs/checkpoints/best_model.pt`
-- **Hình dự đoán:** `outputs/predictions_*.png`
-- **Confusion matrix:** `outputs/confusion_matrix_*.png`
-- **Đường cong huấn luyện:** `outputs/run*_curves.png`
-- **Bảng kết quả tổng hợp:** `outputs/experiment_results.json`
-
-Mỗi hình trong log phải kèm một dòng nhận xét đọc trực tiếp từ hình (nội dung thực tế của hình), không chỉ ghi đường dẫn:
-- **Đường cong:** hội tụ ở epoch nào, val loss có tăng lại không (overfitting), khoảng cách train/val.
-- **Confusion matrix:** cặp lớp nhầm lẫn nhiều nhất và tỷ lệ nhầm cụ thể.
-- **Lưới dự đoán:** các mẫu dự đoán sai kèm nhãn thật, nhãn dự đoán, mức tự tin.
-- **TPR/FPR:** lớp có TPR thấp nhất và lớp có FPR cao nhất.
-
----
-
-## 3. COMPARATIVE RESULTS, ERROR DIAGNOSTICS & FINAL SUBMISSION REPORT (Rule: documentation-and-adrs)
-
-### 3.1. Quantitative Evaluation & Comparison Matrix
-Bảng so sánh trực tiếp giữa baseline và các vòng lặp nâng cao, kèm phần trăm cải thiện.
-
-Với bài toán phân loại, bảng định lượng phải phủ đủ bộ metric (không chỉ Accuracy) và kèm bảng metric theo từng lớp:
-
-| Run | Test Loss | Test Acc | Macro F1 | Precision (macro) | Recall (macro) |
-|---|---|---|---|---|---|
-| | | | | | |
-
-| Run | Class | Precision | Recall (TPR) | F1 | FPR |
-|---|---|---|---|---|---|
-| | | | | | |
-
-Mọi chênh lệch ghi dạng delta tuyệt đối; metric chưa có trong artifact ghi "not logged" kèm lý do, không bịa số.
-
-### 3.2. Confusion Matrix Diagnostics
-Phân tích sâu các cặp lớp nhầm lẫn cao và giải thích nguyên nhân trực quan. Phải mở ảnh confusion matrix và đọc giá trị từng ô: nêu tên cặp lớp cụ thể và tỷ lệ nhầm (ví dụ "hàng Shirt có 18% bị dự đoán thành Pullover"). Kết hợp biểu đồ TPR/FPR để chỉ ra lớp có TPR thấp nhất và lớp có FPR cao nhất.
-
-### 3.3. Error Analysis Slices
-Kiểm tra trực quan và thống kê các mẫu bị phân loại sai, xác định nguyên nhân gốc. Phải mở ảnh lưới dự đoán và chỉ ra các mẫu cụ thể bị dự đoán sai kèm nhãn thật, nhãn dự đoán, mức tự tin; nhóm lỗi thành lát cắt và nêu lát cắt lỗi nhiều nhất.
-
-### 3.4. Key Technical Findings
-Giải thích các đột phá về hiệu năng, đánh giá tác động của regularization, scheduler và augmentation.
-
-### 3.5. Checkpoint Verification (Save/Load)
-Xác nhận việc nạp lại checkpoint tốt nhất tái lập 100% metric inference.
-
-### 3.6. Decision Traceability
-Bảng truy vết mỗi quyết định kỹ thuật quan trọng về điểm thảo luận tương ứng ở Mục 1.0, kèm hướng giải quyết đã chốt. Dùng văn phong kỹ thuật trung tính, ngôi thứ ba; không dùng lối kể chuyện hay từ chỉ người như "bạn", "tôi", "chúng ta".
-
-| Quyết định kỹ thuật | Điểm thảo luận (Mục 1.0) | Hướng giải quyết đã chốt |
-|---|---|---|
-| | | |
-
-### 3.7. Conclusion & Lessons Learned
-Kết luận cuối cùng và các bài học rút ra cho lab tiếp theo.
+- Biên tập đầy đủ phương pháp và phân tích kết quả; không biến PDF thành danh sách file, log hay code dump.
+- Giữ bảng kết quả đầy đủ ở Section 3; Section 2 giải thích và dẫn chiếu để tránh lặp.
+- Với Lab01, mục tiêu tối thiểu 25 trang có nội dung; render để kiểm tra số trang, chữ, ảnh, caption và bảng, không khẳng định từ số dòng Markdown.
+- Không tạo REPORT.md hoặc bản sao walkthrough trong outputs/. README chỉ hướng dẫn sử dụng.

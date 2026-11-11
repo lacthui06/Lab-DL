@@ -82,6 +82,12 @@ labs/*/outputs/eda/tables/spatial_features.csv
 **/outputs/models/*
 **/outputs/checkpoints/*
 
+# Deliverable models for Lab 01 & Lab 03
+!labs/lab01/models/*.pt
+!labs/lab01/models/*.json
+!labs/lab03/models/*.json
+!labs/lab03/models/README.md
+
 # Logs & Output runs
 wandb/
 runs/
@@ -97,7 +103,8 @@ lightning_logs/
 
 **/outputs/.registry.lock
 
-labs/lab03/internal_changes.md
+# Local-only technical change journals
+**/internal_changes.md
 
 labs/lab03/outputs/publication_history/
 

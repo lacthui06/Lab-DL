@@ -1,6 +1,7 @@
 # Lab03 — Binary Sentiment Classification with Hugging Face
 
-Phân loại cảm xúc tiếng Anh trên Rotten Tomatoes: pretrained sentiment/tokenization và fine-tuning DistilBERT. Pipeline gồm đúng **hai notebook**, có roadmap, module tham chiếu, ảnh inline và artifact được lưu để dùng cho report.
+- **Tác giả:** Thái Anh Lạc
+- **Phạm vi:** Phân loại cảm xúc tiếng Anh trên Rotten Tomatoes: pretrained sentiment/tokenization và fine-tuning DistilBERT. Pipeline gồm đúng **hai notebook**, có roadmap, module tham chiếu, ảnh inline và artifact được lưu để dùng cho report.
 
 ## Kết quả đã hoàn thành và xem ngay
 

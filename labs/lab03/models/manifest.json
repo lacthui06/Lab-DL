@@ -1,0 +1,34 @@
+{
+  "models": {
+    "TF-IDF_Baseline": {
+      "type": "sklearn.linear_model.LogisticRegression",
+      "features": "TfidfVectorizer(max_features=5000, ngram_range=(1,2))",
+      "threshold": 0.5,
+      "test_accuracy": 78.99,
+      "binary_f1": 78.91,
+      "source_run": "labs/lab03/outputs/runs/20261103T110437Z_frozen_trial_b021d6eb",
+      "sample_count": 1066
+    },
+    "DistilBERT_Threshold_0.5": {
+      "backbone": "distilbert-base-uncased",
+      "threshold": 0.5,
+      "test_accuracy": 82.93,
+      "binary_f1": 82.89,
+      "parameters": 66955010,
+      "source_run": "labs/lab03/outputs/runs/20261103T110437Z_frozen_trial_b021d6eb",
+      "promoted_at": "2026-11-03T11:04:37+00:00"
+    },
+    "DistilBERT_Optimal_Threshold_0.45": {
+      "backbone": "distilbert-base-uncased",
+      "threshold": 0.45,
+      "test_accuracy": 83.11,
+      "binary_f1": 83.30,
+      "parameters": 66955010,
+      "source_run": "labs/lab03/outputs/runs/20261103T110437Z_frozen_trial_b021d6eb",
+      "promoted_at": "2026-11-03T11:04:37+00:00"
+    }
+  },
+  "best_model": "DistilBERT_Optimal_Threshold_0.45",
+  "winner_name": "DistilBERT_Optimal_Threshold_0.45",
+  "optimal_threshold": 0.45
+}

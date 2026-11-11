@@ -1,5 +1,8 @@
 # Description — Lab03: Getting started with Hugging Face
 
+- **Tác giả:** Thái Anh Lạc
+- **Môn học:** Deep Learning (Lab Thực Hành)
+
 ## 1. Đề bài
 
 ### Exercise1: Sentiment Analysis with Hugging Face

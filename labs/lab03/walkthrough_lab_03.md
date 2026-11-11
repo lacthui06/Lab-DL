@@ -1,6 +1,7 @@
 # Walkthrough — Lab03: Binary Sentiment Classification với Hugging Face
 
-**Mục tiêu:** xây dựng pipeline đầy đủ từ khám phá dữ liệu đến fine-tuning, chọn policy và xuất artifact có thể dùng trực tiếp cho report.
+- **Tác giả:** Thái Anh Lạc
+- **Mục tiêu:** xây dựng pipeline đầy đủ từ khám phá dữ liệu đến fine-tuning, chọn policy và xuất artifact có thể dùng trực tiếp cho report.
 
 **Profile:** official Rotten Tomatoes, DistilBERT base, tối đa5epoch, early stopping và regularization.
 
