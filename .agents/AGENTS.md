@@ -54,6 +54,12 @@ Mọi thảo luận và quyết định kỹ thuật trong quá trình trao đ�
 - **Chiến lược kiểm thử** (TDD, Mocking, Safety Gates, Dimension checks): Thảo luận tại `labs/lab0X/tests/README.md`.
 - **Ranh giới:** Quyết định thiết kế và đánh đổi kỹ thuật nằm ở README mô-đun; toàn bộ bảng kết quả và chỉ số thực nghiệm sau khi chạy thuộc về `walkthrough_lab_0X.md`.
 
+### 1.12. Quy chuẩn bắt buộc cho Jupyter Notebooks
+Mọi Jupyter Notebook khi được tạo mới hoặc chỉnh sửa bắt buộc phải tuân thủ:
+- **Bảng Roadmap ở Cell đầu tiên:** Cell markdown đầu tiên phải chứa Bảng Lộ Trình (Pipeline Execution Roadmap) gồm 5 cột chuẩn: Bước, Giai đoạn, Nội dung chi tiết, Mô-đun triển khai (`src/...`), Sản phẩm đầu ra (Artifacts).
+- **Không nhồi nhét logic nặng:** Code cell chỉ gọi hàm từ thư viện mô-đun trong `src/` và hiển thị kết quả trực quan (ảnh inline, bảng số liệu); toàn bộ thuật toán và xử lý phức tạp phải nằm trong `src/`.
+- **Hỗ trợ chế độ kép (Dual Mode):** Mặc định hỗ trợ `MODE="view"` để đọc nhanh báo cáo offline và `MODE="train"` (hoặc `prepare`) khi chạy mới.
+
 ---
 
 ## 2. Ánh xạ Ý định (Intent) sang Skill
