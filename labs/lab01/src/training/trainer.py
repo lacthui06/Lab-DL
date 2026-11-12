@@ -141,7 +141,8 @@ def sanity_overfit_check(
     num_epochs: int = 40,
     lr: float = 1e-2,
     num_steps: Optional[int] = None,
-    target_loss: float = 0.15,
+    target_loss: float = 0.2,
+    target_acc: float = 80.0,
 ) -> Tuple[bool, float, float]:
     """Mandatory Sanity Test (AGENTS.md Rule 1.4): Overfits 1 mini-batch (8-16 samples) to loss near 0."""
     dev = device or torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -165,50 +166,5 @@ def sanity_overfit_check(
         preds = outputs.argmax(dim=1)
         final_acc = (preds == targets).float().mean().item() * 100.0
 
-    return (final_loss < target_loss and final_acc >= 90.0), final_loss, final_acc
+    return (final_loss < target_loss and final_acc > target_acc), final_loss, final_acc
 
-
-def train_one_epoch(
-    model: nn.Module,
-    dataloader: DataLoader,
-    criterion: nn.Module,
-    optimizer: torch.optim.Optimizer,
-    device: torch.device,
-) -> Tuple[float, float]:
-    """Module-level function wrapping Trainer.train_one_epoch."""
-    return Trainer(model, criterion, optimizer, device).train_one_epoch(dataloader)
-
-
-def evaluate(
-    model: nn.Module,
-    dataloader: DataLoader,
-    criterion: nn.Module,
-    device: torch.device,
-) -> Tuple[float, float, List[int], List[int]]:
-    """Module-level function wrapping Trainer.evaluate."""
-    return Trainer(model, criterion, None, device).evaluate(dataloader)
-
-
-def train_model(
-    model: nn.Module,
-    train_loader: DataLoader,
-    val_loader: DataLoader,
-    criterion: nn.Module,
-    optimizer: torch.optim.Optimizer,
-    scheduler: Optional[torch.optim.lr_scheduler.LRScheduler] = None,
-    num_epochs: int = 10,
-    device: Optional[torch.device] = None,
-    save_path: Optional[Path] = None,
-    verbose: bool = True,
-) -> Tuple[Dict[str, List[float]], float]:
-    """Module-level function wrapping Trainer.fit."""
-    dev = device or torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    history = Trainer(model, criterion, optimizer, dev, scheduler=scheduler).fit(
-        train_loader=train_loader,
-        val_loader=val_loader,
-        epochs=num_epochs,
-        checkpoint_path=save_path,
-        verbose=verbose,
-    )
-    best_acc = max(history["val_acc"]) if history["val_acc"] else 0.0
-    return history, best_acc

@@ -1,0 +1,8 @@
+{
+  "passed": true,
+  "samples": 16,
+  "max_probability_error": 0.0,
+  "predicted_labels_unchanged": true,
+  "checkpoint": "best.pt",
+  "source_run": "<LAB>/outputs/runs/20261022T130609Z_MainMLP_0f179a92"
+}

@@ -1,0 +1,12 @@
+{
+  "name": "SmallMLP",
+  "seed": 42,
+  "accuracy": 0.8852,
+  "macro_f1": 0.8849484207722373,
+  "precision": 0.8850570180861916,
+  "recall": 0.8852,
+  "loss": 0.321349173784256,
+  "train_seconds": 8.267886199988425,
+  "parameters": 101770,
+  "best_epoch": 9
+}

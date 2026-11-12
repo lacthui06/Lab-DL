@@ -3,7 +3,7 @@
     "frozen_trial": "20261103T110437Z_frozen_trial_b021d6eb",
     "exercise1": "20261103T110425Z_exercise1_f9b5a257",
     "exercise1_analysis": "20261103T110429Z_exercise1_analysis_f2706089",
-    "notebook_render": "20261111T100401Z_notebook_render_83564330"
+    "notebook_render": "20261111T101408Z_notebook_render_5a4cd98b"
   },
   "runs": [
     {
@@ -43,6 +43,11 @@
     },
     {
       "id": "20261111T100401Z_notebook_render_83564330",
+      "kind": "notebook_render",
+      "status": "completed"
+    },
+    {
+      "id": "20261111T101408Z_notebook_render_5a4cd98b",
       "kind": "notebook_render",
       "status": "completed"
     }

@@ -1,0 +1,21 @@
+split,label,class_name,count,percent,split_total
+train,0,T-shirt/top,5400,10.0,54000
+train,1,Trouser,5400,10.0,54000
+train,2,Pullover,5400,10.0,54000
+train,3,Dress,5400,10.0,54000
+train,4,Coat,5400,10.0,54000
+train,5,Sandal,5400,10.0,54000
+train,6,Shirt,5400,10.0,54000
+train,7,Sneaker,5400,10.0,54000
+train,8,Bag,5400,10.0,54000
+train,9,Ankle boot,5400,10.0,54000
+val,0,T-shirt/top,600,10.0,6000
+val,1,Trouser,600,10.0,6000
+val,2,Pullover,600,10.0,6000
+val,3,Dress,600,10.0,6000
+val,4,Coat,600,10.0,6000
+val,5,Sandal,600,10.0,6000
+val,6,Shirt,600,10.0,6000
+val,7,Sneaker,600,10.0,6000
+val,8,Bag,600,10.0,6000
+val,9,Ankle boot,600,10.0,6000

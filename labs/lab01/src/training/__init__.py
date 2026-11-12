@@ -1,31 +1,31 @@
-"""Training package initialization: trainer, optimizer factory, and experiment runners."""
+"""Training package initialization: trainer, optimizer factory, comparison, and tuning."""
 
-from .experiments import (
-    compare_optimizers_wallclock,
-    plot_roc_curves,
-    predict_proba,
-    run_optuna_optimizer_study,
-)
+from .comparison import CONFIGS, loaders, run_model
 from .trainer import (
     Trainer,
     build_optimizer,
-    evaluate,
     sanity_overfit_check,
-    train_model,
-    train_one_epoch,
+)
+from .tuning import (
+    OPTIMIZERS,
+    plot_best_optimizer_histories,
+    refit_winner,
+    run_fixed_lr,
+    run_tuning,
+    summarize_optimizer_runs,
 )
 
 __all__ = [
-    # Trainer & Loops
     "Trainer",
     "build_optimizer",
     "sanity_overfit_check",
-    "train_one_epoch",
-    "evaluate",
-    "train_model",
-    # Experiments
-    "predict_proba",
-    "run_optuna_optimizer_study",
-    "compare_optimizers_wallclock",
-    "plot_roc_curves",
+    "CONFIGS",
+    "loaders",
+    "run_model",
+    "OPTIMIZERS",
+    "plot_best_optimizer_histories",
+    "run_fixed_lr",
+    "run_tuning",
+    "refit_winner",
+    "summarize_optimizer_runs",
 ]

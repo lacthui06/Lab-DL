@@ -1,0 +1,38 @@
+{
+  "models": {
+    "SmallMLP": {
+      "checkpoint": "SmallMLP.pt",
+      "val_acc": 90.07,
+      "test_accuracy": 88.52,
+      "parameters": 101770,
+      "source_run": "labs/lab01/outputs/runs/20261022T133355Z_SmallMLP_cdad89a5",
+      "promoted_at": "2026-11-10T06:28:16.564502+00:00"
+    },
+    "MainMLP": {
+      "checkpoint": "MainMLP.pt",
+      "val_acc": 90.78,
+      "test_accuracy": 89.41,
+      "parameters": 235146,
+      "source_run": "labs/lab01/outputs/runs/20261022T133406Z_MainMLP_8f90f1a2",
+      "promoted_at": "2026-11-10T06:28:16.667583+00:00"
+    },
+    "MainMLP_FE": {
+      "checkpoint": "MainMLP_FE.pt",
+      "val_acc": 90.88,
+      "test_accuracy": 89.6,
+      "parameters": 237706,
+      "source_run": "labs/lab01/outputs/runs/20261022T133425Z_MainMLP_FE_d8323126",
+      "promoted_at": "2026-11-10T06:28:16.742226+00:00"
+    },
+    "final": {
+      "checkpoint": "final.pt",
+      "val_acc": 90.85,
+      "test_accuracy": 89.14,
+      "parameters": 235146,
+      "source_run": "labs/lab01/outputs/runs/20261022T165113Z_MainMLP_a62528f0",
+      "promoted_at": "2026-11-11T00:00:00.000000+00:00"
+    }
+  },
+  "best_model": "best_model.pt",
+  "winner_name": "final"
+}

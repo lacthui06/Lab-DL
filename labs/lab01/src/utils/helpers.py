@@ -4,7 +4,6 @@ import json
 import os
 import platform
 import random
-import warnings
 from pathlib import Path
 from typing import Any, Dict, Optional, Tuple
 
@@ -15,24 +14,23 @@ import torch.nn as nn
 # ---------------------------------------------------------------------------
 # Project Base Directories & Device Configuration
 # ---------------------------------------------------------------------------
-if os.path.exists("/kaggle/working"):
-    BASE_DIR = Path("/kaggle/working")
-else:
-    BASE_DIR = Path(__file__).resolve().parent.parent.parent
+SOURCE_DIR = Path(__file__).resolve().parent.parent.parent
+BASE_DIR = Path(os.environ.get(
+    "LAB01_WORK_DIR",
+    "/kaggle/working" if os.path.exists("/kaggle/working") else str(SOURCE_DIR),
+)).resolve()
 
 DATA_DIR = BASE_DIR / "data"
 OUTPUTS_DIR = BASE_DIR / "outputs"
-CHECKPOINTS_DIR = OUTPUTS_DIR / "checkpoints"
 LOGS_DIR = OUTPUTS_DIR / "logs"
-PREDICTIONS_DIR = OUTPUTS_DIR / "predictions"
 EDA_DIR = OUTPUTS_DIR / "eda"
+MODELS_DIR = BASE_DIR / "models"
 
 # Ensure output directories exist
 OUTPUTS_DIR.mkdir(parents=True, exist_ok=True)
-CHECKPOINTS_DIR.mkdir(parents=True, exist_ok=True)
 LOGS_DIR.mkdir(parents=True, exist_ok=True)
-PREDICTIONS_DIR.mkdir(parents=True, exist_ok=True)
 EDA_DIR.mkdir(parents=True, exist_ok=True)
+MODELS_DIR.mkdir(parents=True, exist_ok=True)
 
 # Device Configuration
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -40,14 +38,11 @@ DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 # Dataset & Split Constants
 RANDOM_SEED = 42
 IMAGE_SIZE = 28
-NUM_CHANNELS = 1
-NUM_CLASSES = 10
 VAL_SPLIT = 0.1
 SPLIT_VERSION = "split_v2_stratified"
 PREPROC_VERSION = "preproc_v2_train_global_std"
 
-CONFIG_DIR = BASE_DIR / "config"
-AUGMENTATIONS_CONFIG_PATH = CONFIG_DIR / "augmentations.yaml"
+CONFIG_DIR = SOURCE_DIR / "config"
 PREPROCESSING_CONFIG_PATH = EDA_DIR / "preprocessing_config.json"
 
 
@@ -76,10 +71,8 @@ def resolve_normalization_stats(
     return tuple(float(m) for m in mean), tuple(float(s) for s in std), f"artifact:{path}"
 
 
-# Alias for backward compatibility in internal handoff verification
-_resolve_normalization = resolve_normalization_stats
 
-FASHION_MNIST_MEAN, FASHION_MNIST_STD, NORMALIZATION_SOURCE = resolve_normalization_stats()
+
 
 # Class Label Mapping
 CLASS_NAMES = [
@@ -110,19 +103,6 @@ def set_seed(seed: int = 42) -> None:
         torch.backends.cudnn.benchmark = False
 
 
-def load_yaml_config(config_path: Path) -> Dict[str, Any]:
-    """Loads a YAML configuration file safely."""
-    path = Path(config_path)
-    if not path.exists():
-        raise FileNotFoundError(f"Configuration file not found at: {path}")
-    try:
-        import yaml
-        with open(path, "r", encoding="utf-8") as f:
-            return yaml.safe_load(f)
-    except ImportError:
-        raise ImportError("Package 'pyyaml' is required to load YAML config. Install with: pip install pyyaml")
-
-
 def save_checkpoint(
     model: nn.Module,
     save_path: Path,
@@ -151,6 +131,101 @@ def load_checkpoint(
     model.load_state_dict(checkpoint["model_state_dict"])
     model.to(device)
     return checkpoint.get("metadata", {})
+
+
+def promote_model_checkpoint(
+    run_dir: Path,
+    name: str,
+    is_winner: bool = False,
+    force: bool = False,
+    models_dir: Optional[Path] = None,
+) -> Optional[Path]:
+    """Promotes a trained model checkpoint from a run directory to the models/ folder.
+
+    Follows the Auto-Promote protocol:
+    1. Verifies the run completed and best.pt exists.
+    2. Reads val_acc/metrics from run_dir.
+    3. Checks models/manifest.json. Only overwrites if new run is better or force=True.
+    4. Copies best.pt to models/<name>.pt (and models/best_model.pt if is_winner or final).
+    5. Updates models/manifest.json with provenance, metadata, and timestamps.
+    """
+    import shutil
+    from datetime import datetime, timezone
+
+    run_dir = Path(run_dir)
+    src_ckpt = run_dir / "best.pt"
+    if not src_ckpt.exists():
+        return None
+
+    target_dir = Path(models_dir) if models_dir is not None else MODELS_DIR
+    target_dir.mkdir(parents=True, exist_ok=True)
+
+    manifest_path = target_dir / "manifest.json"
+    manifest = {}
+    if manifest_path.exists():
+        try:
+            with open(manifest_path, "r", encoding="utf-8") as f:
+                manifest = json.load(f)
+        except Exception:
+            manifest = {}
+    models_info = manifest.setdefault("models", {})
+
+    # Extract accuracy from run artifacts
+    run_val_acc = 0.0
+    run_metrics = {}
+    metrics_path = run_dir / "metrics.json"
+    if metrics_path.exists():
+        try:
+            with open(metrics_path, "r", encoding="utf-8") as f:
+                run_metrics = json.load(f)
+        except Exception:
+            pass
+
+    history_path = run_dir / "history.json"
+    if history_path.exists():
+        try:
+            with open(history_path, "r", encoding="utf-8") as f:
+                hist = json.load(f)
+            if "val_acc" in hist and len(hist["val_acc"]) > 0:
+                run_val_acc = float(max(hist["val_acc"]))
+        except Exception:
+            pass
+
+    if "accuracy" in run_metrics and run_val_acc == 0.0:
+        run_val_acc = float(run_metrics["accuracy"]) * 100.0
+
+    current_val_acc = 0.0
+    if name in models_info:
+        current_val_acc = float(models_info[name].get("val_acc", 0.0))
+
+    if not force and current_val_acc > 0 and run_val_acc < current_val_acc:
+        print(f"[AUTO-PROMOTE] Kept existing {name}.pt ({current_val_acc:.2f}% >= new {run_val_acc:.2f}%)")
+        return None
+
+    dest_ckpt = target_dir / f"{name}.pt"
+    shutil.copyfile(src_ckpt, dest_ckpt)
+
+    now_iso = datetime.now(timezone.utc).isoformat()
+    models_info[name] = {
+        "checkpoint": f"{name}.pt",
+        "val_acc": round(run_val_acc, 2),
+        "test_accuracy": round(run_metrics.get("accuracy", 0.0) * 100.0, 2) if "accuracy" in run_metrics else None,
+        "parameters": run_metrics.get("parameters"),
+        "source_run": str(run_dir.resolve()),
+        "promoted_at": now_iso,
+    }
+
+    if is_winner or name.lower() in ("final", "winner", "mainmlp_winner"):
+        best_target = target_dir / "best_model.pt"
+        shutil.copyfile(src_ckpt, best_target)
+        manifest["best_model"] = "best_model.pt"
+        manifest["winner_name"] = name
+
+    with open(manifest_path, "w", encoding="utf-8") as f:
+        json.dump(manifest, f, indent=2, ensure_ascii=False)
+
+    print(f"[AUTO-PROMOTE] Successfully promoted {dest_ckpt.name} to {target_dir} (val_acc: {run_val_acc:.2f}%)")
+    return dest_ckpt
 
 
 def collect_environment_snapshot(save_path: Optional[Path] = None) -> Dict[str, Any]:

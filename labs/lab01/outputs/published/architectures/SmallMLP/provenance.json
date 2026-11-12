@@ -1,0 +1,35 @@
+{
+  "source_run": "20261102T045843Z_architecture_SmallMLP_096b15fe",
+  "files": [
+    {
+      "path": "architectures/SmallMLP/config.json",
+      "bytes": 86,
+      "source_sha256": "7898652ae6aae37bea281bd9187e9ad712597a87fa9e9489ffd9263ed10b8a8e",
+      "sha256": "aa1bc39b3cda724d7d6471fb3cbedaa784ac5b447181f88008cdde900c39b98f"
+    },
+    {
+      "path": "architectures/SmallMLP/environment_snapshot.json",
+      "bytes": 464,
+      "source_sha256": "06eb65ab6c6622474e4a80bac0d955433ee4cb929a63b1f50d64fb7e57a763f0",
+      "sha256": "31926d27b257f6e8510621ec2d0f8e95e823fbc8fdedb67d23531c6eaf2bfa65"
+    },
+    {
+      "path": "architectures/SmallMLP/layers.csv",
+      "bytes": 134,
+      "source_sha256": "bb016831d1a91c1d5ead9e42c161a93a79e1bcc027e8d768c1a0dbf08e351688",
+      "sha256": "bb016831d1a91c1d5ead9e42c161a93a79e1bcc027e8d768c1a0dbf08e351688"
+    },
+    {
+      "path": "architectures/SmallMLP/model_architecture.txt",
+      "bytes": 226,
+      "source_sha256": "a325a49fb13394250c333222b6601f77c92e71946df1db7d17fd3a68bb02eb4b",
+      "sha256": "a325a49fb13394250c333222b6601f77c92e71946df1db7d17fd3a68bb02eb4b"
+    },
+    {
+      "path": "architectures/SmallMLP/status.json",
+      "bytes": 156,
+      "source_sha256": "b03bc020c750311d97605972bc408008a9a3af70be5650f30b317a20b8b94054",
+      "sha256": "17596ddfcf70ee95d439a68b6dd2ddbfe8c59be34089988f836cef857615d764"
+    }
+  ]
+}

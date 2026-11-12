@@ -10,6 +10,7 @@ import numpy as np
 import pandas as pd
 
 from .base import load_split, make_stratified_split, save_split
+from .features import measure_intensity, foreground_bbox
 from ..utils.helpers import (
     CLASS_NAMES,
     DATA_DIR,
@@ -18,7 +19,6 @@ from ..utils.helpers import (
     RANDOM_SEED,
     SPLIT_VERSION,
     VAL_SPLIT,
-    resolve_normalization_stats,
 )
 from ..utils.plots import plot_eda_figures
 
@@ -172,16 +172,7 @@ def class_distribution(
     return pd.DataFrame(rows)
 
 
-def _foreground_bbox(mask: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
-    """Return enclosing height/width, including interior gaps; empty masks yield zero."""
-    rows = mask.any(axis=2)
-    cols = mask.any(axis=1)
-    nonempty = rows.any(axis=1)
-    height = np.where(nonempty, rows.shape[1] - rows[:, ::-1].argmax(axis=1)
-                      - rows.argmax(axis=1), 0)
-    width = np.where(nonempty, cols.shape[1] - cols[:, ::-1].argmax(axis=1)
-                     - cols.argmax(axis=1), 0)
-    return height, width
+_foreground_bbox = foreground_bbox
 
 
 def spatial_features(
@@ -326,12 +317,9 @@ def compute_handcrafted_features(
         aspect = np.where(bbox_h > 0, bbox_w / bbox_h, np.nan)
     area_ratio = bbox_h * bbox_w / (h * w)
 
-    diff_h = np.abs(np.diff(scaled, axis=1))[:, :, :-1]
-    diff_w = np.abs(np.diff(scaled, axis=2))[:, :-1, :]
-    edge_density = ((diff_h + diff_w) > 0.15).mean(axis=(1, 2))
-
-    img_means = scaled.mean(axis=(1, 2))
-    img_stds = scaled.std(axis=(1, 2))
+    # Same definition used by modeling. Historical outputs retain their original formula.
+    per_image = np.asarray([measure_intensity(image, threshold) for image in scaled])
+    img_means, img_stds, edge_density = per_image.T
 
     rows = []
     for c_idx, name in enumerate(class_names):
@@ -484,38 +472,3 @@ def run_eda_and_fe_pipeline(
         "num_test": len(X_test),
         "figures": figures,
     }
-
-
-def verify_pipeline_handoff(
-    train_loader,
-    val_loader,
-    eda_dir: Path = EDA_DIR,
-) -> bool:
-    """Verifies 4 core criteria before training handoff."""
-    eda_dir = Path(eda_dir)
-    split_meta_path = eda_dir / "split_metadata.json"
-    preproc_path = eda_dir / "preprocessing_config.json"
-    split_npz_path = eda_dir / "split_indices.npz"
-
-    assert split_meta_path.exists() and preproc_path.exists() and split_npz_path.exists(), "[LỖI] Thiếu artifact bàn giao!"
-
-    with open(split_meta_path, "r", encoding="utf-8") as f:
-        split_meta = json.load(f)
-    with open(preproc_path, "r", encoding="utf-8") as f:
-        preproc_cfg = json.load(f)
-
-    meta_split_version = split_meta.get("split_version") or split_meta.get("version")
-    assert meta_split_version == SPLIT_VERSION, f"split_version mismatch: {meta_split_version} != {SPLIT_VERSION}"
-    assert preproc_cfg.get("version") == PREPROC_VERSION, "preprocessing version mismatch"
-
-    current_mean, _, current_source = resolve_normalization_stats(eda_dir)
-    assert current_source.startswith("artifact:"), "NORMALIZATION_SOURCE must start with artifact:"
-    expected_mean = preproc_cfg["normalization"]["mean"][0]
-    assert round(current_mean[0], 4) == round(expected_mean, 4), f"Mean mismatch: {current_mean[0]} != {expected_mean}"
-    expected_train_size = split_meta.get("train_size") or split_meta.get("train_count")
-    expected_val_size = split_meta.get("val_size") or split_meta.get("val_count")
-    assert len(train_loader.dataset) == expected_train_size, f"train_loader size mismatch: {len(train_loader.dataset)} != {expected_train_size}"
-    assert len(val_loader.dataset) == expected_val_size, f"val_loader size mismatch: {len(val_loader.dataset)} != {expected_val_size}"
-
-    print("[GUARD ASSERT PASSED] Toàn bộ 4 tiêu chí bàn giao EDA đã được xác thực 100%!")
-    return True

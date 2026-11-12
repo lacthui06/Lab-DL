@@ -1,52 +1,30 @@
-"""Training, Optimization, Metrics, and Environment tests."""
+"""Training, Optimization, Checkpoint, and Environment tests."""
 
 import sys
 from pathlib import Path
 import pytest
 import torch
-import numpy as np
 
 LAB01_DIR = Path(__file__).resolve().parent.parent
 if str(LAB01_DIR) not in sys.path:
     sys.path.insert(0, str(LAB01_DIR))
 
 from src.utils.helpers import (
-    DATA_DIR,
     DEVICE,
-    EDA_DIR,
     RANDOM_SEED,
-    CLASS_NAMES,
     collect_environment_snapshot,
     load_checkpoint,
     save_checkpoint,
     set_seed,
 )
-from src.datasets.classification import get_dataloaders
 from src.models import build_model
-from src.training.trainer import Trainer, build_optimizer, sanity_overfit_check
-from src.utils.metrics import build_per_class_metrics, compute_tpr_fpr
-from src.training.experiments import (
-    compare_optimizers_wallclock,
-    predict_proba,
-    run_optuna_optimizer_study,
-)
+from src.training.trainer import build_optimizer, sanity_overfit_check
 
 
-@pytest.fixture(scope="module")
-def sample_loaders():
+def test_4_sanity_overfit_one_batch():
     set_seed(RANDOM_SEED)
-    return get_dataloaders(
-        data_dir=DATA_DIR,
-        split_dir=EDA_DIR,
-        batch_size=8,
-        val_split=0.1,
-        num_workers=0,
-    )
-
-
-def test_4_sanity_overfit_one_batch(sample_loaders):
-    train_loader, _, _, _ = sample_loaders
-    images, targets = next(iter(train_loader))
+    images = torch.randn(8, 784)
+    targets = torch.arange(8)
 
     model = build_model("mlp", num_classes=10)
     passed, final_loss, final_acc = sanity_overfit_check(
@@ -98,56 +76,9 @@ def test_6_build_optimizer_factory():
         build_optimizer("invalid_name", model)
 
 
-def test_7_compute_tpr_fpr():
-    cm = np.array([
-        [8, 2, 0],
-        [0, 9, 1],
-        [2, 0, 8],
-    ])
-    tpr, fpr = compute_tpr_fpr([0, 0, 1], [0, 1, 1], num_classes=3)
-    assert len(tpr) == 3 and len(fpr) == 3
-
-
-def test_11_build_per_class_metrics():
-    targets = [0, 0, 1, 1, 2, 2]
-    preds = [0, 1, 1, 1, 2, 0]
-    names = ["class_0", "class_1", "class_2"]
-    df = build_per_class_metrics(targets, preds, names)
-    assert len(df) == 3
-    assert "F1-Score" in df.columns
-
-
 def test_12_environment_snapshot(tmp_path):
     out_path = tmp_path / "environment_snapshot.json"
     snapshot = collect_environment_snapshot(out_path)
     assert out_path.exists()
     assert "python_version" in snapshot
     assert "torch" in snapshot["libraries"]
-
-
-def test_26_predict_proba_contract(sample_loaders):
-    _, val_loader, _, _ = sample_loaders
-    model = build_model("mlp").to(DEVICE)
-    y_probs, y_true = predict_proba(model, val_loader, DEVICE)
-    assert len(y_probs) == len(y_true)
-    assert y_probs.shape[1] == 10
-    assert np.allclose(y_probs.sum(axis=1), 1.0, atol=1e-5)
-
-
-def test_29_experiment_runner_signatures(sample_loaders):
-    import pandas as pd
-    train_loader, val_loader, _, _ = sample_loaders
-
-    best_results, trials_df = run_optuna_optimizer_study(
-        train_loader, val_loader, num_trials=2, epochs_per_trial=1, device=DEVICE
-    )
-    assert isinstance(best_results, dict)
-    assert isinstance(trials_df, pd.DataFrame)
-
-    toy_configs = {"Adam": {"params": {"lr": 0.001}}}
-    summary_df, winner_model, winner_name, fig = compare_optimizers_wallclock(
-        train_loader, val_loader, toy_configs, num_epochs=1, device=DEVICE
-    )
-    assert isinstance(summary_df, pd.DataFrame)
-    assert isinstance(winner_model, torch.nn.Module)
-    assert winner_name == "Adam"
