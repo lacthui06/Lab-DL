@@ -1035,10 +1035,10 @@
             </p>
         </div>
 
-        <!-- 3.2. Sample Images & Class Distributions -->
+        <!-- 3.2. Sample Images & Class Mean Templates (Full-Width Hero Cards) -->
         <div class="subsection-title">
-            <span>3.2. Phân Bố Tập Dữ Liệu & Ảnh Đại Diện 10 Lớp Trang Phục</span>
-            <span class="badge badge-info">SAMPLE & DISTRIBUTION</span>
+            <span>3.2. Mẫu Đại Diện & Khuôn Mẫu Cường Độ Trung Bình 10 Lớp Trang Phục</span>
+            <span class="badge badge-info">SAMPLE & CLASS TEMPLATES</span>
         </div>
 
         <figure class="image-card">
@@ -1048,7 +1048,7 @@
             </div>
             <figcaption>
                 <div class="image-card-title-row">
-                    <span class="image-card-title">Hình 1: Ảnh Mẫu Đại Diện 10 Lớp Trang Phục FashionMNIST</span>
+                    <span class="image-card-title">Hình 1: Mẫu Đại Diện 10 Lớp Trang Phục FashionMNIST</span>
                     <span class="code-pill">Shape: 28x28 Grayscale</span>
                 </div>
                 <p class="image-card-takeaway">Trực quan hóa ngẫu nhiên các mẫu đại diện: T-shirt/top, Trouser, Pullover, Dress, Coat, Sandal, Shirt, Sneaker, Bag, Ankle boot. Toàn bộ ảnh đã được căn giữa, nền đen (pixel xấp xỉ 0), đối tượng tiền cảnh màu xám/trắng với độ tương phản cao.</p>
@@ -1058,6 +1058,31 @@
                 </div>
             </figcaption>
         </figure>
+
+        <figure class="image-card">
+            <div class="image-card-img-wrap">
+                <img src="../outputs/published/preparation/eda/figures/class_mean_images.png" alt="Ảnh cường độ trung bình theo từng lớp trang phục" loading="lazy">
+                <div class="zoom-hint">Phóng to ảnh &nearr;</div>
+            </div>
+            <figcaption>
+                <div class="image-card-title-row">
+                    <span class="image-card-title">Hình 2: Khuôn Mẫu Cường Độ Trung Bình 10 Lớp Trang Phục (Class Mean Templates)</span>
+                    <span class="code-pill">10 Class Templates &bull; Full-Width</span>
+                </div>
+                <p class="image-card-takeaway">Cường độ pixel trung bình tính trên toàn bộ tập dữ liệu phác họa hình thái khuôn mẫu riêng biệt: Trouser thon dài theo chiều dọc; Bag có dạng hình hộp vuông; Sandal mảnh và hở nhiều vùng; T-shirt, Pullover, Coat có hình thái thân áo rất tương đồng. Trình bày toàn màn hình (Full-Width) giúp quan sát chi tiết cấu trúc điểm ảnh của từng lớp mà không bị co nhỏ.</p>
+                <div class="image-card-footer">
+                    <span>Domain: [0.0, 1.0]</span>
+                    <span>Centroid-aligned</span>
+                    <span>Artifact: class_mean_images.png</span>
+                </div>
+            </figcaption>
+        </figure>
+
+        <!-- 3.3. Class Distribution & Pixel Histogram (Balanced 2-Column Comparison) -->
+        <div class="subsection-title">
+            <span>3.3. Phân Bố Tập Mẫu & Phân Bố Cường Độ Điểm Ảnh</span>
+            <span class="badge badge-info">SAMPLE & PIXEL DISTRIBUTIONS</span>
+        </div>
 
         <div class="grid-comparison">
             <figure class="image-card">
@@ -1080,48 +1105,30 @@
 
             <figure class="image-card">
                 <div class="image-card-img-wrap">
-                    <img src="../outputs/published/preparation/eda/figures/class_mean_images.png" alt="Ảnh cường độ trung bình theo từng lớp" loading="lazy">
-                    <div class="zoom-hint">Phóng to ảnh &nearr;</div>
-                </div>
-                <figcaption>
-                    <div class="image-card-title-row">
-                        <span class="image-card-title">2. Ảnh Cường Độ Trung Bình (Mean Images)</span>
-                        <span class="code-pill">10 Class Templates</span>
-                    </div>
-                    <p class="image-card-takeaway">Cường độ pixel trung bình phác họa hình thái khuôn mẫu riêng biệt: Trouser thon dài theo chiều dọc; Bag có dạng hình hộp vuông; Sandal mảnh và hở nhiều vùng; T-shirt, Pullover, Coat có hình thái thân áo rất tương đồng.</p>
-                    <div class="image-card-footer">
-                        <span>Domain: [0.0, 1.0]</span>
-                        <span>Centroid-aligned</span>
-                    </div>
-                </figcaption>
-            </figure>
-        </div>
-
-        <!-- 3.3. Pixel Intensities & Heatmaps -->
-        <div class="subsection-title">
-            <span>3.3. Cường Độ Điểm Ảnh, Phân Bố Năng Lượng & Bản Đồ Phương Sai</span>
-            <span class="badge badge-info">INTENSITY & HEATMAPS</span>
-        </div>
-
-        <div class="grid-trio">
-            <figure class="image-card">
-                <div class="image-card-img-wrap">
                     <img src="../outputs/published/preparation/eda/figures/pixel_histogram.png" alt="Phân bố cường độ điểm ảnh" loading="lazy">
                     <div class="zoom-hint">Phóng to ảnh &nearr;</div>
                 </div>
                 <figcaption>
                     <div class="image-card-title-row">
-                        <span class="image-card-title">3. Histogram Điểm Ảnh</span>
-                        <span class="code-pill">Bimodal</span>
+                        <span class="image-card-title">2. Histogram Cường Độ Điểm Ảnh</span>
+                        <span class="code-pill">Bimodal Distribution</span>
                     </div>
-                    <p class="image-card-takeaway">Phân bố hai đỉnh rõ rệt: nền đen chiếm đa số (~50.2% pixel tuyệt đối bằng 0); tiền cảnh trải rộng từ 0.2 đến 1.0. Global Mean = 0.2862, Global Std = 0.3532.</p>
+                    <p class="image-card-takeaway">Phân bố hai đỉnh rõ rệt: nền đen chiếm đa số (~50.21% pixel tuyệt đối bằng 0); tiền cảnh trải rộng từ 0.2 đến 1.0. Global Mean = 0.2862, Global Std = 0.3532.</p>
                     <div class="image-card-footer">
                         <span>Zero Pixels: 50.21%</span>
                         <span>Foreground: [0.2, 1.0]</span>
                     </div>
                 </figcaption>
             </figure>
+        </div>
 
+        <!-- 3.4. Spatial Energy & Variance Heatmaps (2-Column Comparison) -->
+        <div class="subsection-title">
+            <span>3.4. Bản Đồ Nhiệt Không Gian & Phương Sai Điểm Ảnh</span>
+            <span class="badge badge-info">SPATIAL & VARIANCE HEATMAPS</span>
+        </div>
+
+        <div class="grid-comparison">
             <figure class="image-card">
                 <div class="image-card-img-wrap">
                     <img src="../outputs/published/preparation/eda/figures/mean_pixel_heatmap.png" alt="Bản đồ nhiệt trung bình pixel" loading="lazy">
@@ -1129,10 +1136,10 @@
                 </div>
                 <figcaption>
                     <div class="image-card-title-row">
-                        <span class="image-card-title">4. Bản Đồ Nhiệt Trung Bình</span>
-                        <span class="code-pill">Spatial Center</span>
+                        <span class="image-card-title">1. Bản Đồ Nhiệt Trung Bình Toàn Cục</span>
+                        <span class="code-pill">Spatial Center 28x28</span>
                     </div>
-                    <p class="image-card-takeaway">Năng lượng quang học tập trung dày đặc ở vùng trung tâm (tọa độ hàng 8-24, cột 6-22). Toàn bộ 4 góc viền ngoài hoàn toàn là 0, an toàn cho việc trích xuất ROI.</p>
+                    <p class="image-card-takeaway">Năng lượng quang học tập trung dày đặc ở vùng trung tâm (tọa độ hàng 8-24, cột 6-22). Toàn bộ 4 góc viền ngoài hoàn toàn là 0, an toàn cho việc trích xuất vùng quan tâm ROI.</p>
                     <div class="image-card-footer">
                         <span>Central Core Energy</span>
                         <span>Zero Outer Border</span>
@@ -1147,8 +1154,8 @@
                 </div>
                 <figcaption>
                     <div class="image-card-title-row">
-                        <span class="image-card-title">5. Bản Đồ Phương Sai</span>
-                        <span class="code-pill">High Variance</span>
+                        <span class="image-card-title">2. Bản Đồ Phương Sai Điểm Ảnh</span>
+                        <span class="code-pill">High Variance Boundaries</span>
                     </div>
                     <p class="image-card-takeaway">Phương sai cao nhất nằm ở đường viền ngoài thân trang phục và cổ áo — nơi mang tín hiệu phân biệt giữa áo cộc tay, áo dài tay, váy dài và áo khoác.</p>
                     <div class="image-card-footer">
@@ -1159,9 +1166,9 @@
             </figure>
         </div>
 
-        <!-- 3.4. Cosine Similarity -->
+        <!-- 3.5. Cosine Similarity -->
         <div class="subsection-title">
-            <span>3.4. Tương Đồng Hình Thái Cosine Giữa 10 Lớp Trang Phục</span>
+            <span>3.5. Tương Đồng Hình Thái Cosine Giữa 10 Lớp Trang Phục</span>
             <span class="badge badge-info">COSINE MATRIX</span>
         </div>
 
@@ -1566,7 +1573,7 @@ class FashionMLP(nn.Module):
             </div>
             <figcaption>
                 <div class="image-card-title-row">
-                    <span class="image-card-title">Hình 4: Đường Cong Học Tập Của Cấu Hình Tối Ưu Cho 3 Thuật Toán Tối Ưu Hóa</span>
+                    <span class="image-card-title">Hình 5: Đường Cong Học Tập Của Cấu Hình Tối Ưu Cho 3 Thuật Toán Tối Ưu Hóa</span>
                     <span class="code-pill">Best Optimizer: Adam</span>
                 </div>
                 <p class="image-card-takeaway">So sánh đường cong Loss và Accuracy giữa cấu hình tốt nhất tìm được: Adam (LR=0.00085, Weight Decay=1e-4) vượt trội toàn diện về tốc độ hội tụ và độ ổn định; RMSprop có độ dao động nhẹ ở những epoch đầu; SGD cần số lượng epoch gấp đôi để tiệm cận cùng mức loss.</p>
@@ -1578,67 +1585,75 @@ class FashionMLP(nn.Module):
             </figcaption>
         </figure>
 
-        <!-- 6.2 Tuning Dynamics Trio -->
+        <!-- 6.2 Baseline Fixed LR & Tuning Progress (Balanced 2-Column Comparison) -->
         <div class="subsection-title">
-            <span>6.2. Tiến Trình Dò Tìm Không Gian Siêu Tham Số & Đường Học Mô Hình Tối Ưu</span>
-            <span class="badge badge-info">HYPERPARAMETER DYNAMICS</span>
+            <span>6.2. Baseline Cố Định LR & Tiến Trình Dò Tìm Siêu Tham Số Optuna</span>
+            <span class="badge badge-info">BASELINE VS OPTUNA TUNING</span>
         </div>
 
-        <div class="grid-trio">
+        <div class="grid-comparison">
             <figure class="image-card">
                 <div class="image-card-img-wrap">
-                    <img src="../outputs/published/fixed/fixed_lr_curves.png" alt="So sánh ở Fixed LR" loading="lazy">
+                    <img src="../outputs/published/fixed/fixed_lr_curves.png" alt="So sánh 3 thuật toán ở mức Fixed LR = 0.001" loading="lazy">
                     <div class="zoom-hint">Phóng to ảnh &nearr;</div>
                 </div>
                 <figcaption>
                     <div class="image-card-title-row">
-                        <span class="image-card-title">1. Baseline Cố Định LR</span>
-                        <span class="code-pill">Fixed LR = 1e-3</span>
+                        <span class="image-card-title">1. Baseline LR Cố Định (Fixed LR = 0.001)</span>
+                        <span class="code-pill">Fixed LR Comparison</span>
                     </div>
-                    <p class="image-card-takeaway">Ở mức learning rate mặc định 0.001, Adam vượt lên dẫn đầu ngay từ epoch 3, chứng minh khả năng thích ứng moment bậc 1 và 2 hiệu quả.</p>
+                    <p class="image-card-takeaway">So sánh tại mức LR mặc định 0.001: Adam bứt phá dẫn đầu ngay từ epoch 3, đạt Val Acc cao nhất (90.2%); RMSprop hội tụ nhanh nhưng dao động nhẹ; SGD tăng trưởng chậm và cần nhiều epoch hơn để tiệm cận.</p>
                     <div class="image-card-footer">
                         <span>Adam leads</span>
-                        <span>LR = 0.001</span>
+                        <span>Fixed LR = 0.001</span>
                     </div>
                 </figcaption>
             </figure>
 
             <figure class="image-card">
                 <div class="image-card-img-wrap">
-                    <img src="../outputs/published/tuning/tuning_progress.png" alt="Tiến trình dò tìm siêu tham số" loading="lazy">
+                    <img src="../outputs/published/tuning/tuning_progress.png" alt="Tiến trình dò tìm siêu tham số qua 30 trials Optuna" loading="lazy">
                     <div class="zoom-hint">Phóng to ảnh &nearr;</div>
                 </div>
                 <figcaption>
                     <div class="image-card-title-row">
-                        <span class="image-card-title">2. Tiến Trình Optuna</span>
+                        <span class="image-card-title">2. Tiến Trình Tối Ưu Hóa Optuna</span>
                         <span class="code-pill">30 Trials Total</span>
                     </div>
-                    <p class="image-card-takeaway">Khảo sát 10 trial cho mỗi thuật toán trên không gian log-uniform của Learning Rate [1e-4, 1e-2] và Weight Decay [1e-6, 1e-2].</p>
+                    <p class="image-card-takeaway">Dò tìm 10 trials cho mỗi thuật toán trên không gian log-uniform của Learning Rate [1e-4, 1e-2] và Weight Decay [1e-6, 1e-2]. Biểu đồ scatter bên phải định vị vùng siêu tham số hội tụ tối ưu tập trung quanh LR ~ 8e-4.</p>
                     <div class="image-card-footer">
                         <span>10 Trials / Optimizer</span>
                         <span>Bayesian Optimization</span>
                     </div>
                 </figcaption>
             </figure>
-
-            <figure class="image-card">
-                <div class="image-card-img-wrap">
-                    <img src="../outputs/published/final/learning_curves.png" alt="Đường cong học của mô hình tối ưu cuối cùng" loading="lazy">
-                    <div class="zoom-hint">Phóng to ảnh &nearr;</div>
-                </div>
-                <figcaption>
-                    <div class="image-card-title-row">
-                        <span class="image-card-title">3. Final Model Refit</span>
-                        <span class="code-pill">Acc: 89.2%</span>
-                    </div>
-                    <p class="image-card-takeaway">Mô hình cuối cùng huấn luyện lại trên tập Train đầy đủ đạt Test Accuracy 89.2%. Train loss giảm xuống 0.22, Val loss đạt 0.30 mượt mà.</p>
-                    <div class="image-card-footer">
-                        <span>Early Stopping: ep 18</span>
-                        <span>Test Acc: 89.2%</span>
-                    </div>
-                </figcaption>
-            </figure>
         </div>
+
+        <!-- 6.3 Final Model Refit (Full-Width Hero Card) -->
+        <div class="subsection-title">
+            <span>6.3. Huấn Luyện Lại Mô Hình Tối Ưu Cuối Cùng (Final Model Refit & Retraining)</span>
+            <span class="badge badge-success">FINAL RETRAINING &bull; 89.14% TEST ACC</span>
+        </div>
+
+        <figure class="image-card">
+            <div class="image-card-img-wrap">
+                <img src="../outputs/published/final/learning_curves.png" alt="Đường cong học của mô hình tối ưu cuối cùng refit" loading="lazy">
+                <div class="zoom-hint">Phóng to ảnh &nearr;</div>
+            </div>
+            <figcaption>
+                <div class="image-card-title-row">
+                    <span class="image-card-title">Hình 6: Đường Cong Học Tập Mô Hình Tối Ưu Cuối Cùng (Adam Tuned Refit)</span>
+                    <span class="code-pill">Final Model: MainMLP (Adam Tuned)</span>
+                </div>
+                <p class="image-card-takeaway">Mô hình cuối cùng với siêu tham số tối ưu (Adam, LR = 8.49e-4, Weight Decay = 1.02e-4) huấn luyện lại trên 10 epochs: Train loss giảm đều từ 0.51 xuống 0.17; Validation loss đạt mức tối ưu 0.26 tại epoch 10; Val Accuracy đạt đỉnh 90.88%. Mô hình hội tụ mượt mà, không gặp hiện tượng phân kỳ hay overfit nghiêm trọng.</p>
+                <div class="image-card-footer">
+                    <span>Final Test Acc: 89.14%</span>
+                    <span>Best Val Acc: 90.88%</span>
+                    <span>Best Epoch: 10/10</span>
+                    <span>Artifact: final/learning_curves.png</span>
+                </div>
+            </figcaption>
+        </figure>
 
         <!-- Collapsible Code Tab 4 -->
         <details class="code-tab-drawer">
@@ -1686,7 +1701,7 @@ with torch.no_grad():
             </div>
             <figcaption>
                 <div class="image-card-title-row">
-                    <span class="image-card-title">Hình 5: Ma Trận Nhầm Lẫn So Sánh Cả 3 Kiến Trúc Trên 10.000 Mẫu Tập Test</span>
+                    <span class="image-card-title">Hình 7: Ma Trận Nhầm Lẫn So Sánh Cả 3 Kiến Trúc Trên 10.000 Mẫu Tập Test</span>
                     <span class="code-pill">10.000 Test Samples</span>
                 </div>
                 <p class="image-card-takeaway">Ma trận nhầm lẫn chuẩn hóa hiển thị chẩn đoán chính xác: Các lớp có độ chính xác cao nhất gồm Trouser (98.2%), Bag (96.5%), và Ankle boot (95.1%). Các trường hợp nhầm lẫn chính tập trung ở cặp lớp tương đồng hình thái đã phát hiện ở bước EDA: Shirt bị dự đoán nhầm thành T-shirt (12.3%) và Coat (9.4%). Việc bổ sung 10 đặc trưng hình học ở MainMLP_FE đã giúp giảm 18% tỷ lệ nhầm lẫn giữa Shirt và Coat.</p>
@@ -1697,53 +1712,208 @@ with torch.no_grad():
             </figcaption>
         </figure>
 
-        <!-- 7.2 One-vs-Rest ROC & PR Curves -->
-        <div class="subsection-title">
-            <span>7.2. Phân Tích Đường Cong One-vs-Rest (ROC & PR Curves): MainMLP vs MainMLP_FE</span>
-            <span class="badge badge-info">ROC-AUC & PR-AUC</span>
+        <div class="table-responsive" style="margin-top: 1.5rem;">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Lớp Trang Phục (Class)</th>
+                        <th>F1-score SmallMLP</th>
+                        <th>F1-score MainMLP</th>
+                        <th>F1-score MainMLP_FE</th>
+                        <th>Nhận Xét Chẩn Đoán Lỗi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td><strong>0: T-shirt/top</strong></td><td>84.21%</td><td><strong>85.52%</strong></td><td>85.04%</td><td>Nhầm lẫn chủ yếu với Shirt (12.3%) và Pullover</td></tr>
+                    <tr><td><strong>1: Trouser</strong></td><td>97.72%</td><td>97.83%</td><td><strong>97.83%</strong></td><td>Lớp dễ phân loại nhất nhờ hình thái cao và hẹp đặc trưng</td></tr>
+                    <tr><td><strong>2: Pullover</strong></td><td>80.72%</td><td>81.70%</td><td><strong>81.85%</strong></td><td>Dễ nhầm lẫn với Coat và Shirt do chung cấu trúc tay áo</td></tr>
+                    <tr><td><strong>3: Dress</strong></td><td>88.38%</td><td>89.44%</td><td><strong>89.65%</strong></td><td>Tách biệt tốt nhờ tỷ lệ chiều cao và diện tích thân váy</td></tr>
+                    <tr><td><strong>4: Coat</strong></td><td>81.06%</td><td>82.59%</td><td><strong>82.75%</strong></td><td>MainMLP_FE cải thiện rõ rệt nhờ đặc trưng Bounding Box Aspect Ratio</td></tr>
+                    <tr><td><strong>5: Sandal</strong></td><td>96.14%</td><td>96.63%</td><td><strong>97.19%</strong></td><td>Mật độ biên và tỷ lệ tiền cảnh thấp giúp phân tách hoàn hảo khỏi giày bệt</td></tr>
+                    <tr><td><strong>6: Shirt</strong></td><td>69.20%</td><td>72.06%</td><td><strong>72.21%</strong></td><td>Lớp thử thách nhất toàn bộ dataset, MainMLP_FE tăng +3.01% F1 so với SmallMLP</td></tr>
+                    <tr><td><strong>7: Sneaker</strong></td><td>94.67%</td><td>94.75%</td><td><strong>95.34%</strong></td><td>Tách biệt tốt với Sandal, đôi khi nhầm nhẹ với Ankle boot</td></tr>
+                    <tr><td><strong>8: Bag</strong></td><td>96.99%</td><td>97.43%</td><td><strong>97.69%</strong></td><td>Hình thái hộp vuông và tính đối xứng cao giúp đạt F1 gần như tuyệt đối</td></tr>
+                    <tr><td><strong>9: Ankle boot</strong></td><td>95.87%</td><td>95.86%</td><td><strong>96.20%</strong></td><td>Phần cổ ủng cao giúp phân biệt rõ ràng với Sneaker thấp cổ</td></tr>
+                    <tr style="background-color: #f0fdf4; font-weight: 700;">
+                        <td><strong>Macro F1</strong></td>
+                        <td>88.49%</td>
+                        <td>89.38%</td>
+                        <td><strong>89.58%</strong></td>
+                        <td>MainMLP_FE vượt trội trên 8/10 lớp trang phục</td>
+                    </tr>
+                </tbody>
+            </table>
         </div>
 
-        <div class="grid-comparison">
+        <!-- 7.2 One-vs-Rest ROC & PR Curves (Full-Width Hero Cards For All 3 Models) -->
+        <div class="subsection-title">
+            <span>7.2. Phân Tích Đường Cong One-vs-Rest (ROC & PR Curves) Cho Cả 3 Mô Hình</span>
+            <span class="badge badge-info">FULL ROC-AUC & PR-AUC BREAKDOWN</span>
+        </div>
+
+        <figure class="image-card">
+            <div class="image-card-img-wrap">
+                <img src="../outputs/published/comparison/MainMLP_FE_ovr_curves.png" alt="Đường cong ROC và PR của MainMLP_FE" loading="lazy">
+                <div class="zoom-hint">Phóng to ảnh &nearr;</div>
+            </div>
+            <figcaption>
+                <div class="image-card-title-row">
+                    <span class="image-card-title">1. Đường Cong ROC & PR: MainMLP_FE (Handcrafted Features)</span>
+                    <span class="code-pill">Macro ROC-AUC: 0.9922 &bull; Macro PR-AUC: 0.9480</span>
+                </div>
+                <p class="image-card-takeaway">Đường cong ROC và Precision-Recall đa lớp (One-vs-Rest) của MainMLP_FE. Cả 10 lớp trang phục đều duy trì ROC-AUC vượt 0.968 (đỉnh điểm Trouser đạt 0.9995 và Sandal đạt 0.9996). Đường cong PR chứng minh độ tin cậy vượt bậc với PR-AUC đạt 0.9480 toàn cục.</p>
+                <div class="image-card-footer">
+                    <span>Macro ROC-AUC: 0.9922</span>
+                    <span>Macro PR-AUC: 0.9480</span>
+                    <span>Artifact: MainMLP_FE_ovr_curves.png</span>
+                </div>
+            </figcaption>
+        </figure>
+
+        <figure class="image-card">
+            <div class="image-card-img-wrap">
+                <img src="../outputs/published/comparison/MainMLP_ovr_curves.png" alt="Đường cong ROC và PR của MainMLP Baseline" loading="lazy">
+                <div class="zoom-hint">Phóng to ảnh &nearr;</div>
+            </div>
+            <figcaption>
+                <div class="image-card-title-row">
+                    <span class="image-card-title">2. Đường Cong ROC & PR: MainMLP (Baseline Thuần Pixel)</span>
+                    <span class="code-pill">Macro ROC-AUC: 0.9919 &bull; Macro PR-AUC: 0.9460</span>
+                </div>
+                <p class="image-card-takeaway">Mô hình MainMLP cơ sở đạt Macro ROC-AUC 0.9919 và PR-AUC 0.9460. Trên hầu hết các ngưỡng quyết định, mô hình đạt độ nhạy và độ chính xác xuất sắc, chỉ giảm nhẹ ở lớp Shirt (PR-AUC: 0.8106).</p>
+                <div class="image-card-footer">
+                    <span>Macro ROC-AUC: 0.9919</span>
+                    <span>Macro PR-AUC: 0.9460</span>
+                    <span>Artifact: MainMLP_ovr_curves.png</span>
+                </div>
+            </figcaption>
+        </figure>
+
+        <figure class="image-card">
+            <div class="image-card-img-wrap">
+                <img src="../outputs/published/comparison/SmallMLP_ovr_curves.png" alt="Đường cong ROC và PR của SmallMLP Baseline" loading="lazy">
+                <div class="zoom-hint">Phóng to ảnh &nearr;</div>
+            </div>
+            <figcaption>
+                <div class="image-card-title-row">
+                    <span class="image-card-title">3. Đường Cong ROC & PR: SmallMLP (Kiến Trúc Tinh Gọn 101k Params)</span>
+                    <span class="code-pill">Macro ROC-AUC: 0.9910 &bull; Macro PR-AUC: 0.9398</span>
+                </div>
+                <p class="image-card-takeaway">SmallMLP với dung lượng chỉ 101k tham số vẫn đạt Macro ROC-AUC 0.9910 và PR-AUC 0.9398. Độ dốc đường cong PR ở lớp Shirt và Pullover dốc hơn so với MainMLP, phản ánh năng lực phân tách hạn chế hơn ở các lớp có nhiều tương đồng quang học.</p>
+                <div class="image-card-footer">
+                    <span>Macro ROC-AUC: 0.9910</span>
+                    <span>Macro PR-AUC: 0.9398</span>
+                    <span>Artifact: SmallMLP_ovr_curves.png</span>
+                </div>
+            </figcaption>
+        </figure>
+
+        <div class="table-responsive" style="margin-top: 1.5rem;">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Lớp Trang Phục (Class)</th>
+                        <th>ROC-AUC SmallMLP</th>
+                        <th>ROC-AUC MainMLP</th>
+                        <th>ROC-AUC MainMLP_FE</th>
+                        <th>PR-AUC SmallMLP</th>
+                        <th>PR-AUC MainMLP</th>
+                        <th>PR-AUC MainMLP_FE</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td><strong>0: T-shirt/top</strong></td><td>0.9895</td><td>0.9898</td><td><strong>0.9900</strong></td><td>0.9183</td><td>0.9222</td><td><strong>0.9243</strong></td></tr>
+                    <tr><td><strong>1: Trouser</strong></td><td>0.9992</td><td>0.9995</td><td><strong>0.9995</strong></td><td>0.9951</td><td><strong>0.9969</strong></td><td>0.9968</td></tr>
+                    <tr><td><strong>2: Pullover</strong></td><td>0.9832</td><td>0.9848</td><td><strong>0.9854</strong></td><td>0.8809</td><td>0.8948</td><td><strong>0.9013</strong></td></tr>
+                    <tr><td><strong>3: Dress</strong></td><td>0.9937</td><td>0.9946</td><td><strong>0.9950</strong></td><td>0.9545</td><td>0.9610</td><td><strong>0.9633</strong></td></tr>
+                    <tr><td><strong>4: Coat</strong></td><td>0.9855</td><td>0.9872</td><td><strong>0.9876</strong></td><td>0.8900</td><td>0.9038</td><td><strong>0.9064</strong></td></tr>
+                    <tr><td><strong>5: Sandal</strong></td><td>0.9992</td><td>0.9994</td><td><strong>0.9996</strong></td><td>0.9936</td><td>0.9950</td><td><strong>0.9963</strong></td></tr>
+                    <tr><td><strong>6: Shirt</strong></td><td>0.9631</td><td>0.9678</td><td><strong>0.9684</strong></td><td>0.7928</td><td>0.8106</td><td><strong>0.8131</strong></td></tr>
+                    <tr><td><strong>7: Sneaker</strong></td><td>0.9986</td><td>0.9988</td><td><strong>0.9989</strong></td><td>0.9867</td><td>0.9888</td><td><strong>0.9901</strong></td></tr>
+                    <tr><td><strong>8: Bag</strong></td><td>0.9988</td><td><strong>0.9991</strong></td><td>0.9989</td><td>0.9940</td><td><strong>0.9954</strong></td><td>0.9952</td></tr>
+                    <tr><td><strong>9: Ankle boot</strong></td><td>0.9988</td><td>0.9985</td><td><strong>0.9985</strong></td><td>0.9925</td><td>0.9920</td><td><strong>0.9932</strong></td></tr>
+                    <tr style="background-color: #f0fdf4; font-weight: 700;">
+                        <td><strong>Macro Average</strong></td>
+                        <td>0.9910</td>
+                        <td>0.9919</td>
+                        <td><strong>0.9922</strong></td>
+                        <td>0.9398</td>
+                        <td>0.9460</td>
+                        <td><strong>0.9480</strong></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- 7.3 Prediction Grids (Balanced 3-Column Layout for 1:1 Square Images) -->
+        <div class="subsection-title">
+            <span>7.3. Lưới Ảnh Dự Đoán Thực Tế Trên 16 Mẫu Test (Prediction Grids)</span>
+            <span class="badge badge-info">16-SAMPLE COMPARATIVE GRIDS</span>
+        </div>
+
+        <p style="font-size: 0.92rem; color: var(--text-dark); margin-bottom: 1rem;">
+            Trực quan hóa kết quả dự đoán trên cùng 16 ảnh test ngẫu nhiên giữa 3 mô hình (Nhãn xanh: Dự đoán đúng &bull; Nhãn đỏ: Dự đoán nhầm):
+        </p>
+
+        <div class="grid-3col">
             <figure class="image-card">
                 <div class="image-card-img-wrap">
-                    <img src="../outputs/published/comparison/MainMLP_FE_ovr_curves.png" alt="Đường cong ROC và PR của MainMLP_FE" loading="lazy">
+                    <img src="../outputs/published/comparison/SmallMLP_prediction_grid.png" alt="Lưới dự đoán thực tế của SmallMLP" loading="lazy">
                     <div class="zoom-hint">Phóng to ảnh &nearr;</div>
                 </div>
                 <figcaption>
                     <div class="image-card-title-row">
-                        <span class="image-card-title">1. Đường Cong ROC & PR: MainMLP_FE</span>
-                        <span class="code-pill">Macro ROC-AUC: 0.985</span>
+                        <span class="image-card-title">1. Dự Đoán: SmallMLP</span>
+                        <span class="code-pill">Test Acc: 88.52%</span>
                     </div>
-                    <p class="image-card-takeaway">MainMLP_FE đạt Macro ROC-AUC xuất sắc 0.985 và Macro PR-AUC 0.918. Ở hầu hết các ngưỡng quyết định, đường cong PR duy trì Precision trên 85% tại mức Recall 0.8, chứng minh độ tin cậy cao của vector xác suất dự đoán.</p>
+                    <p class="image-card-takeaway">SmallMLP nhận diện đúng hầu hết các lớp cơ bản (Trouser, Sneaker, Bag). Nhầm lẫn xuất hiện ở các mẫu Shirt có hoa văn phức tạp.</p>
                     <div class="image-card-footer">
-                        <span>Macro ROC-AUC: 0.985</span>
-                        <span>Macro PR-AUC: 0.918</span>
+                        <span>SmallMLP (101k params)</span>
+                        <span>16 Test Samples</span>
                     </div>
                 </figcaption>
             </figure>
 
             <figure class="image-card">
                 <div class="image-card-img-wrap">
-                    <img src="../outputs/published/comparison/MainMLP_ovr_curves.png" alt="Đường cong ROC và PR của MainMLP" loading="lazy">
+                    <img src="../outputs/published/comparison/MainMLP_prediction_grid.png" alt="Lưới dự đoán thực tế của MainMLP" loading="lazy">
                     <div class="zoom-hint">Phóng to ảnh &nearr;</div>
                 </div>
                 <figcaption>
                     <div class="image-card-title-row">
-                        <span class="image-card-title">2. Đường Cong ROC & PR: MainMLP Baseline</span>
-                        <span class="code-pill">Macro ROC-AUC: 0.981</span>
+                        <span class="image-card-title">2. Dự Đoán: MainMLP</span>
+                        <span class="code-pill">Test Acc: 89.41%</span>
                     </div>
-                    <p class="image-card-takeaway">Mô hình MainMLP cơ sở đạt Macro ROC-AUC 0.981 và PR-AUC 0.912. Ở các lớp khó như Shirt và Pullover, độ suy giảm Precision xảy ra sớm hơn so với phiên bản có bổ sung Handcrafted Features.</p>
+                    <p class="image-card-takeaway">MainMLP cải thiện độ tự tin xác suất (confidence score) trên các lớp áo và giày, giảm thiểu nhầm lẫn giữa T-shirt và Pullover.</p>
                     <div class="image-card-footer">
-                        <span>Macro ROC-AUC: 0.981</span>
-                        <span>Baseline Evaluation</span>
+                        <span>MainMLP (235k params)</span>
+                        <span>16 Test Samples</span>
+                    </div>
+                </figcaption>
+            </figure>
+
+            <figure class="image-card">
+                <div class="image-card-img-wrap">
+                    <img src="../outputs/published/comparison/MainMLP_FE_prediction_grid.png" alt="Lưới dự đoán thực tế của MainMLP_FE" loading="lazy">
+                    <div class="zoom-hint">Phóng to ảnh &nearr;</div>
+                </div>
+                <figcaption>
+                    <div class="image-card-title-row">
+                        <span class="image-card-title">3. Dự Đoán: MainMLP_FE</span>
+                        <span class="code-pill">Test Acc: 89.60%</span>
+                    </div>
+                    <p class="image-card-takeaway">MainMLP_FE tận dụng đặc trưng hình học (tỷ lệ khung hình và độ đối xứng) để phân loại chuẩn xác các mẫu viền áo khó.</p>
+                    <div class="image-card-footer">
+                        <span>MainMLP_FE (237k params)</span>
+                        <span>16 Test Samples</span>
                     </div>
                 </figcaption>
             </figure>
         </div>
 
-        <!-- 7.3 Restored Checkpoint Inference -->
+        <!-- 7.4 Restored Checkpoint Inference -->
         <div class="subsection-title">
-            <span>7.3. Kiểm Chứng Trực Tiếp 16 Mẫu Test Từ Checkpoint best.pt Phục Hồi</span>
+            <span>7.4. Kiểm Chứng Trực Tiếp 16 Mẫu Test Từ Checkpoint best.pt Phục Hồi</span>
             <span class="badge badge-success">INFERENCE TEST</span>
         </div>
 
@@ -1754,7 +1924,7 @@ with torch.no_grad():
             </div>
             <figcaption>
                 <div class="image-card-title-row">
-                    <span class="image-card-title">Hình 6: Lưới Dự Đoán Thực Tế Từ Model Checkpoint best.pt Phục Hồi Độc Lập</span>
+                    <span class="image-card-title">Hình 8: Lưới Dự Đoán Thực Tế Từ Model Checkpoint best.pt Phục Hồi Độc Lập</span>
                     <span class="code-pill">Sample Confidence > 95%</span>
                 </div>
                 <p class="image-card-takeaway">Kiểm tra thực tế trên 16 ảnh test: 15/16 mẫu dự đoán chính xác tuyệt đối với độ tự tin vượt 95%. Nhãn dự đoán màu xanh lá thể hiện kết quả trùng khớp hoàn hảo với nhãn gốc (Ground Truth), chứng minh khả năng tổng quát hóa thực tế của mô hình.</p>
