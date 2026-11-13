@@ -1,6 +1,7 @@
 # Deep Learning Labs
 
-Repository containing source code, engineering workflows, and practical lab exercises for Deep Learning coursework.
+- **Tác giả:** Thái Anh Lạc
+- **Mô tả:** Repository chứa toàn bộ mã nguồn, quy trình kỹ thuật thực nghiệm và bài tập thực hành môn Học Sâu (Deep Learning).
 
 ---
 
@@ -22,7 +23,7 @@ Repository containing source code, engineering workflows, and practical lab exer
 
 ## Lab Directory
 
-- **Lab 01**: [FashionMNIST Classification with PyTorch](labs/lab01/README.md) — local experiments available; final PDF pending.
+- **Lab 01**: [FashionMNIST Classification with PyTorch](labs/lab01/README.md) — local experiments available; [Walkthrough](labs/lab01/reports/walkthrough_lab_01.md) & [HTML Report](labs/lab01/reports/walkthrough_lab_01.html).
 - **Lab 02**: [CIFAR-10 Transfer Learning](labs/lab02/README.md) — ResNet18 and DenseNet121, EDA/modeling notebooks, experiments and saved results.
 - **Lab 03**: [Hugging Face Sentiment Analysis & Fine-tuning](https://github.com/lacthui06/Lab-DL/tree/lab03/labs/lab03) — notebooks and experiment results on the `lab03` branch.
 - **Lab 04**: Upcoming
@@ -33,9 +34,11 @@ Repository containing source code, engineering workflows, and practical lab exer
 
 Each practical lab is organized into modular directories and a single living documentation file:
 
+- `reports/`: Living walkthrough, interactive HTML report with collapsible code blocks, and exported PDF deliverables.
 - `config/`: JSON or YAML configurations matching the actual pipeline; Lab01 uses `workflow.json` and `publication.json`, while Lab02 provides experiment profiles.
 - `data/`: Experimental datasets (ignored by git).
-- `notebooks/`: Jupyter Notebooks for interactive execution, analysis, and visualization.
+- `models/`: Production-ready deliverable checkpoints (`*.pt`), `manifest.json` (audit provenance), and quick-load guide.
+- `notebooks/`: Jupyter Notebooks for interactive execution, analysis, and visualization. All notebooks follow the mandatory Pipeline Execution Roadmap standard at the first cell.
 - `src/`: Modular, production-ready Python subpackages (`datasets/`, `models/`, `training/`, `utils/`).
 - `scripts/`: Actual command-line entry points; see each lab README for supported train, evaluation, inference and artifact commands.
 - `tests/`: Mandatory TDD test suites (`test_datasets.py`, `test_models.py`, `test_training.py`).
