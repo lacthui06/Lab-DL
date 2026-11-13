@@ -164,7 +164,7 @@ Bảng lấy từ preparation run đang dùng, không trộn bảng lịch sử 
 | Trùng lặp nội bộ tập Test | 0 mẫu trùng | 0 mẫu trùng | PASSED |
 | Rò rỉ trùng lặp Train vs Test | 0 mẫu trùng | 0 mẫu trùng | PASSED |
 
-![Ảnh mẫu đại diện mười lớp](outputs/published/preparation/eda/figures/sample_images.png)
+![Ảnh mẫu đại diện mười lớp](../outputs/published/preparation/eda/figures/sample_images.png)
 
 *Hình: Ảnh mẫu đại diện mười lớp. Nguồn: `outputs/published/preparation/eda/figures`.*
 
@@ -176,13 +176,13 @@ Không loại ảnh khó chỉ vì model dự đoán sai. Nếu dùng kết qu�
 
 ### 2.2. Phân bố lớp và ảnh trung bình
 
-![Phân bố train/validation](outputs/published/preparation/eda/figures/class_distribution.png)
+![Phân bố train/validation](../outputs/published/preparation/eda/figures/class_distribution.png)
 
 *Hình: Phân bố train/validation. Nguồn: `outputs/published/preparation/eda/figures`.*
 
 Số mẫu mỗi lớp được giữ cân bằng trong train/validation. Điều này giảm nguy cơ accuracy cao chủ yếu nhờ đoán lớp đông. Cân bằng số lượng không làm các lớp dễ như nhau: Shirt, Coat, Pullover vẫn gần nhau hơn nhiều so với Trouser và Sandal về cấu trúc hình dáng.
 
-![Ảnh trung bình theo lớp](outputs/published/preparation/eda/figures/class_mean_images.png)
+![Ảnh trung bình theo lớp](../outputs/published/preparation/eda/figures/class_mean_images.png)
 
 *Hình: Ảnh trung bình theo lớp. Nguồn: `outputs/published/preparation/eda/figures`.*
 
@@ -196,7 +196,7 @@ Quan sát gợi ý sử dụng bbox width/height, aspect ratio và centroid. Tuy
 
 ### 2.3. Phân bố pixel và chuẩn hóa cường độ
 
-![Phân bố cường độ pixel train](outputs/published/preparation/eda/figures/pixel_histogram.png)
+![Phân bố cường độ pixel train](../outputs/published/preparation/eda/figures/pixel_histogram.png)
 
 *Hình: Phân bố cường độ pixel train. Nguồn: `outputs/published/preparation/eda/figures`.*
 
@@ -229,19 +229,19 @@ Rescaling đưa [0,255] về [0,1] và tạo miền nhất quán cho ngưỡng c
 
 ### 2.4. Không gian pixel và tương đồng giữa lớp
 
-![Bản đồ mean pixel](outputs/published/preparation/eda/figures/mean_pixel_heatmap.png)
+![Bản đồ mean pixel](../outputs/published/preparation/eda/figures/mean_pixel_heatmap.png)
 
 *Hình: Bản đồ mean pixel. Nguồn: `outputs/published/preparation/eda/figures`.*
 
 Mean map trả lời vị trí nào thường chứa vùng sáng. Trung tâm cao hơn góc vì vật thể thường nằm giữa. Nó không phải attention map của model: đây là thống kê trước modeling, không có gradient hoặc phân tích quyết định mạng tham gia.
 
-![Bản đồ variance pixel](outputs/published/preparation/eda/figures/pixel_variance_heatmap.png)
+![Bản đồ variance pixel](../outputs/published/preparation/eda/figures/pixel_variance_heatmap.png)
 
 *Hình: Bản đồ variance pixel. Nguồn: `outputs/published/preparation/eda/figures`.*
 
 Variance map mô tả mức thay đổi giữa các ảnh tại từng vị trí. Biên và vùng có khác biệt dáng có thể có variance cao, nhưng nhiễu hoặc biến thiên trong cùng lớp cũng góp phần. Không đồng nhất pixel biến thiên mạnh với pixel chắc chắn quan trọng nhất cho phân loại.
 
-![Cosine similarity giữa ảnh trung bình](outputs/published/preparation/eda/figures/class_similarity_heatmap.png)
+![Cosine similarity giữa ảnh trung bình](../outputs/published/preparation/eda/figures/class_similarity_heatmap.png)
 
 *Hình: Cosine similarity giữa ảnh trung bình. Nguồn: `outputs/published/preparation/eda/figures`.*
 
@@ -308,25 +308,17 @@ test_z = scaler.transform(test_features)
 
 Đây là đoạn mô tả phương pháp. Implementation fit trong nhánh train rồi transform từng split ở vòng lặp. File feature_scaler.json giữ thứ tự tên cột, mean, scale, fit_split. Việc lưu thứ tự cũng quan trọng như giá trị scaler: tráo centroid_x và symmetry sẽ tạo input khác dù cả hai là số thực hợp lệ.
 
-![Phân bố mười feature theo lớp](outputs/published/preparation/feature_distributions.png)
-
-*Hình: Phân bố mười feature theo lớp. Nguồn: `outputs/published/preparation`.*
-
-Boxplot biểu diễn phân bố theo lớp. Vạch trong hộp là median; hộp là vùng phân vị 25%–75%; các outlier bị ẩn theo cấu hình vẽ, không có nghĩa dữ liệu không có giá trị xa. Các hộp chồng lấn cho thấy một cột riêng lẻ không tách hoàn toàn nhãn. Trouser có bbox width nhỏ; các lớp giày có aspect ratio cao hơn, phù hợp ảnh mẫu.
-
-Trong hình lịch sử, vị trí 1–10 tương ứng class 0–9. Dataset không có class 10. Mã tạo run mới đã gán tick đúng 0–9; ảnh cũ được giữ nguyên để tôn trọng bằng chứng nguồn. Thứ tự lớp, không phải số tick được tự suy đoán, là cơ sở đọc hình.
-
 <div style="break-before: page; page-break-before: always;"></div>
 
 ### 2.8. Hình học, tương quan và đóng gói dữ liệu
 
-![Bounding box và centroid](outputs/published/preparation/feature_geometry.png)
+![Bounding box và centroid](../outputs/published/preparation/feature_geometry.png)
 
 *Hình: Bounding box và centroid. Nguồn: `outputs/published/preparation`.*
 
 Khung đỏ bao foreground; chấm cam là centroid cường độ. Ví dụ Trouser cao/hẹp, Sandal và Sneaker thấp/ngang. Hình kiểm tra công thức và tọa độ, chưa phải bằng chứng định lượng về khả năng phân loại toàn bộ dataset. Bbox gần full width không chứng minh ảnh chứa vật thể ngoài khung; cần đọc pixel/ngưỡng cụ thể.
 
-![Correlation của feature train](outputs/published/preparation/feature_correlations.png)
+![Correlation của feature train](../outputs/published/preparation/feature_correlations.png)
 
 *Hình: Correlation của feature train. Nguồn: `outputs/published/preparation`.*
 
@@ -455,13 +447,13 @@ Mỗi model có một hình hai panel, mỗi panel mười đường. Thiết k�
 
 SmallMLP đạt 88,52% với 101.770 tham số. MainMLP đạt 89,41%, tăng 0,89 điểm phần trăm, thêm 133.376 tham số. MainMLP_FE đạt 89,60%, tăng thêm 0,19 điểm phần trăm, tương ứng 19 dự đoán đúng ròng trên 10.000 test. Đúng ròng không có nghĩa chỉ có 19 ảnh đổi kết quả giữa hai model.
 
-![So sánh test accuracy và Macro F1](outputs/published/comparison/test_scores.png)
+![So sánh test accuracy và Macro F1](../outputs/published/comparison/test_scores.png)
 
 *Hình: So sánh test accuracy và Macro F1. Nguồn: `outputs/published/comparison`.*
 
 Loss giảm từ 0,32135 xuống 0,30788 khi tăng model, rồi xuống 0,30021 khi thêm feature; macro F1 cũng tăng. Nhiều metric cùng chiều làm kết luận mô tả nhất quán hơn việc chỉ chọn một chỉ số có lợi, nhưng không thay thế kiểm định hoặc nhiều seed.
 
-![Số tham số và thời gian ghi trong run](outputs/published/comparison/cost.png)
+![Số tham số và thời gian ghi trong run](../outputs/published/comparison/cost.png)
 
 *Hình: Số tham số và thời gian ghi trong run. Nguồn: `outputs/published/comparison`.*
 
@@ -473,7 +465,7 @@ SmallMLP là mốc tiết kiệm tham số; MainMLP tăng hiệu năng; FE có m
 
 ### 3.2. Đường học và lựa chọn epoch
 
-![Validation curves của ba cấu hình](outputs/published/comparison/validation_comparison.png)
+![Validation curves của ba cấu hình](../outputs/published/comparison/validation_comparison.png)
 
 *Hình: Validation curves của ba cấu hình. Nguồn: `outputs/published/comparison`.*
 
@@ -522,7 +514,7 @@ Không đánh giá test ở mọi epoch rồi chọn epoch có test tốt nhất
 
 ### 3.3. Metric theo lớp và confusion matrix
 
-![Confusion matrix ba model: counts và màu tỷ lệ](outputs/published/comparison/confusion_comparison.png)
+![Confusion matrix ba model: counts và màu tỷ lệ](../outputs/published/comparison/confusion_comparison.png)
 
 *Hình: Confusion matrix ba model: counts và màu tỷ lệ. Nguồn: `outputs/published/comparison`.*
 
@@ -587,15 +579,15 @@ Các nhận xét là mô tả hiệu năng theo lớp, không quy chắc chắn 
 
 ### 3.4. ROC và Precision–Recall của ba model
 
-![SmallMLP — ROC và PR OvR](outputs/published/comparison/SmallMLP_ovr_curves.png)
+![SmallMLP — ROC và PR OvR](../outputs/published/comparison/SmallMLP_ovr_curves.png)
 
 *Hình: SmallMLP — ROC và PR OvR. Nguồn: `outputs/published/comparison`.*
 
-![MainMLP — ROC và PR OvR](outputs/published/comparison/MainMLP_ovr_curves.png)
+![MainMLP — ROC và PR OvR](../outputs/published/comparison/MainMLP_ovr_curves.png)
 
 *Hình: MainMLP — ROC và PR OvR. Nguồn: `outputs/published/comparison`.*
 
-![MainMLP_FE — ROC và PR OvR](outputs/published/comparison/MainMLP_FE_ovr_curves.png)
+![MainMLP_FE — ROC và PR OvR](../outputs/published/comparison/MainMLP_FE_ovr_curves.png)
 
 *Hình: MainMLP_FE — ROC và PR OvR. Nguồn: `outputs/published/comparison`.*
 
@@ -650,7 +642,7 @@ PR hữu ích vì OvR có 10% dương, 90% âm. Tập âm lớn khiến một FP
 
 ### 3.5. Optimizer trong điều kiện cùng learning rate
 
-![Validation của optimizer cùng LR](outputs/published/fixed/fixed_lr_curves.png)
+![Validation của optimizer cùng LR](../outputs/published/fixed/fixed_lr_curves.png)
 
 *Hình: Validation của optimizer cùng LR. Nguồn: `outputs/published/fixed`.*
 
@@ -672,7 +664,7 @@ Cùng LR là điều kiện kiểm soát đơn giản và có giá trị sư ph�
 
 ### 3.6. Search, pruning và best trial
 
-![Tiến trình search và LR–score](outputs/published/tuning/tuning_progress.png)
+![Tiến trình search và LR–score](../outputs/published/tuning/tuning_progress.png)
 
 *Hình: Tiến trình search và LR–score. Nguồn: `outputs/published/tuning`.*
 
@@ -698,7 +690,7 @@ Adam được refit vì cao nhất trong ba best trial. Tuy vậy, Adam fixed đ
 
 ### 3.7. Loss/accuracy với best parameters của đủ ba optimizer
 
-![Train/validation loss và accuracy của best trial từng optimizer](outputs/published/best_optimizer_curves/best_optimizer_learning_curves.png)
+![Train/validation loss và accuracy của best trial từng optimizer](../outputs/published/best_optimizer_curves/best_optimizer_learning_curves.png)
 
 *Hình: Train/validation loss và accuracy của best trial từng optimizer. Nguồn: `outputs/published/best_optimizer_curves`.*
 
@@ -716,7 +708,7 @@ best_parameters.csv và best_optimizer_history.csv giữ optimizer, trial number
 
 Refit dùng Adam LR 0,0015930522616241021, weight_decay 0,0003470266988650413, seed 42, batch 128, 10 epoch. Validation best 90,85% tại epoch 10. Candidate search không được đánh giá test; refit được test sau lựa chọn bằng validation.
 
-![Đường học của refit Adam](outputs/published/final/learning_curves.png)
+![Đường học của refit Adam](../outputs/published/final/learning_curves.png)
 
 *Hình: Đường học của refit Adam. Nguồn: `outputs/published/final`.*
 
@@ -726,7 +718,7 @@ Save/load giữ state_dict và kiến trúc, tạo instance FashionMLP mới, n�
 | --- | --- | --- | --- | --- | --- |
 | 10000 | 89.140000 | 0.891219 | 0.303679 | 16 | 0.000000 |
 
-![Mẫu test của model được load lại](outputs/published/loaded_model_test/loaded_model_test_samples.png)
+![Mẫu test của model được load lại](../outputs/published/loaded_model_test/loaded_model_test_samples.png)
 
 *Hình: Mẫu test của model được load lại. Nguồn: `outputs/published/loaded_model_test`.*
 
@@ -766,27 +758,27 @@ SmallMLP phù hợp minh họa mạng gọn; MainMLP là mốc năng lực cao h
 
 **Danh mục bằng chứng thực nghiệm**
 
-- **preparation:** [thư mục artifact](outputs/published/preparation) — `outputs/published/preparation`.
+- **preparation:** [thư mục artifact](../outputs/published/preparation) — `outputs/published/preparation`.
 
-- **comparison:** [thư mục artifact](outputs/published/comparison) — `outputs/published/comparison`.
+- **comparison:** [thư mục artifact](../outputs/published/comparison) — `outputs/published/comparison`.
 
-- **fixed:** [thư mục artifact](outputs/published/fixed) — `outputs/published/fixed`.
+- **fixed:** [thư mục artifact](../outputs/published/fixed) — `outputs/published/fixed`.
 
-- **tuning:** [thư mục artifact](outputs/published/tuning) — `outputs/published/tuning`.
+- **tuning:** [thư mục artifact](../outputs/published/tuning) — `outputs/published/tuning`.
 
-- **final:** [thư mục artifact](outputs/published/final) — `outputs/published/final`.
+- **final:** [thư mục artifact](../outputs/published/final) — `outputs/published/final`.
 
-- **optimizer_results:** [thư mục artifact](outputs/published/optimizer_results) — `outputs/published/optimizer_results`.
+- **optimizer_results:** [thư mục artifact](../outputs/published/optimizer_results) — `outputs/published/optimizer_results`.
 
-- **SmallMLP:** [metric JSON](outputs/published/models/SmallMLP/metrics.json); [history CSV](outputs/published/models/SmallMLP/history.csv).
+- **SmallMLP:** [metric JSON](../outputs/published/models/SmallMLP/metrics.json); [history CSV](../outputs/published/models/SmallMLP/history.csv).
 
-- **MainMLP:** [metric JSON](outputs/published/models/MainMLP/metrics.json); [history CSV](outputs/published/models/MainMLP/history.csv).
+- **MainMLP:** [metric JSON](../outputs/published/models/MainMLP/metrics.json); [history CSV](../outputs/published/models/MainMLP/history.csv).
 
-- **MainMLP_FE:** [metric JSON](outputs/published/models/MainMLP_FE/metrics.json); [history CSV](outputs/published/models/MainMLP_FE/history.csv).
+- **MainMLP_FE:** [metric JSON](../outputs/published/models/MainMLP_FE/metrics.json); [history CSV](../outputs/published/models/MainMLP_FE/history.csv).
 
-- **Best optimizer curves:** [history của đủ ba optimizer](outputs/published/best_optimizer_curves/best_optimizer_history.csv).
+- **Best optimizer curves:** [history của đủ ba optimizer](../outputs/published/best_optimizer_curves/best_optimizer_history.csv).
 
-- **Full-test sau load:** [metric](outputs/published/loaded_model_test/test_metrics.json); [index/nhãn/xác suất mẫu](outputs/published/loaded_model_test/loaded_model_test_samples.csv).
+- **Full-test sau load:** [metric](../outputs/published/loaded_model_test/test_metrics.json); [index/nhãn/xác suất mẫu](../outputs/published/loaded_model_test/loaded_model_test_samples.csv).
 
 ### 3.10. Kiến trúc hiển thị và tài nguyên mỗi mẫu training
 
@@ -794,13 +786,13 @@ Kiến trúc từng model được in trực tiếp trong notebook trước khi 
 
 Phép đo bổ sung ngày 02/11/2026 dùng checkpoint của ba model, batch train cố định 128 mẫu, CPU, 2 thread, 3 warmup và 10 batch timed. Chỉ vài bước training trên checkpoint bản sao trong process riêng, không huấn luyện lại toàn bộ và không đánh giá thêm test. Đo forward, CrossEntropyLoss, backward, optimizer.step với batch đã ở thiết bị; thời gian chia batch size là mức chuẩn hóa theo batch, không phải single-image latency. Không gồm loading/transfer, FE, validation và ghi artifact.
 
-Kết quả nằm trong [CSV hiệu năng training](outputs/published/training_performance/training_performance.csv), kèm [times thô SmallMLP](outputs/published/training_performance/measurement_0.json), [MainMLP](outputs/published/training_performance/measurement_1.json) và [MainMLP_FE](outputs/published/training_performance/measurement_2.json). Mỗi phép đo lưu cấu hình và môi trường riêng, không gán số liệu này ngược vào run cũ.
+Kết quả nằm trong [CSV hiệu năng training](../outputs/published/training_performance/training_performance.csv), kèm [times thô SmallMLP](../outputs/published/training_performance/measurement_0.json), [MainMLP](../outputs/published/training_performance/measurement_1.json) và [MainMLP_FE](../outputs/published/training_performance/measurement_2.json). Mỗi phép đo lưu cấu hình và môi trường riêng, không gán số liệu này ngược vào run cũ.
 
 RAM/sample là sampled peak RSS cả process chia batch size; có cả giá trị baseline và phần tăng so baseline. Nó chứa interpreter, thư viện, model và vùng nhớ dùng chung, có thể bỏ lỡ đỉnh ngắn hơn chu kỳ lấy mẫu; không phải số byte độc lập của từng ảnh. VRAM/sample dùng peak tensor allocated của PyTorch, không phải reserved cache/tổng bộ nhớ card; phép đo CPU hiện tại không có số VRAM. Lượt đo bộ nhớ riêng gồm bước training đầu tiên để tính cấp phát optimizer state; timing đo sau warmup không bật sampler. Không so sánh RSS giữa các process như bằng chứng chính xác về riêng dung lượng kiến trúc hoặc kết luận thứ hạng tốc độ phổ quát từ một lượt đo ngắn.
 
 ### 3.11. Đo training với đúng một mẫu
 
-Đo lại độc lập với batch size 1 thay vì suy từ batch 128. [CSV batch 1](outputs/published/training_performance_single_sample/training_performance.csv) và [biểu đồ tài nguyên](outputs/published/training_performance_single_sample/training_resources.png) được nhúng trực tiếp trong notebook ngay sau MainMLP_FE, trước phần ROC/PR. Cùng CPU, 2 thread, 3 warmup và 10 timed steps, cùng mẫu train đã chuẩn bị; mỗi model ở process riêng trên checkpoint bản sao. Không chạy lại full training, không thay benchmark batch 128.
+Đo lại độc lập với batch size 1 thay vì suy từ batch 128. [CSV batch 1](../outputs/published/training_performance_single_sample/training_performance.csv) và [biểu đồ tài nguyên](../outputs/published/training_performance_single_sample/training_resources.png) được nhúng trực tiếp trong notebook ngay sau MainMLP_FE, trước phần ROC/PR. Cùng CPU, 2 thread, 3 warmup và 10 timed steps, cùng mẫu train đã chuẩn bị; mỗi model ở process riêng trên checkpoint bản sao. Không chạy lại full training, không thay benchmark batch 128.
 
 RAM process gồm Python/runtime khi batch size bằng 1; bảng và biểu đồ phân biệt peak RSS với phần tăng so baseline. RSS là sampled, không phải peak chính xác; CPU không có số VRAM. RESOURCE_MODE điều khiển benchmark riêng với MODE training của các cell model. Bảng HTML và hình PNG được nhúng trực tiếp, kể cả khi kernel dùng backend Agg.
 
