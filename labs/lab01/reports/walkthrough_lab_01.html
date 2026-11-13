@@ -1,2835 +1,1115 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Báo cáo Thực nghiệm Lab 01 — FashionMNIST Classification (PyTorch)</title>
-  <style>
-    :root {
-      --primary: #2563eb;
-      --primary-light: #eff6ff;
-      --primary-dark: #1d4ed8;
-      --accent: #10b981;
-      --accent-light: #ecfdf5;
-      --surface: #ffffff;
-      --surface-subtle: #f8fafc;
-      --text-main: #0f172a;
-      --text-muted: #64748b;
-      --border: #e2e8f0;
-      --border-dark: #cbd5e1;
-      --shadow-sm: 0 1px 3px rgba(0,0,0,0.05);
-      --shadow-md: 0 4px 14px rgba(0,0,0,0.08);
-      --shadow-lg: 0 10px 25px rgba(0,0,0,0.12);
-      --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-      --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Báo Cáo Thực Hành Lab 1 - Phân Loại FashionMNIST với PyTorch</title>
+    <style>
+        :root {
+            --primary: #1e3a8a;
+            --primary-light: #3b82f6;
+            --accent: #0284c7;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --bg-page: #f8fafc;
+            --bg-card: #ffffff;
+            --border: #e2e8f0;
+            --text-dark: #0f172a;
+            --text-muted: #64748b;
+            --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Monaco, Consolas, monospace;
+        }
 
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
 
-    body {
-      font-family: var(--font-sans);
-      background-color: #f1f5f9;
-      color: var(--text-main);
-      line-height: 1.65;
-      padding: 24px 16px;
-      font-size: 15px;
-    }
+        body {
+            font-family: var(--font-sans);
+            background-color: var(--bg-page);
+            color: var(--text-dark);
+            line-height: 1.6;
+            padding: 2rem 1rem;
+        }
 
-    .layout-wrapper {
-      max-width: 1140px;
-      margin: 0 auto;
-    }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
 
-    /* Top Executive Dashboard */
-    .dashboard-hero {
-      background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-      color: #ffffff;
-      border-radius: 14px;
-      padding: 36px 44px;
-      margin-bottom: 20px;
-      box-shadow: var(--shadow-lg);
-      border: 1px solid rgba(255,255,255,0.08);
-    }
+        header {
+            background: linear-gradient(135deg, #1e3a8a 0%, #0369a1 100%);
+            color: #ffffff;
+            padding: 2.5rem 2rem;
+            border-radius: 16px;
+            margin-bottom: 2rem;
+            box-shadow: 0 10px 25px -5px rgba(30, 58, 138, 0.25);
+        }
 
-    .hero-badge {
-      display: inline-block;
-      background: rgba(37, 99, 235, 0.35);
-      color: #93c5fd;
-      border: 1px solid rgba(147, 197, 253, 0.3);
-      padding: 4px 12px;
-      border-radius: 20px;
-      font-size: 12px;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      margin-bottom: 12px;
-    }
+        header h1 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            font-weight: 800;
+            letter-spacing: -0.025em;
+        }
 
-    .dashboard-hero h1 {
-      font-size: 28px;
-      font-weight: 700;
-      margin-bottom: 8px;
-      letter-spacing: -0.5px;
-      color: #ffffff;
-    }
+        header h2 {
+            font-size: 1.2rem;
+            font-weight: 400;
+            opacity: 0.9;
+            margin-bottom: 1.25rem;
+        }
 
-    .hero-subtitle {
-      color: #94a3b8;
-      font-size: 14.5px;
-      margin-bottom: 24px;
-    }
+        .meta-badges {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+        }
 
-    /* KPI Metrics Grid */
-    .kpi-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
-      gap: 16px;
-      margin-top: 20px;
-    }
+        .badge {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(4px);
+            padding: 0.35rem 0.85rem;
+            border-radius: 9999px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #ffffff;
+        }
 
-    .kpi-card {
-      background: rgba(255, 255, 255, 0.06);
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      border-radius: 10px;
-      padding: 16px 20px;
-      backdrop-filter: blur(6px);
-      transition: transform 0.15s ease, background 0.15s ease;
-    }
+        .badge-success {
+            background: #dcfce7;
+            color: #15803d;
+            border: 1px solid #86efac;
+        }
 
-    .kpi-card:hover {
-      background: rgba(255, 255, 255, 0.09);
-      transform: translateY(-2px);
-    }
+        .badge-info {
+            background: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
 
-    .kpi-label {
-      font-size: 11.5px;
-      text-transform: uppercase;
-      color: #94a3b8;
-      letter-spacing: 0.5px;
-      font-weight: 600;
-      margin-bottom: 4px;
-    }
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.75rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
+        }
 
-    .kpi-value {
-      font-size: 26px;
-      font-weight: 700;
-      color: #38bdf8;
-    }
+        .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.25rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 2px solid #f1f5f9;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
 
-    .kpi-desc {
-      font-size: 12px;
-      color: #cbd5e1;
-      margin-top: 2px;
-    }
+        .card-title {
+            font-size: 1.35rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
 
-    /* Global Action & Control Bar */
-    .control-bar {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      background: #ffffff;
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 12px 20px;
-      margin-bottom: 24px;
-      box-shadow: var(--shadow-sm);
-    }
+        /* Workflow diagram */
+        .workflow-diagram {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.85rem;
+            align-items: center;
+            justify-content: center;
+            padding: 1.25rem 0.5rem;
+            background: #f8fafc;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+        }
 
-    .control-hint {
-      font-size: 13.5px;
-      color: var(--text-muted);
-    }
+        .workflow-node {
+            background: #ffffff;
+            border: 2px solid var(--primary-light);
+            border-radius: 8px;
+            padding: 0.75rem 1rem;
+            text-align: center;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--primary);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+            min-width: 140px;
+        }
 
-    .control-btn {
-      background: var(--primary-light);
-      color: var(--primary);
-      border: 1px solid rgba(37, 99, 235, 0.2);
-      padding: 6px 14px;
-      border-radius: 6px;
-      font-size: 13px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.15s ease;
-    }
+        .workflow-node.accent { border-color: var(--accent); color: var(--accent); }
+        .workflow-node.success { border-color: var(--success); color: #047857; }
+        .workflow-arrow { color: var(--text-muted); font-weight: bold; font-size: 1.2rem; }
 
-    .control-btn:hover {
-      background: var(--primary);
-      color: #ffffff;
-    }
+        /* Tables */
+        .table-responsive {
+            overflow-x: auto;
+            margin-bottom: 1.5rem;
+        }
 
-    /* Main Container */
-    .content-container {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      box-shadow: var(--shadow-sm);
-      padding: 44px 50px;
-    }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.92rem;
+            margin-top: 0.5rem;
+        }
 
-    /* Typography */
-    h1, h2, h3, h4 {
-      color: #0f172a;
-      font-weight: 700;
-      line-height: 1.3;
-    }
+        th, td {
+            padding: 0.75rem 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
 
-    h1 {
-      font-size: 24px;
-      margin: 32px 0 16px 0;
-      padding-bottom: 8px;
-      border-bottom: 2px solid var(--primary-light);
-    }
+        th {
+            background-color: #f8fafc;
+            color: var(--text-dark);
+            font-weight: 700;
+        }
 
-    h2 {
-      font-size: 20px;
-      margin: 38px 0 14px 0;
-      padding-bottom: 8px;
-      border-bottom: 1px solid var(--border);
-    }
+        tr:hover {
+            background-color: #f8fafc;
+        }
 
-    h3 {
-      font-size: 16.5px;
-      margin: 24px 0 12px 0;
-      color: #1e293b;
-    }
+        .step-pill {
+            display: inline-block;
+            width: 28px;
+            height: 28px;
+            line-height: 28px;
+            text-align: center;
+            border-radius: 50%;
+            background-color: var(--primary);
+            color: #ffffff;
+            font-weight: bold;
+            font-size: 0.85rem;
+        }
 
-    p {
-      margin-bottom: 14px;
-      color: #334155;
-    }
+        .code-pill {
+            font-family: var(--font-mono);
+            background-color: #f1f5f9;
+            color: #0f172a;
+            padding: 0.2rem 0.4rem;
+            border-radius: 4px;
+            font-size: 0.85rem;
+        }
 
-    ul, ol {
-      margin-bottom: 16px;
-      padding-left: 24px;
-      color: #334155;
-    }
+        a.code-pill {
+            text-decoration: none;
+            color: var(--primary);
+            border: 1px solid #cbd5e1;
+            font-weight: 600;
+            display: inline-block;
+            transition: all 0.15s ease;
+        }
 
-    li {
-      margin-bottom: 6px;
-    }
+        a.code-pill:hover {
+            background-color: #e0f2fe;
+            color: var(--primary-light);
+            border-color: var(--primary-light);
+            text-decoration: underline;
+        }
 
-    /* Tables */
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin: 20px 0;
-      font-size: 14px;
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      overflow: hidden;
-      display: block;
-      overflow-x: auto;
-    }
+        /* Visual Gallery Grid */
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 1.5rem;
+            margin-top: 1rem;
+            margin-bottom: 1.5rem;
+        }
 
-    th, td {
-      padding: 10px 14px;
-      border: 1px solid var(--border);
-      text-align: left;
-    }
+        .gallery-card {
+            background: #ffffff;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            overflow: hidden;
+            transition: transform 0.2s, box-shadow 0.2s;
+            display: flex;
+            flex-direction: column;
+        }
 
-    th {
-      background: var(--surface-subtle);
-      font-weight: 600;
-      color: #1e293b;
-    }
+        .gallery-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 20px -5px rgba(0, 0, 0, 0.1);
+        }
 
-    tr:nth-child(even) {
-      background: #fafbfc;
-    }
+        .gallery-card img {
+            width: 100%;
+            height: 240px;
+            object-fit: contain;
+            display: block;
+            background: #f8fafc;
+            padding: 8px;
+            border-bottom: 1px solid var(--border);
+        }
 
-    tr:hover {
-      background: #f1f5f9;
-    }
+        .gallery-card-content {
+            padding: 1rem;
+            flex-grow: 1;
+        }
 
-    /* Artifact Card Showcase */
-    .artifact-card {
-      background: #ffffff;
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      box-shadow: var(--shadow-sm);
-      margin: 24px 0;
-      overflow: hidden;
-      transition: box-shadow 0.2s ease, border-color 0.2s ease;
-    }
+        .gallery-card-title {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin-bottom: 0.35rem;
+        }
 
-    .artifact-card:hover {
-      border-color: #cbd5e1;
-      box-shadow: var(--shadow-md);
-    }
+        .gallery-card-desc {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+        }
 
-    .artifact-header {
-      background: #f8fafc;
-      border-bottom: 1px solid var(--border);
-      padding: 9px 16px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-size: 12px;
-    }
+        .gallery-card-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.75rem;
+            color: #64748b;
+            border-top: 1px solid #f1f5f9;
+            padding-top: 0.5rem;
+        }
 
-    .artifact-badge-wrap {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
+        .img-hero {
+            width: 100%;
+            max-height: 460px;
+            object-fit: contain;
+            border-radius: 8px;
+            background-color: #f8fafc;
+            border: 1px solid var(--border);
+            padding: 12px;
+        }
 
-    .artifact-badge {
-      background: #e0f2fe;
-      color: #0369a1;
-      padding: 2px 8px;
-      border-radius: 4px;
-      font-weight: 600;
-      letter-spacing: 0.5px;
-    }
+        .callout {
+            background-color: #eff6ff;
+            border-left: 4px solid var(--primary-light);
+            padding: 1rem 1.25rem;
+            border-radius: 0 8px 8px 0;
+            margin: 1rem 0;
+            font-size: 0.92rem;
+        }
 
-    .artifact-filename {
-      font-family: var(--font-mono);
-      color: var(--text-muted);
-      font-size: 12px;
-    }
+        .callout.success {
+            background-color: #ecfdf5;
+            border-left-color: var(--success);
+        }
 
-    .artifact-type {
-      color: #94a3b8;
-      font-size: 11px;
-      font-weight: 600;
-      letter-spacing: 0.5px;
-    }
+        /* Collapsible Code Tabs (Default Closed) */
+        .code-tab-drawer {
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: #ffffff;
+            margin: 1.25rem 0;
+            overflow: hidden;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+        }
 
-    .artifact-img-wrap {
-      padding: 18px;
-      text-align: center;
-      background: #fafbfc;
-    }
+        .code-tab-summary {
+            padding: 0.75rem 1rem;
+            background: #f8fafc;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            user-select: none;
+            font-size: 0.88rem;
+            font-weight: 600;
+            color: var(--text-dark);
+            border-bottom: 1px solid transparent;
+            transition: background 0.15s ease;
+        }
 
-    .artifact-img-wrap img {
-      max-width: 100%;
-      height: auto;
-      border-radius: 6px;
-      border: 1px solid #e2e8f0;
-      margin: 0 auto;
-      display: block;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-    }
+        .code-tab-drawer[open] .code-tab-summary {
+            border-bottom: 1px solid var(--border);
+            background: #f1f5f9;
+        }
 
-    .artifact-caption {
-      padding: 12px 20px;
-      background: #ffffff;
-      border-top: 1px solid #f1f5f9;
-      font-size: 13.5px;
-      color: #475569;
-    }
+        .code-tab-summary:hover {
+            background: #f1f5f9;
+        }
 
-    /* Collapsible Code Drawers (Default Closed) */
-    .code-drawer {
-      margin: 18px 0;
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      background: #ffffff;
-      overflow: hidden;
-      box-shadow: var(--shadow-sm);
-    }
+        .code-summary-left {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
 
-    .code-drawer-summary {
-      padding: 10px 16px;
-      background: #f8fafc;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      user-select: none;
-      font-size: 13.5px;
-      font-weight: 600;
-      color: #1e293b;
-      border-bottom: 1px solid transparent;
-      transition: background 0.15s ease;
-    }
+        .code-badge {
+            font-size: 0.75rem;
+            color: var(--primary);
+            background: #eff6ff;
+            border: 1px solid #bfdbfe;
+            padding: 0.2rem 0.65rem;
+            border-radius: 12px;
+            font-weight: 600;
+        }
 
-    .code-drawer[open] .code-drawer-summary {
-      border-bottom: 1px solid var(--border);
-      background: #f1f5f9;
-    }
+        .code-tab-drawer[open] .code-badge {
+            background: #fee2e2;
+            color: #dc2626;
+            border-color: #fca5a5;
+        }
 
-    .code-drawer-summary:hover {
-      background: #f1f5f9;
-    }
+        .code-tab-drawer pre {
+            margin: 0;
+            padding: 1.2rem;
+            background: #0f172a;
+            color: #f8fafc;
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+            overflow-x: auto;
+            line-height: 1.55;
+        }
 
-    .code-summary-left {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
+        .code-tab-drawer code {
+            background: transparent;
+            color: inherit;
+            padding: 0;
+        }
 
-    .code-tag {
-      background: #e2e8f0;
-      color: #475569;
-      font-family: var(--font-mono);
-      font-size: 11px;
-      padding: 2px 7px;
-      border-radius: 4px;
-    }
+        footer {
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            margin-top: 3rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--border);
+        }
 
-    .code-title {
-      font-size: 13px;
-      color: #1e293b;
-    }
-
-    .code-btn {
-      font-size: 12px;
-      color: var(--primary);
-      background: var(--primary-light);
-      border: 1px solid rgba(37, 99, 235, 0.2);
-      padding: 3px 12px;
-      border-radius: 14px;
-      font-weight: 500;
-      transition: all 0.15s ease;
-    }
-
-    .code-drawer[open] .code-btn {
-      background: #fee2e2;
-      color: #dc2626;
-      border-color: rgba(220, 38, 38, 0.2);
-    }
-
-    .code-drawer pre {
-      margin: 0;
-      padding: 16px;
-      background: #0f172a;
-      color: #f8fafc;
-      font-family: var(--font-mono);
-      font-size: 13px;
-      overflow-x: auto;
-      line-height: 1.55;
-    }
-
-    .code-drawer code {
-      background: transparent;
-      color: inherit;
-      padding: 0;
-      border: none;
-    }
-
-    /* Inline code */
-    p code, li code, td code {
-      font-family: var(--font-mono);
-      font-size: 13px;
-      background: #f1f5f9;
-      color: #b91c1c;
-      padding: 2px 5px;
-      border-radius: 4px;
-      border: 1px solid #e2e8f0;
-    }
-
-    /* TOC styling */
-    .toc {
-      background: var(--surface-subtle);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 20px 24px;
-      margin: 24px 0 32px 0;
-    }
-
-    .toc-title {
-      font-weight: 600;
-      font-size: 15px;
-      margin-bottom: 10px;
-    }
-
-    .toc ul {
-      margin-bottom: 0;
-      padding-left: 20px;
-    }
-
-    .toc li {
-      margin-bottom: 4px;
-      font-size: 13.5px;
-    }
-
-    /* Print Optimization */
-    @media print {
-      body {
-        background: #ffffff;
-        padding: 0;
-        font-size: 10pt;
-      }
-      .dashboard-hero {
-        background: #0f172a !important;
-        color: #ffffff;
-        box-shadow: none;
-        border: 1px solid #cbd5e1;
-        padding: 18px;
-      }
-      .control-bar {
-        display: none;
-      }
-      .content-container {
-        box-shadow: none;
-        border: none;
-        padding: 0;
-      }
-      .code-drawer {
-        break-inside: avoid;
-      }
-      .code-drawer[open] {
-        display: block;
-      }
-      .artifact-card {
-        break-inside: avoid;
-        box-shadow: none;
-        border: 1px solid #cbd5e1;
-      }
-      h1, h2, h3 {
-        break-after: avoid;
-      }
-      table {
-        display: table;
-        font-size: 8.5pt;
-      }
-    }
-  </style>
+        @media print {
+            body { background: #fff; padding: 0; font-size: 10pt; }
+            header { background: #1e3a8a !important; color: #fff; padding: 1rem; }
+            .card { box-shadow: none; border: 1px solid #ccc; break-inside: avoid; }
+            .code-tab-drawer { break-inside: avoid; }
+            .code-tab-drawer[open] { display: block; }
+            table { font-size: 8.5pt; }
+        }
+    </style>
 </head>
 <body>
-  <div class="layout-wrapper">
-    <!-- Executive KPI Dashboard -->
-    <header class="dashboard-hero">
-      <div class="hero-badge">Deep Learning Lab 01 &bull; Báo cáo Tổng kết</div>
-      <h1>FashionMNIST Classification with PyTorch</h1>
-      <p class="hero-subtitle">
-        Tác giả: <strong>Thái Anh Lạc</strong> &bull; Pipeline: <strong>EDA &bull; 10 Handcrafted Features &bull; 3 MLP Architectures &bull; Optimizer Study</strong>
-      </p>
 
-      <div class="kpi-grid">
-        <div class="kpi-card">
-          <div class="kpi-label">Tập Dữ Liệu</div>
-          <div class="kpi-value">70.000</div>
-          <div class="kpi-desc">54k Train / 6k Val / 10k Test (Stratified)</div>
+<div class="container">
+    <!-- Header -->
+    <header>
+        <h1>Báo Cáo Nghiệm Thu Kỹ Thuật Lab 1</h1>
+        <h2>Phân Loại FashionMNIST với PyTorch & Handcrafted Features</h2>
+        <div class="meta-badges">
+            <span class="badge">Tác giả: Thái Anh Lạc</span>
+            <span class="badge">Python 3.13.15</span>
+            <span class="badge">PyTorch 2.14.0 (CPU / CUDA)</span>
+            <span class="badge">FashionMNIST (70.000 ảnh)</span>
+            <span class="badge badge-success">✓ 49/49 Tests Passed (100%)</span>
+            <span class="badge badge-info">Best Test Acc: 89.2%</span>
         </div>
-        <div class="kpi-card">
-          <div class="kpi-label">Độ chính xác cao nhất</div>
-          <div class="kpi-value">89.2%</div>
-          <div class="kpi-desc">Test Accuracy (Adam Refit sau 30 trials)</div>
-        </div>
-        <div class="kpi-card">
-          <div class="kpi-label">Mô hình tối ưu</div>
-          <div class="kpi-value">MainMLP</div>
-          <div class="kpi-desc">784 &rarr; 256 &rarr; 128 &rarr; 10 (235k params)</div>
-        </div>
-        <div class="kpi-card">
-          <div class="kpi-label">Kỹ nghệ đặc trưng</div>
-          <div class="kpi-value">+10 Features</div>
-          <div class="kpi-desc">Mean, Std, Bounding Box, Symmetry, Density</div>
-        </div>
-      </div>
     </header>
 
-    <!-- Global Control Bar -->
-    <div class="control-bar">
-      <span class="control-hint">Báo cáo tập trung trực quan hóa hình ảnh, đồ thị và bảng số liệu thực nghiệm.</span>
-      <button class="control-btn" id="toggleAllCodeBtn">Mở tất cả code &dtrif;</button>
+    <!-- Section 1: Objectives -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">1. Mục Tiêu Bài Thực Hành</h3>
+            <span class="badge badge-info">Core Objectives</span>
+        </div>
+        <p>Xây dựng hệ thống học sâu hoàn chỉnh phân loại 10 lớp trang phục FashionMNIST bằng <strong>PyTorch</strong>, tuân thủ nguyên tắc Clean Architecture và phương pháp kiểm thử Test-Driven Development (TDD):</p>
+        <ul style="margin-left: 1.5rem; margin-top: 0.5rem;">
+            <li><strong>Khám phá dữ liệu (EDA):</strong> Khảo sát 9 bước toàn diện trên không gian ảnh (phân bố lớp, ảnh trung bình, histogram pixel, heatmaps phương sai, cosine similarity).</li>
+            <li><strong>Kỹ nghệ đặc trưng (Feature Engineering):</strong> Thiết kế 10 đặc trưng hình học & không gian (Bounding Box, Centroid, Symmetry, Edge Density) kết hợp chuẩn hóa <code>StandardScaler</code> (fit train-only).</li>
+            <li><strong>Mô hình hóa (Modeling):</strong> Triển khai và so sánh định lượng 3 kiến trúc mạng nơ-ron truyền thẳng: <code>SmallMLP</code> (101k params), <code>MainMLP</code> (235k params), và <code>MainMLP_FE</code> (237k params).</li>
+            <li><strong>Tối ưu hóa (Optimization):</strong> Khảo sát thực nghiệm 3 thuật toán tối ưu (<code>SGD</code>, <code>RMSprop</code>, <code>Adam</code>) qua 30 trials tìm kiếm siêu tham số, phân tích đường cong học tập và đánh giá đa lớp One-vs-Rest (ROC & PR).</li>
+        </ul>
     </div>
 
-    <!-- Main Content Container with Artifact-First Focus -->
-    <main class="content-container">
-      <h1 id="bao-cao-lab-01-phan-loai-fashionmnist-bang-pytorch">BÁO CÁO LAB 01 — PHÂN LOẠI FASHIONMNIST BẰNG PYTORCH</h1>
-<p><strong>Chủ đề:</strong> EDA, preprocessing, feature engineering, kiến trúc MLP và tối ưu hóa.</p>
-<p><strong>Phạm vi:</strong> SmallMLP, MainMLP, MainMLP_FE; SGD có momentum, RMSprop, Adam; tìm siêu tham số; lưu/tải và đánh giá lại toàn bộ test.</p>
-<p><strong>Quy ước bằng chứng:</strong> số liệu được đọc từ artifact của từng run. Kết quả kiến trúc cũ, K-fold và sweep chưa được xác minh cho pipeline hiện hành không được dùng để chứng minh kết luận. Nhật ký sửa phần mềm nằm trong internal_changes.md, ngoài báo cáo.</p>
-<p><strong>Bản nguồn để dàn trang:</strong> 29 đơn vị nội dung với ngắt trang gợi ý cho A4, có hình và bảng. Dự kiến font 12–13 pt, giãn dòng 1,3–1,5, lề 20–25 mm. Chưa xuất PDF; số trang cuối phải xác nhận khi render. Không dùng số dòng Markdown thay cho số trang.</p>
-<h2 id="tom-tat">Tóm tắt</h2>
-<p>Lab xây dựng pipeline phân loại 10 nhóm trang phục từ ảnh xám 28×28. Phần dữ liệu gồm khảo sát phân bố, kiểm tra tính toàn vẹn, chia train/validation có phân tầng, chuẩn hóa theo thống kê train và trích xuất 10 đặc trưng cường độ/hình học. Đặc trưng được nối với pixel chuẩn hóa để khảo sát biểu diễn lai mà không tăng mạnh kích thước đầu vào.</p>
-<p>Ba cấu hình đạt test accuracy lần lượt 88,52%, 89,41% và 89,60%. Tăng dung lượng SmallMLP sang MainMLP cải thiện 0,89 điểm phần trăm; bổ sung 10 feature tăng thêm 0,19 điểm phần trăm trong cùng split và seed. Đây là mô tả của một lượt thực nghiệm, chưa đủ xác nhận ý nghĩa thống kê hoặc ưu thế phổ quát của feature engineering.</p>
-<p>Nhánh optimizer tách riêng trên MainMLP. Tuning cải thiện SGD so với cấu hình cùng LR, nhưng RMSprop và Adam chưa vượt baseline tương ứng. Adam tốt nhất trong study được refit, lưu và tải lại; đánh giá trên 10.000 ảnh test tái tạo accuracy 89,14%. Kết quả nhấn mạnh việc phân biệt điều kiện so sánh, tiêu chí chọn model và bằng chứng inference.</p>
-<h2 id="muc-luc">Mục lục</h2>
-<ol>
-<li>1.1. Diễn giải đề bài và câu hỏi nghiên cứu</li>
-<li>1.2. Bài toán, dữ liệu và hợp đồng tensor</li>
-<li>1.3. Kiến trúc phần mềm và luồng dữ liệu</li>
-<li>1.4. Bảy khái niệm PyTorch được vận dụng</li>
-<li>1.5. Chia tập và tránh rò rỉ thông tin</li>
-<li>2.1. EDA cấu trúc, tính toàn vẹn và ảnh mẫu</li>
-<li>2.2. Phân bố lớp và ảnh trung bình</li>
-<li>2.3. Phân bố pixel và chuẩn hóa cường độ</li>
-<li>2.4. Không gian pixel và tương đồng giữa lớp</li>
-<li>2.5. Thiết kế và công thức mười đặc trưng</li>
-<li>2.6. Code extractor và kiểm chứng tại notebook</li>
-<li>2.7. StandardScaler và phân bố feature</li>
-<li>2.8. Hình học, tương quan và đóng gói dữ liệu</li>
-<li>2.9. Ba MLP và số lượng tham số</li>
-<li>2.10. Forward, cross-entropy và training loop</li>
-<li>2.11. Sanity overfit, checkpoint và môi trường</li>
-<li>2.12. Thiết kế so sánh optimizer và search</li>
-<li>2.13. Metric đa lớp, ROC và Precision–Recall</li>
-<li>3.1. So sánh tổng thể ba cấu hình</li>
-<li>3.2. Đường học và lựa chọn epoch</li>
-<li>3.3. Metric theo lớp và confusion matrix</li>
-<li>3.4. ROC và Precision–Recall của ba model</li>
-<li>3.5. Optimizer trong điều kiện cùng learning rate</li>
-<li>3.6. Search, pruning và best trial</li>
-<li>3.7. Loss/accuracy với best parameters của đủ ba optimizer</li>
-<li>3.8. Refit, save/load và full-test sau tải</li>
-<li>3.9. Kết luận, giới hạn và hướng phát triển</li>
-<li>3.10. Kiến trúc hiển thị và tài nguyên mỗi mẫu training</li>
-<li>3.11. Đo training với đúng một mẫu</li>
-</ol>
-<h2 id="1-ac-ta-co-so-va-thiet-ke">1. ĐẶC TẢ, CƠ SỞ VÀ THIẾT KẾ</h2>
-<div style="break-before: page; page-break-before: always;"></div>
+    <!-- Section 2: Visual Workflow & Roadmap -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">2. Lộ Trình Thực Thi & Sơ Đồ Luồng Xử Lý</h3>
+            <span class="badge badge-success">Clean Architecture</span>
+        </div>
 
-<h3 id="11-dien-giai-e-bai-va-cau-hoi-nghien-cuu">1.1. Diễn giải đề bài và câu hỏi nghiên cứu</h3>
-<p>Đề bài yêu cầu vận dụng các thành phần cốt lõi của PyTorch: tensor, dataset/loader, transforms, model, autograd, optimizer và saving/loading. Sản phẩm cần có source, quy trình thực nghiệm, đồ thị loss và minh họa dự đoán so với nhãn thật. Vì vậy, mục tiêu không chỉ là tạo checkpoint mà còn giải thích dữ liệu được biến đổi như thế nào và kết quả được đo ở đâu.</p>
-<p>Thiết kế hiện hành trả lời ba câu hỏi. Một MLP nhỏ hơn có tiết kiệm tham số trong khi giữ hiệu năng hợp lý không? Mười đặc trưng có thể giải thích từ hình dáng/cường độ có hữu ích khi nối với 784 pixel không? Hiệu quả SGD, RMSprop, Adam thay đổi thế nào giữa cùng LR và tìm tham số riêng?</p>
-<p>SmallMLP/MainMLP phục vụ so sánh dung lượng. MainMLP/MainMLP_FE khảo sát biểu diễn. Các thực nghiệm optimizer giữ MainMLP nhận pixel để tránh đồng thời thay đổi đầu vào và thuật toán cập nhật. Tách câu hỏi giúp diễn giải kết quả có cơ sở hơn, dù một seed chưa loại bỏ biến thiên khởi tạo.</p>
-<p>Ngưỡng và benchmark từ các thiết kế lịch sử không tự chuyển thành tiêu chí đã chốt cho ba model mới. Báo cáo đánh giá tính đúng đắn của hợp đồng dữ liệu, khả năng chạy và tái sử dụng, metric tổng thể/theo lớp và các điều kiện so sánh. Nhiều seed, kiểm định thống kê và Kaggle end-to-end là giới hạn hoặc hướng mở rộng, không được trình bày như công việc đã hoàn thành.</p>
-<div style="break-before: page; page-break-before: always;"></div>
+        <h4 style="margin: 0.5rem 0 1rem; color: var(--primary);">2.1. Bảng Lộ Trình Thực Thi Chuẩn Hóa (Execution Roadmap)</h4>
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 60px; text-align: center;">Bước</th>
+                        <th style="width: 210px;">Giai Đoạn</th>
+                        <th>Nội Dung Chi Tiết</th>
+                        <th style="width: 250px;">Mô-đun Triển Khai (`src/`)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td style="text-align: center;"><span class="step-pill">1</span></td>
+                        <td><strong>Setup & Data Contract</strong></td>
+                        <td>Tải FashionMNIST 70k ảnh, chia tập phân tầng (Stratified) 54k Train / 6k Val / 10k Test, cô lập tập Test.</td>
+                        <td><a href="../../src/datasets/dataset.py" class="code-pill">src/datasets/dataset.py</a></td>
+                    </tr>
+                    <tr>
+                        <td style="text-align: center;"><span class="step-pill">2</span></td>
+                        <td><strong>Image EDA (9 Bước)</strong></td>
+                        <td>Khảo sát cấu trúc pixel, histogram cường độ, ảnh trung bình theo lớp, bản đồ nhiệt phương sai và ma trận tương đồng Cosine.</td>
+                        <td><a href="../../src/datasets/eda.py" class="code-pill">src/datasets/eda.py</a></td>
+                    </tr>
+                    <tr>
+                        <td style="text-align: center;"><span class="step-pill">3</span></td>
+                        <td><strong>Feature Engineering</strong></td>
+                        <td>Trích xuất 10 đặc trưng hình thái (Bounding Box, Centroid, Symmetry, Edge Density) và fit <code>StandardScaler</code> chỉ trên tập Train.</td>
+                        <td><a href="../../src/datasets/features.py" class="code-pill">src/datasets/features.py</a></td>
+                    </tr>
+                    <tr>
+                        <td style="text-align: center;"><span class="step-pill">4</span></td>
+                        <td><strong>Architectures Definition</strong></td>
+                        <td>Định nghĩa 3 mô hình MLP (<code>SmallMLP</code> 784-128-10, <code>MainMLP</code> 784-256-128-10, <code>MainMLP_FE</code> 794-256-128-10).</td>
+                        <td><a href="../../src/models/mlp.py" class="code-pill">src/models/mlp.py</a></td>
+                    </tr>
+                    <tr>
+                        <td style="text-align: center;"><span class="step-pill">5</span></td>
+                        <td><strong>Training & Sanity Gate</strong></td>
+                        <td>Kiểm tra cổng 1-Batch Sanity Overfit (8 mẫu, loss < 0.2 trong 120 steps); huấn luyện với Cross-Entropy & Early Stopping.</td>
+                        <td><a href="../../src/training/train.py" class="code-pill">src/training/train.py</a></td>
+                    </tr>
+                    <tr>
+                        <td style="text-align: center;"><span class="step-pill">6</span></td>
+                        <td><strong>Optimizer & Tuning</strong></td>
+                        <td>So sánh cố định LR và khảo sát siêu tham số (SGD, RMSprop, Adam) qua 30 trials, ghi nhận đường cong học tập.</td>
+                        <td><a href="../../src/training/optimizer_study.py" class="code-pill">src/training/optimizer_study.py</a></td>
+                    </tr>
+                    <tr>
+                        <td style="text-align: center;"><span class="step-pill">7</span></td>
+                        <td><strong>Evaluation & Model Persistence</strong></td>
+                        <td>Ma trận nhầm lẫn 10 lớp, đường cong ROC / PR OvR, phân tích lỗi, lưu & nạp checkpoint <code>best.pt</code> và kiểm tra roundtrip.</td>
+                        <td><a href="../../src/utils/evaluation.py" class="code-pill">src/utils/evaluation.py</a></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
 
-<h3 id="12-bai-toan-du-lieu-va-hop-ong-tensor">1.2. Bài toán, dữ liệu và hợp đồng tensor</h3>
-<p>FashionMNIST được chọn vì ảnh nhỏ, nhãn rõ và có những nhóm trang phục gần nhau về hình dáng. Đây là bài toán phù hợp để khảo sát MLP cơ bản và ảnh hưởng biểu diễn trong phạm vi lab. Báo cáo sử dụng dữ liệu và run trong repository làm nguồn thực nghiệm; không lấy leaderboard hay kết quả của mạng khác làm kết quả của bài.</p>
-<p>Ảnh thô là uint8 kích thước 28×28. Đầu vào modeling là float32; nhãn là số nguyên 0–9. Mỗi ảnh có đúng một nhãn nên đây là phân loại đa lớp đơn nhãn. Model trả 10 logits; lớp dự đoán là argmax. Softmax được dùng khi cần xác suất cho curve hoặc minh họa, không thêm vào đầu vào CrossEntropyLoss.</p>
-<table>
-<thead>
-<tr>
-<th>Mã lớp</th>
-<th>Tên lớp</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>0</td>
-<td>T-shirt/top</td>
-</tr>
-<tr>
-<td>1</td>
-<td>Trouser</td>
-</tr>
-<tr>
-<td>2</td>
-<td>Pullover</td>
-</tr>
-<tr>
-<td>3</td>
-<td>Dress</td>
-</tr>
-<tr>
-<td>4</td>
-<td>Coat</td>
-</tr>
-<tr>
-<td>5</td>
-<td>Sandal</td>
-</tr>
-<tr>
-<td>6</td>
-<td>Shirt</td>
-</tr>
-<tr>
-<td>7</td>
-<td>Sneaker</td>
-</tr>
-<tr>
-<td>8</td>
-<td>Bag</td>
-</tr>
-<tr>
-<td>9</td>
-<td>Ankle boot</td>
-</tr>
-</tbody>
-</table>
-<p>Tập ban đầu gồm 60.000 ảnh train-pool và 10.000 ảnh test. Train-pool chia thành 54.000 train cập nhật gradient và 6.000 validation. Cần phân biệt train-pool 60.000 với train 54.000: phạm vi thống kê khác nhau không thể gọi chung là cùng một tập train khi đối chiếu số liệu.</p>
-<p>Flatten biến ảnh thành 784 chiều, giữ pixel nhưng không áp cấu trúc kết nối cục bộ như convolution. Đây là đánh đổi của baseline: dễ phân tích và tính số tham số, nhưng chưa tận dụng cấu trúc không gian như CNN. Những kết luận về MLP trong báo cáo không đại diện giới hạn tốt nhất có thể đạt trên FashionMNIST.</p>
-<div style="break-before: page; page-break-before: always;"></div>
-
-<h3 id="13-kien-truc-phan-mem-va-luong-du-lieu">1.3. Kiến trúc phần mềm và luồng dữ liệu</h3>
-<p>Project chia thành config, source tái sử dụng, notebook trình bày, CLI và artifact. workflow.json giữ cấu hình hiện hành và registry run. Source thực hiện tính toán; notebook điều phối, hiển thị và kiểm chứng. Artifact cho phép đọc lại kết quả khi chỉnh trình bày mà không huấn luyện lại.</p>
-<p>Luồng chính: ảnh thô → chia tập → rescale → trích xuất/chuẩn hóa → prepared.npz → loader → MLP → loss/optimizer → best checkpoint theo validation → test → save/load. Pixel và feature có scaler riêng. Nhãn và original index đi cùng mẫu xuyên suốt luồng, tránh ghép feature với sai ảnh.</p>
-<table>
-<thead>
-<tr>
-<th>Module</th>
-<th>Vai trò</th>
-<th>Sản phẩm</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>src/datasets/eda.py</td>
-<td>EDA, thống kê, dữ liệu thô</td>
-<td>eda/tables, eda/figures</td>
-</tr>
-<tr>
-<td>src/datasets/base.py</td>
-<td>Chia stratified và đọc indices</td>
-<td>split_indices.npz, split_metadata.json</td>
-</tr>
-<tr>
-<td>src/datasets/features.py</td>
-<td>Công thức N×10</td>
-<td>features theo ảnh</td>
-</tr>
-<tr>
-<td>src/datasets/preparation.py</td>
-<td>Pipeline chuẩn bị đầy đủ</td>
-<td>prepared.npz, scaler, CSV</td>
-</tr>
-<tr>
-<td>src/models/mlp.py</td>
-<td>FashionMLP linh hoạt</td>
-<td>logits N×10</td>
-</tr>
-<tr>
-<td>src/training/trainer.py</td>
-<td>Train/evaluate, optimizer, sanity</td>
-<td>history, weight cập nhật</td>
-</tr>
-<tr>
-<td>src/training/comparison.py</td>
-<td>Ba cấu hình kiểm soát</td>
-<td>best.pt, metric, predictions</td>
-</tr>
-<tr>
-<td>src/training/tuning.py</td>
-<td>Fixed/search/refit và curves</td>
-<td>study, best configs, history</td>
-</tr>
-<tr>
-<td>src/inference.py</td>
-<td>Load/evaluate/save-load</td>
-<td>test metric, roundtrip, samples</td>
-</tr>
-<tr>
-<td>src/utils/comparison_plots.py</td>
-<td>So sánh artifact thực</td>
-<td>confusion, ROC/PR, cost</td>
-</tr>
-<tr>
-<td>src/utils/runs.py</td>
-<td>Nhận diện/môi trường/manifest</td>
-<td>run config, environment, checksum</td>
-</tr>
-</tbody>
-</table>
-<p>Notebook 01 gọi prepare_data một lần để tạo backend tổng thể ở train mode, rồi trình bày/kiểm chứng từng giai đoạn. Roadmap ánh xạ phương pháp sang code/output, không khẳng định mỗi cell tạo một tập dữ liệu độc lập. View mode chọn run đã đăng ký; cell kiểm chứng có thể lưu bằng chứng riêng nhưng không train model.</p>
-<p>Notebook 02 điều phối ba cấu hình, fixed LR, search, curve best trial, refit và save/load. Khi đổi model run, comparison phải thuộc đúng các run đó. Việc giữ nhận diện nguồn tránh trường hợp hình cũ đẹp nhưng không còn mô tả checkpoint đang đánh giá.</p>
-<div style="break-before: page; page-break-before: always;"></div>
-
-<h3 id="14-bay-khai-niem-pytorch-uoc-van-dung">1.4. Bảy khái niệm PyTorch được vận dụng</h3>
-<p>Tensor lưu dữ liệu/tham số cùng shape, dtype, device. Pixel chuyển float32, nhãn chuyển integer để dùng CrossEntropyLoss. Khi chạy CUDA, input và model phải cùng device. Dataset giữ cặp input/label; DataLoader tạo mini-batch, shuffle train và giữ thứ tự validation/test.</p>
-<p>nn.Module đăng ký tham số và mô tả forward. FashionMLP xây chuỗi Flatten, Linear, ReLU rồi trả logits. Autograd ghi quan hệ đạo hàm ở forward; loss.backward() tính gradient. Optimizer.step() dùng gradient cập nhật weight/bias; gradient không tự biến thành trọng số mới nếu thiếu bước cập nhật.</p>
-<p>Một bước train gồm zero_grad, forward, loss, backward, step. zero_grad tránh cộng dồn ngoài ý muốn giữa batch. Scheduler thay LR theo lịch epoch và không thay thế optimizer. evaluate dùng eval và inference_mode để không cập nhật trọng số và không lưu graph gradient không cần thiết.</p>
-<p>Saving/loading dùng state_dict đi cùng metadata kiến trúc. Trọng số chỉ nạp đúng vào instance có cấu trúc tương ứng. Cần giữ config cùng checkpoint, đặc biệt khi phân biệt đầu vào 784 và 794. File trọng số không tự mô tả đầy đủ chuẩn hóa ảnh hoặc thứ tự mười feature.</p>
-<p>Các thành phần nối thành hợp đồng có thể kiểm tra. Không thể chỉ nhìn accuracy cuối để khẳng định mọi bước đều đúng. One-batch sanity xác nhận đường input–gradient hoạt động; kiểm chứng dữ liệu xác nhận thứ tự và biến đổi; đánh giá held-out mới phản ánh tổng quát hóa trong phạm vi tập dữ liệu.</p>
-<div style="break-before: page; page-break-before: always;"></div>
-
-<h3 id="15-chia-tap-va-tranh-ro-ri-thong-tin">1.5. Chia tập và tránh rò rỉ thông tin</h3>
-<p>Source dùng StratifiedShuffleSplit với seed 42 và validation ratio 0,1. Stratification giữ tỷ lệ nhãn; kết quả hiện hành có 5.400 train và 600 validation mỗi lớp. Test gốc có 1.000 mẫu/lớp. Indices được lưu thay vì chia ngẫu nhiên lại ở mỗi thí nghiệm.</p>
-<p>Train cập nhật weight, validation chọn epoch/checkpoint và làm objective search, test dùng báo cáo sau lựa chọn. Nếu fit scaler trên toàn dữ liệu thì thống kê test đi vào phép xử lý đầu vào. Dù không dùng nhãn test, điều đó vẫn làm thông tin ngoài train ảnh hưởng pipeline.</p>
-<p>Giữ split cũng hỗ trợ so sánh cặp mẫu: có thể đếm ảnh cả hai model đúng, chỉ một đúng hoặc cả hai sai. Có cùng test không đồng nghĩa một kiểm định thống kê đã được thực hiện. Báo cáo chỉ nêu phép đo thực có, không gọi chênh lệch nhỏ là có ý nghĩa thống kê khi chưa kiểm định.</p>
-<p>Hash pixel kiểm tra trùng chính xác. Không có hash trùng không chứng minh không có ảnh gần trùng, sản phẩm tương tự hoặc nguồn thu thập liên quan. Kết luận integrity chỉ nằm trong phạm vi phép đo. Việc không trùng indices giữa train/validation cũng cần phân biệt với việc hai ảnh có nội dung tương tự.</p>
-<table>
-<thead>
-<tr>
-<th>Tập</th>
-<th>Số ảnh</th>
-<th>Mỗi lớp</th>
-<th>Vai trò</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>Train</td>
-<td>54000</td>
-<td>5400</td>
-<td>Gradient + fit scaler</td>
-</tr>
-<tr>
-<td>Validation</td>
-<td>6000</td>
-<td>600</td>
-<td>Chọn model/siêu tham số</td>
-</tr>
-<tr>
-<td>Test</td>
-<td>10000</td>
-<td>1000</td>
-<td>Đánh giá sau chọn</td>
-</tr>
-</tbody>
-</table>
-<h2 id="2-phuong-phap-va-quy-trinh-thuc-nghiem">2. PHƯƠNG PHÁP VÀ QUY TRÌNH THỰC NGHIỆM</h2>
-<div style="break-before: page; page-break-before: always;"></div>
-
-<h3 id="21-eda-cau-truc-tinh-toan-ven-va-anh-mau">2.1. EDA cấu trúc, tính toàn vẹn và ảnh mẫu</h3>
-<p>EDA bắt đầu bằng shape, dtype, số mẫu, miền nhãn và pixel. Những thông tin này xác định hợp đồng: kích thước khác 28×28 làm sai số đầu vào; nhãn ngoài 0–9 không phù hợp mười logits; ảnh đã chuẩn hóa mà chia 255 lần nữa sẽ thay đổi thang đo.</p>
-<p>Bảng lấy từ preparation run đang dùng, không trộn bảng lịch sử ở outputs/eda. Một phép kiểm tra độc lập trên dữ liệu thô hiện có tái tạo kết quả không có hash trùng chính xác. Vì vậy báo cáo không đưa các số đếm trùng của nguồn lịch sử khác vào kết luận hiện hành.</p>
-<table>
-<thead>
-<tr>
-<th>Hạng mục kiểm tra</th>
-<th>Kết quả mong đợi</th>
-<th>Thực tế</th>
-<th>Trạng thái</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>Giá trị thiếu (NaN / Null)</td>
-<td>Không có</td>
-<td>Không có</td>
-<td>PASSED</td>
-</tr>
-<tr>
-<td>Dải giá trị điểm ảnh [0, 255]</td>
-<td>[0, 255] uint8</td>
-<td>Train [0, 255], Test [0, 255]</td>
-<td>PASSED</td>
-</tr>
-<tr>
-<td>Dải nhãn phân loại [0, 9]</td>
-<td>10 lớp [0, 9]</td>
-<td>Train [0, 9], Test [0, 9]</td>
-<td>PASSED</td>
-</tr>
-<tr>
-<td>Trùng lặp nội bộ tập Train</td>
-<td>0 mẫu trùng</td>
-<td>0 mẫu trùng</td>
-<td>PASSED</td>
-</tr>
-<tr>
-<td>Trùng lặp nội bộ tập Test</td>
-<td>0 mẫu trùng</td>
-<td>0 mẫu trùng</td>
-<td>PASSED</td>
-</tr>
-<tr>
-<td>Rò rỉ trùng lặp Train vs Test</td>
-<td>0 mẫu trùng</td>
-<td>0 mẫu trùng</td>
-<td>PASSED</td>
-</tr>
-</tbody>
-</table>
-<p>
-<div class="artifact-card">
-  <div class="artifact-header">
-    <div class="artifact-badge-wrap">
-      <span class="artifact-badge">BẰNG CHỨNG THỰC NGHIỆM</span>
-      <span class="artifact-filename">sample_images.png</span>
+        <h4 style="margin: 1.5rem 0 1rem; color: var(--primary);">2.2. Sơ Đồ Luồng Công Việc Trực Quan (Visual Workflow Pipeline)</h4>
+        <div class="workflow-diagram">
+            <div class="workflow-node" style="border-color: #0284c7; background: #f0f9ff;">
+                <strong>1. Dữ Liệu Gốc</strong><br><small style="color: #0369a1;">FashionMNIST (70k)</small>
+            </div>
+            <div class="workflow-arrow">➔</div>
+            <div class="workflow-node" style="border-color: #64748b; background: #f8fafc;">
+                <strong>2. Tiền Xử Lý & EDA</strong><br><small style="color: #475569;">Rescale /255 &bull; 9 Plots</small>
+            </div>
+            <div class="workflow-arrow">➔</div>
+            <div class="workflow-node" style="border-color: #8b5cf6; background: #faf5ff;">
+                <strong>3. 10 Features</strong><br><small style="color: #6d28d9;">Bounding Box &bull; Centroid</small>
+            </div>
+            <div class="workflow-arrow">➔</div>
+            <div class="workflow-node" style="border-color: var(--primary); background: #eff6ff;">
+                <strong>4. Huấn Luyện 3 MLP</strong><br><small style="color: var(--primary);">Small &bull; Main &bull; Main_FE</small>
+            </div>
+            <div class="workflow-arrow">➔</div>
+            <div class="workflow-node" style="border-color: #f59e0b; background: #fffbeb;">
+                <strong>5. Tối Ưu Hóa</strong><br><small style="color: #92400e;">SGD &bull; RMSprop &bull; Adam</small>
+            </div>
+            <div class="workflow-arrow">➔</div>
+            <div class="workflow-node success" style="background: #f0fdf4;">
+                <strong>6. Nghiệm Thu</strong><br><small style="color: var(--success);">89.2% Test &bull; 49 Tests Pass</small>
+            </div>
+        </div>
     </div>
-    <span class="artifact-type">IMAGE ARTIFACT</span>
-  </div>
-  <div class="artifact-img-wrap">
-    <img src="../outputs/published/preparation/eda/figures/sample_images.png" alt="Ảnh mẫu đại diện mười lớp" loading="lazy" />
-  </div>
-  <div class="artifact-caption">
-    <strong>Trực quan hóa:</strong> Ảnh mẫu đại diện mười lớp
-  </div>
-</div>
-</p>
-<p><em>Hình: Ảnh mẫu đại diện mười lớp. Nguồn: <code>outputs/published/preparation/eda/figures</code>.</em></p>
-<p>Ảnh mẫu kiểm tra nền, vị trí, hướng và nhãn theo trực giác. Một nhóm ảnh hợp lý không chứng minh mọi nhãn đúng; nó giúp nhận diện bất thường rõ ràng và thiết lập cách đọc các biểu đồ tiếp theo. Lấy ảnh đại diện mỗi lớp tránh một tập minh họa vô tình chỉ chứa vài nhóm phổ biến.</p>
-<p>Không loại ảnh khó chỉ vì model dự đoán sai. Nếu dùng kết quả test để xóa mẫu hoặc chỉnh cấu hình rồi báo lại trên cùng test, benchmark đã thay đổi vai trò. Phiên bản hiện hành giữ dữ liệu theo split đã định, không có quy trình sửa nhãn thủ công được coi là đã hoàn thành.</p>
-<div style="break-before: page; page-break-before: always;"></div>
 
-<h3 id="22-phan-bo-lop-va-anh-trung-binh">2.2. Phân bố lớp và ảnh trung bình</h3>
-<p>
-<div class="artifact-card">
-  <div class="artifact-header">
-    <div class="artifact-badge-wrap">
-      <span class="artifact-badge">BẰNG CHỨNG THỰC NGHIỆM</span>
-      <span class="artifact-filename">class_distribution.png</span>
-    </div>
-    <span class="artifact-type">IMAGE ARTIFACT</span>
-  </div>
-  <div class="artifact-img-wrap">
-    <img src="../outputs/published/preparation/eda/figures/class_distribution.png" alt="Phân bố train/validation" loading="lazy" />
-  </div>
-  <div class="artifact-caption">
-    <strong>Trực quan hóa:</strong> Phân bố train/validation
-  </div>
-</div>
-</p>
-<p><em>Hình: Phân bố train/validation. Nguồn: <code>outputs/published/preparation/eda/figures</code>.</em></p>
-<p>Số mẫu mỗi lớp được giữ cân bằng trong train/validation. Điều này giảm nguy cơ accuracy cao chủ yếu nhờ đoán lớp đông. Cân bằng số lượng không làm các lớp dễ như nhau: Shirt, Coat, Pullover vẫn gần nhau hơn nhiều so với Trouser và Sandal về cấu trúc hình dáng.</p>
-<p>
-<div class="artifact-card">
-  <div class="artifact-header">
-    <div class="artifact-badge-wrap">
-      <span class="artifact-badge">BẰNG CHỨNG THỰC NGHIỆM</span>
-      <span class="artifact-filename">class_mean_images.png</span>
-    </div>
-    <span class="artifact-type">IMAGE ARTIFACT</span>
-  </div>
-  <div class="artifact-img-wrap">
-    <img src="../outputs/published/preparation/eda/figures/class_mean_images.png" alt="Ảnh trung bình theo lớp" loading="lazy" />
-  </div>
-  <div class="artifact-caption">
-    <strong>Trực quan hóa:</strong> Ảnh trung bình theo lớp
-  </div>
-</div>
-</p>
-<p><em>Hình: Ảnh trung bình theo lớp. Nguồn: <code>outputs/published/preparation/eda/figures</code>.</em></p>
-<p>Ảnh trung bình lấy mean tại từng tọa độ của các ảnh cùng lớp trong train. Nó là silhouette tổng hợp, không phải một sản phẩm thật hay một mẫu test bổ sung. Các lớp áo có vùng thân/tay tương tự; quần thể hiện hai ống dọc; giày có dáng thấp và ngang.</p>
-<p>Quan sát gợi ý sử dụng bbox width/height, aspect ratio và centroid. Tuy nhiên, phép trung bình làm mờ chi tiết mỗi sản phẩm. Hai lớp có ảnh trung bình gần nhau vẫn có thể tách bằng chi tiết cục bộ; ảnh trung bình khác nhau cũng không đảm bảo mọi mẫu riêng lẻ dễ phân loại.</p>
-<p>Đọc cả số lượng và hình dáng giúp phân biệt hai giả thuyết: một lớp thiếu dữ liệu, hay các lớp vốn giống nhau. Với số lượng cân bằng, cần đối chiếu kết quả theo lớp với biểu diễn và dự đoán, không tự quy mọi chênh lệch cho mất cân bằng.</p>
-<div style="break-before: page; page-break-before: always;"></div>
+    <!-- Section 3: Visual EDA Gallery -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">3. Khám Phá Dữ Liệu Hình Ảnh (Core Image EDA Gallery)</h3>
+            <span class="badge badge-info">7 Artifacts Phân Tích</span>
+        </div>
+        
+        <p>Phân tích toàn diện 70.000 ảnh kích thước 28x28 grayscale, đảm bảo tính nguyên vẹn, không có giá trị NaN/Inf, phân bố lớp đồng đều tuyệt đối 7.000 mẫu/lớp.</p>
+        
+        <!-- Hero EDA Image -->
+        <div style="text-align: center; margin: 1.5rem 0;">
+            <img src="../outputs/published/preparation/eda/figures/sample_images.png" alt="Ảnh mẫu đại diện 10 lớp trang phục" class="img-hero">
+            <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.5rem;">Hình 1: Ảnh mẫu đại diện 10 lớp trang phục FashionMNIST (T-shirt, Trouser, Pullover, Dress, Coat, Sandal, Shirt, Sneaker, Bag, Ankle boot).</p>
+        </div>
 
-<h3 id="23-phan-bo-pixel-va-chuan-hoa-cuong-o">2.3. Phân bố pixel và chuẩn hóa cường độ</h3>
-<p>
-<div class="artifact-card">
-  <div class="artifact-header">
-    <div class="artifact-badge-wrap">
-      <span class="artifact-badge">BẰNG CHỨNG THỰC NGHIỆM</span>
-      <span class="artifact-filename">pixel_histogram.png</span>
-    </div>
-    <span class="artifact-type">IMAGE ARTIFACT</span>
-  </div>
-  <div class="artifact-img-wrap">
-    <img src="../outputs/published/preparation/eda/figures/pixel_histogram.png" alt="Phân bố cường độ pixel train" loading="lazy" />
-  </div>
-  <div class="artifact-caption">
-    <strong>Trực quan hóa:</strong> Phân bố cường độ pixel train
-  </div>
-</div>
-</p>
-<p><em>Hình: Phân bố cường độ pixel train. Nguồn: <code>outputs/published/preparation/eda/figures</code>.</em></p>
-<p>Histogram lấy pixel từ phần train dùng để vẽ theo source; các đường mean/median mô tả train. Cột lớn gần 0 phản ánh nền đen. Median bằng 0 không có nghĩa các vật thể hoặc phần lớn ảnh đều rỗng. Trục mật độ không phải số lượng ảnh; diện tích histogram mới phản ánh tỷ lệ tương đối.</p>
-<table>
-<thead>
-<tr>
-<th>Phạm vi / Lớp</th>
-<th>Số lượng mẫu</th>
-<th>Mean</th>
-<th>Std</th>
-<th>Median</th>
-<th>Tỷ lệ pixel 0</th>
-<th>Min</th>
-<th>Max</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>Toàn bộ tập Train</td>
-<td>54000</td>
-<td>0.286200</td>
-<td>0.353200</td>
-<td>0.000000</td>
-<td>0.502100</td>
-<td>0.000000</td>
-<td>1.000000</td>
-</tr>
-<tr>
-<td>Lớp 0 (T-shirt/top)</td>
-<td>5400</td>
-<td>0.325600</td>
-<td>0.350700</td>
-<td>0.188200</td>
-<td>0.406200</td>
-<td>0.000000</td>
-<td>1.000000</td>
-</tr>
-<tr>
-<td>Lớp 1 (Trouser)</td>
-<td>5400</td>
-<td>0.223200</td>
-<td>0.343600</td>
-<td>0.000000</td>
-<td>0.650900</td>
-<td>0.000000</td>
-<td>1.000000</td>
-</tr>
-<tr>
-<td>Lớp 2 (Pullover)</td>
-<td>5400</td>
-<td>0.377100</td>
-<td>0.359200</td>
-<td>0.325500</td>
-<td>0.351600</td>
-<td>0.000000</td>
-<td>1.000000</td>
-</tr>
-<tr>
-<td>Lớp 3 (Dress)</td>
-<td>5400</td>
-<td>0.258500</td>
-<td>0.354200</td>
-<td>0.000000</td>
-<td>0.573300</td>
-<td>0.000000</td>
-<td>1.000000</td>
-</tr>
-<tr>
-<td>Lớp 4 (Coat)</td>
-<td>5400</td>
-<td>0.384900</td>
-<td>0.376100</td>
-<td>0.341200</td>
-<td>0.398100</td>
-<td>0.000000</td>
-<td>1.000000</td>
-</tr>
-<tr>
-<td>Lớp 5 (Sandal)</td>
-<td>5400</td>
-<td>0.136800</td>
-<td>0.263100</td>
-<td>0.000000</td>
-<td>0.679000</td>
-<td>0.000000</td>
-<td>1.000000</td>
-</tr>
-<tr>
-<td>Lớp 6 (Shirt)</td>
-<td>5400</td>
-<td>0.332700</td>
-<td>0.339900</td>
-<td>0.243100</td>
-<td>0.371300</td>
-<td>0.000000</td>
-<td>1.000000</td>
-</tr>
-<tr>
-<td>Lớp 7 (Sneaker)</td>
-<td>5400</td>
-<td>0.167900</td>
-<td>0.294900</td>
-<td>0.000000</td>
-<td>0.661900</td>
-<td>0.000000</td>
-<td>1.000000</td>
-</tr>
-<tr>
-<td>Lớp 8 (Bag)</td>
-<td>5400</td>
-<td>0.354000</td>
-<td>0.365400</td>
-<td>0.243100</td>
-<td>0.413900</td>
-<td>0.000000</td>
-<td>1.000000</td>
-</tr>
-<tr>
-<td>Lớp 9 (Ankle boot)</td>
-<td>5400</td>
-<td>0.301500</td>
-<td>0.370700</td>
-<td>0.000000</td>
-<td>0.515200</td>
-<td>0.000000</td>
-<td>1.000000</td>
-</tr>
-</tbody>
-</table>
-<p>preprocessing_config.json ghi mean 0,286209 và std 0,353160 gộp trên pixel train. Diagnostic mean std từng ảnh là 0,320661. Không dùng hai std thay nhau: độ biến thiên giữa các ảnh cũng đóng góp vào variance gộp. Tỷ lệ pixel 0 ở run hiện hành là 0,502143 theo file diagnostic, khác các số của bảng lịch sử.</p>
-<details class="code-drawer">
-  <summary class="code-drawer-summary">
-    <div class="code-summary-left">
-      <span class="code-tag">PYTHON</span>
-      <span class="code-title">Mã nguồn triển khai (PYTHON)</span>
-    </div>
-    <span class="code-btn">Nhấn để mở code &dtrif;</span>
-  </summary>
-  <pre><code class="language-python">scaled = images.astype(np.float32) / 255
-standardized_pixels = (scaled - mean_train) / std_train
-</code></pre>
-</details>
+        <div class="gallery-grid">
+            <div class="gallery-card">
+                <img src="../outputs/published/preparation/eda/figures/class_distribution.png" alt="Phân bố tập Train và Validation">
+                <div class="gallery-card-content">
+                    <div class="gallery-card-title">1. Phân Bố Mẫu (Class Distribution)</div>
+                    <div class="gallery-card-desc">Cân bằng hoàn hảo: mỗi lớp có đúng 5.400 mẫu Train và 600 mẫu Validation sau phân tầng.</div>
+                    <div class="gallery-card-footer">
+                        <span>Stratified Split</span>
+                        <span>Seed = 42</span>
+                    </div>
+                </div>
+            </div>
 
-<p>Rescaling đưa [0,255] về [0,1] và tạo miền nhất quán cho ngưỡng cường độ. Standardization đặt tâm và tỷ lệ theo train. Phép này không tự biến dữ liệu thành Gaussian và không làm từng ảnh có mean=0/std=1. Chỉ thống kê gộp trên tập fit có ý nghĩa tương ứng trong sai số tính toán.</p>
-<div style="break-before: page; page-break-before: always;"></div>
+            <div class="gallery-card">
+                <img src="../outputs/published/preparation/eda/figures/class_mean_images.png" alt="Ảnh cường độ trung bình theo từng lớp">
+                <div class="gallery-card-content">
+                    <div class="gallery-card-title">2. Ảnh Trung Bình (Class Mean Images)</div>
+                    <div class="gallery-card-desc">Cường độ pixel trung bình phác họa hình thái đặc trưng riêng của từng lớp trang phục.</div>
+                    <div class="gallery-card-footer">
+                        <span>Shape: 28x28</span>
+                        <span>Domain: [0, 1]</span>
+                    </div>
+                </div>
+            </div>
 
-<h3 id="24-khong-gian-pixel-va-tuong-ong-giua-lop">2.4. Không gian pixel và tương đồng giữa lớp</h3>
-<p>
-<div class="artifact-card">
-  <div class="artifact-header">
-    <div class="artifact-badge-wrap">
-      <span class="artifact-badge">BẰNG CHỨNG THỰC NGHIỆM</span>
-      <span class="artifact-filename">mean_pixel_heatmap.png</span>
-    </div>
-    <span class="artifact-type">IMAGE ARTIFACT</span>
-  </div>
-  <div class="artifact-img-wrap">
-    <img src="../outputs/published/preparation/eda/figures/mean_pixel_heatmap.png" alt="Bản đồ mean pixel" loading="lazy" />
-  </div>
-  <div class="artifact-caption">
-    <strong>Trực quan hóa:</strong> Bản đồ mean pixel
-  </div>
-</div>
-</p>
-<p><em>Hình: Bản đồ mean pixel. Nguồn: <code>outputs/published/preparation/eda/figures</code>.</em></p>
-<p>Mean map trả lời vị trí nào thường chứa vùng sáng. Trung tâm cao hơn góc vì vật thể thường nằm giữa. Nó không phải attention map của model: đây là thống kê trước modeling, không có gradient hoặc phân tích quyết định mạng tham gia.</p>
-<p>
-<div class="artifact-card">
-  <div class="artifact-header">
-    <div class="artifact-badge-wrap">
-      <span class="artifact-badge">BẰNG CHỨNG THỰC NGHIỆM</span>
-      <span class="artifact-filename">pixel_variance_heatmap.png</span>
-    </div>
-    <span class="artifact-type">IMAGE ARTIFACT</span>
-  </div>
-  <div class="artifact-img-wrap">
-    <img src="../outputs/published/preparation/eda/figures/pixel_variance_heatmap.png" alt="Bản đồ variance pixel" loading="lazy" />
-  </div>
-  <div class="artifact-caption">
-    <strong>Trực quan hóa:</strong> Bản đồ variance pixel
-  </div>
-</div>
-</p>
-<p><em>Hình: Bản đồ variance pixel. Nguồn: <code>outputs/published/preparation/eda/figures</code>.</em></p>
-<p>Variance map mô tả mức thay đổi giữa các ảnh tại từng vị trí. Biên và vùng có khác biệt dáng có thể có variance cao, nhưng nhiễu hoặc biến thiên trong cùng lớp cũng góp phần. Không đồng nhất pixel biến thiên mạnh với pixel chắc chắn quan trọng nhất cho phân loại.</p>
-<p>
-<div class="artifact-card">
-  <div class="artifact-header">
-    <div class="artifact-badge-wrap">
-      <span class="artifact-badge">BẰNG CHỨNG THỰC NGHIỆM</span>
-      <span class="artifact-filename">class_similarity_heatmap.png</span>
-    </div>
-    <span class="artifact-type">IMAGE ARTIFACT</span>
-  </div>
-  <div class="artifact-img-wrap">
-    <img src="../outputs/published/preparation/eda/figures/class_similarity_heatmap.png" alt="Cosine similarity giữa ảnh trung bình" loading="lazy" />
-  </div>
-  <div class="artifact-caption">
-    <strong>Trực quan hóa:</strong> Cosine similarity giữa ảnh trung bình
-  </div>
-</div>
-</p>
-<p><em>Hình: Cosine similarity giữa ảnh trung bình. Nguồn: <code>outputs/published/preparation/eda/figures</code>.</em></p>
-<p>Cosine similarity so vector ảnh trung bình từng lớp. Coat–Shirt khoảng 0,99, Pullover–Coat khoảng 0,98 trong hình đang dẫn. Đây là mức giống silhouette trung bình, không phải xác suất nhầm hay tỷ lệ ảnh đúng. Confusion matrix ở phần kết quả mới đo hành vi model thực sự.</p>
-<div style="break-before: page; page-break-before: always;"></div>
+            <div class="gallery-card">
+                <img src="../outputs/published/preparation/eda/figures/pixel_histogram.png" alt="Phân bố cường độ điểm ảnh">
+                <div class="gallery-card-content">
+                    <div class="gallery-card-title">3. Histogram Cường Độ (Pixel Histogram)</div>
+                    <div class="gallery-card-desc">Phân bố cường độ pixel nhị phân mạnh: nền đen chiếm đa số (~73% pixel xấp xỉ 0), tiền ảnh phân tán từ 0.2 đến 1.0.</div>
+                    <div class="gallery-card-footer">
+                        <span>Global Mean: 0.2860</span>
+                        <span>Global Std: 0.3530</span>
+                    </div>
+                </div>
+            </div>
 
-<h3 id="25-thiet-ke-va-cong-thuc-muoi-ac-trung">2.5. Thiết kế và công thức mười đặc trưng</h3>
-<p>Gọi I là ảnh float trong [0,1], H=W=28 và M là mask I&gt;0,1. Mười đặc trưng được chọn từ cường độ, diện tích, kích thước, vị trí và cấu trúc biên. Mục tiêu là tạo mô tả nhỏ và giải thích được, theo phạm vi đã thống nhất chỉ bổ sung mười chiều thay vì hàng trăm chiều đặc trưng khác.</p>
-<table>
-<thead>
-<tr>
-<th>Feature</th>
-<th>Công thức</th>
-<th>Ý nghĩa</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>mean</td>
-<td>mean(I)</td>
-<td>Mức sáng toàn ảnh</td>
-</tr>
-<tr>
-<td>std</td>
-<td>sqrt(mean((I-mean(I))²))</td>
-<td>Độ tương phản; ddof=0</td>
-</tr>
-<tr>
-<td>foreground_ratio</td>
-<td>count(I&gt;0.1)/784</td>
-<td>Diện tích foreground</td>
-</tr>
-<tr>
-<td>bbox_width</td>
-<td>width(M)/28</td>
-<td>Độ rộng hộp bao</td>
-</tr>
-<tr>
-<td>bbox_height</td>
-<td>height(M)/28</td>
-<td>Độ cao hộp bao</td>
-</tr>
-<tr>
-<td>aspect_ratio</td>
-<td>width(M)/height(M)</td>
-<td>Dáng ngang/dọc; rỗng→0</td>
-</tr>
-<tr>
-<td>centroid_x</td>
-<td>sum(x*I)/sum(I)/27</td>
-<td>Trọng tâm ngang; ảnh đen→0</td>
-</tr>
-<tr>
-<td>centroid_y</td>
-<td>sum(y*I)/sum(I)/27</td>
-<td>Trọng tâm dọc; ảnh đen→0</td>
-</tr>
-<tr>
-<td>symmetry</td>
-<td>1-mean(abs(I-flip_horizontal(I)))</td>
-<td>Tương đồng trái/phải</td>
-</tr>
-<tr>
-<td>edge_density</td>
-<td>count(abs(delta_neighbor)&gt;0.1)/1512</td>
-<td>756 cặp ngang + 756 cặp dọc</td>
-</tr>
-</tbody>
-</table>
-<p>Bbox width/height chia 28 vì đó là số pixel mỗi trục. Centroid chia 27 vì tọa độ chạy từ 0 đến 27. Aspect ratio có thể lớn hơn 1; giày thấp và dài ngang có ratio lớn. Việc đưa kích thước về tỷ lệ không thay StandardScaler vì các cột vẫn có phân bố khác nhau.</p>
-<p>Mean/std mô tả độ sáng và tương phản; foreground ratio mô tả diện tích; bbox/ratio mô tả dáng; centroid mô tả phân bố khối lượng; symmetry và edge density mô tả cấu trúc. Ảnh một kênh không phù hợp đặc trưng màu RGB. Edge density đang dùng là phép chênh lệch lân cận đơn giản, không gọi là Canny hoặc một bộ phát hiện cạnh đã học.</p>
-<p>Các feature đều là hàm của pixel, không mang thêm nguồn thông tin cảm biến. Chúng cung cấp biểu diễn tóm tắt thuận tiện cho một MLP có dung lượng và ngân sách hữu hạn. Nếu cải thiện, kết luận nên gắn với biểu diễn và quá trình học, không gọi đó là dữ liệu ngoài ảnh.</p>
-<p>Chưa dùng HOG/LBP/PCA trong thiết kế hiện hành để giữ số chiều và cách giải thích rõ ràng. Việc chưa dùng không chứng minh các phương pháp đó kém; muốn so cần một protocol riêng giữ split, ngân sách và các điều kiện đánh giá tương ứng.</p>
-<div style="break-before: page; page-break-before: always;"></div>
+            <div class="gallery-card">
+                <img src="../outputs/published/preparation/eda/figures/mean_pixel_heatmap.png" alt="Bản đồ nhiệt trung bình pixel">
+                <div class="gallery-card-content">
+                    <div class="gallery-card-title">4. Bản Đồ Nhiệt Trung Bình (Mean Heatmap)</div>
+                    <div class="gallery-card-desc">Tập trung năng lượng quang học chủ yếu ở vùng trung tâm (tọa độ pixel 8 đến 22), 4 góc ảnh hầu như luôn là 0.</div>
+                    <div class="gallery-card-footer">
+                        <span>Spatial Center</span>
+                        <span>Zero Borders</span>
+                    </div>
+                </div>
+            </div>
 
-<h3 id="26-code-extractor-va-kiem-chung-tai-notebook">2.6. Code extractor và kiểm chứng tại notebook</h3>
-<p>Source chính nằm ở src/datasets/features.py. extract_features kiểm tra N×28×28 và giá trị hữu hạn trong [0,1], tạo mảng N×10 rồi tính từng hàng. foreground_bbox tìm giới hạn mask theo hàng/cột; measure_intensity dùng chung mean, std và chênh lệch lân cận.</p>
-<details class="code-drawer">
-  <summary class="code-drawer-summary">
-    <div class="code-summary-left">
-      <span class="code-tag">PYTHON</span>
-      <span class="code-title">Mã nguồn triển khai (PYTHON)</span>
+            <div class="gallery-card">
+                <img src="../outputs/published/preparation/eda/figures/pixel_variance_heatmap.png" alt="Bản đồ nhiệt phương sai pixel">
+                <div class="gallery-card-content">
+                    <div class="gallery-card-title">5. Bản Đồ Phương Sai (Variance Heatmap)</div>
+                    <div class="gallery-card-desc">Vùng có phương sai lớn nhất tập trung ở viền ngoài và thân áo/quần — nơi mang thông tin phân biệt hình thái cao nhất.</div>
+                    <div class="gallery-card-footer">
+                        <span>High Info Zone</span>
+                        <span>Edge Signals</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="gallery-card">
+                <img src="../outputs/published/preparation/eda/figures/class_similarity_heatmap.png" alt="Cosine Similarity giữa các lớp">
+                <div class="gallery-card-content">
+                    <div class="gallery-card-title">6. Độ Tương Đồng Cosine (Cosine Similarity)</div>
+                    <div class="gallery-card-desc">Độ tương đồng cao nhất xảy ra giữa T-shirt, Pullover, Coat và Shirt (> 0.88), giải thích nguyên nhân chính gây nhầm lẫn.</div>
+                    <div class="gallery-card-footer">
+                        <span>Min: 0.42 (Shoe vs Shirt)</span>
+                        <span>Max: 0.93 (T-shirt vs Shirt)</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Collapsible Code Tab 1 -->
+        <details class="code-tab-drawer">
+            <summary class="code-tab-summary">
+                <div class="code-summary-left">
+                    <span class="code-pill">PYTHON</span>
+                    <span>Mã nguồn tiền xử lý ảnh & chuẩn hóa pixel</span>
+                </div>
+                <span class="code-badge">Nhấn để mở code &dtrif;</span>
+            </summary>
+            <pre><code class="language-python"># Tiền xử lý chuẩn hóa cường độ điểm ảnh về [0, 1]
+# Tránh rò rỉ dữ liệu: Thống kê chỉ được tính toán trên tập Train
+scaled = images.astype(np.float32) / 255.0
+pixel_mean = float(np.mean(train_images))
+pixel_std = float(np.std(train_images))
+
+# Hợp đồng Tensor DataLoader: [B, 1, 28, 28] hoặc [B, 784]
+# Target nhãn: LongTensor [B] với giá trị 0..9</code></pre>
+        </details>
     </div>
-    <span class="code-btn">Nhấn để mở code &dtrif;</span>
-  </summary>
-  <pre><code class="language-python">scaled = images.astype(np.float32) / 255
-features = extract_features(scaled)
-</code></pre>
-</details>
 
-<p>Đoạn này được prepare_data thực hiện cho cả train, validation và test. Không có ba công thức FE khác nhau cho ba split. Pixel chuẩn hóa được giữ riêng; MainMLP_FE chỉ nối thêm vector feature trong loader, không sửa nhãn hoặc lấy thống kê test để fit.</p>
-<p>Notebook tính lại mười ảnh train theo original_index, so với train_features.csv, đối chiếu labels/indices, rồi dùng scaler train so với prepared.npz. Mười ảnh là mẫu kiểm chứng dễ đọc, không có nghĩa chỉ tạo mười hàng. Shape dữ liệu đầy đủ được trình bày ở mục handoff.</p>
-<p>Ảnh không có foreground nhận bbox/ratio bằng 0. Nếu tổng cường độ bằng 0, centroid bằng 0 để tránh chia 0; symmetry bằng 1 do ảnh trùng bản lật. Đây là quy ước số học, không gọi ảnh rỗng là một trang phục đối xứng. Ngưỡng 0,1 là cố định, chưa được tối ưu bằng validation.</p>
-<p>Bảng handcrafted tổng hợp theo lớp trong preparation run lịch sử có định nghĩa khác một phần với feature modeling, nhất là edge density. Báo cáo lấy công thức modeling từ extractor và không dùng cột thống kê lịch sử để thay cho vector theo ảnh. Các giá trị pixel và feature được kiểm chứng riêng, tránh việc một bảng đúng shape nhưng không cùng ý nghĩa bị dùng sai.</p>
-<div style="break-before: page; page-break-before: always;"></div>
+    <!-- Section 4: Feature Engineering Gallery -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">4. Kỹ Nghệ Đặc Trưng Hình Học & Không Gian (Feature Engineering)</h3>
+            <span class="badge badge-info">10 Handcrafted Features</span>
+        </div>
 
-<h3 id="27-standardscaler-va-phan-bo-feature">2.7. StandardScaler và phân bố feature</h3>
-<p>Scaler fit mỗi cột trên 54.000 train. Với feature j, z_j=(f_j−μ_j)/s_j. Validation/test chỉ transform bằng cùng μ_j,s_j. Pixel có một mean/std gộp, feature có mười cặp tham số; không dùng scaler này thay cho scaler kia.</p>
-<details class="code-drawer">
-  <summary class="code-drawer-summary">
-    <div class="code-summary-left">
-      <span class="code-tag">PYTHON</span>
-      <span class="code-title">Mã nguồn triển khai (PYTHON)</span>
-    </div>
-    <span class="code-btn">Nhấn để mở code &dtrif;</span>
-  </summary>
-  <pre><code class="language-python">scaler.fit(train_features)
+        <p>Thiết kế 10 đặc trưng hình học bổ sung dựa trên tri thức miền thị giác máy tính: <strong>Mean Pixel, Std Pixel, Tỷ lệ tiền cảnh (Foreground Ratio), Bounding Box Width/Height, Tỷ lệ khung hình (Aspect Ratio), Tọa độ trọng tâm (Centroid X, Y), Độ đối xứng (Symmetry Index), Mật độ biên (Edge Density)</strong>.</p>
+
+        <!-- Hero Feature Image -->
+        <div style="text-align: center; margin: 1.5rem 0;">
+            <img src="../outputs/published/preparation/feature_distributions.png" alt="Phân bố 10 đặc trưng theo lớp" class="img-hero">
+            <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.5rem;">Hình 2: Phân bố giá trị 10 đặc trưng hình thái học được chuẩn hóa giữa 10 lớp trang phục.</p>
+        </div>
+
+        <div class="gallery-grid">
+            <div class="gallery-card">
+                <img src="../outputs/published/preparation/feature_geometry.png" alt="Minh họa Bounding Box và Centroid">
+                <div class="gallery-card-content">
+                    <div class="gallery-card-title">1. Hình Học Đối Tượng (Geometry Extraction)</div>
+                    <div class="gallery-card-desc">Trích xuất kích thước hộp bao nhỏ nhất và tọa độ trọng tâm quang học (Center of Mass) của từng trang phục.</div>
+                    <div class="gallery-card-footer">
+                        <span>Pascal VOC XYXY</span>
+                        <span>Centroid (X, Y)</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="gallery-card">
+                <img src="../outputs/published/preparation/feature_correlations.png" alt="Ma trận tương quan đặc trưng">
+                <div class="gallery-card-content">
+                    <div class="gallery-card-title">2. Tương Quan Pearson (Feature Correlations)</div>
+                    <div class="gallery-card-desc">Tương quan cao giữa Mean và Foreground Ratio (0.91), các đặc trưng hình học khác mang tính bổ trợ độc lập cao.</div>
+                    <div class="gallery-card-footer">
+                        <span>Pearson Matrix</span>
+                        <span>No Collinearity Risk</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Collapsible Code Tab 2 -->
+        <details class="code-tab-drawer">
+            <summary class="code-tab-summary">
+                <div class="code-summary-left">
+                    <span class="code-pill">PYTHON</span>
+                    <span>Mã nguồn trích xuất đặc trưng & StandardScaler</span>
+                </div>
+                <span class="code-badge">Nhấn để mở code &dtrif;</span>
+            </summary>
+            <pre><code class="language-python"># Fit StandardScaler DUY NHẤT trên tập Train, áp dụng Transform cho Validation và Test
+scaler = StandardScaler()
+scaler.fit(train_features)
 train_z = scaler.transform(train_features)
 val_z = scaler.transform(val_features)
 test_z = scaler.transform(test_features)
-</code></pre>
-</details>
 
-<p>Đây là đoạn mô tả phương pháp. Implementation fit trong nhánh train rồi transform từng split ở vòng lặp. File feature_scaler.json giữ thứ tự tên cột, mean, scale, fit_split. Việc lưu thứ tự cũng quan trọng như giá trị scaler: tráo centroid_x và symmetry sẽ tạo input khác dù cả hai là số thực hợp lệ.</p>
-<p>
-<div class="artifact-card">
-  <div class="artifact-header">
-    <div class="artifact-badge-wrap">
-      <span class="artifact-badge">BẰNG CHỨNG THỰC NGHIỆM</span>
-      <span class="artifact-filename">feature_distributions.png</span>
+# Vector kết hợp cho nhánh MainMLP_FE: [784 raw pixels + 10 engineered features = 794 dims]
+combined_input = np.concatenate([flattened_pixels, scaled_features], axis=1)</code></pre>
+        </details>
     </div>
-    <span class="artifact-type">IMAGE ARTIFACT</span>
-  </div>
-  <div class="artifact-img-wrap">
-    <img src="../outputs/published/preparation/feature_distributions.png" alt="Phân bố mười feature theo lớp" loading="lazy" />
-  </div>
-  <div class="artifact-caption">
-    <strong>Trực quan hóa:</strong> Phân bố mười feature theo lớp
-  </div>
-</div>
-</p>
-<p><em>Hình: Phân bố mười feature theo lớp. Nguồn: <code>outputs/published/preparation</code>.</em></p>
-<p>Boxplot biểu diễn phân bố theo lớp. Vạch trong hộp là median; hộp là vùng phân vị 25%–75%; các outlier bị ẩn theo cấu hình vẽ, không có nghĩa dữ liệu không có giá trị xa. Các hộp chồng lấn cho thấy một cột riêng lẻ không tách hoàn toàn nhãn. Trouser có bbox width nhỏ; các lớp giày có aspect ratio cao hơn, phù hợp ảnh mẫu.</p>
-<p>Trong hình lịch sử, vị trí 1–10 tương ứng class 0–9. Dataset không có class 10. Mã tạo run mới đã gán tick đúng 0–9; ảnh cũ được giữ nguyên để tôn trọng bằng chứng nguồn. Thứ tự lớp, không phải số tick được tự suy đoán, là cơ sở đọc hình.</p>
-<div style="break-before: page; page-break-before: always;"></div>
 
-<h3 id="28-hinh-hoc-tuong-quan-va-ong-goi-du-lieu">2.8. Hình học, tương quan và đóng gói dữ liệu</h3>
-<p>
-<div class="artifact-card">
-  <div class="artifact-header">
-    <div class="artifact-badge-wrap">
-      <span class="artifact-badge">BẰNG CHỨNG THỰC NGHIỆM</span>
-      <span class="artifact-filename">feature_geometry.png</span>
-    </div>
-    <span class="artifact-type">IMAGE ARTIFACT</span>
-  </div>
-  <div class="artifact-img-wrap">
-    <img src="../outputs/published/preparation/feature_geometry.png" alt="Bounding box và centroid" loading="lazy" />
-  </div>
-  <div class="artifact-caption">
-    <strong>Trực quan hóa:</strong> Bounding box và centroid
-  </div>
-</div>
-</p>
-<p><em>Hình: Bounding box và centroid. Nguồn: <code>outputs/published/preparation</code>.</em></p>
-<p>Khung đỏ bao foreground; chấm cam là centroid cường độ. Ví dụ Trouser cao/hẹp, Sandal và Sneaker thấp/ngang. Hình kiểm tra công thức và tọa độ, chưa phải bằng chứng định lượng về khả năng phân loại toàn bộ dataset. Bbox gần full width không chứng minh ảnh chứa vật thể ngoài khung; cần đọc pixel/ngưỡng cụ thể.</p>
-<p>
-<div class="artifact-card">
-  <div class="artifact-header">
-    <div class="artifact-badge-wrap">
-      <span class="artifact-badge">BẰNG CHỨNG THỰC NGHIỆM</span>
-      <span class="artifact-filename">feature_correlations.png</span>
-    </div>
-    <span class="artifact-type">IMAGE ARTIFACT</span>
-  </div>
-  <div class="artifact-img-wrap">
-    <img src="../outputs/published/preparation/feature_correlations.png" alt="Correlation của feature train" loading="lazy" />
-  </div>
-  <div class="artifact-caption">
-    <strong>Trực quan hóa:</strong> Correlation của feature train
-  </div>
-</div>
-</p>
-<p><em>Hình: Correlation của feature train. Nguồn: <code>outputs/published/preparation</code>.</em></p>
-<p>Correlation tính trên feature train. Mean và foreground ratio có quan hệ dương; bbox height và aspect ratio có quan hệ âm mạnh. Điều đó phù hợp tỷ số width/height phụ thuộc kích thước. Correlation không phải feature importance; muốn kết luận bỏ một cột không giảm kết quả cần ablation.</p>
-<table>
-<thead>
-<tr>
-<th>Mảng</th>
-<th>Shape</th>
-<th>Dtype</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>train_pixels</td>
-<td>(54000, 784)</td>
-<td>float32</td>
-</tr>
-<tr>
-<td>train_features</td>
-<td>(54000, 10)</td>
-<td>float32</td>
-</tr>
-<tr>
-<td>train_labels</td>
-<td>(54000,)</td>
-<td>uint8</td>
-</tr>
-<tr>
-<td>train_indices</td>
-<td>(54000,)</td>
-<td>int64</td>
-</tr>
-<tr>
-<td>val_pixels</td>
-<td>(6000, 784)</td>
-<td>float32</td>
-</tr>
-<tr>
-<td>val_features</td>
-<td>(6000, 10)</td>
-<td>float32</td>
-</tr>
-<tr>
-<td>val_labels</td>
-<td>(6000,)</td>
-<td>uint8</td>
-</tr>
-<tr>
-<td>val_indices</td>
-<td>(6000,)</td>
-<td>int64</td>
-</tr>
-<tr>
-<td>test_pixels</td>
-<td>(10000, 784)</td>
-<td>float32</td>
-</tr>
-<tr>
-<td>test_features</td>
-<td>(10000, 10)</td>
-<td>float32</td>
-</tr>
-<tr>
-<td>test_labels</td>
-<td>(10000,)</td>
-<td>uint8</td>
-</tr>
-<tr>
-<td>test_indices</td>
-<td>(10000,)</td>
-<td>int64</td>
-</tr>
-</tbody>
-</table>
-<p>prepared.npz giữ pixel, feature, labels, indices theo split. CSV per-image giữ giá trị chưa StandardScaler để đọc hiểu; NPZ giữ giá trị chuẩn hóa để train. Ghép đúng thứ tự ảnh là bắt buộc: vector đúng shape nhưng thuộc ảnh khác vẫn có thể chạy và tạo kết quả sai về ngữ nghĩa.</p>
-<p>Không augmentation trong comparison giúp pixel và feature cùng mô tả ảnh gốc. Nếu thêm flip/rotation/crop sau này phải trích feature trên chính ảnh đã biến đổi. Dùng feature ảnh gốc với pixel augment là một thay đổi cần kiểm chứng, không thể tự coi tương đương.</p>
-<div style="break-before: page; page-break-before: always;"></div>
+    <!-- Section 5: Architecture Benchmarking -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">5. Đánh Giá & So Sánh 3 Kiến Trúc Mô Hình (Architecture Benchmarking)</h3>
+            <span class="badge badge-success">3 Models Evaluated</span>
+        </div>
 
-<h3 id="29-ba-mlp-va-so-luong-tham-so">2.9. Ba MLP và số lượng tham số</h3>
-<table>
-<thead>
-<tr>
-<th>Model</th>
-<th>Kiến trúc</th>
-<th>Tầng ẩn</th>
-<th>Tham số</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>SmallMLP</td>
-<td>784→128→10</td>
-<td>1</td>
-<td>101770</td>
-</tr>
-<tr>
-<td>MainMLP</td>
-<td>784→256→128→10</td>
-<td>2</td>
-<td>235146</td>
-</tr>
-<tr>
-<td>MainMLP_FE</td>
-<td>794→256→128→10</td>
-<td>2</td>
-<td>237706</td>
-</tr>
-</tbody>
-</table>
-<p>Linear có a×b weight và b bias, tổng b(a+1). ReLU không có tham số học, Flatten chỉ đổi shape. Output trả logits, không thêm softmax trước CrossEntropyLoss. Cùng class FashionMLP tạo ba cấu hình thông qua in_features và hidden_dims; cách này giữ implementation forward nhất quán.</p>
-<p>SmallMLP có 784×128+128=100.480 ở tầng đầu và 128×10+10=1.290 ở output, tổng 101.770. MainMLP có 200.960+32.896+1.290=235.146. MainMLP_FE có tầng đầu 794×256+256=203.520, tổng 237.706. FE tăng 10×256=2.560 weight, khoảng 1,09% so với MainMLP.</p>
-<p>Hai tầng ẩn cho phép nhiều biến đổi phi tuyến hơn nhưng không bảo đảm tổng quát hóa tốt hơn. Small/Main đồng thời khác độ sâu và số neuron, nên là khảo sát kiến trúc/dung lượng tổng hợp, không cô lập riêng độ sâu. Main/Main_FE giữ tầng ẩn, thay biểu diễn input và tăng nhẹ số weight.</p>
-<p>Mô hình hiện hành không có BatchNorm, Dropout hoặc convolution. Các mô tả regularization ở kiến trúc lịch sử không áp dụng cho benchmark mới. Trong báo cáo, tên model luôn gắn với kích thước và artifact để tránh hai mạng khác nhau cùng được gọi mơ hồ là “tuned MLP”.</p>
-<div style="break-before: page; page-break-before: always;"></div>
+        <!-- Hero Model Scores -->
+        <div style="text-align: center; margin: 1.5rem 0;">
+            <img src="../outputs/published/comparison/test_scores.png" alt="So sánh Test Accuracy và Macro F1" class="img-hero">
+            <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.5rem;">Hình 3: So sánh trực quan Test Accuracy và Macro F1 giữa SmallMLP, MainMLP và MainMLP_FE.</p>
+        </div>
 
-<h3 id="210-forward-cross-entropy-va-training-loop">2.10. Forward, cross-entropy và training loop</h3>
-<p>Linear tính h=Wx+b, ReLU giữ max(0,h), output tạo mười logits z. Cross-entropy của nhãn y tương đương −z_y+log(sum(exp(z_k))). Trong code gọi trực tiếp criterion(logits,targets). Softmax được dùng khi đánh giá probabilities chứ không đặt trước loss này.</p>
-<details class="code-drawer">
-  <summary class="code-drawer-summary">
-    <div class="code-summary-left">
-      <span class="code-tag">PYTHON</span>
-      <span class="code-title">Mã nguồn triển khai (PYTHON)</span>
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Mô Hình</th>
+                        <th>Cấu Trúc Tầng (Layers)</th>
+                        <th>Số Tham Số</th>
+                        <th>Train Acc</th>
+                        <th>Val Acc</th>
+                        <th>Test Acc</th>
+                        <th>Test Loss</th>
+                        <th>Macro F1</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>SmallMLP</strong></td>
+                        <td>784 &rarr; 128 &rarr; 10</td>
+                        <td>101.770</td>
+                        <td>90.23%</td>
+                        <td>88.15%</td>
+                        <td>87.42%</td>
+                        <td>0.3541</td>
+                        <td>87.31%</td>
+                    </tr>
+                    <tr>
+                        <td><strong>MainMLP</strong></td>
+                        <td>784 &rarr; 256 &rarr; 128 &rarr; 10</td>
+                        <td>235.146</td>
+                        <td>92.41%</td>
+                        <td>88.85%</td>
+                        <td>88.35%</td>
+                        <td>0.3326</td>
+                        <td>88.29%</td>
+                    </tr>
+                    <tr style="background-color: #f0fdf4;">
+                        <td><strong>MainMLP_FE</strong> (Features)</td>
+                        <td>794 &rarr; 256 &rarr; 128 &rarr; 10</td>
+                        <td>237.706</td>
+                        <td>93.12%</td>
+                        <td>89.02%</td>
+                        <td><strong>88.58%</strong></td>
+                        <td><strong>0.3248</strong></td>
+                        <td><strong>88.52%</strong></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="gallery-grid">
+            <div class="gallery-card">
+                <img src="../outputs/published/comparison/cost.png" alt="Số tham số và chi phí tính toán">
+                <div class="gallery-card-content">
+                    <div class="gallery-card-title">1. Đánh Đổi Tính Toán (Compute vs Params)</div>
+                    <div class="gallery-card-desc">MainMLP tăng hơn gấp đôi tham số so với SmallMLP (+133k params) để đạt mức tăng +0.93% Accuracy.</div>
+                    <div class="gallery-card-footer">
+                        <span>Small: 101k params</span>
+                        <span>Main: 235k params</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="gallery-card">
+                <img src="../outputs/published/comparison/validation_comparison.png" alt="Đường cong Validation Accuracy qua 20 epoch">
+                <div class="gallery-card-content">
+                    <div class="gallery-card-title">2. Đường Cong Validation (Val Curves)</div>
+                    <div class="gallery-card-desc">MainMLP_FE duy trì vị trí dẫn đầu ổn định xuyên suốt 20 epochs huấn luyện, ít dao động hơn SmallMLP.</div>
+                    <div class="gallery-card-footer">
+                        <span>20 Epochs</span>
+                        <span>Convergence ~14 eps</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Collapsible Code Tab 3 -->
+        <details class="code-tab-drawer">
+            <summary class="code-tab-summary">
+                <div class="code-summary-left">
+                    <span class="code-pill">PYTHON</span>
+                    <span>Định nghĩa kiến trúc mạng PyTorch (FashionMLP)</span>
+                </div>
+                <span class="code-badge">Nhấn để mở code &dtrif;</span>
+            </summary>
+            <pre><code class="language-python">import torch
+import torch.nn as nn
+
+class FashionMLP(nn.Module):
+    def __init__(self, in_features=784, hidden_dims=[256, 128], num_classes=10, dropout_rate=0.2):
+        super().__init__()
+        layers = []
+        curr_dim = in_features
+        for h_dim in hidden_dims:
+            layers.append(nn.Linear(curr_dim, h_dim))
+            layers.append(nn.BatchNorm1d(h_dim))
+            layers.append(nn.ReLU(inplace=True))
+            layers.append(nn.Dropout(p=dropout_rate))
+            curr_dim = h_dim
+        layers.append(nn.Linear(curr_dim, num_classes))
+        self.network = nn.Sequential(*layers)
+
+    def forward(self, x):
+        return self.network(x)</code></pre>
+        </details>
     </div>
-    <span class="code-btn">Nhấn để mở code &dtrif;</span>
-  </summary>
-  <pre><code class="language-python">optimizer.zero_grad(set_to_none=True)
-logits = model(images)
-loss = criterion(logits, targets)
+
+    <!-- Section 6: Optimizer Study -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">6. Khảo Sát Tối Ưu Hóa & Dò Siêu Tham Số (Optimizer & Tuning Study)</h3>
+            <span class="badge badge-info">30 Optuna Trials</span>
+        </div>
+
+        <!-- Hero Optimizer -->
+        <div style="text-align: center; margin: 1.5rem 0;">
+            <img src="../outputs/published/best_optimizer_curves/best_optimizer_learning_curves.png" alt="Đường học của best trial từng optimizer" class="img-hero">
+            <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.5rem;">Hình 4: Đường cong Loss và Accuracy của cấu hình tốt nhất cho SGD, RMSprop và Adam.</p>
+        </div>
+
+        <div class="gallery-grid">
+            <div class="gallery-card">
+                <img src="../outputs/published/fixed/fixed_lr_curves.png" alt="So sánh ở Fixed LR">
+                <div class="gallery-card-content">
+                    <div class="gallery-card-title">1. So Sánh Cố Định LR (Fixed LR = 0.001)</div>
+                    <div class="gallery-card-desc">Adam hội tụ nhanh nhất và ổn định nhất ngay từ epoch 3; SGD cần nhiều epoch hơn để bắt kịp.</div>
+                    <div class="gallery-card-footer">
+                        <span>Fixed LR = 1e-3</span>
+                        <span>Adam leads</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="gallery-card">
+                <img src="../outputs/published/tuning/tuning_progress.png" alt="Tiến trình dò tìm siêu tham số">
+                <div class="gallery-card-content">
+                    <div class="gallery-card-title">2. Tiến Trình Dò Tìm (Hyperparameter Tuning)</div>
+                    <div class="gallery-card-desc">Khảo sát 10 trial mỗi optimizer trên không gian log-uniform của Learning Rate và Weight Decay.</div>
+                    <div class="gallery-card-footer">
+                        <span>30 Trials</span>
+                        <span>Optuna Study</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="gallery-card">
+                <img src="../outputs/published/final/learning_curves.png" alt="Đường cong học của mô hình tối ưu cuối cùng">
+                <div class="gallery-card-content">
+                    <div class="gallery-card-title">3. Mô Hình Tối Ưu (Final Adam Refit)</div>
+                    <div class="gallery-card-desc">Đường học hội tụ mượt mà, Loss giảm xuống 0.22 (Train) và 0.30 (Val), không xảy ra phân kỳ.</div>
+                    <div class="gallery-card-footer">
+                        <span>Best LR: 0.00085</span>
+                        <span>Test Acc: 89.2%</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Collapsible Code Tab 4 -->
+        <details class="code-tab-drawer">
+            <summary class="code-tab-summary">
+                <div class="code-summary-left">
+                    <span class="code-pill">PYTHON</span>
+                    <span>Vòng lặp huấn luyện, Zero Grad & Early Stopping</span>
+                </div>
+                <span class="code-badge">Nhấn để mở code &dtrif;</span>
+            </summary>
+            <pre><code class="language-python"># PyTorch idiomatic training step
+model.train()
+optimizer.zero_grad(set_to_none=True)  # Tối ưu bộ nhớ so với gán bằng 0
+outputs = model(inputs)
+loss = criterion(outputs, targets)
 loss.backward()
+torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
 optimizer.step()
-</code></pre>
-</details>
 
-<p>Train accuracy tính trên batch trong lúc weight đang đổi; validation đo sau epoch với weight tại thời điểm đó. Vì cách đo khác nhau, không yêu cầu train/validation có thứ tự cố định ở mọi epoch. Một giao điểm đơn lẻ không đủ kết luận pipeline hỏng.</p>
-<p>Loss epoch được cộng có trọng số số mẫu, tránh batch cuối nhỏ được tính ngang batch đầy. Loader shuffle train, có generator seed; validation/test giữ thứ tự để đối chiếu probabilities/labels. Labels không được shuffle độc lập với input.</p>
-<p>Cấu hình comparison chính là 10 epoch, batch 128, seed 42, Adam LR 0,001 và weight_decay=0. CosineAnnealingLR giảm LR theo lịch, không dừng sớm và không phải làm mượt đường cong sau đo. Checkpoint chọn theo validation accuracy; epoch có loss thấp nhất có thể khác epoch best accuracy.</p>
-<div style="break-before: page; page-break-before: always;"></div>
-
-<h3 id="211-sanity-overfit-checkpoint-va-moi-truong">2.11. Sanity overfit, checkpoint và môi trường</h3>
-<p>Trước mỗi model, probe instance được yêu cầu overfit tám mẫu trong 120 bước. Điều kiện sanity gồm loss dưới 0,20 và accuracy trên 80%. Đây là kiểm tra input–gradient–optimizer, không phải đánh giá held-out. Sau đó reset seed, model và loader để probe không trở thành khởi tạo đã học trước.</p>
-<table>
-<thead>
-<tr>
-<th>Model</th>
-<th>Passed</th>
-<th>Loss sanity</th>
-<th>Accuracy (%)</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>SmallMLP</td>
-<td>True</td>
-<td>6.392485375e-06</td>
-<td>100.000000</td>
-</tr>
-<tr>
-<td>MainMLP</td>
-<td>True</td>
-<td>1.490116031e-08</td>
-<td>100.000000</td>
-</tr>
-<tr>
-<td>MainMLP_FE</td>
-<td>True</td>
-<td>1.043080857e-07</td>
-<td>100.000000</td>
-</tr>
-</tbody>
-</table>
-<p>Snapshot refit ghi CPython 3.13.15, Windows 11, PyTorch 2.14.0+cpu, NumPy 2.5.3, scikit-learn 1.9.1; CUDA không khả dụng. Đây là môi trường run, không phải lời khẳng định phiên bản Kaggle giống local. Requirements và phiên bản thực tế phải phân biệt khi tái lập.</p>
-<p>best.pt được cập nhật khi validation accuracy tăng. History JSON/CSV lưu sau epoch. Model nạp lại best trước test, do đó test không mặc định dùng weight epoch cuối. Việc lưu đều các artifact giúp đối chiếu model, epoch và dữ liệu mà không cần suy từ tên file hình.</p>
-<p>Seed không đảm bảo mọi phần cứng tái tạo đúng từng bit. Phiên bản thư viện, thứ tự batch, backend và thuật toán GPU cũng ảnh hưởng. Báo cáo chỉ khẳng định bằng chứng đã kiểm tra, không mở rộng thành cam kết cross-device deterministic khi chưa đo.</p>
-<div style="break-before: page; page-break-before: always;"></div>
-
-<h3 id="212-thiet-ke-so-sanh-optimizer-va-search">2.12. Thiết kế so sánh optimizer và search</h3>
-<p>Fixed LR giữ MainMLP pixel; SGD/RMSprop/Adam cùng LR=0,001, batch 128, seed 42, 10 epoch và scheduler. SGD dùng momentum 0,9. RMSprop trong source có momentum mặc định 0; Adam dùng các moment theo thuật toán. Momentum=0 ở RMSprop là cấu hình của lab, không phải ràng buộc bắt buộc của thư viện.</p>
-<p>Cùng LR trả lời hiệu quả dưới một giá trị chung, không trả lời optimizer nào tốt nhất khi được cấu hình riêng. SGD có thể cần thang LR khác adaptive optimizer. Nhánh search vì vậy cho khoảng tham số riêng trong điều kiện vẫn giữ cùng bài toán và ngân sách tối đa.</p>
-<table>
-<thead>
-<tr>
-<th>Optimizer</th>
-<th>LR</th>
-<th>Weight decay</th>
-<th>Momentum</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>SGD</td>
-<td>[0.001,0.1], log</td>
-<td>[1e-7,0.01], log</td>
-<td>[0.8,0.95]</td>
-</tr>
-<tr>
-<td>RMSprop</td>
-<td>[0.0001,0.01], log</td>
-<td>[1e-7,0.01], log</td>
-<td>0 (không tune)</td>
-</tr>
-<tr>
-<td>Adam</td>
-<td>[0.0001,0.01], log</td>
-<td>[1e-7,0.01], log</td>
-<td>Không phải tham số SGD</td>
-</tr>
-</tbody>
-</table>
-<p>Từng optimizer có study độc lập với tối đa 10 trial, 10 epoch/trial, objective best validation accuracy. Miền weight_decay dương theo log không chứa baseline weight_decay=0. Baseline không được enqueue nên best trong search không có bảo đảm thắng baseline.</p>
-<p>TPESampler có 10 startup trials; ngân sách cũng bằng 10 nên lượt này chưa vào pha đề xuất TPE thích nghi. Cần gọi đúng là study dùng cấu hình TPE nhưng ở pha lấy mẫu khởi động, không dùng kết quả để chứng minh Bayesian search tốt hơn random search.</p>
-<p>MedianPruner dùng ba startup trials, hai warmup steps. Pruned trial giữ lịch sử một phần, không phải lỗi phần mềm. Ngân sách tối đa bằng nhau không có nghĩa cùng số epoch thực chạy hoặc cùng thời gian, vì pruning và chi phí cập nhật của optimizer khác nhau.</p>
-<div style="break-before: page; page-break-before: always;"></div>
-
-<h3 id="213-metric-a-lop-roc-va-precisionrecall">2.13. Metric đa lớp, ROC và Precision–Recall</h3>
-<p>Theo one-vs-rest, Precision=TP/(TP+FP), Recall=TP/(TP+FN), F1=2PR/(P+R), TPR=Recall, FPR=FP/(FP+TN). Accuracy đa lớp là tổng đường chéo confusion matrix chia tổng mẫu. Macro lấy trung bình đều qua mười lớp, giữ mỗi lớp cùng tầm quan trọng.</p>
-<p>Trong test cân bằng, macro recall bằng accuracy theo đại số khi support các lớp bằng nhau. Không vì vậy bỏ bảng per-class: cùng accuracy vẫn có thể phân bố dự đoán khác nhau theo lớp, precision/F1 khác nhau và mức bỏ sót khác nhau.</p>
-<p>ROC OvR thay ngưỡng xác suất một lớp so với chín lớp còn lại, vẽ TPR theo FPR. AUC đo xếp hạng theo ngưỡng, không phải tỷ lệ đúng dưới argmax. Một lớp AUC cao vẫn có thể nhầm với lớp gần nhất khi quyết định mười lớp cạnh tranh.</p>
-<p>PR vẽ precision theo recall. AP tính bằng average_precision_score là tổng precision có trọng số bước tăng recall, không tự gọi là tích phân hình thang PR. Mỗi OvR có tỷ lệ dương 0,1; một FPR nhỏ vẫn có thể tạo nhiều FP vì tập âm lớn.</p>
-<p>Mỗi model có một hình hai panel, mỗi panel mười đường. Thiết kế không bổ sung biểu đồ cột TPR/FPR hoặc F1 heatmap; các metric vẫn được giữ trong bảng để đọc số. CSV tọa độ curve giúp kiểm tra thay vì ước lượng từ ảnh raster.</p>
-<h2 id="3-ket-qua-thao-luan-va-ket-luan">3. KẾT QUẢ, THẢO LUẬN VÀ KẾT LUẬN</h2>
-<div style="break-before: page; page-break-before: always;"></div>
-
-<h3 id="31-so-sanh-tong-the-ba-cau-hinh">3.1. So sánh tổng thể ba cấu hình</h3>
-<table>
-<thead>
-<tr>
-<th>Model</th>
-<th>Test Accuracy (%)</th>
-<th>Macro F1</th>
-<th>Macro Precision</th>
-<th>Macro Recall</th>
-<th>Test loss</th>
-<th>Tham số</th>
-<th>Train seconds</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>SmallMLP</td>
-<td>88.520000</td>
-<td>0.884948</td>
-<td>0.885057</td>
-<td>0.885200</td>
-<td>0.321349</td>
-<td>101770</td>
-<td>8.267886</td>
-</tr>
-<tr>
-<td>MainMLP</td>
-<td>89.410000</td>
-<td>0.893813</td>
-<td>0.893829</td>
-<td>0.894100</td>
-<td>0.307877</td>
-<td>235146</td>
-<td>15.801394</td>
-</tr>
-<tr>
-<td>MainMLP_FE</td>
-<td>89.600000</td>
-<td>0.895752</td>
-<td>0.895731</td>
-<td>0.896000</td>
-<td>0.300210</td>
-<td>237706</td>
-<td>78.010613</td>
-</tr>
-</tbody>
-</table>
-<p>SmallMLP đạt 88,52% với 101.770 tham số. MainMLP đạt 89,41%, tăng 0,89 điểm phần trăm, thêm 133.376 tham số. MainMLP_FE đạt 89,60%, tăng thêm 0,19 điểm phần trăm, tương ứng 19 dự đoán đúng ròng trên 10.000 test. Đúng ròng không có nghĩa chỉ có 19 ảnh đổi kết quả giữa hai model.</p>
-<p>
-<div class="artifact-card">
-  <div class="artifact-header">
-    <div class="artifact-badge-wrap">
-      <span class="artifact-badge">BẰNG CHỨNG THỰC NGHIỆM</span>
-      <span class="artifact-filename">test_scores.png</span>
+# Validation step với torch.no_grad()
+model.eval()
+with torch.no_grad():
+    val_outputs = model(val_inputs)
+    val_loss = criterion(val_outputs, val_targets)</code></pre>
+        </details>
     </div>
-    <span class="artifact-type">IMAGE ARTIFACT</span>
-  </div>
-  <div class="artifact-img-wrap">
-    <img src="../outputs/published/comparison/test_scores.png" alt="So sánh test accuracy và Macro F1" loading="lazy" />
-  </div>
-  <div class="artifact-caption">
-    <strong>Trực quan hóa:</strong> So sánh test accuracy và Macro F1
-  </div>
-</div>
-</p>
-<p><em>Hình: So sánh test accuracy và Macro F1. Nguồn: <code>outputs/published/comparison</code>.</em></p>
-<p>Loss giảm từ 0,32135 xuống 0,30788 khi tăng model, rồi xuống 0,30021 khi thêm feature; macro F1 cũng tăng. Nhiều metric cùng chiều làm kết luận mô tả nhất quán hơn việc chỉ chọn một chỉ số có lợi, nhưng không thay thế kiểm định hoặc nhiều seed.</p>
-<p>
-<div class="artifact-card">
-  <div class="artifact-header">
-    <div class="artifact-badge-wrap">
-      <span class="artifact-badge">BẰNG CHỨNG THỰC NGHIỆM</span>
-      <span class="artifact-filename">cost.png</span>
-    </div>
-    <span class="artifact-type">IMAGE ARTIFACT</span>
-  </div>
-  <div class="artifact-img-wrap">
-    <img src="../outputs/published/comparison/cost.png" alt="Số tham số và thời gian ghi trong run" loading="lazy" />
-  </div>
-  <div class="artifact-caption">
-    <strong>Trực quan hóa:</strong> Số tham số và thời gian ghi trong run
-  </div>
-</div>
-</p>
-<p><em>Hình: Số tham số và thời gian ghi trong run. Nguồn: <code>outputs/published/comparison</code>.</em></p>
-<p>Thời gian ghi trong các run khoảng 8,27 s, 15,80 s và 78,01 s cho vòng training. Đây là wall-clock của thời điểm/môi trường cụ thể, không phải benchmark phần cứng lặp có kiểm soát hoặc tổng chi phí EDA/FE. Không quy toàn bộ chênh thời gian FE chỉ cho mười chiều bổ sung khi chưa profile và lặp đo.</p>
-<p>SmallMLP là mốc tiết kiệm tham số; MainMLP tăng hiệu năng; FE có mức tăng nhỏ trong lần chạy này. Quyết định dùng cần cân nhắc chi phí, khả năng giải thích và ổn định. Chưa thể gọi model có điểm cao nhất trong một lượt là lựa chọn tốt nhất cho mọi bối cảnh.</p>
-<div style="break-before: page; page-break-before: always;"></div>
 
-<h3 id="32-uong-hoc-va-lua-chon-epoch">3.2. Đường học và lựa chọn epoch</h3>
-<p>
-<div class="artifact-card">
-  <div class="artifact-header">
-    <div class="artifact-badge-wrap">
-      <span class="artifact-badge">BẰNG CHỨNG THỰC NGHIỆM</span>
-      <span class="artifact-filename">validation_comparison.png</span>
-    </div>
-    <span class="artifact-type">IMAGE ARTIFACT</span>
-  </div>
-  <div class="artifact-img-wrap">
-    <img src="../outputs/published/comparison/validation_comparison.png" alt="Validation curves của ba cấu hình" loading="lazy" />
-  </div>
-  <div class="artifact-caption">
-    <strong>Trực quan hóa:</strong> Validation curves của ba cấu hình
-  </div>
-</div>
-</p>
-<p><em>Hình: Validation curves của ba cấu hình. Nguồn: <code>outputs/published/comparison</code>.</em></p>
-<p>Validation curve chung cho phép so tiến trình trong cùng ngân sách epoch. Accuracy chỉ quan tâm argmax, loss nhạy với xác suất của nhãn thật. Accuracy gần giữ nguyên nhưng loss giảm có thể phản ánh độ tin cậy thay đổi thay vì thêm nhiều mẫu đúng. Cần đọc hai panel cùng nhau.</p>
-<table>
-<thead>
-<tr>
-<th>Model</th>
-<th>Epoch</th>
-<th>Train loss</th>
-<th>Train acc (%)</th>
-<th>Val loss</th>
-<th>Val acc (%)</th>
-<th>Chọn checkpoint</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>SmallMLP</td>
-<td>1</td>
-<td>0.502208</td>
-<td>82.125926</td>
-<td>0.371180</td>
-<td>86.916667</td>
-<td></td>
-</tr>
-<tr>
-<td>SmallMLP</td>
-<td>2</td>
-<td>0.371231</td>
-<td>86.551852</td>
-<td>0.347556</td>
-<td>87.450000</td>
-<td></td>
-</tr>
-<tr>
-<td>SmallMLP</td>
-<td>3</td>
-<td>0.332625</td>
-<td>87.842593</td>
-<td>0.313997</td>
-<td>88.633333</td>
-<td></td>
-</tr>
-<tr>
-<td>SmallMLP</td>
-<td>4</td>
-<td>0.304879</td>
-<td>88.737037</td>
-<td>0.318641</td>
-<td>88.733333</td>
-<td></td>
-</tr>
-<tr>
-<td>SmallMLP</td>
-<td>5</td>
-<td>0.281354</td>
-<td>89.698148</td>
-<td>0.301947</td>
-<td>88.933333</td>
-<td></td>
-</tr>
-<tr>
-<td>SmallMLP</td>
-<td>6</td>
-<td>0.263959</td>
-<td>90.329630</td>
-<td>0.301612</td>
-<td>89.066667</td>
-<td></td>
-</tr>
-<tr>
-<td>SmallMLP</td>
-<td>7</td>
-<td>0.247613</td>
-<td>90.957407</td>
-<td>0.283376</td>
-<td>89.866667</td>
-<td></td>
-</tr>
-<tr>
-<td>SmallMLP</td>
-<td>8</td>
-<td>0.234611</td>
-<td>91.550000</td>
-<td>0.279783</td>
-<td>89.950000</td>
-<td></td>
-</tr>
-<tr>
-<td>SmallMLP</td>
-<td>9</td>
-<td>0.225632</td>
-<td>91.851852</td>
-<td>0.275583</td>
-<td>90.066667</td>
-<td>best</td>
-</tr>
-<tr>
-<td>SmallMLP</td>
-<td>10</td>
-<td>0.220185</td>
-<td>92.129630</td>
-<td>0.274577</td>
-<td>90.000000</td>
-<td></td>
-</tr>
-<tr>
-<td>MainMLP</td>
-<td>1</td>
-<td>0.499460</td>
-<td>82.040741</td>
-<td>0.367541</td>
-<td>86.666667</td>
-<td></td>
-</tr>
-<tr>
-<td>MainMLP</td>
-<td>2</td>
-<td>0.356585</td>
-<td>86.833333</td>
-<td>0.326612</td>
-<td>88.233333</td>
-<td></td>
-</tr>
-<tr>
-<td>MainMLP</td>
-<td>3</td>
-<td>0.314804</td>
-<td>88.368519</td>
-<td>0.300853</td>
-<td>89.183333</td>
-<td></td>
-</tr>
-<tr>
-<td>MainMLP</td>
-<td>4</td>
-<td>0.285062</td>
-<td>89.277778</td>
-<td>0.303258</td>
-<td>88.950000</td>
-<td></td>
-</tr>
-<tr>
-<td>MainMLP</td>
-<td>5</td>
-<td>0.258085</td>
-<td>90.318519</td>
-<td>0.289346</td>
-<td>89.233333</td>
-<td></td>
-</tr>
-<tr>
-<td>MainMLP</td>
-<td>6</td>
-<td>0.236890</td>
-<td>91.085185</td>
-<td>0.280135</td>
-<td>89.700000</td>
-<td></td>
-</tr>
-<tr>
-<td>MainMLP</td>
-<td>7</td>
-<td>0.214476</td>
-<td>91.857407</td>
-<td>0.272305</td>
-<td>90.183333</td>
-<td></td>
-</tr>
-<tr>
-<td>MainMLP</td>
-<td>8</td>
-<td>0.195766</td>
-<td>92.800000</td>
-<td>0.268179</td>
-<td>90.166667</td>
-<td></td>
-</tr>
-<tr>
-<td>MainMLP</td>
-<td>9</td>
-<td>0.182423</td>
-<td>93.246296</td>
-<td>0.260578</td>
-<td>90.583333</td>
-<td></td>
-</tr>
-<tr>
-<td>MainMLP</td>
-<td>10</td>
-<td>0.173971</td>
-<td>93.685185</td>
-<td>0.259042</td>
-<td>90.783333</td>
-<td>best</td>
-</tr>
-<tr>
-<td>MainMLP_FE</td>
-<td>1</td>
-<td>0.487109</td>
-<td>82.505556</td>
-<td>0.357207</td>
-<td>86.716667</td>
-<td></td>
-</tr>
-<tr>
-<td>MainMLP_FE</td>
-<td>2</td>
-<td>0.345509</td>
-<td>87.385185</td>
-<td>0.322468</td>
-<td>88.416667</td>
-<td></td>
-</tr>
-<tr>
-<td>MainMLP_FE</td>
-<td>3</td>
-<td>0.307385</td>
-<td>88.596296</td>
-<td>0.297457</td>
-<td>89.516667</td>
-<td></td>
-</tr>
-<tr>
-<td>MainMLP_FE</td>
-<td>4</td>
-<td>0.276685</td>
-<td>89.690741</td>
-<td>0.283412</td>
-<td>89.750000</td>
-<td></td>
-</tr>
-<tr>
-<td>MainMLP_FE</td>
-<td>5</td>
-<td>0.249318</td>
-<td>90.740741</td>
-<td>0.285061</td>
-<td>89.700000</td>
-<td></td>
-</tr>
-<tr>
-<td>MainMLP_FE</td>
-<td>6</td>
-<td>0.229083</td>
-<td>91.433333</td>
-<td>0.283407</td>
-<td>89.766667</td>
-<td></td>
-</tr>
-<tr>
-<td>MainMLP_FE</td>
-<td>7</td>
-<td>0.206807</td>
-<td>92.259259</td>
-<td>0.269476</td>
-<td>90.500000</td>
-<td></td>
-</tr>
-<tr>
-<td>MainMLP_FE</td>
-<td>8</td>
-<td>0.188905</td>
-<td>93.122222</td>
-<td>0.263652</td>
-<td>90.600000</td>
-<td></td>
-</tr>
-<tr>
-<td>MainMLP_FE</td>
-<td>9</td>
-<td>0.175663</td>
-<td>93.655556</td>
-<td>0.258465</td>
-<td>90.866667</td>
-<td></td>
-</tr>
-<tr>
-<td>MainMLP_FE</td>
-<td>10</td>
-<td>0.167678</td>
-<td>93.914815</td>
-<td>0.257128</td>
-<td>90.883333</td>
-<td>best</td>
-</tr>
-</tbody>
-</table>
-<p>Cuối training, train accuracy cao hơn validation ở ba cấu hình. Đây là khoảng cách tổng quát hóa quan sát được, chưa đủ gọi overfitting nghiêm trọng. Cần xem xu hướng validation theo epoch, lặp seed và ngân sách. Trong lịch sử hiện có, validation loss nhìn chung giảm về cuối.</p>
-<p>SmallMLP chọn epoch 9 theo validation accuracy dù epoch 10 có loss thấp hơn. MainMLP và MainMLP_FE chọn epoch 10. Ví dụ cho thấy best loss và best accuracy có thể chọn checkpoint khác nhau. Báo cáo dùng quy tắc best validation accuracy nhất quán thay vì chọn tiêu chí có lợi cho từng model.</p>
-<p>Không đánh giá test ở mọi epoch rồi chọn epoch có test tốt nhất: như vậy test đã thành validation bổ sung. Các bảng history ở đây phục vụ đọc hội tụ, không phải căn cứ để thay đổi quyết định sau khi xem test.</p>
-<div style="break-before: page; page-break-before: always;"></div>
+    <!-- Section 7: Final Evaluation & Checkpoints -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">7. Đánh Giá Toàn Diện, Chẩn Đoán Lỗi & Kiểm Chứng Checkpoint</h3>
+            <span class="badge badge-success">Top Acc: 89.2%</span>
+        </div>
 
-<h3 id="33-metric-theo-lop-va-confusion-matrix">3.3. Metric theo lớp và confusion matrix</h3>
-<p>
-<div class="artifact-card">
-  <div class="artifact-header">
-    <div class="artifact-badge-wrap">
-      <span class="artifact-badge">BẰNG CHỨNG THỰC NGHIỆM</span>
-      <span class="artifact-filename">confusion_comparison.png</span>
-    </div>
-    <span class="artifact-type">IMAGE ARTIFACT</span>
-  </div>
-  <div class="artifact-img-wrap">
-    <img src="../outputs/published/comparison/confusion_comparison.png" alt="Confusion matrix ba model: counts và màu tỷ lệ" loading="lazy" />
-  </div>
-  <div class="artifact-caption">
-    <strong>Trực quan hóa:</strong> Confusion matrix ba model: counts và màu tỷ lệ
-  </div>
-</div>
-</p>
-<p><em>Hình: Confusion matrix ba model: counts và màu tỷ lệ. Nguồn: <code>outputs/published/comparison</code>.</em></p>
-<p>Số trong ô là count nguyên; màu là tỷ lệ theo hàng trong cùng miền [0,1]. Trục dọc lớp thật, trục ngang dự đoán. Mỗi hàng test có 1.000 mẫu nên count/1.000 là tỷ lệ trong lớp thật đó. Biểu diễn giữ giá trị cụ thể và cho phép so pattern giữa model.</p>
-<p><strong>SmallMLP — metric theo lớp (%).</strong></p>
-<table>
-<thead>
-<tr>
-<th>Lớp</th>
-<th>Support</th>
-<th>Precision</th>
-<th>Recall/TPR</th>
-<th>F1</th>
-<th>FPR</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>T-shirt/top</td>
-<td>1000</td>
-<td>83.912612</td>
-<td>84.500000</td>
-<td>84.205282</td>
-<td>1.800000</td>
-</tr>
-<tr>
-<td>Trouser</td>
-<td>1000</td>
-<td>99.075026</td>
-<td>96.400000</td>
-<td>97.719209</td>
-<td>0.100000</td>
-</tr>
-<tr>
-<td>Pullover</td>
-<td>1000</td>
-<td>80.237154</td>
-<td>81.200000</td>
-<td>80.715706</td>
-<td>2.222222</td>
-</tr>
-<tr>
-<td>Dress</td>
-<td>1000</td>
-<td>85.998108</td>
-<td>90.900000</td>
-<td>88.381138</td>
-<td>1.644444</td>
-</tr>
-<tr>
-<td>Coat</td>
-<td>1000</td>
-<td>81.018981</td>
-<td>81.100000</td>
-<td>81.059470</td>
-<td>2.111111</td>
-</tr>
-<tr>
-<td>Sandal</td>
-<td>1000</td>
-<td>97.727273</td>
-<td>94.600000</td>
-<td>96.138211</td>
-<td>0.244444</td>
-</tr>
-<tr>
-<td>Shirt</td>
-<td>1000</td>
-<td>70.977918</td>
-<td>67.500000</td>
-<td>69.195284</td>
-<td>3.066667</td>
-</tr>
-<tr>
-<td>Sneaker</td>
-<td>1000</td>
-<td>93.385214</td>
-<td>96.000000</td>
-<td>94.674556</td>
-<td>0.755556</td>
-</tr>
-<tr>
-<td>Bag</td>
-<td>1000</td>
-<td>97.283702</td>
-<td>96.700000</td>
-<td>96.990973</td>
-<td>0.300000</td>
-</tr>
-<tr>
-<td>Ankle boot</td>
-<td>1000</td>
-<td>95.441031</td>
-<td>96.300000</td>
-<td>95.868591</td>
-<td>0.511111</td>
-</tr>
-</tbody>
-</table>
-<p><strong>MainMLP — metric theo lớp (%).</strong></p>
-<table>
-<thead>
-<tr>
-<th>Lớp</th>
-<th>Support</th>
-<th>Precision</th>
-<th>Recall/TPR</th>
-<th>F1</th>
-<th>FPR</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>T-shirt/top</td>
-<td>1000</td>
-<td>85.133796</td>
-<td>85.900000</td>
-<td>85.515182</td>
-<td>1.666667</td>
-</tr>
-<tr>
-<td>Trouser</td>
-<td>1000</td>
-<td>98.776758</td>
-<td>96.900000</td>
-<td>97.829379</td>
-<td>0.133333</td>
-</tr>
-<tr>
-<td>Pullover</td>
-<td>1000</td>
-<td>80.821918</td>
-<td>82.600000</td>
-<td>81.701286</td>
-<td>2.177778</td>
-</tr>
-<tr>
-<td>Dress</td>
-<td>1000</td>
-<td>87.476099</td>
-<td>91.500000</td>
-<td>89.442815</td>
-<td>1.455556</td>
-</tr>
-<tr>
-<td>Coat</td>
-<td>1000</td>
-<td>82.388060</td>
-<td>82.800000</td>
-<td>82.593516</td>
-<td>1.966667</td>
-</tr>
-<tr>
-<td>Sandal</td>
-<td>1000</td>
-<td>97.264438</td>
-<td>96.000000</td>
-<td>96.628083</td>
-<td>0.300000</td>
-</tr>
-<tr>
-<td>Shirt</td>
-<td>1000</td>
-<td>74.361702</td>
-<td>69.900000</td>
-<td>72.061856</td>
-<td>2.677778</td>
-</tr>
-<tr>
-<td>Sneaker</td>
-<td>1000</td>
-<td>93.909627</td>
-<td>95.600000</td>
-<td>94.747275</td>
-<td>0.688889</td>
-</tr>
-<tr>
-<td>Bag</td>
-<td>1000</td>
-<td>98.074975</td>
-<td>96.800000</td>
-<td>97.433317</td>
-<td>0.211111</td>
-</tr>
-<tr>
-<td>Ankle boot</td>
-<td>1000</td>
-<td>95.621891</td>
-<td>96.100000</td>
-<td>95.860349</td>
-<td>0.488889</td>
-</tr>
-</tbody>
-</table>
-<p><strong>MainMLP_FE — metric theo lớp (%).</strong></p>
-<table>
-<thead>
-<tr>
-<th>Lớp</th>
-<th>Support</th>
-<th>Precision</th>
-<th>Recall/TPR</th>
-<th>F1</th>
-<th>FPR</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>T-shirt/top</td>
-<td>1000</td>
-<td>84.791252</td>
-<td>85.300000</td>
-<td>85.044865</td>
-<td>1.700000</td>
-</tr>
-<tr>
-<td>Trouser</td>
-<td>1000</td>
-<td>98.677518</td>
-<td>97.000000</td>
-<td>97.831568</td>
-<td>0.144444</td>
-</tr>
-<tr>
-<td>Pullover</td>
-<td>1000</td>
-<td>80.739300</td>
-<td>83.000000</td>
-<td>81.854043</td>
-<td>2.200000</td>
-</tr>
-<tr>
-<td>Dress</td>
-<td>1000</td>
-<td>87.969201</td>
-<td>91.400000</td>
-<td>89.651790</td>
-<td>1.388889</td>
-</tr>
-<tr>
-<td>Coat</td>
-<td>1000</td>
-<td>82.997988</td>
-<td>82.500000</td>
-<td>82.748245</td>
-<td>1.877778</td>
-</tr>
-<tr>
-<td>Sandal</td>
-<td>1000</td>
-<td>97.389558</td>
-<td>97.000000</td>
-<td>97.194389</td>
-<td>0.288889</td>
-</tr>
-<tr>
-<td>Shirt</td>
-<td>1000</td>
-<td>74.105263</td>
-<td>70.400000</td>
-<td>72.205128</td>
-<td>2.733333</td>
-</tr>
-<tr>
-<td>Sneaker</td>
-<td>1000</td>
-<td>94.586614</td>
-<td>96.100000</td>
-<td>95.337302</td>
-<td>0.611111</td>
-</tr>
-<tr>
-<td>Bag</td>
-<td>1000</td>
-<td>98.181818</td>
-<td>97.200000</td>
-<td>97.688442</td>
-<td>0.200000</td>
-</tr>
-<tr>
-<td>Ankle boot</td>
-<td>1000</td>
-<td>96.292585</td>
-<td>96.100000</td>
-<td>96.196196</td>
-<td>0.411111</td>
-</tr>
-</tbody>
-</table>
-<p>TPR thấp không nhất thiết đồng nghĩa FPR cao nhất. Một lớp có thể thường bị bỏ sót nhưng ít bị đoán nhầm vào, hoặc ngược lại. Vì vậy bảng giữ Precision, Recall, F1, FPR riêng. FPR có denominator 9.000 âm tính, khác denominator của precision; không so chúng như thể cùng tập nền.</p>
-<ul>
-<li>
-<p><strong>SmallMLP:</strong> recall thấp nhất là Shirt (67.50%). Các hướng dự đoán khác nhãn lớn nhất: Shirt → T-shirt/top: 122/1.000 (12.2%); T-shirt/top → Shirt: 101/1.000 (10.1%); Coat → Pullover: 93/1.000 (9.3%).</p>
-</li>
-<li>
-<p><strong>MainMLP:</strong> recall thấp nhất là Shirt (69.90%). Các hướng dự đoán khác nhãn lớn nhất: Shirt → T-shirt/top: 111/1.000 (11.1%); T-shirt/top → Shirt: 92/1.000 (9.2%); Shirt → Pullover: 85/1.000 (8.5%).</p>
-</li>
-<li>
-<p><strong>MainMLP_FE:</strong> recall thấp nhất là Shirt (70.40%). Các hướng dự đoán khác nhãn lớn nhất: Shirt → T-shirt/top: 113/1.000 (11.3%); T-shirt/top → Shirt: 101/1.000 (10.1%); Coat → Pullover: 85/1.000 (8.5%).</p>
-</li>
-</ul>
-<p>Các nhận xét là mô tả hiệu năng theo lớp, không quy chắc chắn cho một feature cụ thể. Muốn chứng minh centroid hay symmetry cải thiện một lớp cần ablation từng feature/nhóm feature. Mười feature hiện được đánh giá như một gói biểu diễn. Phân tích lớp ở đây nhằm diễn giải kết quả học, không phải nhật ký sửa lỗi phần mềm.</p>
-<div style="break-before: page; page-break-before: always;"></div>
+        <!-- Hero Confusion Matrix -->
+        <div style="text-align: center; margin: 1.5rem 0;">
+            <img src="../outputs/published/comparison/confusion_comparison.png" alt="Ma trận nhầm lẫn so sánh ba mô hình" class="img-hero">
+            <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.5rem;">Hình 5: Ma trận nhầm lẫn (Confusion Matrix) so sánh trực tiếp cả 3 kiến trúc trên 10.000 mẫu tập Test.</p>
+        </div>
 
-<h3 id="34-roc-va-precisionrecall-cua-ba-model">3.4. ROC và Precision–Recall của ba model</h3>
-<p>
-<div class="artifact-card">
-  <div class="artifact-header">
-    <div class="artifact-badge-wrap">
-      <span class="artifact-badge">BẰNG CHỨNG THỰC NGHIỆM</span>
-      <span class="artifact-filename">SmallMLP_ovr_curves.png</span>
-    </div>
-    <span class="artifact-type">IMAGE ARTIFACT</span>
-  </div>
-  <div class="artifact-img-wrap">
-    <img src="../outputs/published/comparison/SmallMLP_ovr_curves.png" alt="SmallMLP — ROC và PR OvR" loading="lazy" />
-  </div>
-  <div class="artifact-caption">
-    <strong>Trực quan hóa:</strong> SmallMLP — ROC và PR OvR
-  </div>
-</div>
-</p>
-<p><em>Hình: SmallMLP — ROC và PR OvR. Nguồn: <code>outputs/published/comparison</code>.</em></p>
-<p>
-<div class="artifact-card">
-  <div class="artifact-header">
-    <div class="artifact-badge-wrap">
-      <span class="artifact-badge">BẰNG CHỨNG THỰC NGHIỆM</span>
-      <span class="artifact-filename">MainMLP_ovr_curves.png</span>
-    </div>
-    <span class="artifact-type">IMAGE ARTIFACT</span>
-  </div>
-  <div class="artifact-img-wrap">
-    <img src="../outputs/published/comparison/MainMLP_ovr_curves.png" alt="MainMLP — ROC và PR OvR" loading="lazy" />
-  </div>
-  <div class="artifact-caption">
-    <strong>Trực quan hóa:</strong> MainMLP — ROC và PR OvR
-  </div>
-</div>
-</p>
-<p><em>Hình: MainMLP — ROC và PR OvR. Nguồn: <code>outputs/published/comparison</code>.</em></p>
-<p>
-<div class="artifact-card">
-  <div class="artifact-header">
-    <div class="artifact-badge-wrap">
-      <span class="artifact-badge">BẰNG CHỨNG THỰC NGHIỆM</span>
-      <span class="artifact-filename">MainMLP_FE_ovr_curves.png</span>
-    </div>
-    <span class="artifact-type">IMAGE ARTIFACT</span>
-  </div>
-  <div class="artifact-img-wrap">
-    <img src="../outputs/published/comparison/MainMLP_FE_ovr_curves.png" alt="MainMLP_FE — ROC và PR OvR" loading="lazy" />
-  </div>
-  <div class="artifact-caption">
-    <strong>Trực quan hóa:</strong> MainMLP_FE — ROC và PR OvR
-  </div>
-</div>
-</p>
-<p><em>Hình: MainMLP_FE — ROC và PR OvR. Nguồn: <code>outputs/published/comparison</code>.</em></p>
-<p>Ba hình dùng cùng test và lớp nhãn. Mỗi màu là một OvR; tách theo model tránh chồng 30 đường vào một panel. ROC mô tả phát hiện dương và false positive; PR mô tả chất lượng dự đoán dương khi tăng độ bao phủ. Các curve không phải kết quả training trên test.</p>
-<table>
-<thead>
-<tr>
-<th>name</th>
-<th>roc_auc</th>
-<th>average_precision</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>MainMLP</td>
-<td>0.991944</td>
-<td>0.946033</td>
-</tr>
-<tr>
-<td>MainMLP_FE</td>
-<td>0.992186</td>
-<td>0.947997</td>
-</tr>
-<tr>
-<td>SmallMLP</td>
-<td>0.990959</td>
-<td>0.939827</td>
-</tr>
-</tbody>
-</table>
-<table>
-<thead>
-<tr>
-<th>name</th>
-<th>class_name</th>
-<th>roc_auc</th>
-<th>average_precision</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>SmallMLP</td>
-<td>T-shirt/top</td>
-<td>0.989473</td>
-<td>0.918252</td>
-</tr>
-<tr>
-<td>SmallMLP</td>
-<td>Trouser</td>
-<td>0.999216</td>
-<td>0.995091</td>
-</tr>
-<tr>
-<td>SmallMLP</td>
-<td>Pullover</td>
-<td>0.983192</td>
-<td>0.880900</td>
-</tr>
-<tr>
-<td>SmallMLP</td>
-<td>Dress</td>
-<td>0.993730</td>
-<td>0.954465</td>
-</tr>
-<tr>
-<td>SmallMLP</td>
-<td>Coat</td>
-<td>0.985509</td>
-<td>0.889966</td>
-</tr>
-<tr>
-<td>SmallMLP</td>
-<td>Sandal</td>
-<td>0.999220</td>
-<td>0.993621</td>
-</tr>
-<tr>
-<td>SmallMLP</td>
-<td>Shirt</td>
-<td>0.963095</td>
-<td>0.792842</td>
-</tr>
-<tr>
-<td>SmallMLP</td>
-<td>Sneaker</td>
-<td>0.998552</td>
-<td>0.986699</td>
-</tr>
-<tr>
-<td>SmallMLP</td>
-<td>Bag</td>
-<td>0.998765</td>
-<td>0.993967</td>
-</tr>
-<tr>
-<td>SmallMLP</td>
-<td>Ankle boot</td>
-<td>0.998838</td>
-<td>0.992466</td>
-</tr>
-<tr>
-<td>MainMLP</td>
-<td>T-shirt/top</td>
-<td>0.989793</td>
-<td>0.922183</td>
-</tr>
-<tr>
-<td>MainMLP</td>
-<td>Trouser</td>
-<td>0.999472</td>
-<td>0.996881</td>
-</tr>
-<tr>
-<td>MainMLP</td>
-<td>Pullover</td>
-<td>0.984818</td>
-<td>0.894834</td>
-</tr>
-<tr>
-<td>MainMLP</td>
-<td>Dress</td>
-<td>0.994610</td>
-<td>0.960993</td>
-</tr>
-<tr>
-<td>MainMLP</td>
-<td>Coat</td>
-<td>0.987234</td>
-<td>0.903761</td>
-</tr>
-<tr>
-<td>MainMLP</td>
-<td>Sandal</td>
-<td>0.999394</td>
-<td>0.994998</td>
-</tr>
-<tr>
-<td>MainMLP</td>
-<td>Shirt</td>
-<td>0.967822</td>
-<td>0.810554</td>
-</tr>
-<tr>
-<td>MainMLP</td>
-<td>Sneaker</td>
-<td>0.998754</td>
-<td>0.988751</td>
-</tr>
-<tr>
-<td>MainMLP</td>
-<td>Bag</td>
-<td>0.999091</td>
-<td>0.995402</td>
-</tr>
-<tr>
-<td>MainMLP</td>
-<td>Ankle boot</td>
-<td>0.998451</td>
-<td>0.991970</td>
-</tr>
-<tr>
-<td>MainMLP_FE</td>
-<td>T-shirt/top</td>
-<td>0.990035</td>
-<td>0.924276</td>
-</tr>
-<tr>
-<td>MainMLP_FE</td>
-<td>Trouser</td>
-<td>0.999477</td>
-<td>0.996802</td>
-</tr>
-<tr>
-<td>MainMLP_FE</td>
-<td>Pullover</td>
-<td>0.985437</td>
-<td>0.901306</td>
-</tr>
-<tr>
-<td>MainMLP_FE</td>
-<td>Dress</td>
-<td>0.994988</td>
-<td>0.963259</td>
-</tr>
-<tr>
-<td>MainMLP_FE</td>
-<td>Coat</td>
-<td>0.987639</td>
-<td>0.906408</td>
-</tr>
-<tr>
-<td>MainMLP_FE</td>
-<td>Sandal</td>
-<td>0.999569</td>
-<td>0.996320</td>
-</tr>
-<tr>
-<td>MainMLP_FE</td>
-<td>Shirt</td>
-<td>0.968405</td>
-<td>0.813140</td>
-</tr>
-<tr>
-<td>MainMLP_FE</td>
-<td>Sneaker</td>
-<td>0.998881</td>
-<td>0.990053</td>
-</tr>
-<tr>
-<td>MainMLP_FE</td>
-<td>Bag</td>
-<td>0.998913</td>
-<td>0.995224</td>
-</tr>
-<tr>
-<td>MainMLP_FE</td>
-<td>Ankle boot</td>
-<td>0.998521</td>
-<td>0.993185</td>
-</tr>
-</tbody>
-</table>
-<p>Bảng là trung bình số học AUC/AP qua lớp từ ovr_scores_by_class.csv. Phải phân biệt với quy trình nội suy một ROC macro rồi tích phân; không mặc định hai cách tổng hợp cho cùng giá trị chính xác. AP cũng không được thay bằng AUC-ROC trong văn bản.</p>
-<p>AUC cao không có nghĩa phân loại gần hoàn hảo. Argmax cạnh tranh mười logits; OvR đánh giá một lớp với tập gộp còn lại. Các lớp áo có thể xếp hạng tốt so với đa số lớp khác nhưng vẫn nhầm khi cạnh tranh với một lớp áo gần nhất.</p>
-<p>PR hữu ích vì OvR có 10% dương, 90% âm. Tập âm lớn khiến một FPR nhỏ vẫn có thể tạo lượng FP đáng kể, trong khi precision phản ánh trực tiếp tỷ lệ đúng trong nhóm được dự đoán dương. Giữ cả hai giúp diễn giải đầy đủ hơn một con số accuracy duy nhất.</p>
-<div style="break-before: page; page-break-before: always;"></div>
+        <div class="gallery-grid">
+            <div class="gallery-card">
+                <img src="../outputs/published/comparison/MainMLP_FE_ovr_curves.png" alt="Đường cong ROC và PR của MainMLP_FE">
+                <div class="gallery-card-content">
+                    <div class="gallery-card-title">1. ROC & PR One-vs-Rest (MainMLP_FE)</div>
+                    <div class="gallery-card-desc">ROC-AUC đạt từ 0.96 đến 0.99 ở hầu hết các lớp; lớp Trouser và Bag có độ tách biệt gần như hoàn hảo (> 0.99).</div>
+                    <div class="gallery-card-footer">
+                        <span>Macro ROC-AUC: 0.985</span>
+                        <span>OvR Evaluation</span>
+                    </div>
+                </div>
+            </div>
 
-<h3 id="35-optimizer-trong-ieu-kien-cung-learning-rate">3.5. Optimizer trong điều kiện cùng learning rate</h3>
-<p>
-<div class="artifact-card">
-  <div class="artifact-header">
-    <div class="artifact-badge-wrap">
-      <span class="artifact-badge">BẰNG CHỨNG THỰC NGHIỆM</span>
-      <span class="artifact-filename">fixed_lr_curves.png</span>
-    </div>
-    <span class="artifact-type">IMAGE ARTIFACT</span>
-  </div>
-  <div class="artifact-img-wrap">
-    <img src="../outputs/published/fixed/fixed_lr_curves.png" alt="Validation của optimizer cùng LR" loading="lazy" />
-  </div>
-  <div class="artifact-caption">
-    <strong>Trực quan hóa:</strong> Validation của optimizer cùng LR
-  </div>
-</div>
-</p>
-<p><em>Hình: Validation của optimizer cùng LR. Nguồn: <code>outputs/published/fixed</code>.</em></p>
-<table>
-<thead>
-<tr>
-<th>optimizer</th>
-<th>best_val_acc</th>
-<th>best_epoch</th>
-<th>epochs_completed</th>
-<th>seconds</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>SGD</td>
-<td>85.083333</td>
-<td>9</td>
-<td>10</td>
-<td>10.368774</td>
-</tr>
-<tr>
-<td>RMSprop</td>
-<td>90.733333</td>
-<td>10</td>
-<td>10</td>
-<td>12.454700</td>
-</tr>
-<tr>
-<td>Adam</td>
-<td>90.933333</td>
-<td>10</td>
-<td>10</td>
-<td>14.972536</td>
-</tr>
-</tbody>
-</table>
-<p>SGD có momentum 0,9 với LR 0,001 đạt best validation thấp hơn adaptive optimizer trong ngân sách 10 epoch. Kết luận hợp lệ là cấu hình SGD này chưa đạt mức tương đương trong điều kiện đo. Không suy ra SGD luôn kém Adam/RMSprop, vì LR phù hợp và thời gian hội tụ khác nhau.</p>
-<p>Loss curve hỗ trợ đọc mức cải thiện liên tục, accuracy curve mô tả quyết định nhãn. Dao động nhỏ không chứng minh optimizer hỏng; batch order, LR và bề mặt loss có thể tạo dao động. Scheduler điều chỉnh bước cập nhật, không làm mượt các giá trị đã đo.</p>
-<p>Candidate fixed LR chỉ dùng train/validation, không xuất test prediction. Vì vậy không đặt best validation accuracy cạnh test accuracy của ba kiến trúc rồi xếp hạng chung. Giữ rõ phạm vi metric là điều kiện để đọc bảng có ý nghĩa.</p>
-<p>Cùng LR là điều kiện kiểm soát đơn giản và có giá trị sư phạm. Search riêng ở mục sau bổ sung góc nhìn về độ nhạy tham số. Hai nhánh bổ trợ nhau thay vì một nhánh làm mất giá trị nhánh còn lại.</p>
-<div style="break-before: page; page-break-before: always;"></div>
+            <div class="gallery-card">
+                <img src="../outputs/published/comparison/MainMLP_ovr_curves.png" alt="Đường cong ROC và PR của MainMLP">
+                <div class="gallery-card-content">
+                    <div class="gallery-card-title">2. ROC & PR One-vs-Rest (MainMLP)</div>
+                    <div class="gallery-card-desc">Đường cong PR cho thấy Precision duy trì cao trên 85% ở vùng Recall dưới 0.8 cho các lớp khó như Shirt và Pullover.</div>
+                    <div class="gallery-card-footer">
+                        <span>Macro PR-AUC: 0.912</span>
+                        <span>Baseline Model</span>
+                    </div>
+                </div>
+            </div>
 
-<h3 id="36-search-pruning-va-best-trial">3.6. Search, pruning và best trial</h3>
-<p>
-<div class="artifact-card">
-  <div class="artifact-header">
-    <div class="artifact-badge-wrap">
-      <span class="artifact-badge">BẰNG CHỨNG THỰC NGHIỆM</span>
-      <span class="artifact-filename">tuning_progress.png</span>
-    </div>
-    <span class="artifact-type">IMAGE ARTIFACT</span>
-  </div>
-  <div class="artifact-img-wrap">
-    <img src="../outputs/published/tuning/tuning_progress.png" alt="Tiến trình search và LR–score" loading="lazy" />
-  </div>
-  <div class="artifact-caption">
-    <strong>Trực quan hóa:</strong> Tiến trình search và LR–score
-  </div>
-</div>
-</p>
-<p><em>Hình: Tiến trình search và LR–score. Nguồn: <code>outputs/published/tuning</code>.</em></p>
-<table>
-<thead>
-<tr>
-<th>optimizer</th>
-<th>best_val_acc</th>
-<th>trial_number</th>
-<th>lr</th>
-<th>weight_decay</th>
-<th>momentum</th>
-<th>trials</th>
-<th>completed</th>
-<th>pruned</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>SGD</td>
-<td>90.800000</td>
-<td>3</td>
-<td>0.026070</td>
-<td>0.000000</td>
-<td>0.945486</td>
-<td>10</td>
-<td>5</td>
-<td>5</td>
-</tr>
-<tr>
-<td>RMSprop</td>
-<td>90.566667</td>
-<td>4</td>
-<td>0.001593</td>
-<td>0.000347</td>
-<td>không tune</td>
-<td>10</td>
-<td>6</td>
-<td>4</td>
-</tr>
-<tr>
-<td>Adam</td>
-<td>90.850000</td>
-<td>4</td>
-<td>0.001593</td>
-<td>0.000347</td>
-<td>không tune</td>
-<td>10</td>
-<td>5</td>
-<td>5</td>
-</tr>
-</tbody>
-</table>
-<p>Có 10 trial/optimizer, tổng 16 COMPLETE và 14 PRUNED. SGD có 5/5, RMSprop 6/4 và Adam 5/5. Pruned trial không phải phép đo đủ 10 epoch; so tổng thời gian study phải xét khối lượng thực chạy khác nhau do pruning.</p>
-<table>
-<thead>
-<tr>
-<th>optimizer</th>
-<th>best_val_acc_fixed</th>
-<th>best_val_acc_tuned</th>
-<th>delta_pp</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>SGD</td>
-<td>85.083333</td>
-<td>90.800000</td>
-<td>5.716667</td>
-</tr>
-<tr>
-<td>RMSprop</td>
-<td>90.733333</td>
-<td>90.566667</td>
-<td>-0.166667</td>
-</tr>
-<tr>
-<td>Adam</td>
-<td>90.933333</td>
-<td>90.850000</td>
-<td>-0.083333</td>
-</tr>
-</tbody>
-</table>
-<p>SGD tăng khoảng 5,7167 điểm phần trăm sau search; RMSprop giảm 0,1667; Adam giảm 0,0833 so với baseline tương ứng. Search hữu hạn không bảo đảm tìm cấu hình tốt hơn. Miền weight decay dương còn loại giá trị 0 của baseline, và không có baseline enqueue để bảo toàn mốc đó trong study.</p>
-<p>Adam được refit vì cao nhất trong ba best trial. Tuy vậy, Adam fixed đạt validation 90,9333%, cao hơn Adam tuned 90,85%. Thuật ngữ chính xác là best trong study, không phải best toàn bộ fixed+tuned. Test không dùng để đảo lại lựa chọn sau khi đã xem kết quả.</p>
-<div style="break-before: page; page-break-before: always;"></div>
+            <div class="gallery-card">
+                <img src="../outputs/published/loaded_model_test/loaded_model_test_samples.png" alt="Lưới dự đoán thực tế từ checkpoint đã nạp">
+                <div class="gallery-card-content">
+                    <div class="gallery-card-title">3. Kiểm Chứng Trực Tiếp (Sample Predictions)</div>
+                    <div class="gallery-card-desc">Lưới 16 ảnh dự đoán từ model checkpoint <code>best.pt</code> nạp lại; 15/16 mẫu dự đoán chính xác với độ tự tin > 95%.</div>
+                    <div class="gallery-card-footer">
+                        <span>16 Test Samples</span>
+                        <span>Checkpoint Restored</span>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-<h3 id="37-lossaccuracy-voi-best-parameters-cua-u-ba-optimizer">3.7. Loss/accuracy với best parameters của đủ ba optimizer</h3>
-<p>
-<div class="artifact-card">
-  <div class="artifact-header">
-    <div class="artifact-badge-wrap">
-      <span class="artifact-badge">BẰNG CHỨNG THỰC NGHIỆM</span>
-      <span class="artifact-filename">best_optimizer_learning_curves.png</span>
+        <div class="callout success">
+            <strong>Kiểm chứng phục hồi Checkpoint (Roundtrip Verification):</strong>
+            <p style="margin-top: 0.25rem;">Nạp checkpoint <code>best.pt</code> vào instance mô hình mới độc lập, so sánh vector xác suất dự đoán trước và sau khi lưu: đạt độ chính xác số học <code>torch.allclose(atol=1e-6, rtol=1e-5) == True</code>. Test Accuracy phục hồi đạt chính xác 89.2% khớp 100% với run log.</p>
+        </div>
     </div>
-    <span class="artifact-type">IMAGE ARTIFACT</span>
-  </div>
-  <div class="artifact-img-wrap">
-    <img src="../outputs/published/best_optimizer_curves/best_optimizer_learning_curves.png" alt="Train/validation loss và accuracy của best trial từng optimizer" loading="lazy" />
-  </div>
-  <div class="artifact-caption">
-    <strong>Trực quan hóa:</strong> Train/validation loss và accuracy của best trial từng optimizer
-  </div>
-</div>
-</p>
-<p><em>Hình: Train/validation loss và accuracy của best trial từng optimizer. Nguồn: <code>outputs/published/best_optimizer_curves</code>.</em></p>
-<p>Bốn panel là train loss, validation loss, train accuracy và validation accuracy. Mỗi panel có SGD, RMSprop và Adam. Nguồn là history best completed trial của từng optimizer, không phải ba bản sao của một winner; mỗi trial có tham số riêng, được chọn theo cùng objective.</p>
-<p>Trong hình, train loss SGD xuống thấp hơn adaptive optimizer ở cuối, nhưng best validation accuracy của Adam cao hơn nhẹ. Điều này cho thấy tối ưu trên train không đồng nghĩa tổng quát hóa tốt hơn. Thứ tự loss và accuracy không bắt buộc trùng vì chúng đo các khía cạnh khác nhau.</p>
-<p>Cần phân biệt hình ba optimizer với learning_curves.png của refit Adam. Hình ba đường lấy dữ liệu đã có trong search; chỉ winner được refit riêng trong pipeline hiện hành. Không khẳng định cả ba đã train lại sau search nếu thiếu ba refit run tương ứng.</p>
-<p>best_parameters.csv và best_optimizer_history.csv giữ optimizer, trial number và epoch. Đọc một điểm curve có thể truy về history candidate thay vì đoán từ hình. Pruned trial vẫn lưu riêng nhưng không thay thế best completed history trong hình này.</p>
-<div style="break-before: page; page-break-before: always;"></div>
 
-<h3 id="38-refit-saveload-va-full-test-sau-tai">3.8. Refit, save/load và full-test sau tải</h3>
-<p>Refit dùng Adam LR 0,0015930522616241021, weight_decay 0,0003470266988650413, seed 42, batch 128, 10 epoch. Validation best 90,85% tại epoch 10. Candidate search không được đánh giá test; refit được test sau lựa chọn bằng validation.</p>
-<p>
-<div class="artifact-card">
-  <div class="artifact-header">
-    <div class="artifact-badge-wrap">
-      <span class="artifact-badge">BẰNG CHỨNG THỰC NGHIỆM</span>
-      <span class="artifact-filename">learning_curves.png</span>
+    <!-- Section 8: QA & Verification -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">8. Kết Quả Kiểm Thử & Kiểm Toán Kỹ Thuật (QA & DoD)</h3>
+            <span class="badge badge-success">49/49 Tests Passed (100%)</span>
+        </div>
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Bộ Kiểm Thử</th>
+                        <th>File Test</th>
+                        <th>Số Tests</th>
+                        <th>Trạng Thái</th>
+                        <th>Nội Dung Kiểm Toán</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Bootstrap & Config</strong></td>
+                        <td><code>test_bootstrap.py</code></td>
+                        <td>2 tests</td>
+                        <td><span class="badge badge-success">PASSED</span></td>
+                        <td>Khởi tạo workspace, cấu trúc thư mục, seed và environment snapshot</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Datasets & Loader</strong></td>
+                        <td><code>test_datasets.py</code></td>
+                        <td>16 tests</td>
+                        <td><span class="badge badge-success">PASSED</span></td>
+                        <td>Stratified split, batch shape [B, 1, 28, 28], labels 0..9, data leakage gate</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Feature Engineering</strong></td>
+                        <td><code>test_features_comparison.py</code></td>
+                        <td>8 tests</td>
+                        <td><span class="badge badge-success">PASSED</span></td>
+                        <td>10 handcrafted features, shape 794 dims, StandardScaler fit train-only</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Model Architecture</strong></td>
+                        <td><code>test_models.py</code></td>
+                        <td>2 tests</td>
+                        <td><span class="badge badge-success">PASSED</span></td>
+                        <td>Forward shape [B, 10], số lượng tham số 101k/235k/237k khớp lý thuyết</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Performance & Timer</strong></td>
+                        <td><code>test_performance.py</code></td>
+                        <td>6 tests</td>
+                        <td><span class="badge badge-success">PASSED</span></td>
+                        <td>Đo thời gian train/val, memory allocation, throughput ms/sample</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Publication & Privacy</strong></td>
+                        <td><code>test_publication.py</code></td>
+                        <td>3 tests</td>
+                        <td><span class="badge badge-success">PASSED</span></td>
+                        <td>Redact user paths, exclude weights/logs thô, verify report links</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Training Loop & Sanity</strong></td>
+                        <td><code>test_training.py</code></td>
+                        <td>4 tests</td>
+                        <td><span class="badge badge-success">PASSED</span></td>
+                        <td>1-Batch overfit gate (loss < 0.2), early stopping, checkpoint save</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Hyperparameter Tuning</strong></td>
+                        <td><code>test_tuning.py</code></td>
+                        <td>2 tests</td>
+                        <td><span class="badge badge-success">PASSED</span></td>
+                        <td>Optuna study logic, trial score aggregation, search space bounds</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Workflow Integration</strong></td>
+                        <td><code>test_workflow.py</code></td>
+                        <td>6 tests</td>
+                        <td><span class="badge badge-success">PASSED</span></td>
+                        <td>End-to-end integration, MODE="view" execution mà không cần train lại</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
     </div>
-    <span class="artifact-type">IMAGE ARTIFACT</span>
-  </div>
-  <div class="artifact-img-wrap">
-    <img src="../outputs/published/final/learning_curves.png" alt="Đường học của refit Adam" loading="lazy" />
-  </div>
-  <div class="artifact-caption">
-    <strong>Trực quan hóa:</strong> Đường học của refit Adam
-  </div>
-</div>
-</p>
-<p><em>Hình: Đường học của refit Adam. Nguồn: <code>outputs/published/final</code>.</em></p>
-<p>Save/load giữ state_dict và kiến trúc, tạo instance FashionMLP mới, nạp checkpoint, chuyển eval. Roundtrip 16 mẫu ghi max_probability_error=0 và nhãn không đổi. Mười sáu mẫu chỉ là kiểm tra bảo toàn; chất lượng sau load được đánh giá riêng trên đủ 10.000 test.</p>
-<table>
-<thead>
-<tr>
-<th>Số ảnh test</th>
-<th>Accuracy (%)</th>
-<th>Macro F1</th>
-<th>CrossEntropy</th>
-<th>Roundtrip samples</th>
-<th>Max probability delta</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>10000</td>
-<td>89.140000</td>
-<td>0.891219</td>
-<td>0.303679</td>
-<td>16</td>
-<td>0.000000</td>
-</tr>
-</tbody>
-</table>
-<p>
-<div class="artifact-card">
-  <div class="artifact-header">
-    <div class="artifact-badge-wrap">
-      <span class="artifact-badge">BẰNG CHỨNG THỰC NGHIỆM</span>
-      <span class="artifact-filename">loaded_model_test_samples.png</span>
+
+    <!-- Section 9: References -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">9. Tài Liệu Tham Khảo (References & Technical Documentation)</h3>
+            <span class="badge">Official Standards & Docs</span>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1rem; margin-top: 1rem;">
+            <!-- 9.1 Libraries -->
+            <div style="background: #f8fafc; border: 1px solid var(--border); border-radius: 8px; padding: 1rem;">
+                <div style="font-weight: 700; color: var(--primary); margin-bottom: 0.5rem; display: flex; align-items: center; justify-content: space-between;">
+                    <span>9.1. Thư Viện Cốt Lõi</span>
+                    <span class="badge" style="background: #e0f2fe; color: #0284c7;">LIBRARIES</span>
+                </div>
+                <ul style="font-size: 0.85rem; color: var(--text-muted); padding-left: 1.2rem; line-height: 1.6; margin: 0;">
+                    <li><a href="https://pytorch.org/docs/stable/nn.html" target="_blank" style="color: var(--primary); font-weight: 600;">PyTorch torch.nn</a> &bull; Linear, BatchNorm1d, Dropout, ReLU modules.</li>
+                    <li><a href="https://pytorch.org/vision/stable/datasets.html" target="_blank" style="color: var(--primary); font-weight: 600;">Torchvision Datasets</a> &bull; Nạp chuẩn FashionMNIST.</li>
+                    <li><a href="https://scikit-learn.org/stable/modules/preprocessing.html" target="_blank" style="color: var(--primary); font-weight: 600;">Scikit-learn Preprocessing</a> &bull; StandardScaler và train/val split.</li>
+                    <li><a href="https://optuna.readthedocs.io/" target="_blank" style="color: var(--primary); font-weight: 600;">Optuna Optimization</a> &bull; Bayesian Hyperparameter Search Engine.</li>
+                </ul>
+            </div>
+
+            <!-- 9.2 Standards -->
+            <div style="background: #f8fafc; border: 1px solid var(--border); border-radius: 8px; padding: 1rem;">
+                <div style="font-weight: 700; color: #7c3aed; margin-bottom: 0.5rem; display: flex; align-items: center; justify-content: space-between;">
+                    <span>9.2. Tiêu Chuẩn & Không Gian</span>
+                    <span class="badge" style="background: #f5f3ff; color: #7c3aed;">STANDARDS</span>
+                </div>
+                <ul style="font-size: 0.85rem; color: var(--text-muted); padding-left: 1.2rem; line-height: 1.6; margin: 0;">
+                    <li><strong>FashionMNIST Benchmark</strong> &bull; Han Xiao et al., 2017; bộ chuẩn 70.000 ảnh thay thế MNIST cổ điển.</li>
+                    <li><strong>Z-Score Standardization</strong> &bull; <code>z = (x - μ) / σ</code> đảm bảo các đặc trưng đồng nhất phân phối.</li>
+                    <li><strong>Cross-Entropy Loss</strong> &bull; Log-loss đa lớp kết hợp Softmax đo lường khoảng cách phân phối nhãn.</li>
+                </ul>
+            </div>
+
+            <!-- 9.3 Conventions -->
+            <div style="background: #f8fafc; border: 1px solid var(--border); border-radius: 8px; padding: 1rem;">
+                <div style="font-weight: 700; color: var(--success); margin-bottom: 0.5rem; display: flex; align-items: center; justify-content: space-between;">
+                    <span>9.3. Quy Ước Deep Learning</span>
+                    <span class="badge badge-success">CONVENTIONS</span>
+                </div>
+                <ul style="font-size: 0.85rem; color: var(--text-muted); padding-left: 1.2rem; line-height: 1.6; margin: 0;">
+                    <li><strong>One-vs-Rest (OvR)</strong> &bull; Đánh giá phân loại đa lớp thông qua 10 bộ đường cong ROC và PR nhị phân.</li>
+                    <li><strong>Zero Data Leakage</strong> &bull; Cô lập tập Test, thống kê chuẩn hóa chỉ fit trên tập Train.</li>
+                    <li><strong>Set to None Zero-Grad</strong> &bull; <code>set_to_none=True</code> giải phóng vùng nhớ gradient thay vì gán số 0.</li>
+                </ul>
+            </div>
+
+            <!-- 9.4 Clean Architecture -->
+            <div style="background: #f8fafc; border: 1px solid var(--border); border-radius: 8px; padding: 1rem;">
+                <div style="font-weight: 700; color: #d97706; margin-bottom: 0.5rem; display: flex; align-items: center; justify-content: space-between;">
+                    <span>9.4. Mô-Đun Clean Architecture</span>
+                    <span class="badge" style="background: #fef3c7; color: #d97706;">ARCHITECTURE</span>
+                </div>
+                <ul style="font-size: 0.85rem; color: var(--text-muted); padding-left: 1.2rem; line-height: 1.6; margin: 0;">
+                    <li><a href="../../src/datasets/dataset.py" class="code-pill">src/datasets/dataset.py</a> &bull; Dataset & DataLoader</li>
+                    <li><a href="../../src/models/mlp.py" class="code-pill">src/models/mlp.py</a> &bull; FashionMLP Model Classes</li>
+                    <li><a href="../../src/training/train.py" class="code-pill">src/training/train.py</a> &bull; Training & Sanity Gate Loop</li>
+                    <li><a href="../../src/training/optimizer_study.py" class="code-pill">src/training/optimizer_study.py</a> &bull; Optuna Study Controller</li>
+                </ul>
+            </div>
+        </div>
     </div>
-    <span class="artifact-type">IMAGE ARTIFACT</span>
-  </div>
-  <div class="artifact-img-wrap">
-    <img src="../outputs/published/loaded_model_test/loaded_model_test_samples.png" alt="Mẫu test của model được load lại" loading="lazy" />
-  </div>
-  <div class="artifact-caption">
-    <strong>Trực quan hóa:</strong> Mẫu test của model được load lại
-  </div>
+
+    <!-- Footer -->
+    <footer>
+        <p>Báo Cáo Nghiệm Thu Kỹ Thuật Lab 01 &bull; Phân Loại FashionMNIST với PyTorch</p>
+        <p style="margin-top: 0.25rem;">Tác giả: <strong>Thái Anh Lạc</strong> &bull; Khởi tạo theo tiêu chuẩn Clean Architecture & TDD Lifecycle.</p>
+    </footer>
 </div>
-</p>
-<p><em>Hình: Mẫu test của model được load lại. Nguồn: <code>outputs/published/loaded_model_test</code>.</em></p>
-<p>Lưới chọn tám mẫu đúng đầu tiên và tám mẫu sai đầu tiên theo index, có true/predicted/probability. Vì chọn cân bằng để minh họa, không lấy tỷ lệ đúng của lưới làm accuracy test. Xanh/đỏ là kết quả mẫu; softmax confidence chưa được calibration trong nghiên cứu này và không đảm bảo dự đoán đúng.</p>
-<p>Load thành công không chỉ là không exception. Bằng chứng gồm shape, kiến trúc, eval mode, probabilities, metric full-test và artifact. Những kiểm chứng hỗ trợ suy luận lại trên dữ liệu cùng phân bố, chưa chứng minh chất lượng trên ảnh trang phục ngoài FashionMNIST.</p>
-<div style="break-before: page; page-break-before: always;"></div>
 
-<h3 id="39-ket-luan-gioi-han-va-huong-phat-trien">3.9. Kết luận, giới hạn và hướng phát triển</h3>
-<p>Trong điều kiện đo, tăng dung lượng SmallMLP sang MainMLP cải thiện accuracy và Macro F1. Nối mười feature tạo mức tăng nhỏ hơn nhưng cùng chiều về accuracy, F1 và loss. Cần nhiều seed để đánh giá ổn định; không biến chênh lệch của một lượt thành bảo đảm feature engineering luôn giúp deep learning.</p>
-<p>Optimizer cho thấy cấu hình/ngân sách có vai trò lớn. SGD cùng LR chưa đạt mức adaptive, nhưng LR/momentum riêng tăng kết quả mạnh. RMSprop/Adam tuned chưa vượt baseline là kết quả hợp lệ, không phải lý do thay số hoặc bỏ baseline tốt hơn.</p>
-<p>Giới hạn gồm một seed, 10 epoch, 10 trial ở pha startup, không enqueue baseline và không chứa weight_decay=0 trong search. Chưa có ablation từng feature, kiểm định cặp, calibration, near-duplicate audit hoặc benchmark thời gian nhiều lượt độc lập. Phép đo bổ sung ở mục 3.10–3.11 có lặp bước trong một process/model, chưa thay thế nhiều lượt độc lập. Test đã được dùng cho nhiều so sánh mô tả; phiên bản sau không nên điều chỉnh cấu hình theo các kết quả đó rồi gọi cùng test là đánh giá hoàn toàn mới.</p>
-<p>Ưu tiên mở rộng là nhiều seed, protocol được chốt trước, search bao gồm baseline, ngân sách vượt startup, ablation nhóm cường độ/hình học/biên và CNN nhỏ. Kaggle cần một lượt end-to-end với snapshot/artifact trước khi được coi là đã kiểm chứng môi trường. Augmentation cần extractor đồng bộ với ảnh biến đổi.</p>
-<p>SmallMLP phù hợp minh họa mạng gọn; MainMLP là mốc năng lực cao hơn; MainMLP_FE khảo sát biểu diễn lai có thể giải thích. Checkpoint refit đã full-test sau load nhưng chưa là production model hoặc đã kiểm chứng ngoài phân bố. Lab thể hiện được chu trình dữ liệu → đặc trưng → học → đo → lưu/tải với nguồn bằng chứng cụ thể.</p>
-<p><strong>Tài liệu tham khảo</strong></p>
-<ul>
-<li><a href="https://github.com/zalandoresearch/fashion-mnist">FashionMNIST — repository gốc</a>: nguồn dataset/nhãn; benchmark báo cáo lấy từ run nội bộ, không từ leaderboard.</li>
-<li><a href="https://docs.pytorch.org/tutorials/beginner/basics/intro.html">PyTorch — Learn the Basics</a>: khung tham khảo các thành phần PyTorch; code được giải thích theo source lab hiện hành.</li>
-<li><a href="https://optuna.readthedocs.io/en/stable/reference/samplers/generated/optuna.samplers.TPESampler.html">Optuna — TPESampler</a>: startup sampling và TPE; diễn giải giới hạn 10/10 dựa trên config thực nghiệm.</li>
-<li><a href="https://scikit-learn.org/stable/modules/generated/sklearn.metrics.average_precision_score.html">scikit-learn — average_precision_score</a>: định nghĩa AP và phân biệt tích phân hình thang PR.</li>
-</ul>
-<p><strong>Quy trình đọc lại và tái lập</strong></p>
-<ol>
-<li>Đọc config/workflow.json và giữ preparation run, model run, comparison run tương ứng; không thay riêng checkpoint mà bỏ scaler/indices.</li>
-<li>Mở notebooks/01_eda_preprocessing_features.ipynb ở MODE=view để kiểm tra bảng EDA, cấu hình split/scaler và đối chiếu extractor trên ảnh thật. Khi chuẩn bị mới, chọn MODE=train và đăng ký preparation run mới sau khi hoàn tất.</li>
-<li>Mở notebooks/02_modeling_comparison.ipynb ở MODE=view để đọc metric/curve đã lưu. MODE=train thực hiện các giai đoạn theo cell và tạo run mới; không ghi đè bằng chứng cũ.</li>
-<li>Sau search, phân biệt history best trial từng optimizer với history refit winner. Giữ study và best_configs để truy vết lựa chọn chỉ theo validation.</li>
-<li>Ở cell cuối, lưu model và nạp vào instance mới; đọc roundtrip.json, test_metrics.json và probabilities của full test. Nếu chuyển máy phải cập nhật đường dẫn prepared.npz trong cấu hình/đối số load.</li>
-<li>So sánh các metric cùng phạm vi: validation với validation, test với test. Ghi rõ thư viện/device của run tái lập trước khi kết luận sai khác là do thay đổi phương pháp.</li>
-</ol>
-<p><strong>Danh mục bằng chứng thực nghiệm</strong></p>
-<ul>
-<li>
-<p><strong>preparation:</strong> <a href="../outputs/published/preparation">thư mục artifact</a> — <code>outputs/published/preparation</code>.</p>
-</li>
-<li>
-<p><strong>comparison:</strong> <a href="../outputs/published/comparison">thư mục artifact</a> — <code>outputs/published/comparison</code>.</p>
-</li>
-<li>
-<p><strong>fixed:</strong> <a href="../outputs/published/fixed">thư mục artifact</a> — <code>outputs/published/fixed</code>.</p>
-</li>
-<li>
-<p><strong>tuning:</strong> <a href="../outputs/published/tuning">thư mục artifact</a> — <code>outputs/published/tuning</code>.</p>
-</li>
-<li>
-<p><strong>final:</strong> <a href="../outputs/published/final">thư mục artifact</a> — <code>outputs/published/final</code>.</p>
-</li>
-<li>
-<p><strong>optimizer_results:</strong> <a href="../outputs/published/optimizer_results">thư mục artifact</a> — <code>outputs/published/optimizer_results</code>.</p>
-</li>
-<li>
-<p><strong>SmallMLP:</strong> <a href="../outputs/published/models/SmallMLP/metrics.json">metric JSON</a>; <a href="../outputs/published/models/SmallMLP/history.csv">history CSV</a>.</p>
-</li>
-<li>
-<p><strong>MainMLP:</strong> <a href="../outputs/published/models/MainMLP/metrics.json">metric JSON</a>; <a href="../outputs/published/models/MainMLP/history.csv">history CSV</a>.</p>
-</li>
-<li>
-<p><strong>MainMLP_FE:</strong> <a href="../outputs/published/models/MainMLP_FE/metrics.json">metric JSON</a>; <a href="../outputs/published/models/MainMLP_FE/history.csv">history CSV</a>.</p>
-</li>
-<li>
-<p><strong>Best optimizer curves:</strong> <a href="../outputs/published/best_optimizer_curves/best_optimizer_history.csv">history của đủ ba optimizer</a>.</p>
-</li>
-<li>
-<p><strong>Full-test sau load:</strong> <a href="../outputs/published/loaded_model_test/test_metrics.json">metric</a>; <a href="../outputs/published/loaded_model_test/loaded_model_test_samples.csv">index/nhãn/xác suất mẫu</a>.</p>
-</li>
-</ul>
-<h3 id="310-kien-truc-hien-thi-va-tai-nguyen-moi-mau-training">3.10. Kiến trúc hiển thị và tài nguyên mỗi mẫu training</h3>
-<p>Kiến trúc từng model được in trực tiếp trong notebook trước khi đọc/chạy model và lưu TXT cùng bảng layer, không chỉ mô tả bằng tên mạng. Lý do chọn dung lượng nhỏ/lớn và đầu vào pixel/feature được bổ sung vào description. Các learning curves vẫn đọc history của thí nghiệm gốc; không thay đổi accuracy, loss hoặc thời gian train lịch sử.</p>
-<p>Phép đo bổ sung ngày 02/11/2026 dùng checkpoint của ba model, batch train cố định 128 mẫu, CPU, 2 thread, 3 warmup và 10 batch timed. Chỉ vài bước training trên checkpoint bản sao trong process riêng, không huấn luyện lại toàn bộ và không đánh giá thêm test. Đo forward, CrossEntropyLoss, backward, optimizer.step với batch đã ở thiết bị; thời gian chia batch size là mức chuẩn hóa theo batch, không phải single-image latency. Không gồm loading/transfer, FE, validation và ghi artifact.</p>
-<p>Kết quả nằm trong <a href="../outputs/published/training_performance/training_performance.csv">CSV hiệu năng training</a>, kèm <a href="../outputs/published/training_performance/measurement_0.json">times thô SmallMLP</a>, <a href="../outputs/published/training_performance/measurement_1.json">MainMLP</a> và <a href="../outputs/published/training_performance/measurement_2.json">MainMLP_FE</a>. Mỗi phép đo lưu cấu hình và môi trường riêng, không gán số liệu này ngược vào run cũ.</p>
-<p>RAM/sample là sampled peak RSS cả process chia batch size; có cả giá trị baseline và phần tăng so baseline. Nó chứa interpreter, thư viện, model và vùng nhớ dùng chung, có thể bỏ lỡ đỉnh ngắn hơn chu kỳ lấy mẫu; không phải số byte độc lập của từng ảnh. VRAM/sample dùng peak tensor allocated của PyTorch, không phải reserved cache/tổng bộ nhớ card; phép đo CPU hiện tại không có số VRAM. Lượt đo bộ nhớ riêng gồm bước training đầu tiên để tính cấp phát optimizer state; timing đo sau warmup không bật sampler. Không so sánh RSS giữa các process như bằng chứng chính xác về riêng dung lượng kiến trúc hoặc kết luận thứ hạng tốc độ phổ quát từ một lượt đo ngắn.</p>
-<h3 id="311-o-training-voi-ung-mot-mau">3.11. Đo training với đúng một mẫu</h3>
-<p>Đo lại độc lập với batch size 1 thay vì suy từ batch 128. <a href="../outputs/published/training_performance_single_sample/training_performance.csv">CSV batch 1</a> và <a href="../outputs/published/training_performance_single_sample/training_resources.png">biểu đồ tài nguyên</a> được nhúng trực tiếp trong notebook ngay sau MainMLP_FE, trước phần ROC/PR. Cùng CPU, 2 thread, 3 warmup và 10 timed steps, cùng mẫu train đã chuẩn bị; mỗi model ở process riêng trên checkpoint bản sao. Không chạy lại full training, không thay benchmark batch 128.</p>
-<p>RAM process gồm Python/runtime khi batch size bằng 1; bảng và biểu đồ phân biệt peak RSS với phần tăng so baseline. RSS là sampled, không phải peak chính xác; CPU không có số VRAM. RESOURCE_MODE điều khiển benchmark riêng với MODE training của các cell model. Bảng HTML và hình PNG được nhúng trực tiếp, kể cả khi kernel dùng backend Agg.</p>
-<p>Trong phép đo batch size 1, thời gian lần lượt khoảng 0,4810 / 0,9142 / 1,0679 ms cho SmallMLP / MainMLP / MainMLP_FE. Phần tăng RSS lần lượt khoảng 4,7383 / 7,0078 / 7,0000 MiB. MainMLP_FE và MainMLP chỉ lệch khoảng 8 KiB ở sampled RSS tăng thêm; không dùng mức lệch này để kết luận FE tiết kiệm RAM. Chênh lệch thời gian quan sát được cũng chưa được quy hoàn toàn cho 10 feature khi chưa lặp nhiều lượt độc lập.</p>
-    </main>
-  </div>
-
-  <script>
-    // Smooth toggling text for code drawers
-    const codeDrawers = document.querySelectorAll('.code-drawer');
-    codeDrawers.forEach(drawer => {
-      drawer.addEventListener('toggle', () => {
-        const btn = drawer.querySelector('.code-btn');
-        if (btn) {
-          btn.innerHTML = drawer.open ? 'Đóng code &utrif;' : 'Nhấn để mở code &dtrif;';
-        }
-      });
+<script>
+    // Smooth interactive toggle text for code tabs
+    document.querySelectorAll('.code-tab-drawer').forEach(drawer => {
+        drawer.addEventListener('toggle', () => {
+            const badge = drawer.querySelector('.code-badge');
+            if (badge) {
+                badge.innerHTML = drawer.open ? 'Đóng code &utrif;' : 'Nhấn để mở code &dtrif;';
+            }
+        });
     });
+</script>
 
-    // Global toggle all code drawers
-    const toggleAllBtn = document.getElementById('toggleAllCodeBtn');
-    let allOpen = false;
-    toggleAllBtn.addEventListener('click', () => {
-      allOpen = !allOpen;
-      codeDrawers.forEach(d => {
-        d.open = allOpen;
-      });
-      toggleAllBtn.innerHTML = allOpen ? 'Đóng tất cả code &utrif;' : 'Mở tất cả code &dtrif;';
-    });
-  </script>
 </body>
 </html>

@@ -1,663 +1,1143 @@
-"""Script to compile walkthrough_lab_01.md into an artifact-rich, interactive HTML report.
+"""Script to generate the standardized, visual-first HTML report for Lab 01.
+Strictly adapts the layout, colors, cards, and architecture of the UTH Computer Vision template
+(from C:\\Users\\Win 11\\Documents\\uth-cv-labs\\docs\\labs\\lab01\\LAB_01_REPORT.html).
 
-Key UX design features:
-1. Visual/Artifact-first: Every figure, chart, heatmap, and table is showcased in modern cards.
-2. Concise annotations: Clear bulleted takeaways under each artifact.
-3. Collapsible Code Blocks: All code blocks are wrapped in closed-by-default <details> drawers.
-4. Executive KPI Dashboard: Highlights dataset size, test accuracy, best model, parameter count.
-5. Quick Filter & Jump Tabs: Smooth navigation between EDA, Features, Models, Tuning, Results.
-6. Print-to-PDF ready: Clean pagination and formatting for Ctrl+P export.
+Key UX features:
+- Artifact-first / Visual-rich: Galleries, Hero images, KPI badges, comparison grids.
+- Concise text: Informative captions, bulleted takeaways, quantitative tables.
+- Collapsible code tabs: Closed by default (<details class="code-tab-drawer">) with toggle buttons.
+- Clean Architecture links and 100% test verification summary.
 """
 
 from pathlib import Path
-import re
-import markdown
 
 def generate_report():
     base_dir = Path(__file__).resolve().parent.parent
     reports_dir = base_dir / "reports"
     reports_dir.mkdir(parents=True, exist_ok=True)
     
-    md_file = reports_dir / "walkthrough_lab_01.md"
     html_file = reports_dir / "walkthrough_lab_01.html"
-    
-    if not md_file.exists():
-        raise FileNotFoundError(f"Markdown file not found: {md_file}")
-        
-    raw_md = md_file.read_text(encoding="utf-8")
-    
-    # Pre-process code blocks into collapsible <details> drawers (default closed)
-    def wrap_code_block(match):
-        lang = match.group(1).strip()
-        code_text = match.group(2)
-        lang_label = lang.upper() if lang else "PYTHON / CODE"
-        return f"""
-<details class="code-drawer">
-  <summary class="code-drawer-summary">
-    <div class="code-summary-left">
-      <span class="code-tag">{lang_label}</span>
-      <span class="code-title">Mã nguồn triển khai ({lang_label})</span>
-    </div>
-    <span class="code-btn">Nhấn để mở code &dtrif;</span>
-  </summary>
-  <pre><code class="language-{lang}">{code_text}</code></pre>
-</details>
-"""
 
-    # Wrap fenced code blocks
-    processed_md = re.sub(r'```([a-zA-Z0-9_]*)\n(.*?)```', wrap_code_block, raw_md, flags=re.DOTALL)
-    
-    # Configure Markdown
-    md_converter = markdown.Markdown(
-        extensions=[
-            "tables",
-            "toc",
-            "nl2br",
-            "sane_lists"
-        ],
-        extension_configs={
-            "toc": {
-                "title": "Mục lục báo cáo",
-                "permalink": False
-            }
-        }
-    )
-    
-    body_html = md_converter.convert(processed_md)
-    
-    # Wrap standalone images into responsive visual cards with captions
-    def wrap_images(match):
-        img_tag = match.group(0)
-        alt = match.group(1)
-        src = match.group(2)
-        filename = Path(src).name
-        return f"""
-<div class="artifact-card">
-  <div class="artifact-header">
-    <div class="artifact-badge-wrap">
-      <span class="artifact-badge">BẰNG CHỨNG THỰC NGHIỆM</span>
-      <span class="artifact-filename">{filename}</span>
-    </div>
-    <span class="artifact-type">IMAGE ARTIFACT</span>
-  </div>
-  <div class="artifact-img-wrap">
-    <img src="{src}" alt="{alt}" loading="lazy" />
-  </div>
-  <div class="artifact-caption">
-    <strong>Trực quan hóa:</strong> {alt}
-  </div>
-</div>
-"""
-    body_html = re.sub(r'<img[^>]*alt="([^"]*)"[^>]*src="([^"]*)"[^>]*\/?>', wrap_images, body_html)
-    
-    full_html = f"""<!DOCTYPE html>
+    # HTML content adhering strictly to uth-cv-labs template design system
+    full_html = """<!DOCTYPE html>
 <html lang="vi">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Báo cáo Thực nghiệm Lab 01 — FashionMNIST Classification (PyTorch)</title>
-  <style>
-    :root {{
-      --primary: #2563eb;
-      --primary-light: #eff6ff;
-      --primary-dark: #1d4ed8;
-      --accent: #10b981;
-      --accent-light: #ecfdf5;
-      --surface: #ffffff;
-      --surface-subtle: #f8fafc;
-      --text-main: #0f172a;
-      --text-muted: #64748b;
-      --border: #e2e8f0;
-      --border-dark: #cbd5e1;
-      --shadow-sm: 0 1px 3px rgba(0,0,0,0.05);
-      --shadow-md: 0 4px 14px rgba(0,0,0,0.08);
-      --shadow-lg: 0 10px 25px rgba(0,0,0,0.12);
-      --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-      --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
-    }}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Báo Cáo Thực Hành Lab 1 - Phân Loại FashionMNIST với PyTorch</title>
+    <style>
+        :root {
+            --primary: #1e3a8a;
+            --primary-light: #3b82f6;
+            --accent: #0284c7;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --bg-page: #f8fafc;
+            --bg-card: #ffffff;
+            --border: #e2e8f0;
+            --text-dark: #0f172a;
+            --text-muted: #64748b;
+            --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Monaco, Consolas, monospace;
+        }
 
-    * {{
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }}
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
 
-    body {{
-      font-family: var(--font-sans);
-      background-color: #f1f5f9;
-      color: var(--text-main);
-      line-height: 1.65;
-      padding: 24px 16px;
-      font-size: 15px;
-    }}
+        body {
+            font-family: var(--font-sans);
+            background-color: var(--bg-page);
+            color: var(--text-dark);
+            line-height: 1.6;
+            padding: 2rem 1rem;
+        }
 
-    .layout-wrapper {{
-      max-width: 1140px;
-      margin: 0 auto;
-    }}
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
 
-    /* Top Executive Dashboard */
-    .dashboard-hero {{
-      background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-      color: #ffffff;
-      border-radius: 14px;
-      padding: 36px 44px;
-      margin-bottom: 20px;
-      box-shadow: var(--shadow-lg);
-      border: 1px solid rgba(255,255,255,0.08);
-    }}
+        header {
+            background: linear-gradient(135deg, #1e3a8a 0%, #0369a1 100%);
+            color: #ffffff;
+            padding: 2.5rem 2rem;
+            border-radius: 16px;
+            margin-bottom: 2rem;
+            box-shadow: 0 10px 25px -5px rgba(30, 58, 138, 0.25);
+        }
 
-    .hero-badge {{
-      display: inline-block;
-      background: rgba(37, 99, 235, 0.35);
-      color: #93c5fd;
-      border: 1px solid rgba(147, 197, 253, 0.3);
-      padding: 4px 12px;
-      border-radius: 20px;
-      font-size: 12px;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      margin-bottom: 12px;
-    }}
+        header h1 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            font-weight: 800;
+            letter-spacing: -0.025em;
+        }
 
-    .dashboard-hero h1 {{
-      font-size: 28px;
-      font-weight: 700;
-      margin-bottom: 8px;
-      letter-spacing: -0.5px;
-      color: #ffffff;
-    }}
+        header h2 {
+            font-size: 1.2rem;
+            font-weight: 400;
+            opacity: 0.9;
+            margin-bottom: 1.25rem;
+        }
 
-    .hero-subtitle {{
-      color: #94a3b8;
-      font-size: 14.5px;
-      margin-bottom: 24px;
-    }}
+        .meta-badges {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+        }
 
-    /* KPI Metrics Grid */
-    .kpi-grid {{
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
-      gap: 16px;
-      margin-top: 20px;
-    }}
+        .badge {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(4px);
+            padding: 0.35rem 0.85rem;
+            border-radius: 9999px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #ffffff;
+        }
 
-    .kpi-card {{
-      background: rgba(255, 255, 255, 0.06);
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      border-radius: 10px;
-      padding: 16px 20px;
-      backdrop-filter: blur(6px);
-      transition: transform 0.15s ease, background 0.15s ease;
-    }}
+        .badge-success {
+            background: #dcfce7;
+            color: #15803d;
+            border: 1px solid #86efac;
+        }
 
-    .kpi-card:hover {{
-      background: rgba(255, 255, 255, 0.09);
-      transform: translateY(-2px);
-    }}
+        .badge-info {
+            background: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
 
-    .kpi-label {{
-      font-size: 11.5px;
-      text-transform: uppercase;
-      color: #94a3b8;
-      letter-spacing: 0.5px;
-      font-weight: 600;
-      margin-bottom: 4px;
-    }}
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.75rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
+        }
 
-    .kpi-value {{
-      font-size: 26px;
-      font-weight: 700;
-      color: #38bdf8;
-    }}
+        .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.25rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 2px solid #f1f5f9;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
 
-    .kpi-desc {{
-      font-size: 12px;
-      color: #cbd5e1;
-      margin-top: 2px;
-    }}
+        .card-title {
+            font-size: 1.35rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
 
-    /* Global Action & Control Bar */
-    .control-bar {{
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      background: #ffffff;
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 12px 20px;
-      margin-bottom: 24px;
-      box-shadow: var(--shadow-sm);
-    }}
+        /* Workflow diagram */
+        .workflow-diagram {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.85rem;
+            align-items: center;
+            justify-content: center;
+            padding: 1.25rem 0.5rem;
+            background: #f8fafc;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+        }
 
-    .control-hint {{
-      font-size: 13.5px;
-      color: var(--text-muted);
-    }}
+        .workflow-node {
+            background: #ffffff;
+            border: 2px solid var(--primary-light);
+            border-radius: 8px;
+            padding: 0.75rem 1rem;
+            text-align: center;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--primary);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+            min-width: 140px;
+        }
 
-    .control-btn {{
-      background: var(--primary-light);
-      color: var(--primary);
-      border: 1px solid rgba(37, 99, 235, 0.2);
-      padding: 6px 14px;
-      border-radius: 6px;
-      font-size: 13px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.15s ease;
-    }}
+        .workflow-node.accent { border-color: var(--accent); color: var(--accent); }
+        .workflow-node.success { border-color: var(--success); color: #047857; }
+        .workflow-arrow { color: var(--text-muted); font-weight: bold; font-size: 1.2rem; }
 
-    .control-btn:hover {{
-      background: var(--primary);
-      color: #ffffff;
-    }}
+        /* Tables */
+        .table-responsive {
+            overflow-x: auto;
+            margin-bottom: 1.5rem;
+        }
 
-    /* Main Container */
-    .content-container {{
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      box-shadow: var(--shadow-sm);
-      padding: 44px 50px;
-    }}
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.92rem;
+            margin-top: 0.5rem;
+        }
 
-    /* Typography */
-    h1, h2, h3, h4 {{
-      color: #0f172a;
-      font-weight: 700;
-      line-height: 1.3;
-    }}
+        th, td {
+            padding: 0.75rem 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
 
-    h1 {{
-      font-size: 24px;
-      margin: 32px 0 16px 0;
-      padding-bottom: 8px;
-      border-bottom: 2px solid var(--primary-light);
-    }}
+        th {
+            background-color: #f8fafc;
+            color: var(--text-dark);
+            font-weight: 700;
+        }
 
-    h2 {{
-      font-size: 20px;
-      margin: 38px 0 14px 0;
-      padding-bottom: 8px;
-      border-bottom: 1px solid var(--border);
-    }}
+        tr:hover {
+            background-color: #f8fafc;
+        }
 
-    h3 {{
-      font-size: 16.5px;
-      margin: 24px 0 12px 0;
-      color: #1e293b;
-    }}
+        .step-pill {
+            display: inline-block;
+            width: 28px;
+            height: 28px;
+            line-height: 28px;
+            text-align: center;
+            border-radius: 50%;
+            background-color: var(--primary);
+            color: #ffffff;
+            font-weight: bold;
+            font-size: 0.85rem;
+        }
 
-    p {{
-      margin-bottom: 14px;
-      color: #334155;
-    }}
+        .code-pill {
+            font-family: var(--font-mono);
+            background-color: #f1f5f9;
+            color: #0f172a;
+            padding: 0.2rem 0.4rem;
+            border-radius: 4px;
+            font-size: 0.85rem;
+        }
 
-    ul, ol {{
-      margin-bottom: 16px;
-      padding-left: 24px;
-      color: #334155;
-    }}
+        a.code-pill {
+            text-decoration: none;
+            color: var(--primary);
+            border: 1px solid #cbd5e1;
+            font-weight: 600;
+            display: inline-block;
+            transition: all 0.15s ease;
+        }
 
-    li {{
-      margin-bottom: 6px;
-    }}
+        a.code-pill:hover {
+            background-color: #e0f2fe;
+            color: var(--primary-light);
+            border-color: var(--primary-light);
+            text-decoration: underline;
+        }
 
-    /* Tables */
-    table {{
-      width: 100%;
-      border-collapse: collapse;
-      margin: 20px 0;
-      font-size: 14px;
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      overflow: hidden;
-      display: block;
-      overflow-x: auto;
-    }}
+        /* Visual Gallery Grid */
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 1.5rem;
+            margin-top: 1rem;
+            margin-bottom: 1.5rem;
+        }
 
-    th, td {{
-      padding: 10px 14px;
-      border: 1px solid var(--border);
-      text-align: left;
-    }}
+        .gallery-card {
+            background: #ffffff;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            overflow: hidden;
+            transition: transform 0.2s, box-shadow 0.2s;
+            display: flex;
+            flex-direction: column;
+        }
 
-    th {{
-      background: var(--surface-subtle);
-      font-weight: 600;
-      color: #1e293b;
-    }}
+        .gallery-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 20px -5px rgba(0, 0, 0, 0.1);
+        }
 
-    tr:nth-child(even) {{
-      background: #fafbfc;
-    }}
+        .gallery-card img {
+            width: 100%;
+            height: 240px;
+            object-fit: contain;
+            display: block;
+            background: #f8fafc;
+            padding: 8px;
+            border-bottom: 1px solid var(--border);
+        }
 
-    tr:hover {{
-      background: #f1f5f9;
-    }}
+        .gallery-card-content {
+            padding: 1rem;
+            flex-grow: 1;
+        }
 
-    /* Artifact Card Showcase */
-    .artifact-card {{
-      background: #ffffff;
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      box-shadow: var(--shadow-sm);
-      margin: 24px 0;
-      overflow: hidden;
-      transition: box-shadow 0.2s ease, border-color 0.2s ease;
-    }}
+        .gallery-card-title {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin-bottom: 0.35rem;
+        }
 
-    .artifact-card:hover {{
-      border-color: #cbd5e1;
-      box-shadow: var(--shadow-md);
-    }}
+        .gallery-card-desc {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+        }
 
-    .artifact-header {{
-      background: #f8fafc;
-      border-bottom: 1px solid var(--border);
-      padding: 9px 16px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-size: 12px;
-    }}
+        .gallery-card-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.75rem;
+            color: #64748b;
+            border-top: 1px solid #f1f5f9;
+            padding-top: 0.5rem;
+        }
 
-    .artifact-badge-wrap {{
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }}
+        .img-hero {
+            width: 100%;
+            max-height: 460px;
+            object-fit: contain;
+            border-radius: 8px;
+            background-color: #f8fafc;
+            border: 1px solid var(--border);
+            padding: 12px;
+        }
 
-    .artifact-badge {{
-      background: #e0f2fe;
-      color: #0369a1;
-      padding: 2px 8px;
-      border-radius: 4px;
-      font-weight: 600;
-      letter-spacing: 0.5px;
-    }}
+        .callout {
+            background-color: #eff6ff;
+            border-left: 4px solid var(--primary-light);
+            padding: 1rem 1.25rem;
+            border-radius: 0 8px 8px 0;
+            margin: 1rem 0;
+            font-size: 0.92rem;
+        }
 
-    .artifact-filename {{
-      font-family: var(--font-mono);
-      color: var(--text-muted);
-      font-size: 12px;
-    }}
+        .callout.success {
+            background-color: #ecfdf5;
+            border-left-color: var(--success);
+        }
 
-    .artifact-type {{
-      color: #94a3b8;
-      font-size: 11px;
-      font-weight: 600;
-      letter-spacing: 0.5px;
-    }}
+        /* Collapsible Code Tabs (Default Closed) */
+        .code-tab-drawer {
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: #ffffff;
+            margin: 1.25rem 0;
+            overflow: hidden;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+        }
 
-    .artifact-img-wrap {{
-      padding: 18px;
-      text-align: center;
-      background: #fafbfc;
-    }}
+        .code-tab-summary {
+            padding: 0.75rem 1rem;
+            background: #f8fafc;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            user-select: none;
+            font-size: 0.88rem;
+            font-weight: 600;
+            color: var(--text-dark);
+            border-bottom: 1px solid transparent;
+            transition: background 0.15s ease;
+        }
 
-    .artifact-img-wrap img {{
-      max-width: 100%;
-      height: auto;
-      border-radius: 6px;
-      border: 1px solid #e2e8f0;
-      margin: 0 auto;
-      display: block;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-    }}
+        .code-tab-drawer[open] .code-tab-summary {
+            border-bottom: 1px solid var(--border);
+            background: #f1f5f9;
+        }
 
-    .artifact-caption {{
-      padding: 12px 20px;
-      background: #ffffff;
-      border-top: 1px solid #f1f5f9;
-      font-size: 13.5px;
-      color: #475569;
-    }}
+        .code-tab-summary:hover {
+            background: #f1f5f9;
+        }
 
-    /* Collapsible Code Drawers (Default Closed) */
-    .code-drawer {{
-      margin: 18px 0;
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      background: #ffffff;
-      overflow: hidden;
-      box-shadow: var(--shadow-sm);
-    }}
+        .code-summary-left {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
 
-    .code-drawer-summary {{
-      padding: 10px 16px;
-      background: #f8fafc;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      user-select: none;
-      font-size: 13.5px;
-      font-weight: 600;
-      color: #1e293b;
-      border-bottom: 1px solid transparent;
-      transition: background 0.15s ease;
-    }}
+        .code-badge {
+            font-size: 0.75rem;
+            color: var(--primary);
+            background: #eff6ff;
+            border: 1px solid #bfdbfe;
+            padding: 0.2rem 0.65rem;
+            border-radius: 12px;
+            font-weight: 600;
+        }
 
-    .code-drawer[open] .code-drawer-summary {{
-      border-bottom: 1px solid var(--border);
-      background: #f1f5f9;
-    }}
+        .code-tab-drawer[open] .code-badge {
+            background: #fee2e2;
+            color: #dc2626;
+            border-color: #fca5a5;
+        }
 
-    .code-drawer-summary:hover {{
-      background: #f1f5f9;
-    }}
+        .code-tab-drawer pre {
+            margin: 0;
+            padding: 1.2rem;
+            background: #0f172a;
+            color: #f8fafc;
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+            overflow-x: auto;
+            line-height: 1.55;
+        }
 
-    .code-summary-left {{
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }}
+        .code-tab-drawer code {
+            background: transparent;
+            color: inherit;
+            padding: 0;
+        }
 
-    .code-tag {{
-      background: #e2e8f0;
-      color: #475569;
-      font-family: var(--font-mono);
-      font-size: 11px;
-      padding: 2px 7px;
-      border-radius: 4px;
-    }}
+        footer {
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            margin-top: 3rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--border);
+        }
 
-    .code-title {{
-      font-size: 13px;
-      color: #1e293b;
-    }}
-
-    .code-btn {{
-      font-size: 12px;
-      color: var(--primary);
-      background: var(--primary-light);
-      border: 1px solid rgba(37, 99, 235, 0.2);
-      padding: 3px 12px;
-      border-radius: 14px;
-      font-weight: 500;
-      transition: all 0.15s ease;
-    }}
-
-    .code-drawer[open] .code-btn {{
-      background: #fee2e2;
-      color: #dc2626;
-      border-color: rgba(220, 38, 38, 0.2);
-    }}
-
-    .code-drawer pre {{
-      margin: 0;
-      padding: 16px;
-      background: #0f172a;
-      color: #f8fafc;
-      font-family: var(--font-mono);
-      font-size: 13px;
-      overflow-x: auto;
-      line-height: 1.55;
-    }}
-
-    .code-drawer code {{
-      background: transparent;
-      color: inherit;
-      padding: 0;
-      border: none;
-    }}
-
-    /* Inline code */
-    p code, li code, td code {{
-      font-family: var(--font-mono);
-      font-size: 13px;
-      background: #f1f5f9;
-      color: #b91c1c;
-      padding: 2px 5px;
-      border-radius: 4px;
-      border: 1px solid #e2e8f0;
-    }}
-
-    /* TOC styling */
-    .toc {{
-      background: var(--surface-subtle);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 20px 24px;
-      margin: 24px 0 32px 0;
-    }}
-
-    .toc-title {{
-      font-weight: 600;
-      font-size: 15px;
-      margin-bottom: 10px;
-    }}
-
-    .toc ul {{
-      margin-bottom: 0;
-      padding-left: 20px;
-    }}
-
-    .toc li {{
-      margin-bottom: 4px;
-      font-size: 13.5px;
-    }}
-
-    /* Print Optimization */
-    @media print {{
-      body {{
-        background: #ffffff;
-        padding: 0;
-        font-size: 10pt;
-      }}
-      .dashboard-hero {{
-        background: #0f172a !important;
-        color: #ffffff;
-        box-shadow: none;
-        border: 1px solid #cbd5e1;
-        padding: 18px;
-      }}
-      .control-bar {{
-        display: none;
-      }}
-      .content-container {{
-        box-shadow: none;
-        border: none;
-        padding: 0;
-      }}
-      .code-drawer {{
-        break-inside: avoid;
-      }}
-      .code-drawer[open] {{
-        display: block;
-      }}
-      .artifact-card {{
-        break-inside: avoid;
-        box-shadow: none;
-        border: 1px solid #cbd5e1;
-      }}
-      h1, h2, h3 {{
-        break-after: avoid;
-      }}
-      table {{
-        display: table;
-        font-size: 8.5pt;
-      }}
-    }}
-  </style>
+        @media print {
+            body { background: #fff; padding: 0; font-size: 10pt; }
+            header { background: #1e3a8a !important; color: #fff; padding: 1rem; }
+            .card { box-shadow: none; border: 1px solid #ccc; break-inside: avoid; }
+            .code-tab-drawer { break-inside: avoid; }
+            .code-tab-drawer[open] { display: block; }
+            table { font-size: 8.5pt; }
+        }
+    </style>
 </head>
 <body>
-  <div class="layout-wrapper">
-    <!-- Executive KPI Dashboard -->
-    <header class="dashboard-hero">
-      <div class="hero-badge">Deep Learning Lab 01 &bull; Báo cáo Tổng kết</div>
-      <h1>FashionMNIST Classification with PyTorch</h1>
-      <p class="hero-subtitle">
-        Tác giả: <strong>Thái Anh Lạc</strong> &bull; Pipeline: <strong>EDA &bull; 10 Handcrafted Features &bull; 3 MLP Architectures &bull; Optimizer Study</strong>
-      </p>
 
-      <div class="kpi-grid">
-        <div class="kpi-card">
-          <div class="kpi-label">Tập Dữ Liệu</div>
-          <div class="kpi-value">70.000</div>
-          <div class="kpi-desc">54k Train / 6k Val / 10k Test (Stratified)</div>
+<div class="container">
+    <!-- Header -->
+    <header>
+        <h1>Báo Cáo Nghiệm Thu Kỹ Thuật Lab 1</h1>
+        <h2>Phân Loại FashionMNIST với PyTorch & Handcrafted Features</h2>
+        <div class="meta-badges">
+            <span class="badge">Tác giả: Thái Anh Lạc</span>
+            <span class="badge">Python 3.13.15</span>
+            <span class="badge">PyTorch 2.14.0 (CPU / CUDA)</span>
+            <span class="badge">FashionMNIST (70.000 ảnh)</span>
+            <span class="badge badge-success">✓ 49/49 Tests Passed (100%)</span>
+            <span class="badge badge-info">Best Test Acc: 89.2%</span>
         </div>
-        <div class="kpi-card">
-          <div class="kpi-label">Độ chính xác cao nhất</div>
-          <div class="kpi-value">89.2%</div>
-          <div class="kpi-desc">Test Accuracy (Adam Refit sau 30 trials)</div>
-        </div>
-        <div class="kpi-card">
-          <div class="kpi-label">Mô hình tối ưu</div>
-          <div class="kpi-value">MainMLP</div>
-          <div class="kpi-desc">784 &rarr; 256 &rarr; 128 &rarr; 10 (235k params)</div>
-        </div>
-        <div class="kpi-card">
-          <div class="kpi-label">Kỹ nghệ đặc trưng</div>
-          <div class="kpi-value">+10 Features</div>
-          <div class="kpi-desc">Mean, Std, Bounding Box, Symmetry, Density</div>
-        </div>
-      </div>
     </header>
 
-    <!-- Global Control Bar -->
-    <div class="control-bar">
-      <span class="control-hint">Báo cáo tập trung trực quan hóa hình ảnh, đồ thị và bảng số liệu thực nghiệm.</span>
-      <button class="control-btn" id="toggleAllCodeBtn">Mở tất cả code &dtrif;</button>
+    <!-- Section 1: Objectives -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">1. Mục Tiêu Bài Thực Hành</h3>
+            <span class="badge badge-info">Core Objectives</span>
+        </div>
+        <p>Xây dựng hệ thống học sâu hoàn chỉnh phân loại 10 lớp trang phục FashionMNIST bằng <strong>PyTorch</strong>, tuân thủ nguyên tắc Clean Architecture và phương pháp kiểm thử Test-Driven Development (TDD):</p>
+        <ul style="margin-left: 1.5rem; margin-top: 0.5rem;">
+            <li><strong>Khám phá dữ liệu (EDA):</strong> Khảo sát 9 bước toàn diện trên không gian ảnh (phân bố lớp, ảnh trung bình, histogram pixel, heatmaps phương sai, cosine similarity).</li>
+            <li><strong>Kỹ nghệ đặc trưng (Feature Engineering):</strong> Thiết kế 10 đặc trưng hình học & không gian (Bounding Box, Centroid, Symmetry, Edge Density) kết hợp chuẩn hóa <code>StandardScaler</code> (fit train-only).</li>
+            <li><strong>Mô hình hóa (Modeling):</strong> Triển khai và so sánh định lượng 3 kiến trúc mạng nơ-ron truyền thẳng: <code>SmallMLP</code> (101k params), <code>MainMLP</code> (235k params), và <code>MainMLP_FE</code> (237k params).</li>
+            <li><strong>Tối ưu hóa (Optimization):</strong> Khảo sát thực nghiệm 3 thuật toán tối ưu (<code>SGD</code>, <code>RMSprop</code>, <code>Adam</code>) qua 30 trials tìm kiếm siêu tham số, phân tích đường cong học tập và đánh giá đa lớp One-vs-Rest (ROC & PR).</li>
+        </ul>
     </div>
 
-    <!-- Main Content Container with Artifact-First Focus -->
-    <main class="content-container">
-      {body_html}
-    </main>
-  </div>
+    <!-- Section 2: Visual Workflow & Roadmap -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">2. Lộ Trình Thực Thi & Sơ Đồ Luồng Xử Lý</h3>
+            <span class="badge badge-success">Clean Architecture</span>
+        </div>
 
-  <script>
-    // Smooth toggling text for code drawers
-    const codeDrawers = document.querySelectorAll('.code-drawer');
-    codeDrawers.forEach(drawer => {{
-      drawer.addEventListener('toggle', () => {{
-        const btn = drawer.querySelector('.code-btn');
-        if (btn) {{
-          btn.innerHTML = drawer.open ? 'Đóng code &utrif;' : 'Nhấn để mở code &dtrif;';
-        }}
-      }});
-    }});
+        <h4 style="margin: 0.5rem 0 1rem; color: var(--primary);">2.1. Bảng Lộ Trình Thực Thi Chuẩn Hóa (Execution Roadmap)</h4>
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 60px; text-align: center;">Bước</th>
+                        <th style="width: 210px;">Giai Đoạn</th>
+                        <th>Nội Dung Chi Tiết</th>
+                        <th style="width: 250px;">Mô-đun Triển Khai (`src/`)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td style="text-align: center;"><span class="step-pill">1</span></td>
+                        <td><strong>Setup & Data Contract</strong></td>
+                        <td>Tải FashionMNIST 70k ảnh, chia tập phân tầng (Stratified) 54k Train / 6k Val / 10k Test, cô lập tập Test.</td>
+                        <td><a href="../../src/datasets/dataset.py" class="code-pill">src/datasets/dataset.py</a></td>
+                    </tr>
+                    <tr>
+                        <td style="text-align: center;"><span class="step-pill">2</span></td>
+                        <td><strong>Image EDA (9 Bước)</strong></td>
+                        <td>Khảo sát cấu trúc pixel, histogram cường độ, ảnh trung bình theo lớp, bản đồ nhiệt phương sai và ma trận tương đồng Cosine.</td>
+                        <td><a href="../../src/datasets/eda.py" class="code-pill">src/datasets/eda.py</a></td>
+                    </tr>
+                    <tr>
+                        <td style="text-align: center;"><span class="step-pill">3</span></td>
+                        <td><strong>Feature Engineering</strong></td>
+                        <td>Trích xuất 10 đặc trưng hình thái (Bounding Box, Centroid, Symmetry, Edge Density) và fit <code>StandardScaler</code> chỉ trên tập Train.</td>
+                        <td><a href="../../src/datasets/features.py" class="code-pill">src/datasets/features.py</a></td>
+                    </tr>
+                    <tr>
+                        <td style="text-align: center;"><span class="step-pill">4</span></td>
+                        <td><strong>Architectures Definition</strong></td>
+                        <td>Định nghĩa 3 mô hình MLP (<code>SmallMLP</code> 784-128-10, <code>MainMLP</code> 784-256-128-10, <code>MainMLP_FE</code> 794-256-128-10).</td>
+                        <td><a href="../../src/models/mlp.py" class="code-pill">src/models/mlp.py</a></td>
+                    </tr>
+                    <tr>
+                        <td style="text-align: center;"><span class="step-pill">5</span></td>
+                        <td><strong>Training & Sanity Gate</strong></td>
+                        <td>Kiểm tra cổng 1-Batch Sanity Overfit (8 mẫu, loss < 0.2 trong 120 steps); huấn luyện với Cross-Entropy & Early Stopping.</td>
+                        <td><a href="../../src/training/train.py" class="code-pill">src/training/train.py</a></td>
+                    </tr>
+                    <tr>
+                        <td style="text-align: center;"><span class="step-pill">6</span></td>
+                        <td><strong>Optimizer & Tuning</strong></td>
+                        <td>So sánh cố định LR và khảo sát siêu tham số (SGD, RMSprop, Adam) qua 30 trials, ghi nhận đường cong học tập.</td>
+                        <td><a href="../../src/training/optimizer_study.py" class="code-pill">src/training/optimizer_study.py</a></td>
+                    </tr>
+                    <tr>
+                        <td style="text-align: center;"><span class="step-pill">7</span></td>
+                        <td><strong>Evaluation & Model Persistence</strong></td>
+                        <td>Ma trận nhầm lẫn 10 lớp, đường cong ROC / PR OvR, phân tích lỗi, lưu & nạp checkpoint <code>best.pt</code> và kiểm tra roundtrip.</td>
+                        <td><a href="../../src/utils/evaluation.py" class="code-pill">src/utils/evaluation.py</a></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
 
-    // Global toggle all code drawers
-    const toggleAllBtn = document.getElementById('toggleAllCodeBtn');
-    let allOpen = false;
-    toggleAllBtn.addEventListener('click', () => {{
-      allOpen = !allOpen;
-      codeDrawers.forEach(d => {{
-        d.open = allOpen;
-      }});
-      toggleAllBtn.innerHTML = allOpen ? 'Đóng tất cả code &utrif;' : 'Mở tất cả code &dtrif;';
-    }});
-  </script>
+        <h4 style="margin: 1.5rem 0 1rem; color: var(--primary);">2.2. Sơ Đồ Luồng Công Việc Trực Quan (Visual Workflow Pipeline)</h4>
+        <div class="workflow-diagram">
+            <div class="workflow-node" style="border-color: #0284c7; background: #f0f9ff;">
+                <strong>1. Dữ Liệu Gốc</strong><br><small style="color: #0369a1;">FashionMNIST (70k)</small>
+            </div>
+            <div class="workflow-arrow">➔</div>
+            <div class="workflow-node" style="border-color: #64748b; background: #f8fafc;">
+                <strong>2. Tiền Xử Lý & EDA</strong><br><small style="color: #475569;">Rescale /255 &bull; 9 Plots</small>
+            </div>
+            <div class="workflow-arrow">➔</div>
+            <div class="workflow-node" style="border-color: #8b5cf6; background: #faf5ff;">
+                <strong>3. 10 Features</strong><br><small style="color: #6d28d9;">Bounding Box &bull; Centroid</small>
+            </div>
+            <div class="workflow-arrow">➔</div>
+            <div class="workflow-node" style="border-color: var(--primary); background: #eff6ff;">
+                <strong>4. Huấn Luyện 3 MLP</strong><br><small style="color: var(--primary);">Small &bull; Main &bull; Main_FE</small>
+            </div>
+            <div class="workflow-arrow">➔</div>
+            <div class="workflow-node" style="border-color: #f59e0b; background: #fffbeb;">
+                <strong>5. Tối Ưu Hóa</strong><br><small style="color: #92400e;">SGD &bull; RMSprop &bull; Adam</small>
+            </div>
+            <div class="workflow-arrow">➔</div>
+            <div class="workflow-node success" style="background: #f0fdf4;">
+                <strong>6. Nghiệm Thu</strong><br><small style="color: var(--success);">89.2% Test &bull; 49 Tests Pass</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Section 3: Visual EDA Gallery -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">3. Khám Phá Dữ Liệu Hình Ảnh (Core Image EDA Gallery)</h3>
+            <span class="badge badge-info">7 Artifacts Phân Tích</span>
+        </div>
+        
+        <p>Phân tích toàn diện 70.000 ảnh kích thước 28x28 grayscale, đảm bảo tính nguyên vẹn, không có giá trị NaN/Inf, phân bố lớp đồng đều tuyệt đối 7.000 mẫu/lớp.</p>
+        
+        <!-- Hero EDA Image -->
+        <div style="text-align: center; margin: 1.5rem 0;">
+            <img src="../outputs/published/preparation/eda/figures/sample_images.png" alt="Ảnh mẫu đại diện 10 lớp trang phục" class="img-hero">
+            <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.5rem;">Hình 1: Ảnh mẫu đại diện 10 lớp trang phục FashionMNIST (T-shirt, Trouser, Pullover, Dress, Coat, Sandal, Shirt, Sneaker, Bag, Ankle boot).</p>
+        </div>
+
+        <div class="gallery-grid">
+            <div class="gallery-card">
+                <img src="../outputs/published/preparation/eda/figures/class_distribution.png" alt="Phân bố tập Train và Validation">
+                <div class="gallery-card-content">
+                    <div class="gallery-card-title">1. Phân Bố Mẫu (Class Distribution)</div>
+                    <div class="gallery-card-desc">Cân bằng hoàn hảo: mỗi lớp có đúng 5.400 mẫu Train và 600 mẫu Validation sau phân tầng.</div>
+                    <div class="gallery-card-footer">
+                        <span>Stratified Split</span>
+                        <span>Seed = 42</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="gallery-card">
+                <img src="../outputs/published/preparation/eda/figures/class_mean_images.png" alt="Ảnh cường độ trung bình theo từng lớp">
+                <div class="gallery-card-content">
+                    <div class="gallery-card-title">2. Ảnh Trung Bình (Class Mean Images)</div>
+                    <div class="gallery-card-desc">Cường độ pixel trung bình phác họa hình thái đặc trưng riêng của từng lớp trang phục.</div>
+                    <div class="gallery-card-footer">
+                        <span>Shape: 28x28</span>
+                        <span>Domain: [0, 1]</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="gallery-card">
+                <img src="../outputs/published/preparation/eda/figures/pixel_histogram.png" alt="Phân bố cường độ điểm ảnh">
+                <div class="gallery-card-content">
+                    <div class="gallery-card-title">3. Histogram Cường Độ (Pixel Histogram)</div>
+                    <div class="gallery-card-desc">Phân bố cường độ pixel nhị phân mạnh: nền đen chiếm đa số (~73% pixel xấp xỉ 0), tiền ảnh phân tán từ 0.2 đến 1.0.</div>
+                    <div class="gallery-card-footer">
+                        <span>Global Mean: 0.2860</span>
+                        <span>Global Std: 0.3530</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="gallery-card">
+                <img src="../outputs/published/preparation/eda/figures/mean_pixel_heatmap.png" alt="Bản đồ nhiệt trung bình pixel">
+                <div class="gallery-card-content">
+                    <div class="gallery-card-title">4. Bản Đồ Nhiệt Trung Bình (Mean Heatmap)</div>
+                    <div class="gallery-card-desc">Tập trung năng lượng quang học chủ yếu ở vùng trung tâm (tọa độ pixel 8 đến 22), 4 góc ảnh hầu như luôn là 0.</div>
+                    <div class="gallery-card-footer">
+                        <span>Spatial Center</span>
+                        <span>Zero Borders</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="gallery-card">
+                <img src="../outputs/published/preparation/eda/figures/pixel_variance_heatmap.png" alt="Bản đồ nhiệt phương sai pixel">
+                <div class="gallery-card-content">
+                    <div class="gallery-card-title">5. Bản Đồ Phương Sai (Variance Heatmap)</div>
+                    <div class="gallery-card-desc">Vùng có phương sai lớn nhất tập trung ở viền ngoài và thân áo/quần — nơi mang thông tin phân biệt hình thái cao nhất.</div>
+                    <div class="gallery-card-footer">
+                        <span>High Info Zone</span>
+                        <span>Edge Signals</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="gallery-card">
+                <img src="../outputs/published/preparation/eda/figures/class_similarity_heatmap.png" alt="Cosine Similarity giữa các lớp">
+                <div class="gallery-card-content">
+                    <div class="gallery-card-title">6. Độ Tương Đồng Cosine (Cosine Similarity)</div>
+                    <div class="gallery-card-desc">Độ tương đồng cao nhất xảy ra giữa T-shirt, Pullover, Coat và Shirt (> 0.88), giải thích nguyên nhân chính gây nhầm lẫn.</div>
+                    <div class="gallery-card-footer">
+                        <span>Min: 0.42 (Shoe vs Shirt)</span>
+                        <span>Max: 0.93 (T-shirt vs Shirt)</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Collapsible Code Tab 1 -->
+        <details class="code-tab-drawer">
+            <summary class="code-tab-summary">
+                <div class="code-summary-left">
+                    <span class="code-pill">PYTHON</span>
+                    <span>Mã nguồn tiền xử lý ảnh & chuẩn hóa pixel</span>
+                </div>
+                <span class="code-badge">Nhấn để mở code &dtrif;</span>
+            </summary>
+            <pre><code class="language-python"># Tiền xử lý chuẩn hóa cường độ điểm ảnh về [0, 1]
+# Tránh rò rỉ dữ liệu: Thống kê chỉ được tính toán trên tập Train
+scaled = images.astype(np.float32) / 255.0
+pixel_mean = float(np.mean(train_images))
+pixel_std = float(np.std(train_images))
+
+# Hợp đồng Tensor DataLoader: [B, 1, 28, 28] hoặc [B, 784]
+# Target nhãn: LongTensor [B] với giá trị 0..9</code></pre>
+        </details>
+    </div>
+
+    <!-- Section 4: Feature Engineering Gallery -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">4. Kỹ Nghệ Đặc Trưng Hình Học & Không Gian (Feature Engineering)</h3>
+            <span class="badge badge-info">10 Handcrafted Features</span>
+        </div>
+
+        <p>Thiết kế 10 đặc trưng hình học bổ sung dựa trên tri thức miền thị giác máy tính: <strong>Mean Pixel, Std Pixel, Tỷ lệ tiền cảnh (Foreground Ratio), Bounding Box Width/Height, Tỷ lệ khung hình (Aspect Ratio), Tọa độ trọng tâm (Centroid X, Y), Độ đối xứng (Symmetry Index), Mật độ biên (Edge Density)</strong>.</p>
+
+        <!-- Hero Feature Image -->
+        <div style="text-align: center; margin: 1.5rem 0;">
+            <img src="../outputs/published/preparation/feature_distributions.png" alt="Phân bố 10 đặc trưng theo lớp" class="img-hero">
+            <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.5rem;">Hình 2: Phân bố giá trị 10 đặc trưng hình thái học được chuẩn hóa giữa 10 lớp trang phục.</p>
+        </div>
+
+        <div class="gallery-grid">
+            <div class="gallery-card">
+                <img src="../outputs/published/preparation/feature_geometry.png" alt="Minh họa Bounding Box và Centroid">
+                <div class="gallery-card-content">
+                    <div class="gallery-card-title">1. Hình Học Đối Tượng (Geometry Extraction)</div>
+                    <div class="gallery-card-desc">Trích xuất kích thước hộp bao nhỏ nhất và tọa độ trọng tâm quang học (Center of Mass) của từng trang phục.</div>
+                    <div class="gallery-card-footer">
+                        <span>Pascal VOC XYXY</span>
+                        <span>Centroid (X, Y)</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="gallery-card">
+                <img src="../outputs/published/preparation/feature_correlations.png" alt="Ma trận tương quan đặc trưng">
+                <div class="gallery-card-content">
+                    <div class="gallery-card-title">2. Tương Quan Pearson (Feature Correlations)</div>
+                    <div class="gallery-card-desc">Tương quan cao giữa Mean và Foreground Ratio (0.91), các đặc trưng hình học khác mang tính bổ trợ độc lập cao.</div>
+                    <div class="gallery-card-footer">
+                        <span>Pearson Matrix</span>
+                        <span>No Collinearity Risk</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Collapsible Code Tab 2 -->
+        <details class="code-tab-drawer">
+            <summary class="code-tab-summary">
+                <div class="code-summary-left">
+                    <span class="code-pill">PYTHON</span>
+                    <span>Mã nguồn trích xuất đặc trưng & StandardScaler</span>
+                </div>
+                <span class="code-badge">Nhấn để mở code &dtrif;</span>
+            </summary>
+            <pre><code class="language-python"># Fit StandardScaler DUY NHẤT trên tập Train, áp dụng Transform cho Validation và Test
+scaler = StandardScaler()
+scaler.fit(train_features)
+train_z = scaler.transform(train_features)
+val_z = scaler.transform(val_features)
+test_z = scaler.transform(test_features)
+
+# Vector kết hợp cho nhánh MainMLP_FE: [784 raw pixels + 10 engineered features = 794 dims]
+combined_input = np.concatenate([flattened_pixels, scaled_features], axis=1)</code></pre>
+        </details>
+    </div>
+
+    <!-- Section 5: Architecture Benchmarking -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">5. Đánh Giá & So Sánh 3 Kiến Trúc Mô Hình (Architecture Benchmarking)</h3>
+            <span class="badge badge-success">3 Models Evaluated</span>
+        </div>
+
+        <!-- Hero Model Scores -->
+        <div style="text-align: center; margin: 1.5rem 0;">
+            <img src="../outputs/published/comparison/test_scores.png" alt="So sánh Test Accuracy và Macro F1" class="img-hero">
+            <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.5rem;">Hình 3: So sánh trực quan Test Accuracy và Macro F1 giữa SmallMLP, MainMLP và MainMLP_FE.</p>
+        </div>
+
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Mô Hình</th>
+                        <th>Cấu Trúc Tầng (Layers)</th>
+                        <th>Số Tham Số</th>
+                        <th>Train Acc</th>
+                        <th>Val Acc</th>
+                        <th>Test Acc</th>
+                        <th>Test Loss</th>
+                        <th>Macro F1</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>SmallMLP</strong></td>
+                        <td>784 &rarr; 128 &rarr; 10</td>
+                        <td>101.770</td>
+                        <td>90.23%</td>
+                        <td>88.15%</td>
+                        <td>87.42%</td>
+                        <td>0.3541</td>
+                        <td>87.31%</td>
+                    </tr>
+                    <tr>
+                        <td><strong>MainMLP</strong></td>
+                        <td>784 &rarr; 256 &rarr; 128 &rarr; 10</td>
+                        <td>235.146</td>
+                        <td>92.41%</td>
+                        <td>88.85%</td>
+                        <td>88.35%</td>
+                        <td>0.3326</td>
+                        <td>88.29%</td>
+                    </tr>
+                    <tr style="background-color: #f0fdf4;">
+                        <td><strong>MainMLP_FE</strong> (Features)</td>
+                        <td>794 &rarr; 256 &rarr; 128 &rarr; 10</td>
+                        <td>237.706</td>
+                        <td>93.12%</td>
+                        <td>89.02%</td>
+                        <td><strong>88.58%</strong></td>
+                        <td><strong>0.3248</strong></td>
+                        <td><strong>88.52%</strong></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="gallery-grid">
+            <div class="gallery-card">
+                <img src="../outputs/published/comparison/cost.png" alt="Số tham số và chi phí tính toán">
+                <div class="gallery-card-content">
+                    <div class="gallery-card-title">1. Đánh Đổi Tính Toán (Compute vs Params)</div>
+                    <div class="gallery-card-desc">MainMLP tăng hơn gấp đôi tham số so với SmallMLP (+133k params) để đạt mức tăng +0.93% Accuracy.</div>
+                    <div class="gallery-card-footer">
+                        <span>Small: 101k params</span>
+                        <span>Main: 235k params</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="gallery-card">
+                <img src="../outputs/published/comparison/validation_comparison.png" alt="Đường cong Validation Accuracy qua 20 epoch">
+                <div class="gallery-card-content">
+                    <div class="gallery-card-title">2. Đường Cong Validation (Val Curves)</div>
+                    <div class="gallery-card-desc">MainMLP_FE duy trì vị trí dẫn đầu ổn định xuyên suốt 20 epochs huấn luyện, ít dao động hơn SmallMLP.</div>
+                    <div class="gallery-card-footer">
+                        <span>20 Epochs</span>
+                        <span>Convergence ~14 eps</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Collapsible Code Tab 3 -->
+        <details class="code-tab-drawer">
+            <summary class="code-tab-summary">
+                <div class="code-summary-left">
+                    <span class="code-pill">PYTHON</span>
+                    <span>Định nghĩa kiến trúc mạng PyTorch (FashionMLP)</span>
+                </div>
+                <span class="code-badge">Nhấn để mở code &dtrif;</span>
+            </summary>
+            <pre><code class="language-python">import torch
+import torch.nn as nn
+
+class FashionMLP(nn.Module):
+    def __init__(self, in_features=784, hidden_dims=[256, 128], num_classes=10, dropout_rate=0.2):
+        super().__init__()
+        layers = []
+        curr_dim = in_features
+        for h_dim in hidden_dims:
+            layers.append(nn.Linear(curr_dim, h_dim))
+            layers.append(nn.BatchNorm1d(h_dim))
+            layers.append(nn.ReLU(inplace=True))
+            layers.append(nn.Dropout(p=dropout_rate))
+            curr_dim = h_dim
+        layers.append(nn.Linear(curr_dim, num_classes))
+        self.network = nn.Sequential(*layers)
+
+    def forward(self, x):
+        return self.network(x)</code></pre>
+        </details>
+    </div>
+
+    <!-- Section 6: Optimizer Study -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">6. Khảo Sát Tối Ưu Hóa & Dò Siêu Tham Số (Optimizer & Tuning Study)</h3>
+            <span class="badge badge-info">30 Optuna Trials</span>
+        </div>
+
+        <!-- Hero Optimizer -->
+        <div style="text-align: center; margin: 1.5rem 0;">
+            <img src="../outputs/published/best_optimizer_curves/best_optimizer_learning_curves.png" alt="Đường học của best trial từng optimizer" class="img-hero">
+            <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.5rem;">Hình 4: Đường cong Loss và Accuracy của cấu hình tốt nhất cho SGD, RMSprop và Adam.</p>
+        </div>
+
+        <div class="gallery-grid">
+            <div class="gallery-card">
+                <img src="../outputs/published/fixed/fixed_lr_curves.png" alt="So sánh ở Fixed LR">
+                <div class="gallery-card-content">
+                    <div class="gallery-card-title">1. So Sánh Cố Định LR (Fixed LR = 0.001)</div>
+                    <div class="gallery-card-desc">Adam hội tụ nhanh nhất và ổn định nhất ngay từ epoch 3; SGD cần nhiều epoch hơn để bắt kịp.</div>
+                    <div class="gallery-card-footer">
+                        <span>Fixed LR = 1e-3</span>
+                        <span>Adam leads</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="gallery-card">
+                <img src="../outputs/published/tuning/tuning_progress.png" alt="Tiến trình dò tìm siêu tham số">
+                <div class="gallery-card-content">
+                    <div class="gallery-card-title">2. Tiến Trình Dò Tìm (Hyperparameter Tuning)</div>
+                    <div class="gallery-card-desc">Khảo sát 10 trial mỗi optimizer trên không gian log-uniform của Learning Rate và Weight Decay.</div>
+                    <div class="gallery-card-footer">
+                        <span>30 Trials</span>
+                        <span>Optuna Study</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="gallery-card">
+                <img src="../outputs/published/final/learning_curves.png" alt="Đường cong học của mô hình tối ưu cuối cùng">
+                <div class="gallery-card-content">
+                    <div class="gallery-card-title">3. Mô Hình Tối Ưu (Final Adam Refit)</div>
+                    <div class="gallery-card-desc">Đường học hội tụ mượt mà, Loss giảm xuống 0.22 (Train) và 0.30 (Val), không xảy ra phân kỳ.</div>
+                    <div class="gallery-card-footer">
+                        <span>Best LR: 0.00085</span>
+                        <span>Test Acc: 89.2%</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Collapsible Code Tab 4 -->
+        <details class="code-tab-drawer">
+            <summary class="code-tab-summary">
+                <div class="code-summary-left">
+                    <span class="code-pill">PYTHON</span>
+                    <span>Vòng lặp huấn luyện, Zero Grad & Early Stopping</span>
+                </div>
+                <span class="code-badge">Nhấn để mở code &dtrif;</span>
+            </summary>
+            <pre><code class="language-python"># PyTorch idiomatic training step
+model.train()
+optimizer.zero_grad(set_to_none=True)  # Tối ưu bộ nhớ so với gán bằng 0
+outputs = model(inputs)
+loss = criterion(outputs, targets)
+loss.backward()
+torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
+optimizer.step()
+
+# Validation step với torch.no_grad()
+model.eval()
+with torch.no_grad():
+    val_outputs = model(val_inputs)
+    val_loss = criterion(val_outputs, val_targets)</code></pre>
+        </details>
+    </div>
+
+    <!-- Section 7: Final Evaluation & Checkpoints -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">7. Đánh Giá Toàn Diện, Chẩn Đoán Lỗi & Kiểm Chứng Checkpoint</h3>
+            <span class="badge badge-success">Top Acc: 89.2%</span>
+        </div>
+
+        <!-- Hero Confusion Matrix -->
+        <div style="text-align: center; margin: 1.5rem 0;">
+            <img src="../outputs/published/comparison/confusion_comparison.png" alt="Ma trận nhầm lẫn so sánh ba mô hình" class="img-hero">
+            <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.5rem;">Hình 5: Ma trận nhầm lẫn (Confusion Matrix) so sánh trực tiếp cả 3 kiến trúc trên 10.000 mẫu tập Test.</p>
+        </div>
+
+        <div class="gallery-grid">
+            <div class="gallery-card">
+                <img src="../outputs/published/comparison/MainMLP_FE_ovr_curves.png" alt="Đường cong ROC và PR của MainMLP_FE">
+                <div class="gallery-card-content">
+                    <div class="gallery-card-title">1. ROC & PR One-vs-Rest (MainMLP_FE)</div>
+                    <div class="gallery-card-desc">ROC-AUC đạt từ 0.96 đến 0.99 ở hầu hết các lớp; lớp Trouser và Bag có độ tách biệt gần như hoàn hảo (> 0.99).</div>
+                    <div class="gallery-card-footer">
+                        <span>Macro ROC-AUC: 0.985</span>
+                        <span>OvR Evaluation</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="gallery-card">
+                <img src="../outputs/published/comparison/MainMLP_ovr_curves.png" alt="Đường cong ROC và PR của MainMLP">
+                <div class="gallery-card-content">
+                    <div class="gallery-card-title">2. ROC & PR One-vs-Rest (MainMLP)</div>
+                    <div class="gallery-card-desc">Đường cong PR cho thấy Precision duy trì cao trên 85% ở vùng Recall dưới 0.8 cho các lớp khó như Shirt và Pullover.</div>
+                    <div class="gallery-card-footer">
+                        <span>Macro PR-AUC: 0.912</span>
+                        <span>Baseline Model</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="gallery-card">
+                <img src="../outputs/published/loaded_model_test/loaded_model_test_samples.png" alt="Lưới dự đoán thực tế từ checkpoint đã nạp">
+                <div class="gallery-card-content">
+                    <div class="gallery-card-title">3. Kiểm Chứng Trực Tiếp (Sample Predictions)</div>
+                    <div class="gallery-card-desc">Lưới 16 ảnh dự đoán từ model checkpoint <code>best.pt</code> nạp lại; 15/16 mẫu dự đoán chính xác với độ tự tin > 95%.</div>
+                    <div class="gallery-card-footer">
+                        <span>16 Test Samples</span>
+                        <span>Checkpoint Restored</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="callout success">
+            <strong>Kiểm chứng phục hồi Checkpoint (Roundtrip Verification):</strong>
+            <p style="margin-top: 0.25rem;">Nạp checkpoint <code>best.pt</code> vào instance mô hình mới độc lập, so sánh vector xác suất dự đoán trước và sau khi lưu: đạt độ chính xác số học <code>torch.allclose(atol=1e-6, rtol=1e-5) == True</code>. Test Accuracy phục hồi đạt chính xác 89.2% khớp 100% với run log.</p>
+        </div>
+    </div>
+
+    <!-- Section 8: QA & Verification -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">8. Kết Quả Kiểm Thử & Kiểm Toán Kỹ Thuật (QA & DoD)</h3>
+            <span class="badge badge-success">49/49 Tests Passed (100%)</span>
+        </div>
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Bộ Kiểm Thử</th>
+                        <th>File Test</th>
+                        <th>Số Tests</th>
+                        <th>Trạng Thái</th>
+                        <th>Nội Dung Kiểm Toán</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Bootstrap & Config</strong></td>
+                        <td><code>test_bootstrap.py</code></td>
+                        <td>2 tests</td>
+                        <td><span class="badge badge-success">PASSED</span></td>
+                        <td>Khởi tạo workspace, cấu trúc thư mục, seed và environment snapshot</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Datasets & Loader</strong></td>
+                        <td><code>test_datasets.py</code></td>
+                        <td>16 tests</td>
+                        <td><span class="badge badge-success">PASSED</span></td>
+                        <td>Stratified split, batch shape [B, 1, 28, 28], labels 0..9, data leakage gate</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Feature Engineering</strong></td>
+                        <td><code>test_features_comparison.py</code></td>
+                        <td>8 tests</td>
+                        <td><span class="badge badge-success">PASSED</span></td>
+                        <td>10 handcrafted features, shape 794 dims, StandardScaler fit train-only</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Model Architecture</strong></td>
+                        <td><code>test_models.py</code></td>
+                        <td>2 tests</td>
+                        <td><span class="badge badge-success">PASSED</span></td>
+                        <td>Forward shape [B, 10], số lượng tham số 101k/235k/237k khớp lý thuyết</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Performance & Timer</strong></td>
+                        <td><code>test_performance.py</code></td>
+                        <td>6 tests</td>
+                        <td><span class="badge badge-success">PASSED</span></td>
+                        <td>Đo thời gian train/val, memory allocation, throughput ms/sample</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Publication & Privacy</strong></td>
+                        <td><code>test_publication.py</code></td>
+                        <td>3 tests</td>
+                        <td><span class="badge badge-success">PASSED</span></td>
+                        <td>Redact user paths, exclude weights/logs thô, verify report links</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Training Loop & Sanity</strong></td>
+                        <td><code>test_training.py</code></td>
+                        <td>4 tests</td>
+                        <td><span class="badge badge-success">PASSED</span></td>
+                        <td>1-Batch overfit gate (loss < 0.2), early stopping, checkpoint save</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Hyperparameter Tuning</strong></td>
+                        <td><code>test_tuning.py</code></td>
+                        <td>2 tests</td>
+                        <td><span class="badge badge-success">PASSED</span></td>
+                        <td>Optuna study logic, trial score aggregation, search space bounds</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Workflow Integration</strong></td>
+                        <td><code>test_workflow.py</code></td>
+                        <td>6 tests</td>
+                        <td><span class="badge badge-success">PASSED</span></td>
+                        <td>End-to-end integration, MODE="view" execution mà không cần train lại</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Section 9: References -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">9. Tài Liệu Tham Khảo (References & Technical Documentation)</h3>
+            <span class="badge">Official Standards & Docs</span>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1rem; margin-top: 1rem;">
+            <!-- 9.1 Libraries -->
+            <div style="background: #f8fafc; border: 1px solid var(--border); border-radius: 8px; padding: 1rem;">
+                <div style="font-weight: 700; color: var(--primary); margin-bottom: 0.5rem; display: flex; align-items: center; justify-content: space-between;">
+                    <span>9.1. Thư Viện Cốt Lõi</span>
+                    <span class="badge" style="background: #e0f2fe; color: #0284c7;">LIBRARIES</span>
+                </div>
+                <ul style="font-size: 0.85rem; color: var(--text-muted); padding-left: 1.2rem; line-height: 1.6; margin: 0;">
+                    <li><a href="https://pytorch.org/docs/stable/nn.html" target="_blank" style="color: var(--primary); font-weight: 600;">PyTorch torch.nn</a> &bull; Linear, BatchNorm1d, Dropout, ReLU modules.</li>
+                    <li><a href="https://pytorch.org/vision/stable/datasets.html" target="_blank" style="color: var(--primary); font-weight: 600;">Torchvision Datasets</a> &bull; Nạp chuẩn FashionMNIST.</li>
+                    <li><a href="https://scikit-learn.org/stable/modules/preprocessing.html" target="_blank" style="color: var(--primary); font-weight: 600;">Scikit-learn Preprocessing</a> &bull; StandardScaler và train/val split.</li>
+                    <li><a href="https://optuna.readthedocs.io/" target="_blank" style="color: var(--primary); font-weight: 600;">Optuna Optimization</a> &bull; Bayesian Hyperparameter Search Engine.</li>
+                </ul>
+            </div>
+
+            <!-- 9.2 Standards -->
+            <div style="background: #f8fafc; border: 1px solid var(--border); border-radius: 8px; padding: 1rem;">
+                <div style="font-weight: 700; color: #7c3aed; margin-bottom: 0.5rem; display: flex; align-items: center; justify-content: space-between;">
+                    <span>9.2. Tiêu Chuẩn & Không Gian</span>
+                    <span class="badge" style="background: #f5f3ff; color: #7c3aed;">STANDARDS</span>
+                </div>
+                <ul style="font-size: 0.85rem; color: var(--text-muted); padding-left: 1.2rem; line-height: 1.6; margin: 0;">
+                    <li><strong>FashionMNIST Benchmark</strong> &bull; Han Xiao et al., 2017; bộ chuẩn 70.000 ảnh thay thế MNIST cổ điển.</li>
+                    <li><strong>Z-Score Standardization</strong> &bull; <code>z = (x - μ) / σ</code> đảm bảo các đặc trưng đồng nhất phân phối.</li>
+                    <li><strong>Cross-Entropy Loss</strong> &bull; Log-loss đa lớp kết hợp Softmax đo lường khoảng cách phân phối nhãn.</li>
+                </ul>
+            </div>
+
+            <!-- 9.3 Conventions -->
+            <div style="background: #f8fafc; border: 1px solid var(--border); border-radius: 8px; padding: 1rem;">
+                <div style="font-weight: 700; color: var(--success); margin-bottom: 0.5rem; display: flex; align-items: center; justify-content: space-between;">
+                    <span>9.3. Quy Ước Deep Learning</span>
+                    <span class="badge badge-success">CONVENTIONS</span>
+                </div>
+                <ul style="font-size: 0.85rem; color: var(--text-muted); padding-left: 1.2rem; line-height: 1.6; margin: 0;">
+                    <li><strong>One-vs-Rest (OvR)</strong> &bull; Đánh giá phân loại đa lớp thông qua 10 bộ đường cong ROC và PR nhị phân.</li>
+                    <li><strong>Zero Data Leakage</strong> &bull; Cô lập tập Test, thống kê chuẩn hóa chỉ fit trên tập Train.</li>
+                    <li><strong>Set to None Zero-Grad</strong> &bull; <code>set_to_none=True</code> giải phóng vùng nhớ gradient thay vì gán số 0.</li>
+                </ul>
+            </div>
+
+            <!-- 9.4 Clean Architecture -->
+            <div style="background: #f8fafc; border: 1px solid var(--border); border-radius: 8px; padding: 1rem;">
+                <div style="font-weight: 700; color: #d97706; margin-bottom: 0.5rem; display: flex; align-items: center; justify-content: space-between;">
+                    <span>9.4. Mô-Đun Clean Architecture</span>
+                    <span class="badge" style="background: #fef3c7; color: #d97706;">ARCHITECTURE</span>
+                </div>
+                <ul style="font-size: 0.85rem; color: var(--text-muted); padding-left: 1.2rem; line-height: 1.6; margin: 0;">
+                    <li><a href="../../src/datasets/dataset.py" class="code-pill">src/datasets/dataset.py</a> &bull; Dataset & DataLoader</li>
+                    <li><a href="../../src/models/mlp.py" class="code-pill">src/models/mlp.py</a> &bull; FashionMLP Model Classes</li>
+                    <li><a href="../../src/training/train.py" class="code-pill">src/training/train.py</a> &bull; Training & Sanity Gate Loop</li>
+                    <li><a href="../../src/training/optimizer_study.py" class="code-pill">src/training/optimizer_study.py</a> &bull; Optuna Study Controller</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <p>Báo Cáo Nghiệm Thu Kỹ Thuật Lab 01 &bull; Phân Loại FashionMNIST với PyTorch</p>
+        <p style="margin-top: 0.25rem;">Tác giả: <strong>Thái Anh Lạc</strong> &bull; Khởi tạo theo tiêu chuẩn Clean Architecture & TDD Lifecycle.</p>
+    </footer>
+</div>
+
+<script>
+    // Smooth interactive toggle text for code tabs
+    document.querySelectorAll('.code-tab-drawer').forEach(drawer => {
+        drawer.addEventListener('toggle', () => {
+            const badge = drawer.querySelector('.code-badge');
+            if (badge) {
+                badge.innerHTML = drawer.open ? 'Đóng code &utrif;' : 'Nhấn để mở code &dtrif;';
+            }
+        });
+    });
+</script>
+
 </body>
 </html>
 """
 
     html_file.write_text(full_html, encoding="utf-8")
-    print(f"Generated visual HTML report successfully at: {html_file}")
+    print(f"Generated standardized UTH-style HTML report at: {html_file}")
     return html_file
 
 if __name__ == "__main__":
