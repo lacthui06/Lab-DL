@@ -1,12 +1,13 @@
 """Script to generate the standardized, visual-first HTML report for Lab 01.
 Strictly adapts the layout, colors, cards, and architecture of the UTH Computer Vision template
-(from C:\\Users\\Win 11\\Documents\\uth-cv-labs\\docs\\labs\\lab01\\LAB_01_REPORT.html).
+with interactive pipeline navigation, spacious artifact galleries, and modal image zoom.
 
 Key UX features:
-- Artifact-first / Visual-rich: Galleries, Hero images, KPI badges, comparison grids.
-- Concise text: Informative captions, bulleted takeaways, quantitative tables.
+- Interactive Process Pipeline: 6 uniform, clickable step cards with smooth anchor jumps.
+- Artifact-first / Spacious Layout: Generous margins, breathable 2rem grid gaps, high-res plots.
+- Lightbox Modal Zoom: Click any image to inspect in full resolution with captions and raw file link.
 - Collapsible code tabs: Closed by default (<details class="code-tab-drawer">) with toggle buttons.
-- Clean Architecture links and 100% test verification summary.
+- Clean Architecture links and 100% test verification summary (49/49 passed).
 """
 
 from pathlib import Path
@@ -48,16 +49,20 @@ def generate_report():
             padding: 0;
         }
 
+        html {
+            scroll-behavior: smooth;
+        }
+
         body {
             font-family: var(--font-sans);
             background-color: var(--bg-page);
             color: var(--text-dark);
             line-height: 1.6;
-            padding: 2rem 1rem;
+            padding: 2.5rem 1rem;
         }
 
         .container {
-            max-width: 1200px;
+            max-width: 1220px;
             margin: 0 auto;
         }
 
@@ -66,21 +71,21 @@ def generate_report():
             color: #ffffff;
             padding: 2.5rem 2rem;
             border-radius: 16px;
-            margin-bottom: 2rem;
+            margin-bottom: 2.5rem;
             box-shadow: 0 10px 25px -5px rgba(30, 58, 138, 0.25);
         }
 
         header h1 {
-            font-size: 2rem;
+            font-size: 2.1rem;
             margin-bottom: 0.5rem;
             font-weight: 800;
             letter-spacing: -0.025em;
         }
 
         header h2 {
-            font-size: 1.2rem;
+            font-size: 1.25rem;
             font-weight: 400;
-            opacity: 0.9;
+            opacity: 0.92;
             margin-bottom: 1.25rem;
         }
 
@@ -116,18 +121,19 @@ def generate_report():
         .card {
             background: var(--bg-card);
             border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 1.75rem;
-            margin-bottom: 2rem;
-            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
+            border-radius: 14px;
+            padding: 2rem 2.25rem;
+            margin-bottom: 2.5rem;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.04);
+            scroll-margin-top: 1.5rem;
         }
 
         .card-header {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            margin-bottom: 1.25rem;
-            padding-bottom: 0.75rem;
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.85rem;
             border-bottom: 2px solid #f1f5f9;
             flex-wrap: wrap;
             gap: 0.5rem;
@@ -139,40 +145,114 @@ def generate_report():
             color: var(--primary);
         }
 
-        /* Workflow diagram */
-        .workflow-diagram {
-            display: flex;
-            flex-wrap: wrap;
+        /* Interactive Process Pipeline (Stepper) */
+        .pipeline-container {
+            margin: 1.5rem 0 2rem;
+        }
+
+        .pipeline-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
             gap: 0.85rem;
+        }
+
+        @media (max-width: 1024px) {
+            .pipeline-grid {
+                grid-template-columns: repeat(3, 1fr);
+                gap: 1rem;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .pipeline-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 0.75rem;
+            }
+        }
+
+        .pipeline-card {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            background: #ffffff;
+            border: 1px solid var(--border);
+            border-top: 4px solid var(--primary-light);
+            border-radius: 10px;
+            padding: 1.1rem 0.95rem;
+            text-decoration: none;
+            color: inherit;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.03);
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        .pipeline-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 20px -5px rgba(30, 58, 138, 0.15);
+            background: #f8fafc;
+        }
+
+        .pipeline-card.step-1 { border-top-color: #0284c7; }
+        .pipeline-card.step-2 { border-top-color: #8b5cf6; }
+        .pipeline-card.step-3 { border-top-color: #2563eb; }
+        .pipeline-card.step-4 { border-top-color: #f59e0b; }
+        .pipeline-card.step-5 { border-top-color: #10b981; }
+        .pipeline-card.step-6 { border-top-color: #047857; }
+
+        .pipeline-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 0.6rem;
+        }
+
+        .pipeline-number {
+            display: inline-flex;
             align-items: center;
             justify-content: center;
-            padding: 1.25rem 0.5rem;
-            background: #f8fafc;
-            border-radius: 8px;
-            margin-bottom: 1.5rem;
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            background: #f1f5f9;
+            color: var(--text-dark);
+            font-size: 0.78rem;
+            font-weight: 700;
         }
 
-        .workflow-node {
-            background: #ffffff;
-            border: 2px solid var(--primary-light);
-            border-radius: 8px;
-            padding: 0.75rem 1rem;
-            text-align: center;
+        .pipeline-card:hover .pipeline-number {
+            background: var(--primary);
+            color: #ffffff;
+        }
+
+        .pipeline-icon {
             font-size: 0.85rem;
-            font-weight: 600;
-            color: var(--primary);
-            box-shadow: 0 2px 4px rgba(0,0,0,0.04);
-            min-width: 140px;
+            color: var(--text-muted);
+            transition: transform 0.2s;
         }
 
-        .workflow-node.accent { border-color: var(--accent); color: var(--accent); }
-        .workflow-node.success { border-color: var(--success); color: #047857; }
-        .workflow-arrow { color: var(--text-muted); font-weight: bold; font-size: 1.2rem; }
+        .pipeline-card:hover .pipeline-icon {
+            color: var(--primary);
+            transform: translateY(2px);
+        }
+
+        .pipeline-title {
+            font-size: 0.92rem;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin-bottom: 0.35rem;
+            line-height: 1.35;
+        }
+
+        .pipeline-desc {
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            line-height: 1.45;
+        }
 
         /* Tables */
         .table-responsive {
             overflow-x: auto;
-            margin-bottom: 1.5rem;
+            margin: 1.5rem 0;
         }
 
         table {
@@ -183,7 +263,7 @@ def generate_report():
         }
 
         th, td {
-            padding: 0.75rem 1rem;
+            padding: 0.85rem 1rem;
             text-align: left;
             border-bottom: 1px solid var(--border);
         }
@@ -209,6 +289,17 @@ def generate_report():
             color: #ffffff;
             font-weight: bold;
             font-size: 0.85rem;
+            transition: transform 0.15s ease, background 0.15s ease;
+        }
+
+        .step-pill-link {
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .step-pill-link:hover .step-pill {
+            transform: scale(1.12);
+            background-color: var(--primary-light);
         }
 
         .code-pill {
@@ -236,85 +327,161 @@ def generate_report():
             text-decoration: underline;
         }
 
+        /* Hero Image Container */
+        .hero-img-wrap {
+            position: relative;
+            text-align: center;
+            margin: 2rem 0 1.5rem;
+            background: #ffffff;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            cursor: zoom-in;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+            transition: box-shadow 0.2s, border-color 0.2s;
+        }
+
+        .hero-img-wrap:hover {
+            border-color: var(--primary-light);
+            box-shadow: 0 8px 20px -4px rgba(30, 58, 138, 0.12);
+        }
+
+        .img-hero {
+            width: 100%;
+            max-height: 480px;
+            object-fit: contain;
+            display: block;
+            margin: 0 auto;
+        }
+
+        .hero-caption {
+            font-size: 0.88rem;
+            color: var(--text-muted);
+            margin-top: 0.85rem;
+            text-align: center;
+            line-height: 1.45;
+        }
+
         /* Visual Gallery Grid */
         .gallery-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-            gap: 1.5rem;
-            margin-top: 1rem;
-            margin-bottom: 1.5rem;
+            grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+            gap: 2rem;
+            margin: 2rem 0;
+        }
+
+        .gallery-grid.grid-2 {
+            grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
+        }
+
+        @media (max-width: 768px) {
+            .gallery-grid, .gallery-grid.grid-2 {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+            }
         }
 
         .gallery-card {
             background: #ffffff;
             border: 1px solid var(--border);
-            border-radius: 10px;
+            border-radius: 12px;
             overflow: hidden;
-            transition: transform 0.2s, box-shadow 0.2s;
+            transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
             display: flex;
             flex-direction: column;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
         }
 
         .gallery-card:hover {
             transform: translateY(-4px);
-            box-shadow: 0 10px 20px -5px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 12px 24px -6px rgba(0, 0, 0, 0.12);
+            border-color: #cbd5e1;
+        }
+
+        .gallery-card-img-wrap {
+            position: relative;
+            background: #fbfcfe;
+            border-bottom: 1px solid var(--border);
+            overflow: hidden;
+            cursor: zoom-in;
         }
 
         .gallery-card img {
             width: 100%;
-            height: 240px;
+            height: 280px;
             object-fit: contain;
             display: block;
-            background: #f8fafc;
-            padding: 8px;
-            border-bottom: 1px solid var(--border);
+            padding: 16px;
+            transition: transform 0.25s ease;
+        }
+
+        .gallery-card:hover img {
+            transform: scale(1.02);
+        }
+
+        .zoom-hint {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            background: rgba(15, 23, 42, 0.75);
+            backdrop-filter: blur(4px);
+            color: #ffffff;
+            font-size: 0.72rem;
+            font-weight: 600;
+            padding: 0.25rem 0.65rem;
+            border-radius: 6px;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+            pointer-events: none;
+        }
+
+        .gallery-card-img-wrap:hover .zoom-hint,
+        .hero-img-wrap:hover .zoom-hint {
+            opacity: 1;
         }
 
         .gallery-card-content {
-            padding: 1rem;
+            padding: 1.25rem;
             flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
         }
 
         .gallery-card-title {
-            font-size: 0.95rem;
+            font-size: 0.98rem;
             font-weight: 700;
             color: var(--text-dark);
-            margin-bottom: 0.35rem;
+            margin-bottom: 0.45rem;
+            line-height: 1.35;
         }
 
         .gallery-card-desc {
-            font-size: 0.85rem;
+            font-size: 0.86rem;
             color: var(--text-muted);
-            margin-bottom: 0.5rem;
+            margin-bottom: 0.85rem;
+            line-height: 1.5;
         }
 
         .gallery-card-footer {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            font-size: 0.75rem;
+            font-size: 0.78rem;
             color: #64748b;
             border-top: 1px solid #f1f5f9;
-            padding-top: 0.5rem;
-        }
-
-        .img-hero {
-            width: 100%;
-            max-height: 460px;
-            object-fit: contain;
-            border-radius: 8px;
-            background-color: #f8fafc;
-            border: 1px solid var(--border);
-            padding: 12px;
+            padding-top: 0.75rem;
+            font-weight: 500;
         }
 
         .callout {
             background-color: #eff6ff;
             border-left: 4px solid var(--primary-light);
-            padding: 1rem 1.25rem;
-            border-radius: 0 8px 8px 0;
-            margin: 1rem 0;
+            padding: 1.1rem 1.35rem;
+            border-radius: 0 10px 10px 0;
+            margin: 1.5rem 0;
             font-size: 0.92rem;
+            line-height: 1.55;
         }
 
         .callout.success {
@@ -325,15 +492,15 @@ def generate_report():
         /* Collapsible Code Tabs (Default Closed) */
         .code-tab-drawer {
             border: 1px solid var(--border);
-            border-radius: 8px;
+            border-radius: 10px;
             background: #ffffff;
-            margin: 1.25rem 0;
+            margin: 1.5rem 0;
             overflow: hidden;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.03);
         }
 
         .code-tab-summary {
-            padding: 0.75rem 1rem;
+            padding: 0.85rem 1.15rem;
             background: #f8fafc;
             cursor: pointer;
             display: flex;
@@ -380,7 +547,7 @@ def generate_report():
 
         .code-tab-drawer pre {
             margin: 0;
-            padding: 1.2rem;
+            padding: 1.25rem 1.5rem;
             background: #0f172a;
             color: #f8fafc;
             font-family: var(--font-mono);
@@ -395,12 +562,143 @@ def generate_report():
             padding: 0;
         }
 
+        /* Lightbox Image Modal */
+        .image-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .image-modal.active {
+            display: flex;
+        }
+
+        .modal-backdrop {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(15, 23, 42, 0.88);
+            backdrop-filter: blur(8px);
+        }
+
+        .modal-content {
+            position: relative;
+            max-width: 92vw;
+            max-height: 92vh;
+            display: flex;
+            flex-direction: column;
+            background: #0f172a;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 14px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
+            overflow: hidden;
+            animation: modalFadeIn 0.2s ease;
+            z-index: 10;
+        }
+
+        @keyframes modalFadeIn {
+            from { opacity: 0; transform: scale(0.96); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .modal-close-btn {
+            position: absolute;
+            top: 12px;
+            right: 14px;
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #ffffff;
+            font-size: 1.5rem;
+            line-height: 1;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.15s ease;
+            z-index: 20;
+        }
+
+        .modal-close-btn:hover {
+            background: #ef4444;
+            border-color: #ef4444;
+            color: #ffffff;
+        }
+
+        .modal-image-wrapper {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #090d16;
+            padding: 1.5rem;
+            overflow: hidden;
+            max-height: 76vh;
+        }
+
+        .modal-image-wrapper img {
+            max-width: 100%;
+            max-height: 72vh;
+            object-fit: contain;
+            border-radius: 6px;
+            background: #ffffff;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+        }
+
+        .modal-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem 1.5rem;
+            background: #1e293b;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .modal-title {
+            color: #ffffff;
+            font-size: 1rem;
+            font-weight: 700;
+        }
+
+        .modal-desc {
+            color: #94a3b8;
+            font-size: 0.85rem;
+            margin-top: 0.2rem;
+        }
+
+        .modal-btn {
+            background: var(--accent);
+            color: #ffffff;
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-weight: 600;
+            padding: 0.45rem 1rem;
+            border-radius: 6px;
+            transition: background 0.15s ease;
+            white-space: nowrap;
+        }
+
+        .modal-btn:hover {
+            background: #0284c7;
+        }
+
         footer {
             text-align: center;
             color: var(--text-muted);
             font-size: 0.9rem;
-            margin-top: 3rem;
-            padding-top: 1.5rem;
+            margin-top: 3.5rem;
+            padding-top: 1.75rem;
             border-top: 1px solid var(--border);
         }
 
@@ -410,6 +708,7 @@ def generate_report():
             .card { box-shadow: none; border: 1px solid #ccc; break-inside: avoid; }
             .code-tab-drawer { break-inside: avoid; }
             .code-tab-drawer[open] { display: block; }
+            .image-modal { display: none !important; }
             table { font-size: 8.5pt; }
         }
     </style>
@@ -426,19 +725,19 @@ def generate_report():
             <span class="badge">Python 3.13.15</span>
             <span class="badge">PyTorch 2.14.0 (CPU / CUDA)</span>
             <span class="badge">FashionMNIST (70.000 ảnh)</span>
-            <span class="badge badge-success">✓ 49/49 Tests Passed (100%)</span>
+            <span class="badge badge-success">49/49 Tests Passed (100%)</span>
             <span class="badge badge-info">Best Test Acc: 89.2%</span>
         </div>
     </header>
 
     <!-- Section 1: Objectives -->
-    <div class="card">
+    <div class="card" id="section-objectives">
         <div class="card-header">
             <h3 class="card-title">1. Mục Tiêu Bài Thực Hành</h3>
             <span class="badge badge-info">Core Objectives</span>
         </div>
         <p>Xây dựng hệ thống học sâu hoàn chỉnh phân loại 10 lớp trang phục FashionMNIST bằng <strong>PyTorch</strong>, tuân thủ nguyên tắc Clean Architecture và phương pháp kiểm thử Test-Driven Development (TDD):</p>
-        <ul style="margin-left: 1.5rem; margin-top: 0.5rem;">
+        <ul style="margin-left: 1.5rem; margin-top: 0.75rem; line-height: 1.7;">
             <li><strong>Khám phá dữ liệu (EDA):</strong> Khảo sát 9 bước toàn diện trên không gian ảnh (phân bố lớp, ảnh trung bình, histogram pixel, heatmaps phương sai, cosine similarity).</li>
             <li><strong>Kỹ nghệ đặc trưng (Feature Engineering):</strong> Thiết kế 10 đặc trưng hình học & không gian (Bounding Box, Centroid, Symmetry, Edge Density) kết hợp chuẩn hóa <code>StandardScaler</code> (fit train-only).</li>
             <li><strong>Mô hình hóa (Modeling):</strong> Triển khai và so sánh định lượng 3 kiến trúc mạng nơ-ron truyền thẳng: <code>SmallMLP</code> (101k params), <code>MainMLP</code> (235k params), và <code>MainMLP_FE</code> (237k params).</li>
@@ -447,18 +746,79 @@ def generate_report():
     </div>
 
     <!-- Section 2: Visual Workflow & Roadmap -->
-    <div class="card">
+    <div class="card" id="section-roadmap">
         <div class="card-header">
             <h3 class="card-title">2. Lộ Trình Thực Thi & Sơ Đồ Luồng Xử Lý</h3>
             <span class="badge badge-success">Clean Architecture</span>
         </div>
 
-        <h4 style="margin: 0.5rem 0 1rem; color: var(--primary);">2.1. Bảng Lộ Trình Thực Thi Chuẩn Hóa (Execution Roadmap)</h4>
+        <h4 style="margin: 0.5rem 0 0.85rem; color: var(--primary);">2.1. Sơ Đồ Luồng Quy Trình Tương Tác (Interactive Workflow Pipeline)</h4>
+        <p style="font-size: 0.88rem; color: var(--text-muted); margin-bottom: 0.5rem;">Nhấn trực tiếp vào từng bước trong sơ đồ để di chuyển nhanh tới nội dung chi tiết tương ứng:</p>
+        
+        <div class="pipeline-container">
+            <div class="pipeline-grid">
+                <a href="#section-eda" class="pipeline-card step-1">
+                    <div class="pipeline-header">
+                        <span class="pipeline-number">01</span>
+                        <span class="pipeline-icon">&darr;</span>
+                    </div>
+                    <div class="pipeline-title">1. Khám Phá EDA</div>
+                    <div class="pipeline-desc">9 Plots &bull; Cân Bằng Lớp &bull; Cosine Matrix</div>
+                </a>
+
+                <a href="#section-features" class="pipeline-card step-2">
+                    <div class="pipeline-header">
+                        <span class="pipeline-number">02</span>
+                        <span class="pipeline-icon">&darr;</span>
+                    </div>
+                    <div class="pipeline-title">2. 10 Features</div>
+                    <div class="pipeline-desc">Bounding Box &bull; Centroid &bull; Scaler</div>
+                </a>
+
+                <a href="#section-models" class="pipeline-card step-3">
+                    <div class="pipeline-header">
+                        <span class="pipeline-number">03</span>
+                        <span class="pipeline-icon">&darr;</span>
+                    </div>
+                    <div class="pipeline-title">3. Kiến Trúc 3 MLP</div>
+                    <div class="pipeline-desc">Small &bull; Main &bull; Main_FE (101k - 237k)</div>
+                </a>
+
+                <a href="#section-tuning" class="pipeline-card step-4">
+                    <div class="pipeline-header">
+                        <span class="pipeline-number">04</span>
+                        <span class="pipeline-icon">&darr;</span>
+                    </div>
+                    <div class="pipeline-title">4. Tối Ưu & Tuning</div>
+                    <div class="pipeline-desc">SGD &bull; RMSprop &bull; Adam (30 Trials)</div>
+                </a>
+
+                <a href="#section-evaluation" class="pipeline-card step-5">
+                    <div class="pipeline-header">
+                        <span class="pipeline-number">05</span>
+                        <span class="pipeline-icon">&darr;</span>
+                    </div>
+                    <div class="pipeline-title">5. Đánh Giá Test</div>
+                    <div class="pipeline-desc">Acc 89.2% &bull; Confusion &bull; OvR Curves</div>
+                </a>
+
+                <a href="#section-qa" class="pipeline-card step-6">
+                    <div class="pipeline-header">
+                        <span class="pipeline-number">06</span>
+                        <span class="pipeline-icon">&darr;</span>
+                    </div>
+                    <div class="pipeline-title">6. Kiểm Toán QA</div>
+                    <div class="pipeline-desc">49/49 Tests Pass &bull; TDD Verification</div>
+                </a>
+            </div>
+        </div>
+
+        <h4 style="margin: 2rem 0 1rem; color: var(--primary);">2.2. Bảng Lộ Trình Thực Thi Chuẩn Hóa (Execution Roadmap)</h4>
         <div class="table-responsive">
             <table>
                 <thead>
                     <tr>
-                        <th style="width: 60px; text-align: center;">Bước</th>
+                        <th style="width: 70px; text-align: center;">Bước</th>
                         <th style="width: 210px;">Giai Đoạn</th>
                         <th>Nội Dung Chi Tiết</th>
                         <th style="width: 250px;">Mô-đun Triển Khai (`src/`)</th>
@@ -466,43 +826,43 @@ def generate_report():
                 </thead>
                 <tbody>
                     <tr>
-                        <td style="text-align: center;"><span class="step-pill">1</span></td>
+                        <td style="text-align: center;"><a href="#section-roadmap" class="step-pill-link" title="Bước 1"><span class="step-pill">1</span></a></td>
                         <td><strong>Setup & Data Contract</strong></td>
                         <td>Tải FashionMNIST 70k ảnh, chia tập phân tầng (Stratified) 54k Train / 6k Val / 10k Test, cô lập tập Test.</td>
                         <td><a href="../../src/datasets/dataset.py" class="code-pill">src/datasets/dataset.py</a></td>
                     </tr>
                     <tr>
-                        <td style="text-align: center;"><span class="step-pill">2</span></td>
+                        <td style="text-align: center;"><a href="#section-eda" class="step-pill-link" title="Chuyển đến EDA"><span class="step-pill">2</span></a></td>
                         <td><strong>Image EDA (9 Bước)</strong></td>
                         <td>Khảo sát cấu trúc pixel, histogram cường độ, ảnh trung bình theo lớp, bản đồ nhiệt phương sai và ma trận tương đồng Cosine.</td>
                         <td><a href="../../src/datasets/eda.py" class="code-pill">src/datasets/eda.py</a></td>
                     </tr>
                     <tr>
-                        <td style="text-align: center;"><span class="step-pill">3</span></td>
+                        <td style="text-align: center;"><a href="#section-features" class="step-pill-link" title="Chuyển đến Features"><span class="step-pill">3</span></a></td>
                         <td><strong>Feature Engineering</strong></td>
                         <td>Trích xuất 10 đặc trưng hình thái (Bounding Box, Centroid, Symmetry, Edge Density) và fit <code>StandardScaler</code> chỉ trên tập Train.</td>
                         <td><a href="../../src/datasets/features.py" class="code-pill">src/datasets/features.py</a></td>
                     </tr>
                     <tr>
-                        <td style="text-align: center;"><span class="step-pill">4</span></td>
+                        <td style="text-align: center;"><a href="#section-models" class="step-pill-link" title="Chuyển đến Models"><span class="step-pill">4</span></a></td>
                         <td><strong>Architectures Definition</strong></td>
                         <td>Định nghĩa 3 mô hình MLP (<code>SmallMLP</code> 784-128-10, <code>MainMLP</code> 784-256-128-10, <code>MainMLP_FE</code> 794-256-128-10).</td>
                         <td><a href="../../src/models/mlp.py" class="code-pill">src/models/mlp.py</a></td>
                     </tr>
                     <tr>
-                        <td style="text-align: center;"><span class="step-pill">5</span></td>
+                        <td style="text-align: center;"><a href="#section-tuning" class="step-pill-link" title="Chuyển đến Training & Gate"><span class="step-pill">5</span></a></td>
                         <td><strong>Training & Sanity Gate</strong></td>
                         <td>Kiểm tra cổng 1-Batch Sanity Overfit (8 mẫu, loss < 0.2 trong 120 steps); huấn luyện với Cross-Entropy & Early Stopping.</td>
                         <td><a href="../../src/training/train.py" class="code-pill">src/training/train.py</a></td>
                     </tr>
                     <tr>
-                        <td style="text-align: center;"><span class="step-pill">6</span></td>
+                        <td style="text-align: center;"><a href="#section-tuning" class="step-pill-link" title="Chuyển đến Tuning"><span class="step-pill">6</span></a></td>
                         <td><strong>Optimizer & Tuning</strong></td>
                         <td>So sánh cố định LR và khảo sát siêu tham số (SGD, RMSprop, Adam) qua 30 trials, ghi nhận đường cong học tập.</td>
                         <td><a href="../../src/training/optimizer_study.py" class="code-pill">src/training/optimizer_study.py</a></td>
                     </tr>
                     <tr>
-                        <td style="text-align: center;"><span class="step-pill">7</span></td>
+                        <td style="text-align: center;"><a href="#section-evaluation" class="step-pill-link" title="Chuyển đến Đánh Giá"><span class="step-pill">7</span></a></td>
                         <td><strong>Evaluation & Model Persistence</strong></td>
                         <td>Ma trận nhầm lẫn 10 lớp, đường cong ROC / PR OvR, phân tích lỗi, lưu & nạp checkpoint <code>best.pt</code> và kiểm tra roundtrip.</td>
                         <td><a href="../../src/utils/evaluation.py" class="code-pill">src/utils/evaluation.py</a></td>
@@ -510,56 +870,35 @@ def generate_report():
                 </tbody>
             </table>
         </div>
-
-        <h4 style="margin: 1.5rem 0 1rem; color: var(--primary);">2.2. Sơ Đồ Luồng Công Việc Trực Quan (Visual Workflow Pipeline)</h4>
-        <div class="workflow-diagram">
-            <div class="workflow-node" style="border-color: #0284c7; background: #f0f9ff;">
-                <strong>1. Dữ Liệu Gốc</strong><br><small style="color: #0369a1;">FashionMNIST (70k)</small>
-            </div>
-            <div class="workflow-arrow">➔</div>
-            <div class="workflow-node" style="border-color: #64748b; background: #f8fafc;">
-                <strong>2. Tiền Xử Lý & EDA</strong><br><small style="color: #475569;">Rescale /255 &bull; 9 Plots</small>
-            </div>
-            <div class="workflow-arrow">➔</div>
-            <div class="workflow-node" style="border-color: #8b5cf6; background: #faf5ff;">
-                <strong>3. 10 Features</strong><br><small style="color: #6d28d9;">Bounding Box &bull; Centroid</small>
-            </div>
-            <div class="workflow-arrow">➔</div>
-            <div class="workflow-node" style="border-color: var(--primary); background: #eff6ff;">
-                <strong>4. Huấn Luyện 3 MLP</strong><br><small style="color: var(--primary);">Small &bull; Main &bull; Main_FE</small>
-            </div>
-            <div class="workflow-arrow">➔</div>
-            <div class="workflow-node" style="border-color: #f59e0b; background: #fffbeb;">
-                <strong>5. Tối Ưu Hóa</strong><br><small style="color: #92400e;">SGD &bull; RMSprop &bull; Adam</small>
-            </div>
-            <div class="workflow-arrow">➔</div>
-            <div class="workflow-node success" style="background: #f0fdf4;">
-                <strong>6. Nghiệm Thu</strong><br><small style="color: var(--success);">89.2% Test &bull; 49 Tests Pass</small>
-            </div>
-        </div>
     </div>
 
     <!-- Section 3: Visual EDA Gallery -->
-    <div class="card">
+    <div class="card" id="section-eda">
         <div class="card-header">
             <h3 class="card-title">3. Khám Phá Dữ Liệu Hình Ảnh (Core Image EDA Gallery)</h3>
             <span class="badge badge-info">7 Artifacts Phân Tích</span>
         </div>
         
-        <p>Phân tích toàn diện 70.000 ảnh kích thước 28x28 grayscale, đảm bảo tính nguyên vẹn, không có giá trị NaN/Inf, phân bố lớp đồng đều tuyệt đối 7.000 mẫu/lớp.</p>
+        <p>Phân tích toàn diện 70.000 ảnh kích thước 28x28 grayscale, đảm bảo tính nguyên vẹn, không có giá trị NaN/Inf, phân bố lớp đồng đều tuyệt đối 7.000 mẫu/lớp. <em>(Nhấp vào bất kỳ ảnh nào để xem phóng to chi tiết).</em></p>
         
         <!-- Hero EDA Image -->
-        <div style="text-align: center; margin: 1.5rem 0;">
-            <img src="../outputs/published/preparation/eda/figures/sample_images.png" alt="Ảnh mẫu đại diện 10 lớp trang phục" class="img-hero">
-            <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.5rem;">Hình 1: Ảnh mẫu đại diện 10 lớp trang phục FashionMNIST (T-shirt, Trouser, Pullover, Dress, Coat, Sandal, Shirt, Sneaker, Bag, Ankle boot).</p>
+        <div class="hero-img-wrap">
+            <img src="../outputs/published/preparation/eda/figures/sample_images.png" alt="Ảnh mẫu đại diện 10 lớp trang phục FashionMNIST" class="img-hero">
+            <div class="zoom-hint">Phóng to ảnh &nearr;</div>
+            <p class="hero-caption">Hình 1: Ảnh mẫu đại diện 10 lớp trang phục FashionMNIST (T-shirt, Trouser, Pullover, Dress, Coat, Sandal, Shirt, Sneaker, Bag, Ankle boot).</p>
         </div>
 
         <div class="gallery-grid">
             <div class="gallery-card">
-                <img src="../outputs/published/preparation/eda/figures/class_distribution.png" alt="Phân bố tập Train và Validation">
+                <div class="gallery-card-img-wrap">
+                    <img src="../outputs/published/preparation/eda/figures/class_distribution.png" alt="Phân bố tập Train và Validation" loading="lazy">
+                    <div class="zoom-hint">Phóng to ảnh &nearr;</div>
+                </div>
                 <div class="gallery-card-content">
-                    <div class="gallery-card-title">1. Phân Bố Mẫu (Class Distribution)</div>
-                    <div class="gallery-card-desc">Cân bằng hoàn hảo: mỗi lớp có đúng 5.400 mẫu Train và 600 mẫu Validation sau phân tầng.</div>
+                    <div>
+                        <div class="gallery-card-title">1. Phân Bố Mẫu (Class Distribution)</div>
+                        <div class="gallery-card-desc">Cân bằng hoàn hảo: mỗi lớp có đúng 5.400 mẫu Train và 600 mẫu Validation sau phân tầng.</div>
+                    </div>
                     <div class="gallery-card-footer">
                         <span>Stratified Split</span>
                         <span>Seed = 42</span>
@@ -568,10 +907,15 @@ def generate_report():
             </div>
 
             <div class="gallery-card">
-                <img src="../outputs/published/preparation/eda/figures/class_mean_images.png" alt="Ảnh cường độ trung bình theo từng lớp">
+                <div class="gallery-card-img-wrap">
+                    <img src="../outputs/published/preparation/eda/figures/class_mean_images.png" alt="Ảnh cường độ trung bình theo từng lớp" loading="lazy">
+                    <div class="zoom-hint">Phóng to ảnh &nearr;</div>
+                </div>
                 <div class="gallery-card-content">
-                    <div class="gallery-card-title">2. Ảnh Trung Bình (Class Mean Images)</div>
-                    <div class="gallery-card-desc">Cường độ pixel trung bình phác họa hình thái đặc trưng riêng của từng lớp trang phục.</div>
+                    <div>
+                        <div class="gallery-card-title">2. Ảnh Trung Bình (Class Mean Images)</div>
+                        <div class="gallery-card-desc">Cường độ pixel trung bình phác họa hình thái đặc trưng riêng của từng lớp trang phục.</div>
+                    </div>
                     <div class="gallery-card-footer">
                         <span>Shape: 28x28</span>
                         <span>Domain: [0, 1]</span>
@@ -580,10 +924,15 @@ def generate_report():
             </div>
 
             <div class="gallery-card">
-                <img src="../outputs/published/preparation/eda/figures/pixel_histogram.png" alt="Phân bố cường độ điểm ảnh">
+                <div class="gallery-card-img-wrap">
+                    <img src="../outputs/published/preparation/eda/figures/pixel_histogram.png" alt="Phân bố cường độ điểm ảnh" loading="lazy">
+                    <div class="zoom-hint">Phóng to ảnh &nearr;</div>
+                </div>
                 <div class="gallery-card-content">
-                    <div class="gallery-card-title">3. Histogram Cường Độ (Pixel Histogram)</div>
-                    <div class="gallery-card-desc">Phân bố cường độ pixel nhị phân mạnh: nền đen chiếm đa số (~73% pixel xấp xỉ 0), tiền ảnh phân tán từ 0.2 đến 1.0.</div>
+                    <div>
+                        <div class="gallery-card-title">3. Histogram Cường Độ (Pixel Histogram)</div>
+                        <div class="gallery-card-desc">Phân bố cường độ pixel nhị phân mạnh: nền đen chiếm đa số (~73% pixel xấp xỉ 0), tiền ảnh phân tán từ 0.2 đến 1.0.</div>
+                    </div>
                     <div class="gallery-card-footer">
                         <span>Global Mean: 0.2860</span>
                         <span>Global Std: 0.3530</span>
@@ -592,10 +941,15 @@ def generate_report():
             </div>
 
             <div class="gallery-card">
-                <img src="../outputs/published/preparation/eda/figures/mean_pixel_heatmap.png" alt="Bản đồ nhiệt trung bình pixel">
+                <div class="gallery-card-img-wrap">
+                    <img src="../outputs/published/preparation/eda/figures/mean_pixel_heatmap.png" alt="Bản đồ nhiệt trung bình pixel" loading="lazy">
+                    <div class="zoom-hint">Phóng to ảnh &nearr;</div>
+                </div>
                 <div class="gallery-card-content">
-                    <div class="gallery-card-title">4. Bản Đồ Nhiệt Trung Bình (Mean Heatmap)</div>
-                    <div class="gallery-card-desc">Tập trung năng lượng quang học chủ yếu ở vùng trung tâm (tọa độ pixel 8 đến 22), 4 góc ảnh hầu như luôn là 0.</div>
+                    <div>
+                        <div class="gallery-card-title">4. Bản Đồ Nhiệt Trung Bình (Mean Heatmap)</div>
+                        <div class="gallery-card-desc">Tập trung năng lượng quang học chủ yếu ở vùng trung tâm (tọa độ pixel 8 đến 22), 4 góc ảnh hầu như luôn là 0.</div>
+                    </div>
                     <div class="gallery-card-footer">
                         <span>Spatial Center</span>
                         <span>Zero Borders</span>
@@ -604,10 +958,15 @@ def generate_report():
             </div>
 
             <div class="gallery-card">
-                <img src="../outputs/published/preparation/eda/figures/pixel_variance_heatmap.png" alt="Bản đồ nhiệt phương sai pixel">
+                <div class="gallery-card-img-wrap">
+                    <img src="../outputs/published/preparation/eda/figures/pixel_variance_heatmap.png" alt="Bản đồ nhiệt phương sai pixel" loading="lazy">
+                    <div class="zoom-hint">Phóng to ảnh &nearr;</div>
+                </div>
                 <div class="gallery-card-content">
-                    <div class="gallery-card-title">5. Bản Đồ Phương Sai (Variance Heatmap)</div>
-                    <div class="gallery-card-desc">Vùng có phương sai lớn nhất tập trung ở viền ngoài và thân áo/quần — nơi mang thông tin phân biệt hình thái cao nhất.</div>
+                    <div>
+                        <div class="gallery-card-title">5. Bản Đồ Phương Sai (Variance Heatmap)</div>
+                        <div class="gallery-card-desc">Vùng có phương sai lớn nhất tập trung ở viền ngoài và thân áo/quần — nơi mang thông tin phân biệt hình thái cao nhất.</div>
+                    </div>
                     <div class="gallery-card-footer">
                         <span>High Info Zone</span>
                         <span>Edge Signals</span>
@@ -616,10 +975,15 @@ def generate_report():
             </div>
 
             <div class="gallery-card">
-                <img src="../outputs/published/preparation/eda/figures/class_similarity_heatmap.png" alt="Cosine Similarity giữa các lớp">
+                <div class="gallery-card-img-wrap">
+                    <img src="../outputs/published/preparation/eda/figures/class_similarity_heatmap.png" alt="Cosine Similarity giữa các lớp" loading="lazy">
+                    <div class="zoom-hint">Phóng to ảnh &nearr;</div>
+                </div>
                 <div class="gallery-card-content">
-                    <div class="gallery-card-title">6. Độ Tương Đồng Cosine (Cosine Similarity)</div>
-                    <div class="gallery-card-desc">Độ tương đồng cao nhất xảy ra giữa T-shirt, Pullover, Coat và Shirt (> 0.88), giải thích nguyên nhân chính gây nhầm lẫn.</div>
+                    <div>
+                        <div class="gallery-card-title">6. Độ Tương Đồng Cosine (Cosine Similarity)</div>
+                        <div class="gallery-card-desc">Độ tương đồng cao nhất xảy ra giữa T-shirt, Pullover, Coat và Shirt (> 0.88), giải thích nguyên nhân chính gây nhầm lẫn.</div>
+                    </div>
                     <div class="gallery-card-footer">
                         <span>Min: 0.42 (Shoe vs Shirt)</span>
                         <span>Max: 0.93 (T-shirt vs Shirt)</span>
@@ -649,7 +1013,7 @@ pixel_std = float(np.std(train_images))
     </div>
 
     <!-- Section 4: Feature Engineering Gallery -->
-    <div class="card">
+    <div class="card" id="section-features">
         <div class="card-header">
             <h3 class="card-title">4. Kỹ Nghệ Đặc Trưng Hình Học & Không Gian (Feature Engineering)</h3>
             <span class="badge badge-info">10 Handcrafted Features</span>
@@ -658,17 +1022,23 @@ pixel_std = float(np.std(train_images))
         <p>Thiết kế 10 đặc trưng hình học bổ sung dựa trên tri thức miền thị giác máy tính: <strong>Mean Pixel, Std Pixel, Tỷ lệ tiền cảnh (Foreground Ratio), Bounding Box Width/Height, Tỷ lệ khung hình (Aspect Ratio), Tọa độ trọng tâm (Centroid X, Y), Độ đối xứng (Symmetry Index), Mật độ biên (Edge Density)</strong>.</p>
 
         <!-- Hero Feature Image -->
-        <div style="text-align: center; margin: 1.5rem 0;">
-            <img src="../outputs/published/preparation/feature_distributions.png" alt="Phân bố 10 đặc trưng theo lớp" class="img-hero">
-            <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.5rem;">Hình 2: Phân bố giá trị 10 đặc trưng hình thái học được chuẩn hóa giữa 10 lớp trang phục.</p>
+        <div class="hero-img-wrap">
+            <img src="../outputs/published/preparation/feature_distributions.png" alt="Phân bố 10 đặc trưng theo lớp trang phục" class="img-hero">
+            <div class="zoom-hint">Phóng to ảnh &nearr;</div>
+            <p class="hero-caption">Hình 2: Phân bố giá trị 10 đặc trưng hình thái học được chuẩn hóa giữa 10 lớp trang phục FashionMNIST.</p>
         </div>
 
-        <div class="gallery-grid">
+        <div class="gallery-grid grid-2">
             <div class="gallery-card">
-                <img src="../outputs/published/preparation/feature_geometry.png" alt="Minh họa Bounding Box và Centroid">
+                <div class="gallery-card-img-wrap">
+                    <img src="../outputs/published/preparation/feature_geometry.png" alt="Minh họa Bounding Box và Centroid" loading="lazy">
+                    <div class="zoom-hint">Phóng to ảnh &nearr;</div>
+                </div>
                 <div class="gallery-card-content">
-                    <div class="gallery-card-title">1. Hình Học Đối Tượng (Geometry Extraction)</div>
-                    <div class="gallery-card-desc">Trích xuất kích thước hộp bao nhỏ nhất và tọa độ trọng tâm quang học (Center of Mass) của từng trang phục.</div>
+                    <div>
+                        <div class="gallery-card-title">1. Hình Học Đối Tượng (Geometry Extraction)</div>
+                        <div class="gallery-card-desc">Trích xuất kích thước hộp bao nhỏ nhất và tọa độ trọng tâm quang học (Center of Mass) của từng trang phục.</div>
+                    </div>
                     <div class="gallery-card-footer">
                         <span>Pascal VOC XYXY</span>
                         <span>Centroid (X, Y)</span>
@@ -677,10 +1047,15 @@ pixel_std = float(np.std(train_images))
             </div>
 
             <div class="gallery-card">
-                <img src="../outputs/published/preparation/feature_correlations.png" alt="Ma trận tương quan đặc trưng">
+                <div class="gallery-card-img-wrap">
+                    <img src="../outputs/published/preparation/feature_correlations.png" alt="Ma trận tương quan đặc trưng" loading="lazy">
+                    <div class="zoom-hint">Phóng to ảnh &nearr;</div>
+                </div>
                 <div class="gallery-card-content">
-                    <div class="gallery-card-title">2. Tương Quan Pearson (Feature Correlations)</div>
-                    <div class="gallery-card-desc">Tương quan cao giữa Mean và Foreground Ratio (0.91), các đặc trưng hình học khác mang tính bổ trợ độc lập cao.</div>
+                    <div>
+                        <div class="gallery-card-title">2. Tương Quan Pearson (Feature Correlations)</div>
+                        <div class="gallery-card-desc">Tương quan cao giữa Mean và Foreground Ratio (0.91), các đặc trưng hình học khác mang tính bổ trợ độc lập cao.</div>
+                    </div>
                     <div class="gallery-card-footer">
                         <span>Pearson Matrix</span>
                         <span>No Collinearity Risk</span>
@@ -711,16 +1086,17 @@ combined_input = np.concatenate([flattened_pixels, scaled_features], axis=1)</co
     </div>
 
     <!-- Section 5: Architecture Benchmarking -->
-    <div class="card">
+    <div class="card" id="section-models">
         <div class="card-header">
             <h3 class="card-title">5. Đánh Giá & So Sánh 3 Kiến Trúc Mô Hình (Architecture Benchmarking)</h3>
             <span class="badge badge-success">3 Models Evaluated</span>
         </div>
 
         <!-- Hero Model Scores -->
-        <div style="text-align: center; margin: 1.5rem 0;">
-            <img src="../outputs/published/comparison/test_scores.png" alt="So sánh Test Accuracy và Macro F1" class="img-hero">
-            <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.5rem;">Hình 3: So sánh trực quan Test Accuracy và Macro F1 giữa SmallMLP, MainMLP và MainMLP_FE.</p>
+        <div class="hero-img-wrap">
+            <img src="../outputs/published/comparison/test_scores.png" alt="So sánh Test Accuracy và Macro F1 giữa 3 mô hình" class="img-hero">
+            <div class="zoom-hint">Phóng to ảnh &nearr;</div>
+            <p class="hero-caption">Hình 3: So sánh trực quan Test Accuracy và Macro F1 giữa SmallMLP, MainMLP và MainMLP_FE trên tập Test.</p>
         </div>
 
         <div class="table-responsive">
@@ -772,12 +1148,17 @@ combined_input = np.concatenate([flattened_pixels, scaled_features], axis=1)</co
             </table>
         </div>
 
-        <div class="gallery-grid">
+        <div class="gallery-grid grid-2">
             <div class="gallery-card">
-                <img src="../outputs/published/comparison/cost.png" alt="Số tham số và chi phí tính toán">
+                <div class="gallery-card-img-wrap">
+                    <img src="../outputs/published/comparison/cost.png" alt="Số tham số và chi phí tính toán" loading="lazy">
+                    <div class="zoom-hint">Phóng to ảnh &nearr;</div>
+                </div>
                 <div class="gallery-card-content">
-                    <div class="gallery-card-title">1. Đánh Đổi Tính Toán (Compute vs Params)</div>
-                    <div class="gallery-card-desc">MainMLP tăng hơn gấp đôi tham số so với SmallMLP (+133k params) để đạt mức tăng +0.93% Accuracy.</div>
+                    <div>
+                        <div class="gallery-card-title">1. Đánh Đổi Tính Toán (Compute vs Params)</div>
+                        <div class="gallery-card-desc">MainMLP tăng hơn gấp đôi tham số so với SmallMLP (+133k params) để đạt mức tăng +0.93% Accuracy.</div>
+                    </div>
                     <div class="gallery-card-footer">
                         <span>Small: 101k params</span>
                         <span>Main: 235k params</span>
@@ -786,10 +1167,15 @@ combined_input = np.concatenate([flattened_pixels, scaled_features], axis=1)</co
             </div>
 
             <div class="gallery-card">
-                <img src="../outputs/published/comparison/validation_comparison.png" alt="Đường cong Validation Accuracy qua 20 epoch">
+                <div class="gallery-card-img-wrap">
+                    <img src="../outputs/published/comparison/validation_comparison.png" alt="Đường cong Validation Accuracy qua 20 epoch" loading="lazy">
+                    <div class="zoom-hint">Phóng to ảnh &nearr;</div>
+                </div>
                 <div class="gallery-card-content">
-                    <div class="gallery-card-title">2. Đường Cong Validation (Val Curves)</div>
-                    <div class="gallery-card-desc">MainMLP_FE duy trì vị trí dẫn đầu ổn định xuyên suốt 20 epochs huấn luyện, ít dao động hơn SmallMLP.</div>
+                    <div>
+                        <div class="gallery-card-title">2. Đường Cong Validation (Val Curves)</div>
+                        <div class="gallery-card-desc">MainMLP_FE duy trì vị trí dẫn đầu ổn định xuyên suốt 20 epochs huấn luyện, ít dao động hơn SmallMLP.</div>
+                    </div>
                     <div class="gallery-card-footer">
                         <span>20 Epochs</span>
                         <span>Convergence ~14 eps</span>
@@ -830,24 +1216,30 @@ class FashionMLP(nn.Module):
     </div>
 
     <!-- Section 6: Optimizer Study -->
-    <div class="card">
+    <div class="card" id="section-tuning">
         <div class="card-header">
             <h3 class="card-title">6. Khảo Sát Tối Ưu Hóa & Dò Siêu Tham Số (Optimizer & Tuning Study)</h3>
             <span class="badge badge-info">30 Optuna Trials</span>
         </div>
 
         <!-- Hero Optimizer -->
-        <div style="text-align: center; margin: 1.5rem 0;">
+        <div class="hero-img-wrap">
             <img src="../outputs/published/best_optimizer_curves/best_optimizer_learning_curves.png" alt="Đường học của best trial từng optimizer" class="img-hero">
-            <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.5rem;">Hình 4: Đường cong Loss và Accuracy của cấu hình tốt nhất cho SGD, RMSprop và Adam.</p>
+            <div class="zoom-hint">Phóng to ảnh &nearr;</div>
+            <p class="hero-caption">Hình 4: Đường cong Loss và Accuracy của cấu hình tốt nhất cho SGD, RMSprop và Adam.</p>
         </div>
 
         <div class="gallery-grid">
             <div class="gallery-card">
-                <img src="../outputs/published/fixed/fixed_lr_curves.png" alt="So sánh ở Fixed LR">
+                <div class="gallery-card-img-wrap">
+                    <img src="../outputs/published/fixed/fixed_lr_curves.png" alt="So sánh ở Fixed LR" loading="lazy">
+                    <div class="zoom-hint">Phóng to ảnh &nearr;</div>
+                </div>
                 <div class="gallery-card-content">
-                    <div class="gallery-card-title">1. So Sánh Cố Định LR (Fixed LR = 0.001)</div>
-                    <div class="gallery-card-desc">Adam hội tụ nhanh nhất và ổn định nhất ngay từ epoch 3; SGD cần nhiều epoch hơn để bắt kịp.</div>
+                    <div>
+                        <div class="gallery-card-title">1. So Sánh Cố Định LR (Fixed LR = 0.001)</div>
+                        <div class="gallery-card-desc">Adam hội tụ nhanh nhất và ổn định nhất ngay từ epoch 3; SGD cần nhiều epoch hơn để bắt kịp.</div>
+                    </div>
                     <div class="gallery-card-footer">
                         <span>Fixed LR = 1e-3</span>
                         <span>Adam leads</span>
@@ -856,10 +1248,15 @@ class FashionMLP(nn.Module):
             </div>
 
             <div class="gallery-card">
-                <img src="../outputs/published/tuning/tuning_progress.png" alt="Tiến trình dò tìm siêu tham số">
+                <div class="gallery-card-img-wrap">
+                    <img src="../outputs/published/tuning/tuning_progress.png" alt="Tiến trình dò tìm siêu tham số" loading="lazy">
+                    <div class="zoom-hint">Phóng to ảnh &nearr;</div>
+                </div>
                 <div class="gallery-card-content">
-                    <div class="gallery-card-title">2. Tiến Trình Dò Tìm (Hyperparameter Tuning)</div>
-                    <div class="gallery-card-desc">Khảo sát 10 trial mỗi optimizer trên không gian log-uniform của Learning Rate và Weight Decay.</div>
+                    <div>
+                        <div class="gallery-card-title">2. Tiến Trình Dò Tìm (Hyperparameter Tuning)</div>
+                        <div class="gallery-card-desc">Khảo sát 10 trial mỗi optimizer trên không gian log-uniform của Learning Rate và Weight Decay.</div>
+                    </div>
                     <div class="gallery-card-footer">
                         <span>30 Trials</span>
                         <span>Optuna Study</span>
@@ -868,10 +1265,15 @@ class FashionMLP(nn.Module):
             </div>
 
             <div class="gallery-card">
-                <img src="../outputs/published/final/learning_curves.png" alt="Đường cong học của mô hình tối ưu cuối cùng">
+                <div class="gallery-card-img-wrap">
+                    <img src="../outputs/published/final/learning_curves.png" alt="Đường cong học của mô hình tối ưu cuối cùng" loading="lazy">
+                    <div class="zoom-hint">Phóng to ảnh &nearr;</div>
+                </div>
                 <div class="gallery-card-content">
-                    <div class="gallery-card-title">3. Mô Hình Tối Ưu (Final Adam Refit)</div>
-                    <div class="gallery-card-desc">Đường học hội tụ mượt mà, Loss giảm xuống 0.22 (Train) và 0.30 (Val), không xảy ra phân kỳ.</div>
+                    <div>
+                        <div class="gallery-card-title">3. Mô Hình Tối Ưu (Final Adam Refit)</div>
+                        <div class="gallery-card-desc">Đường học hội tụ mượt mà, Loss giảm xuống 0.22 (Train) và 0.30 (Val), không xảy ra phân kỳ.</div>
+                    </div>
                     <div class="gallery-card-footer">
                         <span>Best LR: 0.00085</span>
                         <span>Test Acc: 89.2%</span>
@@ -907,24 +1309,30 @@ with torch.no_grad():
     </div>
 
     <!-- Section 7: Final Evaluation & Checkpoints -->
-    <div class="card">
+    <div class="card" id="section-evaluation">
         <div class="card-header">
             <h3 class="card-title">7. Đánh Giá Toàn Diện, Chẩn Đoán Lỗi & Kiểm Chứng Checkpoint</h3>
             <span class="badge badge-success">Top Acc: 89.2%</span>
         </div>
 
         <!-- Hero Confusion Matrix -->
-        <div style="text-align: center; margin: 1.5rem 0;">
+        <div class="hero-img-wrap">
             <img src="../outputs/published/comparison/confusion_comparison.png" alt="Ma trận nhầm lẫn so sánh ba mô hình" class="img-hero">
-            <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.5rem;">Hình 5: Ma trận nhầm lẫn (Confusion Matrix) so sánh trực tiếp cả 3 kiến trúc trên 10.000 mẫu tập Test.</p>
+            <div class="zoom-hint">Phóng to ảnh &nearr;</div>
+            <p class="hero-caption">Hình 5: Ma trận nhầm lẫn (Confusion Matrix) so sánh trực tiếp cả 3 kiến trúc trên 10.000 mẫu tập Test.</p>
         </div>
 
         <div class="gallery-grid">
             <div class="gallery-card">
-                <img src="../outputs/published/comparison/MainMLP_FE_ovr_curves.png" alt="Đường cong ROC và PR của MainMLP_FE">
+                <div class="gallery-card-img-wrap">
+                    <img src="../outputs/published/comparison/MainMLP_FE_ovr_curves.png" alt="Đường cong ROC và PR của MainMLP_FE" loading="lazy">
+                    <div class="zoom-hint">Phóng to ảnh &nearr;</div>
+                </div>
                 <div class="gallery-card-content">
-                    <div class="gallery-card-title">1. ROC & PR One-vs-Rest (MainMLP_FE)</div>
-                    <div class="gallery-card-desc">ROC-AUC đạt từ 0.96 đến 0.99 ở hầu hết các lớp; lớp Trouser và Bag có độ tách biệt gần như hoàn hảo (> 0.99).</div>
+                    <div>
+                        <div class="gallery-card-title">1. ROC & PR One-vs-Rest (MainMLP_FE)</div>
+                        <div class="gallery-card-desc">ROC-AUC đạt từ 0.96 đến 0.99 ở hầu hết các lớp; lớp Trouser và Bag có độ tách biệt gần như hoàn hảo (> 0.99).</div>
+                    </div>
                     <div class="gallery-card-footer">
                         <span>Macro ROC-AUC: 0.985</span>
                         <span>OvR Evaluation</span>
@@ -933,10 +1341,15 @@ with torch.no_grad():
             </div>
 
             <div class="gallery-card">
-                <img src="../outputs/published/comparison/MainMLP_ovr_curves.png" alt="Đường cong ROC và PR của MainMLP">
+                <div class="gallery-card-img-wrap">
+                    <img src="../outputs/published/comparison/MainMLP_ovr_curves.png" alt="Đường cong ROC và PR của MainMLP" loading="lazy">
+                    <div class="zoom-hint">Phóng to ảnh &nearr;</div>
+                </div>
                 <div class="gallery-card-content">
-                    <div class="gallery-card-title">2. ROC & PR One-vs-Rest (MainMLP)</div>
-                    <div class="gallery-card-desc">Đường cong PR cho thấy Precision duy trì cao trên 85% ở vùng Recall dưới 0.8 cho các lớp khó như Shirt và Pullover.</div>
+                    <div>
+                        <div class="gallery-card-title">2. ROC & PR One-vs-Rest (MainMLP)</div>
+                        <div class="gallery-card-desc">Đường cong PR cho thấy Precision duy trì cao trên 85% ở vùng Recall dưới 0.8 cho các lớp khó như Shirt và Pullover.</div>
+                    </div>
                     <div class="gallery-card-footer">
                         <span>Macro PR-AUC: 0.912</span>
                         <span>Baseline Model</span>
@@ -945,10 +1358,15 @@ with torch.no_grad():
             </div>
 
             <div class="gallery-card">
-                <img src="../outputs/published/loaded_model_test/loaded_model_test_samples.png" alt="Lưới dự đoán thực tế từ checkpoint đã nạp">
+                <div class="gallery-card-img-wrap">
+                    <img src="../outputs/published/loaded_model_test/loaded_model_test_samples.png" alt="Lưới dự đoán thực tế từ checkpoint đã nạp" loading="lazy">
+                    <div class="zoom-hint">Phóng to ảnh &nearr;</div>
+                </div>
                 <div class="gallery-card-content">
-                    <div class="gallery-card-title">3. Kiểm Chứng Trực Tiếp (Sample Predictions)</div>
-                    <div class="gallery-card-desc">Lưới 16 ảnh dự đoán từ model checkpoint <code>best.pt</code> nạp lại; 15/16 mẫu dự đoán chính xác với độ tự tin > 95%.</div>
+                    <div>
+                        <div class="gallery-card-title">3. Kiểm Chứng Trực Tiếp (Sample Predictions)</div>
+                        <div class="gallery-card-desc">Lưới 16 ảnh dự đoán từ model checkpoint <code>best.pt</code> nạp lại; 15/16 mẫu dự đoán chính xác với độ tự tin > 95%.</div>
+                    </div>
                     <div class="gallery-card-footer">
                         <span>16 Test Samples</span>
                         <span>Checkpoint Restored</span>
@@ -959,12 +1377,12 @@ with torch.no_grad():
 
         <div class="callout success">
             <strong>Kiểm chứng phục hồi Checkpoint (Roundtrip Verification):</strong>
-            <p style="margin-top: 0.25rem;">Nạp checkpoint <code>best.pt</code> vào instance mô hình mới độc lập, so sánh vector xác suất dự đoán trước và sau khi lưu: đạt độ chính xác số học <code>torch.allclose(atol=1e-6, rtol=1e-5) == True</code>. Test Accuracy phục hồi đạt chính xác 89.2% khớp 100% với run log.</p>
+            <p style="margin-top: 0.35rem;">Nạp checkpoint <code>best.pt</code> vào instance mô hình mới độc lập, so sánh vector xác suất dự đoán trước và sau khi lưu: đạt độ chính xác số học <code>torch.allclose(atol=1e-6, rtol=1e-5) == True</code>. Test Accuracy phục hồi đạt chính xác 89.2% khớp 100% với run log.</p>
         </div>
     </div>
 
     <!-- Section 8: QA & Verification -->
-    <div class="card">
+    <div class="card" id="section-qa">
         <div class="card-header">
             <h3 class="card-title">8. Kết Quả Kiểm Thử & Kiểm Toán Kỹ Thuật (QA & DoD)</h3>
             <span class="badge badge-success">49/49 Tests Passed (100%)</span>
@@ -1050,16 +1468,16 @@ with torch.no_grad():
     </div>
 
     <!-- Section 9: References -->
-    <div class="card">
+    <div class="card" id="section-references">
         <div class="card-header">
             <h3 class="card-title">9. Tài Liệu Tham Khảo (References & Technical Documentation)</h3>
             <span class="badge">Official Standards & Docs</span>
         </div>
 
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1rem; margin-top: 1rem;">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1.25rem; margin-top: 1rem;">
             <!-- 9.1 Libraries -->
-            <div style="background: #f8fafc; border: 1px solid var(--border); border-radius: 8px; padding: 1rem;">
-                <div style="font-weight: 700; color: var(--primary); margin-bottom: 0.5rem; display: flex; align-items: center; justify-content: space-between;">
+            <div style="background: #f8fafc; border: 1px solid var(--border); border-radius: 10px; padding: 1.25rem;">
+                <div style="font-weight: 700; color: var(--primary); margin-bottom: 0.6rem; display: flex; align-items: center; justify-content: space-between;">
                     <span>9.1. Thư Viện Cốt Lõi</span>
                     <span class="badge" style="background: #e0f2fe; color: #0284c7;">LIBRARIES</span>
                 </div>
@@ -1072,8 +1490,8 @@ with torch.no_grad():
             </div>
 
             <!-- 9.2 Standards -->
-            <div style="background: #f8fafc; border: 1px solid var(--border); border-radius: 8px; padding: 1rem;">
-                <div style="font-weight: 700; color: #7c3aed; margin-bottom: 0.5rem; display: flex; align-items: center; justify-content: space-between;">
+            <div style="background: #f8fafc; border: 1px solid var(--border); border-radius: 10px; padding: 1.25rem;">
+                <div style="font-weight: 700; color: #7c3aed; margin-bottom: 0.6rem; display: flex; align-items: center; justify-content: space-between;">
                     <span>9.2. Tiêu Chuẩn & Không Gian</span>
                     <span class="badge" style="background: #f5f3ff; color: #7c3aed;">STANDARDS</span>
                 </div>
@@ -1085,8 +1503,8 @@ with torch.no_grad():
             </div>
 
             <!-- 9.3 Conventions -->
-            <div style="background: #f8fafc; border: 1px solid var(--border); border-radius: 8px; padding: 1rem;">
-                <div style="font-weight: 700; color: var(--success); margin-bottom: 0.5rem; display: flex; align-items: center; justify-content: space-between;">
+            <div style="background: #f8fafc; border: 1px solid var(--border); border-radius: 10px; padding: 1.25rem;">
+                <div style="font-weight: 700; color: var(--success); margin-bottom: 0.6rem; display: flex; align-items: center; justify-content: space-between;">
                     <span>9.3. Quy Ước Deep Learning</span>
                     <span class="badge badge-success">CONVENTIONS</span>
                 </div>
@@ -1098,8 +1516,8 @@ with torch.no_grad():
             </div>
 
             <!-- 9.4 Clean Architecture -->
-            <div style="background: #f8fafc; border: 1px solid var(--border); border-radius: 8px; padding: 1rem;">
-                <div style="font-weight: 700; color: #d97706; margin-bottom: 0.5rem; display: flex; align-items: center; justify-content: space-between;">
+            <div style="background: #f8fafc; border: 1px solid var(--border); border-radius: 10px; padding: 1.25rem;">
+                <div style="font-weight: 700; color: #d97706; margin-bottom: 0.6rem; display: flex; align-items: center; justify-content: space-between;">
                     <span>9.4. Mô-Đun Clean Architecture</span>
                     <span class="badge" style="background: #fef3c7; color: #d97706;">ARCHITECTURE</span>
                 </div>
@@ -1116,8 +1534,28 @@ with torch.no_grad():
     <!-- Footer -->
     <footer>
         <p>Báo Cáo Nghiệm Thu Kỹ Thuật Lab 01 &bull; Phân Loại FashionMNIST với PyTorch</p>
-        <p style="margin-top: 0.25rem;">Tác giả: <strong>Thái Anh Lạc</strong> &bull; Khởi tạo theo tiêu chuẩn Clean Architecture & TDD Lifecycle.</p>
+        <p style="margin-top: 0.35rem;">Tác giả: <strong>Thái Anh Lạc</strong> &bull; Khởi tạo theo tiêu chuẩn Clean Architecture & TDD Lifecycle.</p>
     </footer>
+</div>
+
+<!-- Lightbox Modal for Image Zoom Inspection -->
+<div id="image-modal" class="image-modal" role="dialog" aria-modal="true" aria-label="Phóng to ảnh">
+    <div class="modal-backdrop" onclick="closeImageModal()"></div>
+    <div class="modal-content">
+        <button class="modal-close-btn" onclick="closeImageModal()" title="Đóng (Esc)">&times;</button>
+        <div class="modal-image-wrapper">
+            <img id="modal-img" src="" alt="Ảnh phóng to">
+        </div>
+        <div class="modal-footer">
+            <div class="modal-info">
+                <div id="modal-title" class="modal-title"></div>
+                <div id="modal-desc" class="modal-desc"></div>
+            </div>
+            <div class="modal-actions">
+                <a id="modal-raw-link" href="" target="_blank" class="modal-btn">Mở ảnh gốc &nearr;</a>
+            </div>
+        </div>
+    </div>
 </div>
 
 <script>
@@ -1128,6 +1566,55 @@ with torch.no_grad():
             if (badge) {
                 badge.innerHTML = drawer.open ? 'Đóng code &utrif;' : 'Nhấn để mở code &dtrif;';
             }
+        });
+    });
+
+    // Lightbox Modal Logic
+    const modal = document.getElementById('image-modal');
+    const modalImg = document.getElementById('modal-img');
+    const modalTitle = document.getElementById('modal-title');
+    const modalDesc = document.getElementById('modal-desc');
+    const modalRawLink = document.getElementById('modal-raw-link');
+
+    function openImageModal(src, title, desc) {
+        modalImg.src = src;
+        modalTitle.textContent = title || 'Trực quan hóa thực nghiệm';
+        modalDesc.textContent = desc || '';
+        modalRawLink.href = src;
+        modal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeImageModal() {
+        modal.classList.remove('active');
+        modalImg.src = '';
+        document.body.style.overflow = '';
+    }
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && modal.classList.contains('active')) {
+            closeImageModal();
+        }
+    });
+
+    // Attach click listeners to all zoomable images
+    document.querySelectorAll('.gallery-card-img-wrap, .hero-img-wrap').forEach(wrap => {
+        wrap.addEventListener('click', () => {
+            const img = wrap.querySelector('img');
+            if (!img) return;
+            const card = wrap.closest('.gallery-card');
+            let title = img.alt || '';
+            let desc = '';
+            if (card) {
+                const titleEl = card.querySelector('.gallery-card-title');
+                const descEl = card.querySelector('.gallery-card-desc');
+                if (titleEl) title = titleEl.textContent;
+                if (descEl) desc = descEl.textContent;
+            } else {
+                const heroCaption = wrap.querySelector('.hero-caption');
+                if (heroCaption) desc = heroCaption.textContent;
+            }
+            openImageModal(img.src, title, desc);
         });
     });
 </script>
