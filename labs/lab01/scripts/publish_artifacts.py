@@ -122,20 +122,25 @@ def publish(lab=LAB):
             write_json(staging / alias / "provenance.json", {"source_run": origin.name, "files": copied})
             log.info("%s: %d artifacts", alias, len(copied))
         # Validate the single source report without creating a duplicate.
-        report = (lab / "walkthrough_lab_01.md").read_text(encoding="utf-8")
+        report_file = lab / "reports/walkthrough_lab_01.md"
+        if not report_file.exists():
+            report_file = lab / "walkthrough_lab_01.md"
+        report = report_file.read_text(encoding="utf-8")
         for old, new in mapping.items():
             report = report.replace(old, new)
         write_json(staging / "workflow_config.json", clean_value(config))
         write_json(staging / "index.json", {"generated_at": datetime.now(timezone.utc).isoformat(),
                    "sources": sources, "files": entries, "excluded_count": len(omitted),
                    "note": "Report evidence only; original run paths in configs are provenance, not executable dataset paths."})
-        (staging / "README.md").write_text("# Published Lab01 evidence\n\nRead [the walkthrough](../../walkthrough_lab_01.md) for the full report. All images from selected completed runs are included. Each section contains tables, metrics and provenance. index.json inventories published files and SHA-256 checksums.\n\nNo training is needed to read this evidence. Training/view code still uses the original runs and prepared data; obtain the full artifact archive to execute it. Raw console logs, checkpoints, prepared data and Optuna databases are local-only. Text exports redact local user paths.\n", encoding="utf-8")
+        (staging / "README.md").write_text("# Published Lab01 evidence\n\nRead [the walkthrough](../reports/walkthrough_lab_01.md) for the full report. All images from selected completed runs are included. Each section contains tables, metrics and provenance. index.json inventories published files and SHA-256 checksums.\n\nNo training is needed to read this evidence. Training/view code still uses the original runs and prepared data; obtain the full artifact archive to execute it. Raw console logs, checkpoints, prepared data and Optuna databases are local-only. Text exports redact local user paths.\n", encoding="utf-8")
         write_json(audit / "excluded.json", omitted)
         # Resolve every report link before replacing the previous publication.
         for link in re.findall(r"\]\(([^)]+)\)", report):
             if "://" in link or link.startswith("#"):
                 continue
             candidate = link.split("#")[0]
+            if candidate.startswith("../outputs/published/"):
+                candidate = candidate.removeprefix("../")
             if candidate.startswith("outputs/published/"):
                 resolved = staging / candidate.removeprefix("outputs/published/")
             else:

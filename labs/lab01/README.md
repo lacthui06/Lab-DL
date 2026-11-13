@@ -2,7 +2,7 @@
 
 ## Published report evidence
 
-Open [the walkthrough](walkthrough_lab_01.md) or [the artifact guide](outputs/published/README.md) after cloning. This evidence includes every output image from the explicitly selected completed experiment runs, summary tables, training/trial histories, test predictions, configuration and checksums. Reading the report does not require training or downloading checkpoints.
+Open [the walkthrough](reports/walkthrough_lab_01.md) (or the styled [HTML report](reports/walkthrough_lab_01.html)) or [the artifact guide](outputs/published/README.md) after cloning. This evidence includes every output image from the explicitly selected completed experiment runs, summary tables, training/trial histories, test predictions, configuration and checksums. Reading the report does not require training or downloading checkpoints.
 
 To refresh the evidence after selecting runs in `config/workflow.json` and additional report runs in `config/publication.json`:
 
@@ -97,7 +97,9 @@ labs/lab01/
 │   ├── 01_eda_preprocessing_features.ipynb
 │   └── 02_modeling_comparison.ipynb
 ├── description_lab_01.md              # Đề bài gốc và phạm vi đã thống nhất
-├── walkthrough_lab_01.md              # Phương pháp và kết quả có bằng chứng
+├── reports/
+│   ├── walkthrough_lab_01.md          # Phương pháp và kết quả có bằng chứng
+│   └── walkthrough_lab_01.html        # Báo cáo HTML trực quan, code collapsible
 ├── requirements.txt                   # Dependencies cho lab
 └── README.md                          # Hướng dẫn tổng quan và sử dụng
 ```
@@ -283,7 +285,7 @@ Bản refit **best trong study** dùng Adam, LR=0.0015930522616241021 và weight
 ## 7. Tài liệu, lịch sử và lưu trữ
 
 - [Description](description_lab_01.md): đề bài gốc, phạm vi và các quyết định hiện hành.
-- [Walkthrough](walkthrough_lab_01.md): giải thích phương pháp, triển khai và kết quả có artifact; nguồn để phát triển báo cáo lab.
+- [Walkthrough](reports/walkthrough_lab_01.md): giải thích phương pháp, triển khai và kết quả có artifact (kèm [HTML report](reports/walkthrough_lab_01.html)); nguồn để phát triển báo cáo lab.
 - Nhật ký chỉnh sửa/kiểm tra kỹ thuật được giữ local và Git ignore, không nằm trong bộ bàn giao hoặc báo cáo PDF.
 - Bản tài liệu, notebook/config và CLI trước hợp nhất đã được gỡ khỏi cây thư mục; khôi phục khi cần bằng `git checkout e0fd041 -- labs/lab01/archive`.
 

@@ -23,7 +23,7 @@
 
 ## Lab Directory
 
-- **Lab 01**: [FashionMNIST Classification with PyTorch](labs/lab01/README.md) — local experiments available; final PDF pending.
+- **Lab 01**: [FashionMNIST Classification with PyTorch](labs/lab01/README.md) — local experiments available; [Walkthrough](labs/lab01/reports/walkthrough_lab_01.md) & [HTML Report](labs/lab01/reports/walkthrough_lab_01.html).
 - **Lab 02**: Upcoming
 - **Lab 03**: [Hugging Face Sentiment Analysis & Fine-tuning](https://github.com/lacthui06/Lab-DL/tree/lab03/labs/lab03) — notebooks and experiment results on the `lab03` branch.
 - **Lab 04**: Upcoming
@@ -34,6 +34,7 @@
 
 Each practical lab is organized into modular directories and a single living documentation file:
 
+- `reports/`: Living walkthrough, interactive HTML report with collapsible code blocks, and exported PDF deliverables.
 - `config/`: Current Lab01 configuration and explicit run registry in `workflow.json`; legacy YAML configurations remain for compatible APIs.
 - `data/`: Experimental datasets (ignored by git).
 - `models/`: Production-ready deliverable checkpoints (`*.pt`), `manifest.json` (audit provenance), and quick-load guide.

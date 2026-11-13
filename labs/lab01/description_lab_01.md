@@ -115,7 +115,7 @@ labs/lab01/
 | **Hồ sơ môi trường & Config** | `outputs/runs/<run_id>/environment_snapshot.json`<br>`outputs/runs/<run_id>/config.json` | Phiên bản Python, PyTorch, CUDA, platform và toàn bộ hyperparameter của từng lần chạy. |
 | **Kết quả đánh giá** | `test_predictions.npz`, `metrics.json`, `classification_report.json/csv` | Lưu toàn bộ xác suất dự đoán test và bảng metric phân loại đầy đủ theo từng lớp. |
 | **Minh họa trực quan** | `learning_curves.png`, `confusion_comparison.png`, `*_ovr_curves.png`, `loaded_model_test_samples.png` | Ảnh trực quan hóa chất lượng cao: ma trận nhầm lẫn có số đếm, đường cong ROC/PR OvR, lưới dự đoán 16 ảnh. |
-| **Tài liệu học thuật** | `walkthrough_lab_01.md` | Báo cáo kỹ thuật toàn diện, dẫn chiếu trực tiếp đến artifacts, chuẩn bị cho dàn trang PDF >= 25 trang. |
+| **Tài liệu học thuật** | `reports/walkthrough_lab_01.md`<br>`reports/walkthrough_lab_01.html` | Báo cáo kỹ thuật toàn diện, dẫn chiếu trực tiếp đến artifacts, bản HTML trực quan và chuẩn bị dàn trang PDF >= 25 trang. |
 
 ---
 
@@ -148,7 +148,7 @@ Quy trình và sản phẩm của Lab 01 phải vượt qua toàn bộ 6 tiêu c
    - Đánh giá lại mô hình đã tải trên toàn bộ 10.000 mẫu test: `test_acc` và `test_loss` phục hồi phải khớp 100% so với số liệu ghi nhận lúc huấn luyện.
 6. **Tính toàn vẹn mã nguồn và khả năng tái lập (Reproducibility & Test Suite):**
    - Toàn bộ test suite trong `labs/lab01/tests/` phải pass 100% (49/49 tests).
-   - Mọi số liệu `test_acc`, `test_loss`, `val_acc`, `val_loss` trong `walkthrough_lab_01.md` phải truy vết được về file artifact JSON/CSV thực tế trong `outputs/runs/`, tuyệt đối không có số liệu giả lập hoặc ước tính cảm tính.
+   - Mọi số liệu `test_acc`, `test_loss`, `val_acc`, `val_loss` trong `reports/walkthrough_lab_01.md` phải truy vết được về file artifact JSON/CSV thực tế trong `outputs/runs/`, tuyệt đối không có số liệu giả lập hoặc ước tính cảm tính.
 
 ---
 
