@@ -1520,17 +1520,18 @@ combined_input = np.concatenate([flattened_pixels, scaled_features], axis=1)</co
 
             <figure class="image-card">
                 <div class="image-card-img-wrap">
-                    <img src="../outputs/published/comparison/validation_comparison.png" alt="Đường cong Validation Accuracy qua 20 epoch" loading="lazy">
+                    <img src="../outputs/published/comparison/validation_comparison.png" alt="Đường cong Validation Accuracy qua 10 epoch" loading="lazy">
                     <div class="zoom-hint">Phóng to ảnh &nearr;</div>
                 </div>
                 <figcaption>
                     <div class="image-card-title-row">
                         <span class="image-card-title">2. Đường Cong Validation (Val Accuracy Curves)</span>
-                        <span class="code-pill">20 Epochs Tracking</span>
+                        <span class="code-pill">10 Epochs Tracking</span>
                     </div>
-                    <p class="image-card-takeaway">MainMLP_FE duy trì vị trí dẫn đầu ổn định xuyên suốt từ epoch 6 trở đi. Quá trình hội tụ diễn ra mượt mà, đạt bình nguyên ở khoảng epoch 14-16 mà không có dấu hiệu overfitting nghiêm trọng nhờ lớp BatchNorm1d và Dropout(0.2).</p>
+                    <p class="image-card-takeaway">Đường cong theo dõi 10 epochs: MainMLP và MainMLP_FE tăng trưởng ổn định từ epoch 1 đến epoch 8-10, đạt bình nguyên tối ưu ở mức 90.8% Val Acc mà không có dấu hiệu overfitting nghiêm trọng nhờ lớp BatchNorm1d và Dropout(0.2).</p>
                     <div class="image-card-footer">
-                        <span>Plateau ~14 epochs</span>
+                        <span>Epochs: 10</span>
+                        <span>Best Val Acc: 90.88%</span>
                         <span>Dropout p = 0.2</span>
                     </div>
                 </figcaption>
