@@ -1545,6 +1545,76 @@ combined_input = np.concatenate([flattened_pixels, scaled_features], axis=1)</co
             </figure>
         </div>
 
+        <!-- 5.4 Individual Learning Curves (Loss & Accuracy across 10 Epochs) -->
+        <div class="subsection-title">
+            <span>5.4. Động Học Huấn Luyện Chi Tiết Của Từng Kiến Trúc (Loss & Accuracy Curves)</span>
+            <span class="badge badge-info">10-EPOCH LEARNING CURVES</span>
+        </div>
+
+        <p style="font-size: 0.92rem; color: var(--text-dark); margin-bottom: 1rem;">
+            Theo dõi chi tiết đường cong CrossEntropy Loss (trái) và phân loại Accuracy (phải) giữa tập Train và Validation qua từng epoch của 3 mô hình huấn luyện:
+        </p>
+
+        <!-- 1. SmallMLP -->
+        <figure class="image-card" style="margin-bottom: 1.5rem;">
+            <div class="image-card-img-wrap">
+                <img src="../outputs/published/models/SmallMLP/learning_curves.png" alt="Đường cong học tập Loss và Accuracy của SmallMLP qua 10 epoch" loading="lazy">
+                <div class="zoom-hint">Phóng to ảnh &nearr;</div>
+            </div>
+            <figcaption>
+                <div class="image-card-title-row">
+                    <span class="image-card-title">1. Đường Cong Huấn Luyện: SmallMLP (784 &rarr; 128 &rarr; 10)</span>
+                    <span class="code-pill">Best Val Acc: 90.07% (Ep 9)</span>
+                </div>
+                <p class="image-card-takeaway">SmallMLP hội tụ nhanh chóng ngay từ epoch 3 (Train loss giảm từ 0.50 xuống 0.22, Val loss giảm từ 0.37 xuống 0.27). Val Accuracy đạt đỉnh 90.07% ở epoch 9 trước khi bình ổn. Biên độ chênh lệch giữa Train Acc (92.13%) và Val Acc (90.00%) giữ ở mức thấp 2.13%, chứng minh mô hình kiểm soát overfitting tốt dù chỉ dùng 1 tầng ẩn.</p>
+                <div class="image-card-footer">
+                    <span>Train Loss: 0.2202 &bull; Val Loss: 0.2746</span>
+                    <span>Train Acc: 92.13% &bull; Val Acc: 90.00%</span>
+                    <span>Artifact: models/SmallMLP/learning_curves.png</span>
+                </div>
+            </figcaption>
+        </figure>
+
+        <!-- 2. MainMLP -->
+        <figure class="image-card" style="margin-bottom: 1.5rem;">
+            <div class="image-card-img-wrap">
+                <img src="../outputs/published/models/MainMLP/learning_curves.png" alt="Đường cong học tập Loss và Accuracy của MainMLP qua 10 epoch" loading="lazy">
+                <div class="zoom-hint">Phóng to ảnh &nearr;</div>
+            </div>
+            <figcaption>
+                <div class="image-card-title-row">
+                    <span class="image-card-title">2. Đường Cong Huấn Luyện: MainMLP Baseline (784 &rarr; 256 &rarr; 128 &rarr; 10)</span>
+                    <span class="code-pill">Best Val Acc: 90.78% (Ep 10)</span>
+                </div>
+                <p class="image-card-takeaway">MainMLP mở rộng dung lượng biểu diễn (2 tầng ẩn 256-128) giúp Train Accuracy đạt 93.69% và Val Accuracy tăng lên 90.78% ở epoch 10. Dropout(0.2) kết hợp BatchNorm1d giữ Val loss duy trì mượt mà quanh 0.259 mà không xảy ra hiện tượng thoái hóa gradient hay dao động mất kiểm soát.</p>
+                <div class="image-card-footer">
+                    <span>Train Loss: 0.1740 &bull; Val Loss: 0.2590</span>
+                    <span>Train Acc: 93.69% &bull; Val Acc: 90.78%</span>
+                    <span>Artifact: models/MainMLP/learning_curves.png</span>
+                </div>
+            </figcaption>
+        </figure>
+
+        <!-- 3. MainMLP_FE -->
+        <figure class="image-card" style="margin-bottom: 1.5rem;">
+            <div class="image-card-img-wrap">
+                <img src="../outputs/published/models/MainMLP_FE/learning_curves.png" alt="Đường cong học tập Loss và Accuracy của MainMLP_FE qua 10 epoch" loading="lazy">
+                <div class="zoom-hint">Phóng to ảnh &nearr;</div>
+            </div>
+            <figcaption>
+                <div class="image-card-title-row">
+                    <span class="image-card-title">3. Đường Cong Huấn Luyện: MainMLP_FE (794 &rarr; 256 &rarr; 128 &rarr; 10)</span>
+                    <span class="code-pill">Best Val Acc: 90.88% (Ep 10)</span>
+                </div>
+                <p class="image-card-takeaway">MainMLP_FE kết hợp 10 đặc trưng hình học đạt độ chính xác cao nhất (Train Acc 93.91%, Val Acc 90.88% ở epoch 10). Tốc độ giảm Loss trong 3 epoch đầu diễn ra dốc hơn nhờ 10 đặc trưng hình thái tiền xử lý hỗ trợ bộ tối ưu Adam định hướng không gian nghiệm sớm.</p>
+                <div class="image-card-footer">
+                    <span>Train Loss: 0.1677 &bull; Val Loss: 0.2571</span>
+                    <span>Train Acc: 93.91% &bull; Val Acc: 90.88%</span>
+                    <span>Artifact: models/MainMLP_FE/learning_curves.png</span>
+                </div>
+            </figcaption>
+        </figure>
+
         <!-- Collapsible Code Tab 3 -->
         <details class="code-tab-drawer">
             <summary class="code-tab-summary">
