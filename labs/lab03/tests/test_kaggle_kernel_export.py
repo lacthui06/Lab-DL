@@ -17,7 +17,7 @@ def _module():
 
 def test_export_keeps_clean_train_source_notebook_untouched():
     module = _module()
-    source = ROOT / "notebooks/02_modeling.ipynb"
+    source = ROOT / "notebooks/03_modeling.ipynb"
     before = source.read_bytes()
     exported = module.train_notebook(source)
     assert source.read_bytes() == before
@@ -46,7 +46,7 @@ def test_export_writes_metadata_with_gpu_and_internet(tmp_path):
 
 def test_export_rejects_notebook_without_training_mode(tmp_path):
     module = _module()
-    notebook = nbformat.read(ROOT / "notebooks/02_modeling.ipynb", as_version=4)
+    notebook = nbformat.read(ROOT / "notebooks/03_modeling.ipynb", as_version=4)
     for cell in notebook.cells:
         if cell.cell_type == "code":
             cell.source = cell.source.replace('MODE = "view"', 'MODE = "prepare"').replace('MODE = "train"', 'MODE = "prepare"')

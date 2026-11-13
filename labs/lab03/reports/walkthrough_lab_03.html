@@ -1,0 +1,1375 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Báo cáo Walkthrough — Lab 03: Binary Sentiment Classification</title>
+  <style>
+    :root {
+      --color-fg: #24292f;
+      --color-fg-muted: #57606a;
+      --color-border: #d0d7de;
+      --color-bg: #ffffff;
+      --color-bg-subtle: #f6f8fa;
+      --color-primary: #0969da;
+      --color-primary-subtle: #ddf4ff;
+      --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--font-sans);
+      color: var(--color-fg);
+      background-color: #f0f2f5;
+      line-height: 1.65;
+      padding: 24px;
+      font-size: 15px;
+    }
+
+    .container {
+      max-width: 1040px;
+      margin: 0 auto;
+      background: var(--color-bg);
+      border: 1px solid var(--color-border);
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+      padding: 48px 56px;
+    }
+
+    /* Header banner */
+    .header-tag {
+      display: inline-block;
+      padding: 4px 10px;
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border-radius: 12px;
+      background-color: var(--color-primary-subtle);
+      color: var(--color-primary);
+      margin-bottom: 12px;
+    }
+
+    h1, h2, h3, h4, h5, h6 {
+      color: #1f2328;
+      font-weight: 600;
+      line-height: 1.35;
+      margin-top: 28px;
+      margin-bottom: 14px;
+    }
+
+    h1 {
+      font-size: 28px;
+      padding-bottom: 12px;
+      border-bottom: 2px solid var(--color-border);
+      margin-top: 0;
+    }
+
+    h2 {
+      font-size: 22px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--color-border);
+      margin-top: 36px;
+    }
+
+    h3 {
+      font-size: 18px;
+      margin-top: 24px;
+    }
+
+    h4 {
+      font-size: 16px;
+      margin-top: 20px;
+    }
+
+    p {
+      margin-bottom: 14px;
+    }
+
+    ul, ol {
+      margin-bottom: 14px;
+      padding-left: 28px;
+    }
+
+    li {
+      margin-bottom: 6px;
+    }
+
+    hr {
+      border: 0;
+      border-top: 1px solid var(--color-border);
+      margin: 28px 0;
+    }
+
+    /* Tables */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 20px 0;
+      font-size: 14px;
+      overflow-x: auto;
+      display: block;
+    }
+
+    th, td {
+      padding: 10px 14px;
+      border: 1px solid var(--color-border);
+      text-align: left;
+    }
+
+    th {
+      background-color: var(--color-bg-subtle);
+      font-weight: 600;
+      color: #24292f;
+    }
+
+    tr:nth-child(even) {
+      background-color: #fafbfc;
+    }
+
+    tr:hover {
+      background-color: #f2f4f8;
+    }
+
+    /* Code */
+    code {
+      font-family: var(--font-mono);
+      font-size: 13px;
+      padding: 2px 6px;
+      background-color: var(--color-bg-subtle);
+      border: 1px solid rgba(175, 184, 193, 0.3);
+      border-radius: 4px;
+      color: #b31d28;
+    }
+
+    pre {
+      background-color: var(--color-bg-subtle);
+      border: 1px solid var(--color-border);
+      border-radius: 6px;
+      padding: 16px;
+      overflow-x: auto;
+      margin: 18px 0;
+    }
+
+    pre code {
+      background-color: transparent;
+      border: none;
+      padding: 0;
+      color: #24292f;
+      font-size: 13.5px;
+    }
+
+    /* Blockquotes */
+    blockquote {
+      padding: 8px 16px;
+      color: var(--color-fg-muted);
+      border-left: 4px solid var(--color-primary);
+      background-color: var(--color-bg-subtle);
+      margin: 16px 0;
+      border-radius: 0 4px 4px 0;
+    }
+
+    /* Images */
+    img {
+      max-width: 100%;
+      height: auto;
+      display: block;
+      margin: 20px auto;
+      border: 1px solid var(--color-border);
+      border-radius: 6px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+
+    /* Links */
+    a {
+      color: var(--color-primary);
+      text-decoration: none;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+
+    /* Table of contents styling */
+    .toc {
+      background: var(--color-bg-subtle);
+      border: 1px solid var(--color-border);
+      border-radius: 6px;
+      padding: 18px 24px;
+      margin: 24px 0 32px 0;
+    }
+
+    .toc-title {
+      font-weight: 600;
+      font-size: 16px;
+      margin-bottom: 10px;
+      color: #1f2328;
+    }
+
+    .toc ul {
+      margin-bottom: 0;
+      padding-left: 20px;
+    }
+
+    .toc li {
+      margin-bottom: 4px;
+      font-size: 14px;
+    }
+
+    /* Print styling */
+    @media print {
+      body {
+        background: #fff;
+        padding: 0;
+        font-size: 12pt;
+      }
+      .container {
+        box-shadow: none;
+        border: none;
+        max-width: 100%;
+        padding: 0;
+      }
+      .toc {
+        display: none;
+      }
+      h1, h2, h3 {
+        page-break-after: avoid;
+      }
+      table, pre, img, blockquote {
+        page-break-inside: avoid;
+      }
+      table {
+        display: table;
+        font-size: 10pt;
+      }
+      a {
+        color: #000;
+        text-decoration: underline;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header-tag">Deep Learning Lab Report &bull; Rotten Tomatoes Sentiment</div>
+    <h1 id="walkthrough-lab03-binary-sentiment-classification-voi-hugging-face">Walkthrough — Lab03: Binary Sentiment Classification với Hugging Face</h1>
+<ul>
+<li><strong>Tác giả:</strong> Thái Anh Lạc</li>
+<li><strong>Mục tiêu:</strong> xây dựng pipeline đầy đủ từ khám phá dữ liệu đến fine-tuning, chọn policy và xuất artifact có thể dùng trực tiếp cho report.</li>
+</ul>
+<p><strong>Profile:</strong> official Rotten Tomatoes, DistilBERT base, tối đa5epoch, early stopping và regularization.</p>
+<p><strong>Quy ước bằng chứng:</strong> kết luận định lượng chỉ dựa trên artifact của phiên thực thi. Tài liệu này mô tả phương pháp, cách vận hành và cách đọc kết quả; không ghi trước accuracy, threshold hoặc selected epoch.</p>
+<p><strong>Playbook:</strong> <code>docs/eda.md</code>, <code>docs/feature.md</code>, <code>docs/dl_flow.md</code>, <code>docs/dl_data.md</code>, <code>docs/dl_training.md</code>.</p>
+<h2 id="1-ac-ta-va-thiet-ke">1. Đặc tả và thiết kế</h2>
+<h3 id="10-dien-giai-yeu-cau">1.0. Diễn giải yêu cầu</h3>
+<p>Exercise1 yêu cầu dùng pretrained sentiment model, tokenize và dự đoán sentiment.<br />
+Exercise2 yêu cầu tải dataset/model/tokenizer, preprocess, định nghĩa Trainer, fine-tune và evaluate.</p>
+<p>Bài triển khai bổ sung baseline để có mốc so sánh, EDA để lựa chọn preprocessing và threshold sweep vì target là binary.<br />
+Notebook phải vừa giải thích vừa trực quan hóa, không chỉ gọi một script rồi in JSON.</p>
+<p>Mọi ảnh được hiển thị từ chính PNG lưu trong outputs/.<br />
+Bảng số liệu, predictions, config và log cũng được lưu để tái sử dụng khi viết report.</p>
+<h3 id="11-roadmap">1.1. Roadmap</h3>
+<table>
+<thead>
+<tr>
+<th>Phase</th>
+<th>Câu hỏi</th>
+<th>Module/file</th>
+<th>Bằng chứng</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Setup</td>
+<td>Môi trường có phù hợp không?</td>
+<td>requirements, notebook_runtime</td>
+<td>snapshot/config</td>
+</tr>
+<tr>
+<td>Preflight</td>
+<td>Model/loss/training có chạy đúng không?</td>
+<td>tests, trainer</td>
+<td>pytest log/XML, sanity</td>
+</tr>
+<tr>
+<td>Pretrained sentiment</td>
+<td>Pipeline/manual có nhất quán không?</td>
+<td>classifier, run_exercise1</td>
+<td>tokens/probabilities/PNG</td>
+</tr>
+<tr>
+<td>Data contract</td>
+<td>Đúng full official splits chưa?</td>
+<td>loader</td>
+<td>sizes/labels/fingerprints</td>
+</tr>
+<tr>
+<td>EDA</td>
+<td>Có vấn đề chất lượng hoặc leakage không?</td>
+<td>data_preparation</td>
+<td>quality/count/length PNG</td>
+</tr>
+<tr>
+<td>Preprocess</td>
+<td>Text thành tensor như thế nào?</td>
+<td>loader/tokenizer</td>
+<td>IDs/mask/cutoff</td>
+</tr>
+<tr>
+<td>Feature engineering</td>
+<td>Hai nhánh dùng representation nào?</td>
+<td>data_preparation/augmentation</td>
+<td>TF-IDF/variants</td>
+</tr>
+<tr>
+<td>Baseline</td>
+<td>Mô hình đơn giản đạt gì?</td>
+<td>study.fit_text_baseline</td>
+<td>C candidates/policy</td>
+</tr>
+<tr>
+<td>Fine-tuning</td>
+<td>Model học và generalize ra sao?</td>
+<td>frozen/trainer</td>
+<td>epoch_history/curves</td>
+</tr>
+<tr>
+<td>Performance</td>
+<td>Compute/memory tính thế nào?</td>
+<td>performance</td>
+<td>timer/RSS/CUDA</td>
+</tr>
+<tr>
+<td>Selection</td>
+<td>Chọn checkpoint/threshold bằng gì?</td>
+<td>trainer/thresholds</td>
+<td>policy/scan/checksum</td>
+</tr>
+<tr>
+<td>Test</td>
+<td>Policy khóa có hiệu quả ra sao?</td>
+<td>metrics/plots</td>
+<td>confusion/metrics/calibration</td>
+</tr>
+<tr>
+<td>Reuse</td>
+<td>Pull về có lấy hình/log được không?</td>
+<td>runs/publish</td>
+<td>index/catalog/manifest/ZIP</td>
+</tr>
+</tbody>
+</table>
+<h3 id="12-problem-formulation">1.2. Problem formulation</h3>
+<p>Input là một câu review tiếng Anh.<br />
+Target có hai giá trị: Negative=0 và Positive=1.<br />
+Model trả hai logits, sau đó softmax tạo xác suất hai lớp.</p>
+<p>Policy dự đoán Positive khi P(Positive)&gt;=threshold.<br />
+Confidence của nhãn dự đoán không đồng nhất với xác suất Positive nếu nhãn dự đoán là Negative.<br />
+Threshold phải nhận P(Positive), không nhận confidence của lớp thắng.</p>
+<p>Không đặt accuracy target tùy ý ngoài đề bài.<br />
+Đánh giá chất lượng gồm khả năng phân loại, confidence, generalization, tài nguyên và tính toàn vẹn bằng chứng.</p>
+<h3 id="13-official-dataset">1.3. Official dataset</h3>
+<p>Rotten Tomatoes là sentence-level movie-review polarity, không phải full-length review corpus.<br />
+Dataset name và revision được cố định trong config.</p>
+<table>
+<thead>
+<tr>
+<th>Split</th>
+<th style="text-align: right;">Số mẫu</th>
+<th>Vai trò</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Train</td>
+<td style="text-align: right;">8.530</td>
+<td>Fit features và model, sinh variants</td>
+</tr>
+<tr>
+<td>Validation</td>
+<td style="text-align: right;">1.066</td>
+<td>Chọn baseline C, checkpoint, early stopping, threshold</td>
+</tr>
+<tr>
+<td>Test</td>
+<td style="text-align: right;">1.066</td>
+<td>Đánh giá policy sau khi khóa</td>
+</tr>
+</tbody>
+</table>
+<p>Không subsample cho kết quả chính.<br />
+Không chia lại test hoặc trộn test vào train để tăng accuracy.<br />
+Giữ thứ tự/index để đối chiếu predictions với raw text.</p>
+<h3 id="14-data-va-tensor-contract">1.4. Data và tensor contract</h3>
+<p>Loader phải trả đủ train/validation/test với labels0/1.<br />
+Text phải là string không rỗng sau strip.<br />
+Tokenization giữ label riêng, không mã hóa label vào input.</p>
+<table>
+<thead>
+<tr>
+<th>Tensor</th>
+<th>Shape</th>
+<th>Ý nghĩa</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>input_ids</td>
+<td>[B,L]</td>
+<td>Token IDs từ vocabulary pretrained</td>
+</tr>
+<tr>
+<td>attention_mask</td>
+<td>[B,L]</td>
+<td>1=valid, 0=padding</td>
+</tr>
+<tr>
+<td>labels</td>
+<td>[B]</td>
+<td>Class index0/1</td>
+</tr>
+<tr>
+<td>logits</td>
+<td>[B,2]</td>
+<td>Score trước softmax</td>
+</tr>
+<tr>
+<td>probabilities</td>
+<td>[B,2]</td>
+<td>Tổng hai xác suất xấp xỉ1</td>
+</tr>
+</tbody>
+</table>
+<p>Batch size và sequence length là hai chiều khác nhau.<br />
+Dynamic padding có thể làm L thay đổi giữa các batch.<br />
+Tensor shape đúng chưa đủ; còn phải kiểm labels, finite values và class order.</p>
+<h3 id="15-baseline-i-truoc">1.5. Baseline đi trước</h3>
+<p>Dùng TF-IDF unigram/bigram và Logistic Regression.<br />
+Baseline có ít phần tùy chỉnh, dễ kiểm dữ liệu và tạo mốc so sánh hữu ích.</p>
+<p>Vocabulary/IDF/classifier chỉ fit trên effective train.<br />
+Validation dùng chọn C trong0.1/1/10 bằng Macro-F1, rồi loss và C làm tie-break.<br />
+Sau đó baseline cũng chọn threshold bằng validation.</p>
+<p>Transformer không mặc định tốt hơn chỉ vì có nhiều tham số.<br />
+Report cần so các nhánh trong cùng split và cùng effective train pool.<br />
+Không so accuracy của các policy khác nhau mà bỏ qua precision/recall trade-off.</p>
+<h3 id="16-architecture-exercise1">1.6. Architecture Exercise1</h3>
+<p>Dùng sentiment model SST-2 pretrained từ Hugging Face Hub.<br />
+Revision model được pin cùng config để giảm thay đổi do upstream.</p>
+<p>Pipeline là giao diện cấp cao cho tokenizer/model/postprocessing.<br />
+Manual inference tokenizes, forward logits và softmax trực tiếp.<br />
+So hai nhánh trên cùng model/input ở eval mode để phát hiện class-order hoặc postprocessing lỗi.</p>
+<p>Đầu ra gồm tokens, IDs, attention mask, nhãn và probabilities.<br />
+Exercise1 không cập nhật weights và không dùng làm fine-tuning checkpoint của Exercise2.</p>
+<h3 id="17-architecture-exercise2">1.7. Architecture Exercise2</h3>
+<p>Dùng DistilBERT base với head phân loại hai lớp.<br />
+Pretrained representation được tận dụng; head học nhiệm vụ sentiment từ labels train.</p>
+<p>Luồng:</p>
+<pre><code class="language-text">Text
+  -&gt; WordPiece + attention mask
+  -&gt; Token/position embedding
+  -&gt; Transformer encoder blocks1..6
+  -&gt; First-token [CLS] hidden state
+  -&gt; Linear768 + ReLU
+  -&gt; Dropout0.4
+  -&gt; Linear2 logits
+  -&gt; Cross-entropy khi train
+  -&gt; Softmax + threshold khi inference
+</code></pre>
+<p>Hidden dimension768, attention12heads và FFN intermediate3072.<br />
+Embedding và4blocks đầu frozen;2blocks cuối và head trainable.<br />
+Model.config thực tế được ghi vào model_architecture.json trước training.<br />
+Sơ đồ architecture trong notebook được dựng từ cấu hình đó.</p>
+<h3 id="18-vi-sao-chon-distilbert-va-frozen-representation">1.8. Vì sao chọn DistilBERT và frozen representation?</h3>
+<p>Transfer learning phù hợp khi dữ liệu task nhỏ hơn nhiều so với dữ liệu cần để học ngôn ngữ từ đầu.<br />
+Backbone sáu blocks giúp giữ pipeline thực hành gọn và phù hợp Kaggle T4.</p>
+<p>Freeze hạn chế số weights có thể thay đổi, giảm nguy cơ học thuộc corpus nhỏ.<br />
+Đổi lại, freeze nhiều có thể hạn chế adaptation và gây underfitting.</p>
+<p>Không có ablation kiến trúc để khẳng định sáu blocks hoặc freeze4 là tối ưu toàn cục.<br />
+Lựa chọn được đánh giá qua validation, baseline và error analysis của run thật.<br />
+Số tham số không dùng thay thế phép đo RAM/VRAM.</p>
+<h3 id="19-profile-training">1.9. Profile training</h3>
+<table>
+<thead>
+<tr>
+<th>Thành phần</th>
+<th>Giá trị</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Seed</td>
+<td>42</td>
+</tr>
+<tr>
+<td>Max epochs</td>
+<td>5</td>
+</tr>
+<tr>
+<td>Train/eval batch</td>
+<td>16/32</td>
+</tr>
+<tr>
+<td>Gradient accumulation</td>
+<td>1</td>
+</tr>
+<tr>
+<td>Encoder/head LR</td>
+<td>5e-6 / 2e-5</td>
+</tr>
+<tr>
+<td>Optimizer</td>
+<td>AdamW</td>
+</tr>
+<tr>
+<td>Weight decay</td>
+<td>0.1 cho weights&gt;=2D</td>
+</tr>
+<tr>
+<td>Warmup</td>
+<td>10% tổng updates</td>
+</tr>
+<tr>
+<td>Scheduler</td>
+<td>Linear decay</td>
+</tr>
+<tr>
+<td>Max gradient norm</td>
+<td>1</td>
+</tr>
+<tr>
+<td>Encoder/attention/head dropout</td>
+<td>0.2 / 0.2 / 0.4</td>
+</tr>
+<tr>
+<td>Max sequence length</td>
+<td>128</td>
+</tr>
+<tr>
+<td>Eval/save schedule</td>
+<td>Mỗi epoch</td>
+</tr>
+<tr>
+<td>Checkpoint criterion</td>
+<td>Min validation loss</td>
+</tr>
+<tr>
+<td>Early stopping</td>
+<td>Patience2, min_delta0.001</td>
+</tr>
+<tr>
+<td>Workers</td>
+<td>0</td>
+</tr>
+<tr>
+<td>AMP</td>
+<td>FP16 khi CUDA khả dụng</td>
+</tr>
+</tbody>
+</table>
+<p>Config nguồn là <code>config/frozen_trial.json</code>.<br />
+Mỗi run lưu bản copy config và environment thực tế.<br />
+Không suy luận ngược hyperparameters chỉ từ tên notebook.</p>
+<h3 id="110-regularization-co-vai-tro-gi">1.10. Regularization có vai trò gì?</h3>
+<p>Dropout giảm phụ thuộc vào một tập feature cố định trong lúc train.<br />
+Encoder và attention dropout0.2 regularize representation; head dropout0.4 regularize classifier mới.</p>
+<p>Weight decay tác động vào weights để hạn chế nghiệm quá lớn.<br />
+Bias/LayerNorm không bị decay trong nhóm optimizer được tạo.</p>
+<p>Warmup giảm update đột ngột đầu training; linear decay hạ LR dần.<br />
+Gradient clipping hạn chế norm lớn nhưng không hợp thức hóa NaN hoặc loss không hữu hạn.</p>
+<p>Freeze, augmentation và early stopping là các biện pháp bổ sung.<br />
+Kết hợp chúng không bảo đảm hết overfit; regularization quá mạnh cũng có thể underfit.</p>
+<h3 id="111-quy-tac-chon-checkpoint-va-threshold">1.11. Quy tắc chọn checkpoint và threshold</h3>
+<p>Hai quyết định được tách rõ:</p>
+<ol>
+<li>Trong training: checkpoint có validation loss thấp nhất.</li>
+<li>Sau reload checkpoint: threshold tối đa validation Macro-F1 trên grid định trước.</li>
+</ol>
+<p>Loss xét cả độ tự tin của dự đoán.<br />
+Macro-F1 xét chất lượng nhãn theo cả hai lớp ở một operating point.<br />
+Hai objective phục vụ hai quyết định khác nhau; không dùng test để đổi objective.</p>
+<p>Policy được lưu trước khi predict test và gắn hash weights.<br />
+Threshold không được chuyển sang một checkpoint khác mà không kiểm identity.</p>
+<h2 id="2-van-hanh-va-phuong-phap-thuc-nghiem">2. Vận hành và phương pháp thực nghiệm</h2>
+<h3 id="21-khoi-tao-moi-truong">2.1. Khởi tạo môi trường</h3>
+<p>Dùng Python3.12 cùng requirements đã pin.<br />
+Kaggle bootstrap tạo interpreter con trong <code>/kaggle/working</code>, giữ kernel hiển thị độc lập với ML dependencies.</p>
+<p>Setup kiểm Python, PyTorch và CUDA availability.<br />
+DEVICE=cuda yêu cầu CUDA thật, không âm thầm chuyển full training sang CPU.</p>
+<p>Local dùng kernel có requirements tương ứng.<br />
+Dùng CPU cho fixture/sanity, full training khuyến nghị GPU.<br />
+Đường dẫn ghi luôn nằm trong workspace có quyền ghi.</p>
+<h3 id="22-ba-notebook-va-che-o-chay">2.2. Ba notebook và chế độ chạy</h3>
+<p>Ba notebook được tách biệt chuyên môn hóa theo quy chuẩn <code>docs/eda.md</code> và <code>docs/feature.md</code>:<br />
+- <code>01_eda.ipynb</code>: Phân tích khám phá dữ liệu 6 bước (schema, 5-number summary, phân bố đơn/song biến, boxplot theo nhãn, IQR outliers, data leakage).<br />
+- <code>02_feature_engineering.ipynb</code>: Kỹ nghệ đặc trưng 6 bước (truncation cutoff, WordPiece tokens/mask, đặc trưng ngôn ngữ học, TF-IDF, Chi-Square selection, augmentation).<br />
+- <code>03_modeling.ipynb</code>: Huấn luyện DistilBERT, đóng băng backbone, threshold scan, evaluation, inference.</p>
+<p>Mặc định cả 3 notebook mở ở <code>MODE="view"</code> để đọc artifact đã được kiểm chứng. Khi cần chạy mới: đổi sang <code>MODE="prepare"</code> ở notebook 01/02, hoặc <code>MODE="train"</code>, <code>DEVICE="cuda"</code> ở notebook 03.</p>
+<table>
+<thead>
+<tr>
+<th>Chế độ</th>
+<th>Hành vi</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>prepare</td>
+<td>Tạo EDA/feature artifacts, không train model</td>
+</tr>
+<tr>
+<td>train</td>
+<td>Preflight, inference, baseline, fine-tune, evaluate, export</td>
+</tr>
+<tr>
+<td>view</td>
+<td>Đọc selection sau khi đã có artifact, không download/train</td>
+</tr>
+</tbody>
+</table>
+<p>Không cần giữ biến Python giữa các notebook.<br />
+Modeling script tự dựng lại cùng loader/tokenizer/augmentation từ config.<br />
+Chạy các cell theo thứ tự để session/helper/config được định nghĩa đầy đủ.</p>
+<h3 id="23-session-isolation">2.3. Session isolation</h3>
+<p>Mỗi NotebookSession có một UUID trong LAB03_SESSION_ID.<br />
+Subprocess ML nhận cùng session ID qua environment.<br />
+Run context ghi session_id vào config artifact mà không sửa config object của caller.</p>
+<p>MODE=train bắt đầu với paths rỗng.<br />
+Nó không dùng report selection để lấy metrics trước training.<br />
+Sau từng bước, session trỏ đến run vừa hoàn thành.</p>
+<p>Khi publish/package, các Exercise1/preview runs chỉ được kèm nếu session ID khớp.<br />
+Điều này ngăn gói kết quả vô tình lẫn artifact của phiên khác.<br />
+Isolated run folders vẫn giữ nguyên bytes sau khi manifest được tạo.</p>
+<h3 id="24-preflight-va-sanity-overfit">2.4. Preflight và sanity overfit</h3>
+<p>Chạy pytest trước GPU job.<br />
+Tests dùng tiny fixtures để kiểm labels, masks, shapes, optimizer và logic training.</p>
+<p>Sanity test học một minibatch nhỏ để xác nhận model/loss/optimizer nối đúng.<br />
+Model fixture là disposable, không dùng weights sau sanity cho thí nghiệm chính.</p>
+<p>Early-stopping fixture tạo validation plateau để xác nhận dừng và giữ checkpoint đúng.<br />
+Threshold tests kiểm NaN/Inf, class order, grid, tie-break và policy identity.<br />
+Preflight failure phải được đọc từ pytest.log trước khi tiếp tục training.</p>
+<h3 id="25-eda-chat-luong">2.5. EDA chất lượng</h3>
+<p>Đếm missing/nonstring và blank text ở từng split.<br />
+Kiểm labels có đúng0/1 và số mẫu từng lớp.</p>
+<p>Đếm exact duplicates và normalized duplicates nội bộ.<br />
+Normalized audit dùng lowercase/whitespace normalization để tìm text trùng theo quy tắc đơn giản.</p>
+<p>Đếm giao nhau train-validation, train-test và validation-test.<br />
+Kiểm cùng normalized train text có nhiều label khác nhau không.</p>
+<p>Audit không chứng minh đã phát hiện mọi semantic near-duplicate.<br />
+Không tự loại test samples dựa trên lỗi model hoặc để tăng điểm.<br />
+Nếu có vấn đề chất lượng, lưu counts và thảo luận ảnh hưởng vào report.</p>
+<h3 id="26-eda-nhan-va-vi-du">2.6. EDA nhãn và ví dụ</h3>
+<p>Class-distribution figures hiển thị counts cho từng split.<br />
+Train-examples table cho thấy văn phong, punctuation và sự khác biệt giữa các nhãn.</p>
+<p>Không chọn toàn câu dễ rồi kết luận task đơn giản.<br />
+Ví dụ EDA chỉ minh họa dữ liệu, không thay thống kê toàn tập.</p>
+<p>Label balance giúp chọn cách diễn giải metric nhưng không loại nhu cầu confusion/per-class rates.<br />
+Khi hai lớp cân bằng, accuracy vẫn có thể che trade-off precision/recall của một policy.<br />
+Raw label không được ghép vào text input.</p>
+<h3 id="27-o-dai-theo-lop">2.7. Độ dài theo lớp</h3>
+<p>Đo whitespace words và WordPiece tokens riêng.<br />
+Token count gồm special tokens, không đồng nhất số từ đọc bằng mắt.</p>
+<p>Histogram theo Negative/Positive giúp quan sát length bias.<br />
+Quantiles giúp nhìn phần đuôi thay vì chỉ mean.</p>
+<p>Không coi độ dài tự nó là nhãn sentiment.<br />
+Không dùng test distribution để tối ưu cutoff theo kết quả phân loại.<br />
+Lưu train_token_lengths để kiểm chứng các kết luận về padding/truncation.</p>
+<h3 id="28-cutoff-sensitivity">2.8. Cutoff sensitivity</h3>
+<p>Tính tỷ lệ train có token length vượt64/96/128/256.<br />
+Configured max_length128 là upper bound khi tokenize. EDA ghi P50/P75/P90/P95/P99/max, số lượng và tỷ lệ Train vượt cutoff; nếu tỷ lệ vượt đạt 5% thì nêu khuyến nghị đánh giá cutoff lớn hơn hoặc chiến lược truncation trên Validation, không tự đổi theo Test. Nếu ít hơn thì giữ cấu hình hiện tại, tránh thêm xử lý không cần bằng chứng.</p>
+<p>Nếu một câu bị cắt, phần cuối có thể chứa kết luận hoặc đảo nghĩa.<br />
+Nếu max_length quá lớn, padding và memory có thể tăng không cần thiết.</p>
+<p>Dynamic padding làm chi phí phụ thuộc câu dài nhất trong batch.<br />
+Vì vậy không suy ra runtime chỉ từ cutoff mà chưa đo thực tế.<br />
+Notebook hiển thị cùng bảng/PNG cutoff đã lưu.</p>
+<h3 id="29-giu-phu-inh-va-tuong-phan">2.9. Giữ phủ định và tương phản</h3>
+<p>Các từ not, never hoặc but có thể đổi polarity hay trọng tâm câu.<br />
+Không áp dụng xóa stopwords/punctuation đại trà trước pretrained tokenizer.</p>
+<p>Regex negation/contrast dùng để khảo sát train và bảo vệ augmentation.<br />
+Đây là heuristic, có thể bỏ sót trường hợp ngôn ngữ phức tạp.<br />
+Artifact mới thống kê số review có cue, số lần xuất hiện theo nhóm phủ định/tương phản và ví dụ Train theo nhãn. Chênh lệch tần suất là liên hệ mô tả, không đo causal effect.</p>
+<p>Không đưa heuristic này thành nhãn mới cho validation/test.<br />
+Không kết luận model sai vì một từ chỉ dựa trên việc từ đó xuất hiện trong câu.<br />
+Các giải thích cần gắn với text thật và được gọi là giả thuyết.</p>
+<h3 id="210-wordpiece-ids-va-mask">2.10. WordPiece, IDs và mask</h3>
+<p>Lấy ví dụ thật từ train ở hai lớp.<br />
+Lưu full text, tokens, input_ids và attention_mask trong JSON.</p>
+<p>Bảng PNG rút gọn token/ID preview để đọc được trên notebook.<br />
+Heatmap mask cho thấy padding ở vị trí nào.</p>
+<p>Mask0 không có nghĩa là Negative; nó chỉ có nghĩa padding.<br />
+Labels là tensor riêng cho loss.<br />
+Same tokenizer revision và max_length được dùng trong modeling.</p>
+<h3 id="211-tf-idf-feature-engineering">2.11. TF-IDF feature engineering</h3>
+<p>Unigram biểu diễn từ đơn; bigram giữ một phần quan hệ như not good.<br />
+min_df2 giảm features chỉ xuất hiện một lần.<br />
+max_features50.000 là trần vocabulary, không phải số features bắt buộc.</p>
+<p>Sublinear term frequency làm giảm ảnh hưởng số lần lặp term.<br />
+EDA vectorizer fit trên original train để mô tả corpus.</p>
+<p>Baseline modeling fit lại trên effective augmented train với cùng parameters.<br />
+Không coi hai fitted vocabularies là cùng một object.<br />
+Validation/test không được dùng fit vocabulary hoặc IDF.</p>
+<h3 id="212-dien-giai-sparse-feature-figures">2.12. Diễn giải sparse feature figures</h3>
+<p>Top 25 mean TF-IDF theo lớp mô tả mức feature trung bình trong corpus; biểu đồ delta Positive − Negative giúp thấy term/bigram lệch về nhãn nào.<br />
+Đây không phải classifier coefficient và không phải causal importance.</p>
+<p>Sparse matrix shape, nonzeros và density được lưu.<br />
+Sparse array bytes gồm data/indices/indptr, không gồm mọi Python/model overhead.</p>
+<p>Không gọi sparse array footprint là RAM peak của training process.<br />
+RAM peak có phép đo riêng bằng RSS monitor.<br />
+Báo cả representation settings và fitted split khi dùng feature figure trong report.</p>
+<h3 id="213-train-only-augmentation">2.13. Train-only augmentation</h3>
+<p>Giữ mọi original train sample.<br />
+Tạo variant bằng thay một từ/cụm với từ/cụm cùng cực tính trong lexicon.</p>
+<p>Bỏ câu có phủ định/tương phản để giảm rủi ro đảo nghĩa.<br />
+Chặn duplicate normalized text, kể cả collision với heldout text.</p>
+<p>Cân bằng số variants hai lớp theo khả năng sinh hợp lệ.<br />
+Giới hạn tối đa25%; không nhân bản nguyên câu để đủ quota.<br />
+Validation/test không bị thay text hoặc label.</p>
+<h3 id="214-kiem-duyet-augmentation">2.14. Kiểm duyệt augmentation</h3>
+<p>Mỗi record lưu parent_index, original_text, synthetic text, label và replacement.<br />
+Nhãn variant kế thừa parent là weak supervision.</p>
+<p>Cùng polarity từ vựng không đảm bảo cùng sentiment trong mọi context.<br />
+Đọc bảng trước/sau để phát hiện câu thiếu tự nhiên hoặc đổi nghĩa.</p>
+<p>Counts/diagnostic figures cho thấy nguồn tăng mẫu và balance.<br />
+Records digest giúp tái tạo và đối chiếu cùng seed.<br />
+Không gọi synthetic labels là ground truth đã được người xác nhận.</p>
+<h3 id="215-baseline-selection">2.15. Baseline selection</h3>
+<p>Fit ba Logistic Regression candidates trên cùng train-only TF-IDF pipeline.<br />
+Mỗi candidate dự đoán validation để tính Macro-F1 và loss.</p>
+<p>Chọn bằng thứ tự: Macro-F1 cao hơn, loss thấp hơn, C nhỏ hơn.<br />
+Giữ validation candidate table để kiểm chứng quyết định.</p>
+<p>Sau chọn baseline, quét validation threshold bằng cùng objective/tie-break policy.<br />
+Baseline test chỉ đo sau khi khóa các quyết định của nó.<br />
+Không dùng test để chọn C.</p>
+<h3 id="216-frozen-optimizer-groups">2.16. Frozen optimizer groups</h3>
+<p>Set requires_grad=False cho embeddings và4encoder blocks đầu.<br />
+Chỉ collect tham số trainable vào optimizer.</p>
+<p>Tách encoder/head với LR5e-6/2e-5.<br />
+Trong mỗi nhóm lại tách decay/no-decay theo tensor dimensions.</p>
+<p>Bias/LayerNorm không decay; weights&gt;=2D dùng weight_decay0.1.<br />
+Lưu parameter names và group settings trước scheduler updates.<br />
+Kiểm duplicate parameter để không update một tensor nhiều lần.</p>
+<h3 id="217-freeze-khong-ong-nghia-eval">2.17. Freeze không đồng nghĩa eval</h3>
+<p>requires_grad điều khiển việc tính/cập nhật gradient cho weights.<br />
+model.train/model.eval điều khiển hành vi như dropout.</p>
+<p>Một block frozen vẫn có thể có dropout hoạt động khi toàn model ở train mode.<br />
+Khi evaluate, model.eval tắt dropout để metric ổn định hơn.</p>
+<p>Do đó optimization loss và end-epoch train_loss_eval là hai ngữ cảnh khác nhau.<br />
+Không so chúng như hai phép đo cùng điều kiện.<br />
+Notebook ghi rõ curve dùng full eval-mode train/validation.</p>
+<h3 id="218-epoch-va-optimizer-step">2.18. Epoch và optimizer step</h3>
+<p>Một epoch là một lượt qua effective train.<br />
+Một optimizer step là một lần update sau accumulation.</p>
+<p>Steps/epoch phụ thuộc train size, batch, GPU count và accumulation.<br />
+Pipeline notebook dùng một GPU để đơn giản hóa scope và resource accounting.</p>
+<p>Trục learning curves là epoch, mỗi epoch đã hoàn thành một điểm.<br />
+Global step được giữ để truy vết checkpoint.<br />
+Không điền thêm điểm để đủ ngân sách nếu early stopping đã dừng.</p>
+<h3 id="219-scheduler-va-clipping">2.19. Scheduler và clipping</h3>
+<p>Warmup_ratio0.1 được truyền đúng API Transformers.<br />
+warmup_steps nếu dùng là số nguyên riêng, không truyền ratio vào trường này.</p>
+<p>Sau warmup, linear scheduler giảm LR theo số updates dự kiến.<br />
+Hai optimizer groups giữ tốc độ học khác nhau nhưng cùng lịch tỷ lệ.</p>
+<p>Max gradient norm1 hạn chế gradient lớn trước optimizer update.<br />
+Loss không hữu hạn phải dừng/ghi lỗi thay vì lọc thành một giá trị có vẻ hợp lệ.<br />
+AMP skipped updates được ghi khi có, cần đọc cùng optimization log.</p>
+<h3 id="220-end-epoch-evaluation">2.20. End-epoch evaluation</h3>
+<p>Callback đo full effective train ở eval mode.<br />
+Sau đó Trainer đo full validation theo lịch epoch.</p>
+<p>Ghép train/validation metrics của cùng epoch/step vào epoch_history.<br />
+Lưu một dòng cho mỗi epoch hoàn thành.</p>
+<p>Console summary in epoch/budget, train loss/accuracy, validation loss/accuracy và LR.<br />
+Không lấy loss của một batch cuối làm full train loss.<br />
+Timer train phase dừng trước các lượt evaluation để tách scope.</p>
+<h3 id="221-early-stopping">2.21. Early stopping</h3>
+<p>Objective được theo dõi là validation loss.<br />
+Patience2 đếm hai validation evaluations liên tiếp không cải thiện đủ mức min_delta0.001.</p>
+<p>Metric prefix train_* không được đếm như validation.<br />
+Callback chỉ xử lý metrics có eval_loss.</p>
+<p>Min_delta điều khiển patience; checkpoint vẫn chọn loss nhỏ nhất thực tế.<br />
+Early stopping có thể kết thúc trước ngân sách5epoch.<br />
+selection_summary lưu requested/completed/stopped_early và selected_epoch.</p>
+<h3 id="222-chon-va-reload-checkpoint">2.22. Chọn và reload checkpoint</h3>
+<p>Checkpoint criterion là min validation loss, không mặc định epoch cuối.<br />
+Sau training, Trainer reload best weights.</p>
+<p>Script đối chiếu selected step với epoch có loss nhỏ nhất trong history.<br />
+Lưu best_model, tokenizer và training configuration.</p>
+<p>Save/reload verification so logits trên một số validation examples trong tolerance.<br />
+Không dùng test examples để lựa chọn weights hoặc sửa policy.<br />
+Model reload thành công chưa thay thế kiểm consistency của output.</p>
+<h3 id="223-threshold-sweep">2.23. Threshold sweep</h3>
+<p>Dùng P(Positive) của toàn validation sau reload checkpoint.<br />
+Grid mặc định19điểm từ0.05 đến0.95, bước0.05.</p>
+<p>Tại mỗi threshold tính confusion counts, accuracy, precision/recall và Macro-F1.<br />
+Chọn Macro-F1 lớn nhất, hòa thì gần0.5 hơn rồi threshold nhỏ hơn.</p>
+<p>Không ép threshold khác0.5.<br />
+Lưu scan table, figure và selected policy trước khi predict test.<br />
+Policy mang weights identity để không áp cho model khác ngoài ý muốn.</p>
+<h3 id="224-confusion-va-metrics">2.24. Confusion và metrics</h3>
+<p>Confusion matrix có hàng là true label, cột là predicted label.<br />
+Row-normalized values cho biết tỷ lệ trong từng lớp thật.</p>
+<pre><code class="language-text">TN: Negative -&gt; Negative
+FP: Negative -&gt; Positive
+FN: Positive -&gt; Negative
+TP: Positive -&gt; Positive
+</code></pre>
+<p>Accuracy=(TP+TN)/N.<br />
+Positive precision=TP/(TP+FP).<br />
+Positive recall=TP/(TP+FN).<br />
+Binary F1 là harmonic mean của positive precision/recall.<br />
+Macro-F1 lấy trung bình F1 của cả hai lớp.<br />
+Zero denominator dùng quy ước0 và được kiểm thử.</p>
+<h3 id="225-threshold-trade-off">2.25. Threshold trade-off</h3>
+<p>Tăng threshold thường giảm số Positive predictions.<br />
+Điều đó có thể giảm FP nhưng tăng FN.</p>
+<p>Không kết luận một policy tốt hơn mọi mặt chỉ vì accuracy tăng.<br />
+Đọc precision, recall, Macro-F1 và confusion counts cùng nhau.</p>
+<p>Test comparison có baseline, Transformer threshold0.5 và validation-selected threshold.<br />
+Các policy này giúp diễn giải cùng một run, không dùng để tiếp tục tuning trên test.<br />
+Policy selection split phải được ghi rõ trong report.</p>
+<h3 id="226-roc-pr-va-calibration">2.26. ROC, PR và calibration</h3>
+<p>ROC/PR khảo sát ranking score trên nhiều operating points.<br />
+Reliability plot so confidence trung bình với accuracy thực tế theo bins.</p>
+<p>Brier/ECE/NLL bổ sung thông tin xác suất mà accuracy không thể hiện.<br />
+Sai nhưng tự tin hơn có thể làm loss tăng khi accuracy gần như không đổi.</p>
+<p>Threshold tối ưu một metric nhãn không tự sửa calibration.<br />
+Các diagnostics được tính sau policy lock và không dùng test chọn threshold.<br />
+Không gọi ROC-AUC là accuracy.</p>
+<h3 id="227-uncertainty-va-seed">2.27. Uncertainty và seed</h3>
+<p>Bootstrap phân tầng giữ hai lớp khi resample test predictions.<br />
+Interval phản ánh biến thiên sampling với model/policy cố định.</p>
+<p>Nó không bao gồm uncertainty do training seed, data augmentation hoặc kiến trúc.<br />
+Một seed42 không đủ chứng minh profile ổn định qua mọi khởi tạo.</p>
+<p>Nếu cần khẳng định độ ổn định, phải có thiết kế nhiều seed và budget phù hợp.<br />
+Không thực hiện thêm search chỉ vì một test score chưa đạt mong muốn.<br />
+Báo giới hạn thay vì dùng interval như bằng chứng tối ưu toàn cục.</p>
+<h3 id="228-performance-timing">2.28. Performance: timing</h3>
+<p>Train timer đo train phase của epoch, gồm data loading/forward/backward/optimizer/logging.<br />
+Nó dừng trước end-epoch full train-eval/validation/save.</p>
+<p>Epoch pipeline timer có train và end-epoch evaluation, được giữ thành trường riêng.<br />
+Không gọi pipeline timing là pure training latency.</p>
+<p>Test ms/sample lấy predict runtime nhân1000 chia test size.<br />
+Đây là batch throughput có transfer/evaluation overhead, không phải latency một request độc lập.<br />
+Cùng đơn vị ms/sample không có nghĩa hai scope có thể so trực tiếp.</p>
+<h3 id="229-performance-ram-va-vram">2.29. Performance: RAM và VRAM</h3>
+<p>RAM là RSS của parent training process sampled20ms.<br />
+Peak quan sát có thể bỏ lỡ một đỉnh ngắn hơn chu kỳ sampling.</p>
+<p>VRAM dùng CUDA max_memory_allocated và max_memory_reserved trên selected device.<br />
+Allocated khác reserved cache; cả hai khác tổng memory mọi ứng dụng trên GPU.</p>
+<p>Peak/batch slots gồm shared model memory, không phải bộ nhớ riêng từng câu.<br />
+Ghi batch size và device cùng normalized values.<br />
+CPU execution có VRAM N/A, không thay bằng0.</p>
+<h3 id="230-visualization-trong-notebook">2.30. Visualization trong notebook</h3>
+<p>session.show hiển thị PNG qua IPython Image.<br />
+Đây là cùng file đã lưu, không dựng lại một hình khác chỉ để trình bày.</p>
+<p>Notebook01 có quality, length, cutoff, token/mask, TF-IDF và augmentation figures.<br />
+Notebook02 có pretrained comparison, learning, architecture/performance, threshold, confusion/metrics và calibration/errors.</p>
+<p>JSON giữ precision của số liệu, DataFrame giúp đọc bảng ngay trong notebook.<br />
+Không thay toàn bộ report bằng JSON dump.<br />
+Notebook chưa train không được gắn số đo hoặc ảnh performance tự tạo.</p>
+<h3 id="231-error-analysis">2.31. Error analysis</h3>
+<p>Sample grid có đúng/sai theo hai lớp và confidence.<br />
+Nhóm high-confidence errors hữu ích để tìm failure cases.</p>
+<p>Đây không phải random sample đại diện toàn test.<br />
+threshold_errors lưu các câu sai dưới policy đã chọn, có index để đối chiếu.</p>
+<p>Đọc phủ định, tương phản, implicit sentiment và văn cảnh.<br />
+Giải thích ngôn ngữ là hypothesis, không phải causal attribution.<br />
+Không sửa threshold theo một vài ví dụ test gây ấn tượng.</p>
+<h3 id="232-artifact-lifecycle">2.32. Artifact lifecycle</h3>
+<p>Run context tạo ID riêng và folder không ghi đè.<br />
+Lưu config/environment trước khi thực thi phần khoa học.</p>
+<p>Console output được tee vào console.log.<br />
+Khi kết thúc, status và SHA256 manifest được ghi.</p>
+<p>Failed runs không được chọn làm active result thành công.<br />
+Published là bản sao được kiểm tra từ nguồn, không sửa source artifacts.<br />
+Có thể đọc ảnh/bảng/log sau pull mà không cần train lại.</p>
+<h3 id="233-publish-va-selection">2.33. Publish và selection</h3>
+<p>Training thành công tạo outputs/latest_report.json trỏ đúng run.<br />
+Preprocessing tạo outputs/latest_preparation.json cho EDA view.</p>
+<p>Publisher kiểm source manifests và kiểm audit cohort/selection trước khi xuất.<br />
+Catalog ghi role, run, file, kind và SHA256.</p>
+<p>index.md nhúng hình và liên kết bảng/log để dùng làm report.<br />
+Raw console logs được copy nguyên bytes, không đổi newline làm sai hash.<br />
+Published manifest xác nhận toàn bộ file đã xuất.</p>
+<h3 id="234-review-zip-va-checkpoint-zip">2.34. Review ZIP và checkpoint ZIP</h3>
+<p>Review ZIP chứa artifact nhẹ, source selection, log, figures và manifest.<br />
+Không mang weights vào review bundle.</p>
+<p>Checkpoint ZIP chứa best_model, tokenizer, training config và decision policy.<br />
+Giữ nó riêng để evaluate/infer và kiểm identity.</p>
+<p>Bundle manifest cần được kiểm trước khi nhập artifact.<br />
+Không commit dataset thô, ZIP hoặc weights vào Git.<br />
+Notebook có cell output được tải riêng từ giao diện Kaggle.</p>
+<h2 id="3-oc-ket-qua-va-hoan-thanh-bao-cao">3. Đọc kết quả và hoàn thành báo cáo</h2>
+<h3 id="30-ket-qua-thuc-nghiem-a-xac-minh-tu-zip-kaggle">3.0. Kết quả thực nghiệm đã xác minh từ ZIP Kaggle</h3>
+<p>Nguồn duy nhất cho kết quả chính: <code>20261103T110437Z_frozen_trial_b021d6eb</code>, source commit <code>c02effea2f08e630c37775712cfbc9ac7e6faa8e</code>, Kaggle Tesla T4. ZIP do người thực hiện gửi; 158 file khớp bundle SHA256 trước nhập. Run sources được giữ nguyên byte; biểu đồ/bảng/log được publish để dùng trực tiếp trong report. Không huấn luyện lại, không chọn lại threshold trên test, không đổi số đo.</p>
+<p><a href="../outputs/published/index.md">Report có toàn bộ hình và log</a> · <a href="../outputs/latest_report.json">Selection</a> · <a href="../validation/final_review_audit.json">Audit độc lập</a> · <a href="../validation/import_audit.json">Bằng chứng nhập ZIP</a>.</p>
+<h4 id="eda-va-feature-engineering-a-quan-sat">EDA và feature engineering đã quan sát</h4>
+<p>Official splits 8.530/1.066/1.066; mỗi split cân bằng hai nhãn. Không có missing/blank/invalid label, normalized duplicates trong split hoặc normalized exact overlap giữa các split. Đây là audit exact/normalized text, chưa chứng minh không có semantic paraphrase leakage.</p>
+<p>Train WordPiece median 27, P90=43, P95=47, P99=56, max=78 tokens (gồm special tokens). Cutoff 64 cắt 6/8.530 câu (0,0703%); cutoff 96/128/256 không cắt câu train. Giữ max128 đã định trước; dynamic padding tránh trả chi phí pad128 cho mọi câu. Không chọn lại cutoff bằng test.</p>
+<p>Train negative/positive có mean word count 20,94/21,05 và mean tokens 27,46/27,27: độ dài trung bình gần nhau, không phải feature phân loại mạnh tự thân. Tín hiệu phủ định/tương phản xuất hiện trong 38,12% negative và 28,65% positive; giữ các dấu hiệu này thay vì xóa stopwords. Số liệu heuristic không phải giải thích nhân quả.</p>
+<p>TF-IDF fit original train có 24.083 features, 207.847 nonzero, density 0,1012%, sparse arrays 2.528.288 bytes. Top mean TF-IDF mô tả tần suất có trọng số; không gọi là classifier importance. Modeling fit baseline train-only trên cùng effective pool như Transformer rồi chọn C bằng validation.</p>
+<p>Augmentation thêm <strong>274 mẫu</strong> (137 mỗi lớp), effective train <strong>8.804</strong>. Trần25% không phải số mẫu bắt buộc: 2.848 câu có negation/contrast được bỏ qua; số candidates của lớp negative giới hạn pool cân bằng. Không duplicate để ép thêm mẫu. Heldout không đổi. Labels synthetic kế thừa parent, chưa được người gán nhãn kiểm duyệt hết.</p>
+<p><img alt="EDA" src="../outputs/published/frozen_trial/lengths_by_class.png" /><br />
+<img alt="Preprocessing" src="../outputs/published/frozen_trial/preprocessing_diagnostics.png" /><br />
+<img alt="Features" src="../outputs/published/frozen_trial/tfidf_features.png" /><br />
+<img alt="Augmentation" src="../outputs/published/frozen_trial/augmentation_diagnostics.png" /></p>
+<h4 id="hoc-chon-checkpoint-va-regularization">Học, chọn checkpoint và regularization</h4>
+<p>DistilBERT có 66.955.010 tham số, trong đó 14.767.874 trainable. Embedding và4blocks đầu frozen; encoder LR5e-6/headLR2e-5, dropout0.2/0.2/0.4, decay0.1, warmup10%, clipping1 và augmentation được khai báo trước. Không thực hiện ablation nên không kết luận riêng từng kỹ thuật gây cải thiện.</p>
+<table>
+<thead>
+<tr>
+<th>Epoch</th>
+<th style="text-align: right;">Train accuracy (eval)</th>
+<th style="text-align: right;">Validation accuracy</th>
+<th style="text-align: right;">Train loss (eval)</th>
+<th style="text-align: right;">Validation loss</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td style="text-align: right;">82.30%</td>
+<td style="text-align: right;">82.83%</td>
+<td style="text-align: right;">0.390672</td>
+<td style="text-align: right;">0.394180</td>
+</tr>
+<tr>
+<td>2</td>
+<td style="text-align: right;">83.58%</td>
+<td style="text-align: right;">83.40%</td>
+<td style="text-align: right;">0.367919</td>
+<td style="text-align: right;">0.376805</td>
+</tr>
+<tr>
+<td>3</td>
+<td style="text-align: right;">84.31%</td>
+<td style="text-align: right;">83.68%</td>
+<td style="text-align: right;">0.356153</td>
+<td style="text-align: right;">0.369482</td>
+</tr>
+<tr>
+<td>4</td>
+<td style="text-align: right;">84.51%</td>
+<td style="text-align: right;">83.96%</td>
+<td style="text-align: right;">0.348804</td>
+<td style="text-align: right;">0.368835</td>
+</tr>
+<tr>
+<td>5</td>
+<td style="text-align: right;">84.58%</td>
+<td style="text-align: right;">83.96%</td>
+<td style="text-align: right;">0.348564</td>
+<td style="text-align: right;">0.367875</td>
+</tr>
+</tbody>
+</table>
+<p>Validation loss giảm từ0,394180 xuống0,367875; checkpoint epoch5 được chọn đúng minimum loss. Accuracy gap cuối là <strong>0,616 điểm phần trăm</strong>, loss gap0,01931. Chưa thấy validation-loss tăng trong cửa sổ5epoch; điều này không bảo đảm hết overfit hay mô hình tối ưu. Early stopping patience2/min_delta0.001 được bật; <code>stopped_early=False</code> nghĩa là không kết thúc trước ngân sách5epoch. Tái hiện callback Transformers4.48.3 từ config/history cho counter0/0/0/1/2: cải thiện epoch4 là0,0006465 và epoch5 là0,0009598, đều nhỏ hơn min_delta. Patience do đó đạt ngưỡng ngay tại biên ngân sách. Đây là <strong>counter dẫn xuất</strong>, không phải counter đã được ghi trực tiếp; không kết luận rằng patience chưa đạt ngưỡng.</p>
+<p><a href="../outputs/published/result_analysis/early_stopping_replay.json">Bảng tái hiện patience</a> nêu provenance. Minimum loss vẫn được cập nhật khi có cải thiện nhỏ, nên checkpoint epoch5 được chọn đúng dù min_delta không reset patience.</p>
+<p>Log ghi <strong>2 AMP skipped optimizer steps</strong>; không diễn giải 2.755 global steps thành 2.755 updates thành công. Mọi loss/metric cần thiết hữu hạn; giữ cảnh báo AMP trong raw log và selection_summary, không xóa để làm đẹp kết quả.</p>
+<p><img alt="Learning curves" src="../outputs/published/frozen_trial/learning_curves.png" /><br />
+<a href="../outputs/published/architecture/model_architectures.txt">Kiến trúc chi tiết hai model dạng text</a> và <a href="../outputs/published/architecture/summary.json">bảng cấu trúc/provenance</a>. Mỗi model có66.955.010parameters; Exercise1 chỉ inference nên tối ưu0parameters, dù requires_grad vẫn bật trong cấu trúc khai báo. Exercise2 tối ưu14.767.874parameters. View dựng module tree từ pinned configuration, không load pretrained/checkpoint weights; không dùng sơ đồ này làm bằng chứng reload GPU.</p>
+<h4 id="threshold-validation-only-va-ket-qua-test">Threshold validation-only và kết quả test</h4>
+<p>Quét19ngưỡng0,05–0,95 trên validation Macro-F1, khóa threshold <strong>0,45</strong> cùng identity checkpoint trước khi predict test. Không có lựa chọn threshold dựa trên test.</p>
+<table>
+<thead>
+<tr>
+<th>Model/policy</th>
+<th style="text-align: right;">Accuracy</th>
+<th style="text-align: right;">Precision positive</th>
+<th style="text-align: right;">Recall positive</th>
+<th style="text-align: right;">Binary F1</th>
+<th style="text-align: right;">Macro F1</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>TF-IDF</td>
+<td style="text-align: right;">78.99%</td>
+<td style="text-align: right;">79.21%</td>
+<td style="text-align: right;">78.61%</td>
+<td style="text-align: right;">78.91%</td>
+<td style="text-align: right;">78.99%</td>
+</tr>
+<tr>
+<td>Frozen DistilBERT threshold 0.5</td>
+<td style="text-align: right;">82.93%</td>
+<td style="text-align: right;">83.05%</td>
+<td style="text-align: right;">82.74%</td>
+<td style="text-align: right;">82.89%</td>
+<td style="text-align: right;">82.93%</td>
+</tr>
+<tr>
+<td>Frozen DistilBERT validation threshold</td>
+<td style="text-align: right;">83.11%</td>
+<td style="text-align: right;">82.39%</td>
+<td style="text-align: right;">84.24%</td>
+<td style="text-align: right;">83.30%</td>
+<td style="text-align: right;">83.11%</td>
+</tr>
+</tbody>
+</table>
+<p>Policy được chọn đúng <strong>886/1.066</strong>, sai180. Confusion matrix <code>[TN FP; FN TP]</code> = <code>[[437,96],[84,449]]</code>. So threshold0,5, threshold0,45 sửa thêm8FN nhưng tăng6FP: net thêm2dự đoán đúng, accuracy tăng0,188điểm phần trăm. So baseline, tăng44dự đoán đúng và4,128điểm phần trăm accuracy. Đây là so sánh một seed, chưa là bằng chứng thống kê về mọi lần train.</p>
+<p>Test loss <strong>0,409902</strong> thuộc score distribution của checkpoint, không thay đổi bởi threshold. ROC-AUC0,90037; average precision0,90974; Brier0,12664; confidence ECE0,04254. Bootstrap95% accuracy <strong>80,86–85,37%</strong>, conditional trên fixed model/policy, không bao gồm uncertainty của seed training.</p>
+<p><img alt="Threshold" src="../outputs/published/frozen_trial/validation_threshold_curves.png" /><br />
+<img alt="Confusion" src="../outputs/published/frozen_trial/confusion_matrix.png" /></p>
+<table>
+<thead>
+<tr>
+<th>Lớp (one-vs-rest)</th>
+<th style="text-align: right;">Precision</th>
+<th style="text-align: right;">Recall / TPR</th>
+<th style="text-align: right;">F1</th>
+<th style="text-align: right;">FPR</th>
+<th style="text-align: right;">Support</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Negative</td>
+<td style="text-align: right;">83,88%</td>
+<td style="text-align: right;">81,99%</td>
+<td style="text-align: right;">82,92%</td>
+<td style="text-align: right;">15,76%</td>
+<td style="text-align: right;">533</td>
+</tr>
+<tr>
+<td>Positive</td>
+<td style="text-align: right;">82,39%</td>
+<td style="text-align: right;">84,24%</td>
+<td style="text-align: right;">83,30%</td>
+<td style="text-align: right;">18,01%</td>
+<td style="text-align: right;">533</td>
+</tr>
+</tbody>
+</table>
+<p>Negative có TPR thấp hơn;96/533 câu Negative bị gán Positive. FPR Positive18,01% là tỷ lệ trong Negative bị gọi Positive; FPR Negative15,76% là tỷ lệ trong Positive bị gọi Negative. Không nhầm FPR với1-precision.</p>
+<p><img alt="Per-class metrics" src="../outputs/published/result_analysis/per_class_metrics.png" /></p>
+<p>Baseline log loss tính lại từ1.066saved probability vectors là <strong>0,517371</strong>; Transformer test loss đo tại Kaggle là <strong>0,409902</strong>. Loss baseline là dẫn xuất sklearn log_loss, không phải số đo GPU. <a href="../outputs/published/result_analysis/results_summary.json">Summary dẫn xuất</a> ghi source manifest/code hashes. Test runtime metrics của Transformer dùng argmax; policy threshold0,45 được báo riêng trong test_comparison, không ghi đè metrics nguồn.<br />
+<img alt="ROC PR" src="../outputs/published/frozen_trial/roc_pr_curves.png" /><br />
+<img alt="Calibration" src="../outputs/published/frozen_trial/calibration_confidence.png" /></p>
+<h4 id="performance-a-o">Performance đã đo</h4>
+<p>RAM là parent RSS sampled20ms; VRAM là PyTorch allocator trên cuda:0. Peak/batch slots chứa shared model/optimizer; không phải bộ nhớ riêng của một câu. Các epoch dùng batch16/device. Test <strong>0,42636ms/mẫu</strong> là batch throughput, không phải request latency. Bảng đầy đủ nằm trong performance_history.json.</p>
+<table>
+<thead>
+<tr>
+<th>Epoch</th>
+<th style="text-align: right;">Train ms/mẫu</th>
+<th style="text-align: right;">Pipeline ms/train mẫu</th>
+<th style="text-align: right;">RAM peak MiB</th>
+<th style="text-align: right;">RAM MiB/batch slot</th>
+<th style="text-align: right;">VRAM allocated MiB</th>
+<th style="text-align: right;">VRAM MiB/batch slot</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td style="text-align: right;">1.6680</td>
+<td style="text-align: right;">2.1173</td>
+<td style="text-align: right;">1551.15</td>
+<td style="text-align: right;">96.95</td>
+<td style="text-align: right;">567.47</td>
+<td style="text-align: right;">35.47</td>
+</tr>
+<tr>
+<td>2</td>
+<td style="text-align: right;">1.6064</td>
+<td style="text-align: right;">2.0606</td>
+<td style="text-align: right;">1729.50</td>
+<td style="text-align: right;">108.09</td>
+<td style="text-align: right;">567.47</td>
+<td style="text-align: right;">35.47</td>
+</tr>
+<tr>
+<td>3</td>
+<td style="text-align: right;">1.6285</td>
+<td style="text-align: right;">2.0841</td>
+<td style="text-align: right;">1747.57</td>
+<td style="text-align: right;">109.22</td>
+<td style="text-align: right;">567.47</td>
+<td style="text-align: right;">35.47</td>
+</tr>
+<tr>
+<td>4</td>
+<td style="text-align: right;">1.6155</td>
+<td style="text-align: right;">2.0778</td>
+<td style="text-align: right;">1747.59</td>
+<td style="text-align: right;">109.22</td>
+<td style="text-align: right;">567.47</td>
+<td style="text-align: right;">35.47</td>
+</tr>
+<tr>
+<td>5</td>
+<td style="text-align: right;">1.6591</td>
+<td style="text-align: right;">2.1285</td>
+<td style="text-align: right;">1830.71</td>
+<td style="text-align: right;">114.42</td>
+<td style="text-align: right;">567.47</td>
+<td style="text-align: right;">35.47</td>
+</tr>
+</tbody>
+</table>
+<p>VRAM reserved peak638MiB; RAM peak tăng qua epoch có thể do allocator/cache, không đủ bằng chứng kết luận memory leak. Các số này thuộc run T4 đã nhận, không phải ước lượng từ weights.</p>
+<p><img alt="Performance" src="../outputs/published/frozen_trial/performance.png" /></p>
+<h4 id="error-analysis-va-gioi-han">Error analysis và giới hạn</h4>
+<p>Câu test607 có mệnh đề nhượng bộ “though ... routine script” nhưng kết thúc “cinematic fluidity ... makes it work”; model dự đoán positive0,9875 trong khi label negative. Đây là ví dụ cue xung đột và ambiguity của sentence-level label; không tự sửa nhãn sau khi nhìn prediction.</p>
+<p>Câu test276 “worked for me ... then it caved in” có label positive nhưng model negative0,9705. Cần ngữ cảnh rộng hơn hoặc label audit độc lập để phân biệt lỗi model với ambiguity nhãn. High-confidence examples được chọn để kiểm lỗi, không phải random sample đại diện. Không dùng các ví dụ test này để thay rule augmentation của run đã báo cáo.</p>
+<p><img alt="Examples" src="../outputs/published/frozen_trial/sample_predictions.png" /></p>
+<h4 id="kha-nang-tai-su-dung-sau-pull">Khả năng tái sử dụng sau pull</h4>
+<p>Ba notebook có MODE=view, đã lưu output inline từ chính artifacts này. Có thể mở trên GitHub hoặc chạy view offline mà không tải Hugging Face, không train và không cần GPU. Đổi MODE=prepare cho EDA/Feature mới; MODE=train/DEVICE=cuda cho training mới. Config mặc định chỉ dùng ngân sách 5 epoch.</p>
+<p>Review ZIP không có checkpoint weights: reload_check ghi nhận kiểm tra CPU FP32 thành công tại Kaggle, nhưng máy review này chỉ xác minh hash được ghi và prediction consistency, không tự load weights vắng mặt. Muốn infer/eval checkpoint thật phải giữ ZIP checkpoint riêng. Checkpoint thiếu không ngăn audit metrics, đọc biểu đồ hoặc hoàn thành report.</p>
+<h4 id="oi-chieu-yeu-cau-ban-giao">Đối chiếu yêu cầu bàn giao</h4>
+<table>
+<thead>
+<tr>
+<th>Yêu cầu</th>
+<th>Bằng chứng hiện có</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Ba notebook rõ phase/module, chuẩn docs/</td>
+<td>Notebook01: 7 code cells, 6 ảnh inline; Notebook02: 7 code cells, 10 ảnh inline; Notebook03: 12 code cells, 18 ảnh inline và kiến trúc text</td>
+</tr>
+<tr>
+<td>EDA/preprocessing/features chuẩn 6 bước</td>
+<td>Quality, split overlap, 5-number summary, length boxplot theo nhãn, IQR outliers, tokens/mask, Handcrafted features, TF-IDF, Chi-Square selection, augmentation PNG/JSON</td>
+</tr>
+<tr>
+<td>Architecture và discussion/quyết định</td>
+<td>Description Section4–8; walkthrough Section1–2</td>
+</tr>
+<tr>
+<td>Ngân sách 5 epoch + early stopping + regularization</td>
+<td>frozen_trial.json, selection_summary, history đủ 5 mốc</td>
+</tr>
+<tr>
+<td>Binary threshold</td>
+<td>Validation scan đủ 19 ngưỡng, frozen policy 0,45 và test comparison</td>
+</tr>
+<tr>
+<td>Train accuracy/loss, timing, RAM/VRAM</td>
+<td>performance_history/summary, performance.png và log nguồn</td>
+</tr>
+<tr>
+<td>Hình vừa inline vừa lưu artifact</td>
+<td>Cả 3 notebook thực thi view không lỗi; 34 image/png outputs inline</td>
+</tr>
+<tr>
+<td>Pull về làm report không train lại</td>
+<td>published/index.md, PNG, metrics, raw logs, SHA256 và notebook cached outputs</td>
+</tr>
+<tr>
+<td>Kiểm thử phần mềm</td>
+<td>Bộ test suite tự động kiểm tra data contract, summary statistics, linguistic features, chi2 selection và 3 notebooks</td>
+</tr>
+<tr>
+<td>Giới hạn checkpoint</td>
+<td>Review ZIP không weights; audit metrics đạt, checkpoint sẵn sàng trong models/</td>
+</tr>
+</tbody>
+</table>
+<p>Tests của các module/công cụ đã loại bỏ được dọn cùng chức năng tương ứng. Bộ hiện hành vẫn kiểm dữ liệu/train-only features, dynamic padding, optimizer freezing, sanity100%/loss&lt;0,05, early stopping, threshold tie-break/nonfinite, artifact tampering, session isolation, ZIP và notebook. Không thay bài kiểm thực bằng zero-test/syntax-only. Log preflight trong ZIP thuộc source commit lúc train; log verification hiện hành thuộc code sau rà soát.</p>
+<h3 id="31-thu-tu-kiem-tra-mot-run-hoan-thanh">3.1. Thứ tự kiểm tra một run hoàn thành</h3>
+<p>Đầu tiên đọc status, config, environment và source hashes.<br />
+Kiểm official/effective sizes và augmentation records/digest.</p>
+<p>Đọc epoch_history, selection_summary và early-stopping status.<br />
+Đối chiếu min validation loss với selected checkpoint step.</p>
+<p>Kiểm reload consistency và weights identity của policy.<br />
+Kiểm threshold scan chỉ dựa trên validation.<br />
+Cuối cùng recompute test metrics từ predictions và so figures/log.</p>
+<h3 id="32-mau-dien-giai-learning-curves">3.2. Mẫu diễn giải learning curves</h3>
+<p>Nếu train và validation cùng cải thiện, mô hình đang học tín hiệu có thể generalize trong phạm vi quan sát.<br />
+Nếu train tiếp tục cải thiện trong khi validation loss tăng, xem xét overfitting hoặc confidence của lỗi.</p>
+<p>Nếu cả train/validation đều kém, có thể underfit hoặc preprocessing/model/optimizer chưa phù hợp.<br />
+Hai đường gần nhau không đủ khẳng định mô hình tốt.</p>
+<p>Đọc metric values, baseline và calibration trước khi kết luận.<br />
+Không diễn giải số epoch dài/ngắn như bằng chứng chất lượng độc lập.<br />
+Kết luận phải dẫn đúng run/epoch/figure.</p>
+<h3 id="33-mau-dien-giai-threshold">3.3. Mẫu diễn giải threshold</h3>
+<p>Nêu validation objective, grid/tie-break và threshold thực sự được chọn.<br />
+Nêu policy đã được khóa trước test.</p>
+<p>So metrics threshold0.5 và selected threshold trong cùng test comparison.<br />
+Mô tả FP/FN tăng giảm và ý nghĩa precision/recall trade-off.</p>
+<p>Không nói mọi metric đều cải thiện nếu chỉ một số metric tăng.<br />
+Không đổi threshold sau khi đọc confusion test.<br />
+Nếu0.5 được chọn, đó vẫn là một kết quả hợp lệ của sweep.</p>
+<h3 id="34-mau-dien-giai-performance">3.4. Mẫu diễn giải performance</h3>
+<p>Nêu device, batch size, FP16 và số mẫu làm mẫu số.<br />
+Tách pure train, pipeline và test throughput.</p>
+<p>Báo RSS sampled peak và CUDA allocated/reserved với đơn vị MiB.<br />
+Nêu per-batch-slot normalization và shared memory.</p>
+<p>Không suy diễn memory của một model chỉ bằng số parameters.<br />
+Không lấy CPU fixture timing gán cho T4.<br />
+Nếu measurement thiếu, ghi thiếu thay vì0 hoặc giá trị ước lượng không được đánh dấu.</p>
+<h3 id="35-mau-dien-giai-error-analysis">3.5. Mẫu diễn giải error analysis</h3>
+<p>Chọn một số false positives và false negatives có text thật.<br />
+Nêu predicted label/confidence và true label.</p>
+<p>Chỉ ra ngôn ngữ có thể gây khó như concession hoặc implicit sentiment.<br />
+Đánh dấu đó là hypothesis, không mô tả như đã kiểm chứng cơ chế nội tại.</p>
+<p>Nhắc selection bias của high-confidence grid.<br />
+Không dùng vài ví dụ để kết luận tỷ lệ lỗi của toàn corpus.<br />
+Metrics toàn tập và per-class confusion mới cung cấp quy mô lỗi.</p>
+<h3 id="36-evidence-map-cho-report">3.6. Evidence map cho report</h3>
+<table>
+<thead>
+<tr>
+<th>Nội dung</th>
+<th>Artifact nguồn</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Data sizes/balance/examples</td>
+<td>data_preview.json, class_distribution.png</td>
+</tr>
+<tr>
+<td>Quality/overlap</td>
+<td>data_quality.json/png, split_overlap_audit.json</td>
+</tr>
+<tr>
+<td>Length/cutoff</td>
+<td>preprocessing_statistics.json, length/cutoff PNG</td>
+</tr>
+<tr>
+<td>Tokenization</td>
+<td>tokenization_examples.json, preprocessing_examples.png, attention_mask.png</td>
+</tr>
+<tr>
+<td>TF-IDF</td>
+<td>feature_summary.json, tfidf_features.png</td>
+</tr>
+<tr>
+<td>Augmentation</td>
+<td>augmentation.json, counts/diagnostics/examples PNG</td>
+</tr>
+<tr>
+<td>Optimizer/architecture</td>
+<td>freezing_and_optimizer.json, model_architecture.json/png</td>
+</tr>
+<tr>
+<td>Learning</td>
+<td>epoch_history.json, trainer_history.json, learning_curves.png</td>
+</tr>
+<tr>
+<td>Resources</td>
+<td>resource_history.json, performance_history/summary.json, performance.png</td>
+</tr>
+<tr>
+<td>Selection</td>
+<td>selection_summary.json, decision_threshold.json</td>
+</tr>
+<tr>
+<td>Sweep</td>
+<td>validation_threshold_scan.json, validation_threshold_curves.png</td>
+</tr>
+<tr>
+<td>Test</td>
+<td>test_predictions/runtime_metrics/comparison.json, metrics_bar.png, confusion_matrix.png</td>
+</tr>
+<tr>
+<td>Calibration</td>
+<td>probability_diagnostics.json, reliability_bins.json, ROC/PR/calibration PNG</td>
+</tr>
+<tr>
+<td>Error cases</td>
+<td>sample_predictions.json/png, threshold_errors.json</td>
+</tr>
+<tr>
+<td>Reload</td>
+<td>reload_check.json</td>
+</tr>
+<tr>
+<td>Provenance/log</td>
+<td>source_commit/code hashes, environment_snapshot, console.log</td>
+</tr>
+<tr>
+<td>Integrity</td>
+<td>manifest.json, package audit, bundle_manifest</td>
+</tr>
+</tbody>
+</table>
+<h3 id="37-cac-lenh-van-hanh">3.7. Các lệnh vận hành</h3>
+<p>Từ thư mục gốc repository, dùng môi trường đã cài requirements:</p>
+<pre><code class="language-bash">python -m pytest labs/lab03/tests -q
+python labs/lab03/scripts/preview_dataset.py
+python labs/lab03/scripts/preview_augmentation.py
+python labs/lab03/scripts/run_exercise1.py
+python labs/lab03/scripts/run_frozen_trial.py --config labs/lab03/config/frozen_trial.json --device cuda
+</code></pre>
+<p>Notebook modeling gọi cùng modules với CLI.<br />
+Không copy training loop vào notebook rồi để hai phiên bản lệch nhau.<br />
+Notebook chịu trách nhiệm giải thích, orchestration, display và lấy artifact.</p>
+<h3 id="38-evaluate-va-infer-tu-checkpoint">3.8. Evaluate và infer từ checkpoint</h3>
+<p>Giải nén checkpoint ZIP, giữ nguyên best_model và policy.<br />
+Lệnh evaluate/infer nhận đường dẫn model thật:</p>
+<pre><code class="language-bash">python labs/lab03/scripts/eval.py --model-path /path/to/best_model
+python labs/lab03/scripts/infer.py --model-path /path/to/best_model --text &quot;The acting was good, but the story was disappointing.&quot;
+</code></pre>
+<p>Không bỏ policy đã khóa để tự chọn threshold theo test.<br />
+Không đổi weights nhưng giữ weights hash trong policy như thể không thay đổi.<br />
+Khi cần kết quả mới, tạo run mới và lưu cấu hình/bằng chứng tương ứng.</p>
+<h3 id="39-checklist-hoan-thanh">3.9. Checklist hoàn thành</h3>
+<ul>
+<li>Official splits và labels đúng contract.</li>
+<li>EDA/feature decisions có bảng/ảnh và lý do.</li>
+<li>Baseline fit train-only, selection validation-only.</li>
+<li>Model architecture, optimizer groups và regularization có nguồn.</li>
+<li>Max epochs5, early stopping và history nhất quán.</li>
+<li>Best checkpoint là min validation loss.</li>
+<li>Threshold scan đủ grid và policy khóa trước test.</li>
+<li>Test predictions/metrics/confusion khớp cùng cohort.</li>
+<li>Performance có scope, đơn vị và device rõ ràng.</li>
+<li>Notebook hiển thị ảnh inline, cùng file đã lưu trong outputs/.</li>
+<li>Published có hình/bảng/raw log và hashes.</li>
+<li>Save/reload check pass; checkpoint được giữ riêng.</li>
+<li>Report chỉ đưa kết luận có bằng chứng, ghi giới hạn dữ liệu/seed/sampling.</li>
+</ul>
+<h3 id="310-cau-hoi-bao-ve-va-cau-tra-loi">3.10. Câu hỏi bảo vệ và câu trả lời</h3>
+<p><strong>Vì sao dùng pretrained model?</strong><br />
+Tận dụng representation ngôn ngữ, giảm nhu cầu dữ liệu/compute so với học từ đầu.</p>
+<p><strong>Vì sao không dùng sentiment model của Exercise1 cho Exercise2?</strong><br />
+Hai Exercise có mục tiêu khác nhau; Exercise2 học head/task từ base model theo pipeline được đặc tả.</p>
+<p><strong>Vì sao cần baseline?</strong><br />
+Để biết mô hình phức tạp có mang lại lợi ích trong cùng dữ liệu/policy hay không.</p>
+<p><strong>TF-IDF có fit trên validation không?</strong><br />
+Không. Validation chỉ chọn C/policy; vocabulary/IDF fit train-only.</p>
+<p><strong>Tại sao không xóa not?</strong><br />
+Vì có thể đảo sentiment; stopword list không thay thế phân tích ngữ nghĩa.</p>
+<p><strong>Attention mask có phải nhãn không?</strong><br />
+Không. Nó chỉ phân biệt token hợp lệ và padding.</p>
+<p><strong>Tăng25% có phải phải đủ25% không?</strong><br />
+Không. Đó là trần; số variants hợp lệ phụ thuộc rules, dedup và balance.</p>
+<p><strong>Synthetic label có chắc đúng không?</strong><br />
+Không. Nó kế thừa parent theo heuristic, cần kiểm duyệt và validation.</p>
+<p><strong>Freeze có tắt dropout không?</strong><br />
+Không. requires_grad và train/eval mode điều khiển hai cơ chế khác nhau.</p>
+<p><strong>Vì sao LR head lớn hơn encoder?</strong><br />
+Head mới cần thích nghi, trong khi encoder cần thay đổi thận trọng hơn.</p>
+<p><strong>Vì sao min_delta không bằng improvement của checkpoint?</strong><br />
+Min_delta dùng điều khiển patience; checkpoint vẫn lưu minimum loss thực tế.</p>
+<p><strong>Vì sao ít hơn5điểm trên learning curves?</strong><br />
+Early stopping có thể kết thúc trước ngân sách, không tạo thêm điểm chưa đo.</p>
+<p><strong>Vì sao loss tăng nhưng accuracy gần như giữ nguyên?</strong><br />
+Một số lỗi có thể tự tin hơn; accuracy chỉ xét nhãn đúng/sai, loss còn xét xác suất.</p>
+<p><strong>Threshold0.5 có luôn tối ưu không?</strong><br />
+Không. Validation sweep quyết định operating point cho objective đã chọn;0.5 vẫn có thể được chọn.</p>
+<p><strong>Quét threshold trên test có được không?</strong><br />
+Không dùng test cho selection. Test chỉ đánh giá policy đã khóa.</p>
+<p><strong>ROC-AUC có phải accuracy không?</strong><br />
+Không. ROC-AUC đo ranking qua thresholds, accuracy đo decisions ở một operating point.</p>
+<p><strong>Bootstrap có chứng minh model ổn định qua seeds không?</strong><br />
+Không. Fixed-model bootstrap không bao gồm biến thiên do training seed.</p>
+<p><strong>RAM/VRAM per batch slot là gì?</strong><br />
+Peak chia nominal slots, gồm shared memory; không phải memory riêng một câu.</p>
+<p><strong>Test ms/sample có phải latency ứng dụng không?</strong><br />
+Không. Đó là throughput của full batch evaluation với overhead trong scope được ghi.</p>
+<p><strong>Lấy hình report có cần train lại không?</strong><br />
+Không, sau pipeline hoàn thành có thể lấy trực tiếp từ published/index/catalog và raw run artifacts.</p>
+  </div>
+</body>
+</html>

@@ -10,9 +10,9 @@ import nbformat
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 from labs.lab03.src.utils.runs import ROOT
 
-SOURCE = ROOT / "notebooks/02_modeling.ipynb"
+SOURCE = ROOT / "notebooks/03_modeling.ipynb"
 DESTINATION = ROOT / "kaggle"
-CODE_FILE = "02_modeling_train.ipynb"
+CODE_FILE = "03_modeling_train.ipynb"
 SLUG = "lab03-frozen-distilbert-train"
 TITLE = "Lab03 Frozen DistilBERT train"
 

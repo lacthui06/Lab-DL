@@ -639,7 +639,7 @@ Notebook có cell output được tải riêng từ giao diện Kaggle.
 
 Nguồn duy nhất cho kết quả chính: `20261103T110437Z_frozen_trial_b021d6eb`, source commit `c02effea2f08e630c37775712cfbc9ac7e6faa8e`, Kaggle Tesla T4. ZIP do người thực hiện gửi; 158 file khớp bundle SHA256 trước nhập. Run sources được giữ nguyên byte; biểu đồ/bảng/log được publish để dùng trực tiếp trong report. Không huấn luyện lại, không chọn lại threshold trên test, không đổi số đo.
 
-[Report có toàn bộ hình và log](outputs/published/index.md) · [Selection](outputs/latest_report.json) · [Audit độc lập](validation/final_review_audit.json) · [Bằng chứng nhập ZIP](validation/import_audit.json).
+[Report có toàn bộ hình và log](../outputs/published/index.md) · [Selection](../outputs/latest_report.json) · [Audit độc lập](../validation/final_review_audit.json) · [Bằng chứng nhập ZIP](../validation/import_audit.json).
 
 #### EDA và feature engineering đã quan sát
 
@@ -653,10 +653,10 @@ TF-IDF fit original train có 24.083 features, 207.847 nonzero, density 0,1012%,
 
 Augmentation thêm **274 mẫu** (137 mỗi lớp), effective train **8.804**. Trần25% không phải số mẫu bắt buộc: 2.848 câu có negation/contrast được bỏ qua; số candidates của lớp negative giới hạn pool cân bằng. Không duplicate để ép thêm mẫu. Heldout không đổi. Labels synthetic kế thừa parent, chưa được người gán nhãn kiểm duyệt hết.
 
-![EDA](outputs/published/frozen_trial/lengths_by_class.png)
-![Preprocessing](outputs/published/frozen_trial/preprocessing_diagnostics.png)
-![Features](outputs/published/frozen_trial/tfidf_features.png)
-![Augmentation](outputs/published/frozen_trial/augmentation_diagnostics.png)
+![EDA](../outputs/published/frozen_trial/lengths_by_class.png)
+![Preprocessing](../outputs/published/frozen_trial/preprocessing_diagnostics.png)
+![Features](../outputs/published/frozen_trial/tfidf_features.png)
+![Augmentation](../outputs/published/frozen_trial/augmentation_diagnostics.png)
 
 #### Học, chọn checkpoint và regularization
 
@@ -672,12 +672,12 @@ DistilBERT có 66.955.010 tham số, trong đó 14.767.874 trainable. Embedding 
 
 Validation loss giảm từ0,394180 xuống0,367875; checkpoint epoch5 được chọn đúng minimum loss. Accuracy gap cuối là **0,616 điểm phần trăm**, loss gap0,01931. Chưa thấy validation-loss tăng trong cửa sổ5epoch; điều này không bảo đảm hết overfit hay mô hình tối ưu. Early stopping patience2/min_delta0.001 được bật; `stopped_early=False` nghĩa là không kết thúc trước ngân sách5epoch. Tái hiện callback Transformers4.48.3 từ config/history cho counter0/0/0/1/2: cải thiện epoch4 là0,0006465 và epoch5 là0,0009598, đều nhỏ hơn min_delta. Patience do đó đạt ngưỡng ngay tại biên ngân sách. Đây là **counter dẫn xuất**, không phải counter đã được ghi trực tiếp; không kết luận rằng patience chưa đạt ngưỡng.
 
-[Bảng tái hiện patience](outputs/published/result_analysis/early_stopping_replay.json) nêu provenance. Minimum loss vẫn được cập nhật khi có cải thiện nhỏ, nên checkpoint epoch5 được chọn đúng dù min_delta không reset patience.
+[Bảng tái hiện patience](../outputs/published/result_analysis/early_stopping_replay.json) nêu provenance. Minimum loss vẫn được cập nhật khi có cải thiện nhỏ, nên checkpoint epoch5 được chọn đúng dù min_delta không reset patience.
 
 Log ghi **2 AMP skipped optimizer steps**; không diễn giải 2.755 global steps thành 2.755 updates thành công. Mọi loss/metric cần thiết hữu hạn; giữ cảnh báo AMP trong raw log và selection_summary, không xóa để làm đẹp kết quả.
 
-![Learning curves](outputs/published/frozen_trial/learning_curves.png)
-[Kiến trúc chi tiết hai model dạng text](outputs/published/architecture/model_architectures.txt) và [bảng cấu trúc/provenance](outputs/published/architecture/summary.json). Mỗi model có66.955.010parameters; Exercise1 chỉ inference nên tối ưu0parameters, dù requires_grad vẫn bật trong cấu trúc khai báo. Exercise2 tối ưu14.767.874parameters. View dựng module tree từ pinned configuration, không load pretrained/checkpoint weights; không dùng sơ đồ này làm bằng chứng reload GPU.
+![Learning curves](../outputs/published/frozen_trial/learning_curves.png)
+[Kiến trúc chi tiết hai model dạng text](../outputs/published/architecture/model_architectures.txt) và [bảng cấu trúc/provenance](../outputs/published/architecture/summary.json). Mỗi model có66.955.010parameters; Exercise1 chỉ inference nên tối ưu0parameters, dù requires_grad vẫn bật trong cấu trúc khai báo. Exercise2 tối ưu14.767.874parameters. View dựng module tree từ pinned configuration, không load pretrained/checkpoint weights; không dùng sơ đồ này làm bằng chứng reload GPU.
 
 #### Threshold validation-only và kết quả test
 
@@ -693,8 +693,8 @@ Policy được chọn đúng **886/1.066**, sai180. Confusion matrix `[TN FP; F
 
 Test loss **0,409902** thuộc score distribution của checkpoint, không thay đổi bởi threshold. ROC-AUC0,90037; average precision0,90974; Brier0,12664; confidence ECE0,04254. Bootstrap95% accuracy **80,86–85,37%**, conditional trên fixed model/policy, không bao gồm uncertainty của seed training.
 
-![Threshold](outputs/published/frozen_trial/validation_threshold_curves.png)
-![Confusion](outputs/published/frozen_trial/confusion_matrix.png)
+![Threshold](../outputs/published/frozen_trial/validation_threshold_curves.png)
+![Confusion](../outputs/published/frozen_trial/confusion_matrix.png)
 
 | Lớp (one-vs-rest) | Precision | Recall / TPR | F1 | FPR | Support |
 |---|---:|---:|---:|---:|---:|
@@ -703,11 +703,11 @@ Test loss **0,409902** thuộc score distribution của checkpoint, không thay 
 
 Negative có TPR thấp hơn;96/533 câu Negative bị gán Positive. FPR Positive18,01% là tỷ lệ trong Negative bị gọi Positive; FPR Negative15,76% là tỷ lệ trong Positive bị gọi Negative. Không nhầm FPR với1-precision.
 
-![Per-class metrics](outputs/published/result_analysis/per_class_metrics.png)
+![Per-class metrics](../outputs/published/result_analysis/per_class_metrics.png)
 
-Baseline log loss tính lại từ1.066saved probability vectors là **0,517371**; Transformer test loss đo tại Kaggle là **0,409902**. Loss baseline là dẫn xuất sklearn log_loss, không phải số đo GPU. [Summary dẫn xuất](outputs/published/result_analysis/results_summary.json) ghi source manifest/code hashes. Test runtime metrics của Transformer dùng argmax; policy threshold0,45 được báo riêng trong test_comparison, không ghi đè metrics nguồn.
-![ROC PR](outputs/published/frozen_trial/roc_pr_curves.png)
-![Calibration](outputs/published/frozen_trial/calibration_confidence.png)
+Baseline log loss tính lại từ1.066saved probability vectors là **0,517371**; Transformer test loss đo tại Kaggle là **0,409902**. Loss baseline là dẫn xuất sklearn log_loss, không phải số đo GPU. [Summary dẫn xuất](../outputs/published/result_analysis/results_summary.json) ghi source manifest/code hashes. Test runtime metrics của Transformer dùng argmax; policy threshold0,45 được báo riêng trong test_comparison, không ghi đè metrics nguồn.
+![ROC PR](../outputs/published/frozen_trial/roc_pr_curves.png)
+![Calibration](../outputs/published/frozen_trial/calibration_confidence.png)
 
 #### Performance đã đo
 
@@ -723,7 +723,7 @@ RAM là parent RSS sampled20ms; VRAM là PyTorch allocator trên cuda:0. Peak/ba
 
 VRAM reserved peak638MiB; RAM peak tăng qua epoch có thể do allocator/cache, không đủ bằng chứng kết luận memory leak. Các số này thuộc run T4 đã nhận, không phải ước lượng từ weights.
 
-![Performance](outputs/published/frozen_trial/performance.png)
+![Performance](../outputs/published/frozen_trial/performance.png)
 
 #### Error analysis và giới hạn
 
@@ -731,7 +731,7 @@ Câu test607 có mệnh đề nhượng bộ “though ... routine script” nh�
 
 Câu test276 “worked for me ... then it caved in” có label positive nhưng model negative0,9705. Cần ngữ cảnh rộng hơn hoặc label audit độc lập để phân biệt lỗi model với ambiguity nhãn. High-confidence examples được chọn để kiểm lỗi, không phải random sample đại diện. Không dùng các ví dụ test này để thay rule augmentation của run đã báo cáo.
 
-![Examples](outputs/published/frozen_trial/sample_predictions.png)
+![Examples](../outputs/published/frozen_trial/sample_predictions.png)
 
 #### Khả năng tái sử dụng sau pull
 

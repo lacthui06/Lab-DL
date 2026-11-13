@@ -23,7 +23,7 @@
 
 Lab03 uses its own pinned dependencies in `labs/lab03/requirements.txt` and a separate Python 3.12 environment; do not replace the Lab01 environment with these pins.
 
-Lab03: hai notebook đã có output EDA/modeling từ run Kaggle5epoch. Validation-selected threshold0.45; test accuracy83.11%, binary F1 83.30%. Xem [report hình, bảng và log](labs/lab03/outputs/published/index.md) và [walkthrough](labs/lab03/walkthrough_lab_03.md).
+Lab03: ba notebook chuyên biệt đã có output EDA/Feature/Modeling từ run Kaggle 5 epoch. Validation-selected threshold 0.45; test accuracy 83.11%, binary F1 83.30%. Xem [report hình, bảng và log](labs/lab03/outputs/published/index.md) và [walkthrough](labs/lab03/reports/walkthrough_lab_03.md).
 
 ## Lab Directory
 

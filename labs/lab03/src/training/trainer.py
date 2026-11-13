@@ -2,6 +2,7 @@
 import math
 import warnings
 import time
+import inspect
 import torch
 from copy import copy
 from transformers import Trainer, TrainingArguments, DataCollatorWithPadding, TrainerCallback, EarlyStoppingCallback
@@ -22,29 +23,45 @@ def make_trainer(model, tokenizer, ds, config, run_path):
     strategy = config.get("eval_strategy", "epoch")
     if strategy not in {"steps", "epoch"}:
         raise ValueError("eval_strategy must be steps or epoch")
-    args = TrainingArguments(
+    sig = inspect.signature(TrainingArguments.__init__).parameters
+    kwargs = dict(
         output_dir=str(run_path / "checkpoints"),
         learning_rate=config["learning_rate"],
         num_train_epochs=config["num_train_epochs"],
         per_device_train_batch_size=config["batch_size"],
         per_device_eval_batch_size=config["eval_batch_size"],
-        weight_decay=config["weight_decay"], warmup_ratio=config.get("warmup_ratio", 0.0),
-        warmup_steps=config.get("warmup_steps", 0),
-        eval_strategy=strategy, save_strategy=strategy,
-        eval_steps=config.get("eval_steps", 100), save_steps=config.get("eval_steps", 100),
+        weight_decay=config["weight_decay"],
+        eval_strategy=strategy,
+        save_strategy=strategy,
+        eval_steps=config.get("eval_steps", 100),
+        save_steps=config.get("eval_steps", 100),
         logging_strategy="steps" if strategy == "steps" else "epoch",
-        logging_steps=config.get("logging_steps", 25), logging_nan_inf_filter=False,
+        logging_steps=config.get("logging_steps", 25),
+        logging_nan_inf_filter=False,
         gradient_accumulation_steps=config.get("gradient_accumulation_steps", 1),
         max_grad_norm=config.get("max_grad_norm", 1.0),
         dataloader_num_workers=config.get("dataloader_num_workers", 0),
         dataloader_pin_memory=bool(torch.cuda.is_available() and not use_cpu),
         use_cpu=use_cpu,
-        load_best_model_at_end=True, metric_for_best_model=config.get("metric_for_best_model", "accuracy"),
-        greater_is_better=config.get("metric_for_best_model", "accuracy").removeprefix("eval_") != "loss", save_total_limit=2,
+        load_best_model_at_end=True,
+        metric_for_best_model=config.get("metric_for_best_model", "accuracy"),
+        greater_is_better=config.get("metric_for_best_model", "accuracy").removeprefix("eval_") != "loss",
+        save_total_limit=2,
         disable_tqdm=config.get("epoch_console_summary", False),
         save_only_model=config.get("save_only_model", False),
         fp16=bool(config["fp16"] and torch.cuda.is_available() and not use_cpu),
-        seed=config["seed"], data_seed=config["seed"], report_to="none")
+        seed=config["seed"],
+        data_seed=config["seed"],
+        report_to="none"
+    )
+    if "warmup_ratio" in sig:
+        kwargs["warmup_ratio"] = config.get("warmup_ratio", 0.0)
+        kwargs["warmup_steps"] = config.get("warmup_steps", 0)
+    else:
+        ratio = config.get("warmup_ratio", 0.0)
+        steps = config.get("warmup_steps", 0)
+        kwargs["warmup_steps"] = ratio if ratio > 0 else steps
+    args = TrainingArguments(**kwargs)
     trainer = Trainer(model=model, args=args, processing_class=tokenizer,
                    train_dataset=ds["train"], eval_dataset=ds["validation"],
                    data_collator=DataCollatorWithPadding(tokenizer, pad_to_multiple_of=8 if args.fp16 else None), compute_metrics=compute_metrics)

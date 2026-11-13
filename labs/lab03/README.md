@@ -1,14 +1,14 @@
 # Lab03 — Binary Sentiment Classification with Hugging Face
 
 - **Tác giả:** Thái Anh Lạc
-- **Phạm vi:** Phân loại cảm xúc tiếng Anh trên Rotten Tomatoes: pretrained sentiment/tokenization và fine-tuning DistilBERT. Pipeline gồm đúng **hai notebook**, có roadmap, module tham chiếu, ảnh inline và artifact được lưu để dùng cho report.
+- **Phạm vi:** Phân loại cảm xúc tiếng Anh trên Rotten Tomatoes: pretrained sentiment/tokenization và fine-tuning DistilBERT. Pipeline gồm **ba notebook chuyên biệt**, có roadmap, module tham chiếu, ảnh inline và artifact được lưu để dùng cho report.
 
 ## Kết quả đã hoàn thành và xem ngay
 
 Run Kaggle `20261103T110437Z_frozen_trial_b021d6eb` hoàn thành **5/5 epoch**, checkpoint epoch5, threshold validation **0,45**. Test: **Accuracy83,11%, Binary F1 83,30%**, 886/1.066 mẫu đúng. TF-IDF baseline:78,99%.
 
 - [Report hình/bảng/log](outputs/published/index.md)
-- [Kết quả và diễn giải chi tiết](walkthrough_lab_03.md#30-kết-quả-thực-nghiệm-đã-xác-minh-từ-zip-kaggle)
+- [Kết quả và diễn giải chi tiết](reports/walkthrough_lab_03.md#30-kết-quả-thực-nghiệm-đã-xác-minh-từ-zip-kaggle)
 - [Kiến trúc hai model dạng text](outputs/published/architecture/model_architectures.txt), [bảng tóm tắt](outputs/published/architecture/summary.json).
 - [Metrics theo lớp](outputs/published/result_analysis/per_class_metrics.png), [patience replay](outputs/published/result_analysis/early_stopping_replay.json).
 - [Selection](outputs/latest_report.json), [audit](validation/final_review_audit.json)
@@ -74,7 +74,7 @@ Các kỹ thuật là lựa chọn được định trước để kiểm chứn
 | `outputs/preflight/` | Pytest log/XML trước training |
 | `validation/` | Kiểm chứng phần mềm, khác dataset validation |
 | [Description](description_lab_03.md) | Đề bài, architecture, discussion và quyết định |
-| [Walkthrough](walkthrough_lab_03.md) | Phương pháp, vận hành, cách diễn giải và thu thập bằng chứng |
+| [Reports & Walkthrough](reports/walkthrough_lab_03.md) | Báo cáo phương pháp, vận hành, thu thập bằng chứng (kèm bản HTML trong `reports/`) |
 | [Kaggle runbook](KAGGLE_RUNBOOK.md) | Import/push kernel, chạy và lấy kết quả |
 
 ## Local CLI

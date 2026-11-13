@@ -100,7 +100,7 @@ def test_preflight_isolates_session_environment_without_changing_training_env(tm
 @pytest.mark.parametrize('preflight_fails',[False,True])
 def test_modeling_preflight_cell_restores_training_session_and_propagates_errors(preflight_fails):
     import nbformat
-    source=nbformat.read(ROOT/'notebooks/02_modeling.ipynb',as_version=4).cells[3].source
+    source=nbformat.read(ROOT/'notebooks/03_modeling.ipynb',as_version=4).cells[3].source
     class Session:
         def __init__(self):self.env={'LAB03_SESSION_ID':'training-session'}
         def preflight(self):
