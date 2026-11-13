@@ -2126,27 +2126,27 @@ show_images(COMPARISON_RUN, ['SmallMLP_ovr_curves.png'])</code></pre>
         </div>
 
 
-        <!-- Comprehensive Optimizer Benchmark Table -->
-        <div class="table-responsive" style="margin-bottom: 2rem;">
+                <!-- Comprehensive Optimizer Benchmark Table -->
+        <div class="table-responsive" style="margin-bottom: 1.5rem;">
             <table class="table">
                 <thead>
                     <tr>
-                        <th>Thuật Toán (Optimizer)</th>
-                        <th>Trạng Thái Bộ Nhớ (State Buffers)</th>
-                        <th>Độ Phức Tạp Phép Tính / Bước</th>
-                        <th>Thời Gian 10 Epochs (Fixed LR)</th>
-                        <th>Tốc Độ Trung Bình / Epoch</th>
-                        <th>Best Val Acc (Fixed LR)</th>
-                        <th>Thời Gian Tuning (10 Trials)</th>
-                        <th>Best Val Acc (Sau Tuning)</th>
-                        <th>Chênh Lệch (&Delta;)</th>
+                        <th>Thuật Toán</th>
+                        <th>Bộ Đệm Trạng Thái</th>
+                        <th>Độ Phức Tạp / Bước</th>
+                        <th>Thời Gian 10 Epochs</th>
+                        <th>Tốc Độ / Epoch</th>
+                        <th>Val Acc (Fixed LR)</th>
+                        <th>Thời Gian Tuning</th>
+                        <th>Val Acc (Sau Tuning)</th>
+                        <th>Chênh Lệch</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr>
                         <td><strong>SGD + Momentum</strong></td>
-                        <td>1 buffer (Velocity $v$)</td>
-                        <td>Nhân vô hướng & cộng tensor</td>
+                        <td>1 bộ đệm (Vận tốc v)</td>
+                        <td>Cộng & nhân cơ bản</td>
                         <td><strong>10.37 giây</strong></td>
                         <td><strong>1.04 s/epoch</strong></td>
                         <td>85.08%</td>
@@ -2156,8 +2156,8 @@ show_images(COMPARISON_RUN, ['SmallMLP_ovr_curves.png'])</code></pre>
                     </tr>
                     <tr>
                         <td><strong>RMSprop</strong></td>
-                        <td>1 buffer (Squared grad $s$)</td>
-                        <td>Bình phương, căn bậc hai, chia float</td>
+                        <td>1 bộ đệm (Bình phương gradient)</td>
+                        <td>Căn bậc hai & chia ma trận</td>
                         <td><strong>12.45 giây</strong></td>
                         <td><strong>1.25 s/epoch</strong></td>
                         <td>90.73%</td>
@@ -2166,9 +2166,9 @@ show_images(COMPARISON_RUN, ['SmallMLP_ovr_curves.png'])</code></pre>
                         <td><span style="color: #dc2626; font-weight: bold;">-0.17%</span></td>
                     </tr>
                     <tr style="background-color: #f0fdf4;">
-                        <td><strong>Adam</strong> (Lựa chọn tối ưu)</td>
-                        <td><strong>2 buffers</strong> (Momentum $m$ + Variance $v$)</td>
-                        <td>Bias correction, căn bậc hai, chia & nhân</td>
+                        <td><strong>Adam</strong> (Tối ưu nhất)</td>
+                        <td><strong>2 bộ đệm</strong> (Moment m + Phương sai v)</td>
+                        <td>Căn bậc hai, chia & khử lệch bias</td>
                         <td><strong>14.97 giây</strong></td>
                         <td><strong>1.50 s/epoch</strong></td>
                         <td><strong>90.93%</strong></td>
@@ -2181,21 +2181,15 @@ show_images(COMPARISON_RUN, ['SmallMLP_ovr_curves.png'])</code></pre>
         </div>
 
         <div class="callout" style="border-left-color: #3b82f6; background-color: #eff6ff; margin-bottom: 2rem;">
-            <strong style="color: #1d4ed8;">Chẩn Đoán Kỹ Thuật: Tại Sao Cùng Chạy 10 Epochs Nhưng Thời Gian 3 Optimizer Lại Khác Nhau?</strong>
-            <p style="margin: 0.35rem 0 0.5rem 0; font-size: 0.88rem; line-height: 1.6; color: #1e40af;">
-                Mỗi epoch bao gồm <strong>422 mini-batches</strong> (54.000 mẫu / batch size 128). Dù số lượt lan truyền xuôi (Forward) và lan truyền ngược (Backward) tính gradient là giống hệt nhau, bước cập nhật trọng số <code>optimizer.step()</code> của từng thuật toán lại có chi phí tính toán và truy xuất bộ nhớ hoàn toàn khác nhau:
-            </p>
-            <ol style="margin-left: 1.25rem; font-size: 0.85rem; line-height: 1.6; color: #1e3a8a;">
-                <li><strong>SGD + Momentum (10.37s - Nhanh nhất):</strong> Chỉ duy trì 1 bộ đệm vận tốc $v$. Phép tính cập nhật $v_{t} = \beta v_{t-1} + g_t$ và $\theta_{t} = \theta_{t-1} - \eta v_t$ chỉ là các phép cộng và nhân vô hướng đơn giản, tận dụng tối đa thanh ghi và bộ nhớ đệm CPU L1/L2.</li>
-                <li><strong>RMSprop (12.45s - Chậm hơn ~20% so với SGD):</strong> Phải duy trì ước lượng bình phương gradient $s_t = \alpha s_{t-1} + (1-\alpha)g_t^2$ và tính $\theta_t = \theta_{t-1} - \frac{\eta}{\sqrt{s_t + \epsilon}} g_t$. Phép tính căn bậc hai và phép chia số thực (float division) tiêu tốn nhiều chu kỳ lệnh (clock cycles) của ALU/FPU hơn hẳn so với phép nhân cộng của SGD.</li>
-                <li><strong>Adam (14.97s - Chậm hơn ~44% so với SGD):</strong> Duy trì tới <strong>2 bộ đệm trạng thái độc lập</strong> ($m_t$ và $v_t$), đòi hỏi dung lượng bộ nhớ state gấp đôi. Đồng thời, mỗi bước phải tính lũy thừa step (bias correction: $1 - \beta_1^t$, $1 - \beta_2^t$), căn bậc hai và phép chia tensor. Việc nạp và ghi 2 tensor phụ trợ này làm tăng đáng kể áp lực băng thông bộ nhớ (memory bandwidth overhead).</li>
-            </ol>
-            <p style="margin: 0.5rem 0 0 0; font-size: 0.85rem; color: #1e40af;">
-                <strong>Đánh đổi kỹ thuật:</strong> Adam tiêu tốn thêm ~44% thời gian tính toán nhưng mang lại khả năng tự thích ứng xuất sắc, hội tụ nhanh vượt bậc và đạt độ chính xác cao nhất (90.93%) ngay từ những epoch đầu mà không phụ thuộc khắt khe vào việc tinh chỉnh LR thủ công như SGD.
-            </p>
+            <strong style="color: #1d4ed8;">Giải Thích Ngắn Gọn Về Chênh Lệch Thời Gian Giữa 3 Optimizer:</strong>
+            <ul style="margin: 0.5rem 0 0 1.25rem; font-size: 0.88rem; line-height: 1.6; color: #1e3a8a;">
+                <li><strong>SGD (10.37s - Nhanh nhất):</strong> Chỉ có 1 bộ đệm vận tốc, chỉ dùng phép cộng và nhân cơ bản nên CPU xử lý nhanh nhất.</li>
+                <li><strong>RMSprop (12.45s - Chậm hơn ~20%):</strong> Phải tính thêm căn bậc hai và phép chia ma trận cho từng trọng số ở mỗi bước cập nhật.</li>
+                <li><strong>Adam (14.97s - Chậm hơn ~44%):</strong> Duy trì tới 2 bộ đệm độc lập (tốn gấp đôi RAM trạng thái), tính toán phức tạp nhất nhưng đổi lại hội tụ nhanh và đạt độ chính xác cao nhất (90.93%).</li>
+            </ul>
         </div>
 
-                <!-- 6.1 Best Optimizer Comparison -->
+        <!-- 6.1 Best Optimizer Comparison -->
         <div class="subsection-title">
             <span>6.1. Động Học Học Tập Của Best Configuration: SGD vs RMSprop vs Adam</span>
             <span class="badge badge-info">OPTIMIZER CONVERGENCE</span>
