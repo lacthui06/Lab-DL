@@ -812,7 +812,7 @@
                         <span class="pipeline-icon">&darr;</span>
                     </div>
                     <div class="pipeline-title">2. 10 Features</div>
-                    <div class="pipeline-desc">Bounding Box &bull; Centroid &bull; StandardScaler</div>
+                    <div class="pipeline-desc">Bounding Box &bull; Centroid &bull; Correlation</div>
                 </a>
 
                 <a href="#section-models" class="pipeline-card step-3">
@@ -1226,33 +1226,9 @@ print(f"Train Duplicates: {train_duplicates}, Test Duplicates: {test_duplicates}
 
         <p>Thiết kế 10 đặc trưng hình học bổ sung dựa trên tri thức miền thị giác máy tính: <strong>Mean Pixel, Std Pixel, Tỷ lệ tiền cảnh (Foreground Ratio), Bounding Box Width/Height, Tỷ lệ khung hình (Aspect Ratio), Tọa độ trọng tâm (Centroid X, Y), Độ đối xứng (Symmetry Index), Mật độ biên (Edge Density)</strong>.</p>
 
-        <!-- 4.1 Feature Distributions -->
+        <!-- 4.1 Geometry & Correlations -->
         <div class="subsection-title">
-            <span>4.1. Phân Bố 10 Đặc Trưng Hình Học Giữa Các Lớp Sau Khi Fit StandardScaler</span>
-            <span class="badge badge-info">FEATURE DISTRIBUTIONS</span>
-        </div>
-
-        <figure class="image-card">
-            <div class="image-card-img-wrap">
-                <img src="../outputs/published/preparation/feature_distributions.png" alt="Phân bố 10 đặc trưng theo lớp trang phục" loading="lazy">
-                <div class="zoom-hint">Phóng to ảnh &nearr;</div>
-            </div>
-            <figcaption>
-                <div class="image-card-title-row">
-                    <span class="image-card-title">Hình 2: Phân Bố Giá Trị 10 Đặc Trưng Hình Học Chuẩn Hóa Theo Từng Lớp</span>
-                    <span class="code-pill">Z-Score Normalization</span>
-                </div>
-                <p class="image-card-takeaway">Biểu đồ phân bố (Boxplot/Violin) chứng minh tính phân tách cao của các đặc trưng được thiết kế: Trouser có Bounding Box Aspect Ratio vượt trội; Bag có Centroid đối xứng; Sandal có Foreground Ratio và Edge Density thấp hẳn so với Coat và Pullover.</p>
-                <div class="image-card-footer">
-                    <span>10 Geometric Features</span>
-                    <span>Fit on Train-only</span>
-                </div>
-            </figcaption>
-        </figure>
-
-        <!-- 4.2 Geometry & Correlations -->
-        <div class="subsection-title">
-            <span>4.2. Khảo Sát Bounding Box, Trọng Tâm & Ma Trận Tương Quan Tuyến Tính</span>
+            <span>4.1. Khảo Sát Bounding Box, Trọng Tâm & Ma Trận Tương Quan Tuyến Tính</span>
             <span class="badge badge-info">GEOMETRY & CORRELATION</span>
         </div>
 
