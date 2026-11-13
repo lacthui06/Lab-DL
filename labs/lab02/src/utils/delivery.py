@@ -289,7 +289,7 @@ def finalize_run(run_path: str | None = None) -> None:
         summary_rows.append(f'| {result_row.model} | {result_row.stage} | {result_row.accuracy:.2%} | {result_row.macro_f1:.4f} |')
     (run / "results_index.md").write_text(
         "# Lab 02 — Kết quả đã chạy\n\n"
-        "[Tài liệu sống](../../../walkthrough_lab_02.md)\n\n"
+        "[Tài liệu sống](../../../reports/walkthrough_lab_02.md)\n\n"
         f"Run: `{run.name}`. Profile: **{cfg['profile']}**. Số mẫu xem trong data_summary.json và báo cáo.\n\n"
         f"- [Notebook EDA và tiền xử lý](../../../notebooks/01_lab02_eda.ipynb)\n"
         f"- [Notebook huấn luyện và đánh giá](../../../notebooks/02_lab02_modeling.ipynb)\n"

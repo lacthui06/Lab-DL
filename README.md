@@ -24,7 +24,7 @@
 ## Lab Directory
 
 - **Lab 01**: [FashionMNIST Classification with PyTorch](labs/lab01/README.md) — local experiments available; [Walkthrough](labs/lab01/reports/walkthrough_lab_01.md) & [HTML Report](labs/lab01/reports/walkthrough_lab_01.html).
-- **Lab 02**: [CIFAR-10 Transfer Learning](labs/lab02/README.md) — ResNet18 and DenseNet121, EDA/modeling notebooks, experiments and saved results.
+- **Lab 02**: [CIFAR-10 Transfer Learning](labs/lab02/README.md) — ResNet18 and DenseNet121; [Walkthrough](labs/lab02/reports/walkthrough_lab_02.md) & [HTML Report](labs/lab02/reports/walkthrough_lab_02.html).
 - **Lab 03**: [Hugging Face Sentiment Analysis & Fine-tuning](https://github.com/lacthui06/Lab-DL/tree/lab03/labs/lab03) — notebooks and experiment results on the `lab03` branch.
 - **Lab 04**: Upcoming
 

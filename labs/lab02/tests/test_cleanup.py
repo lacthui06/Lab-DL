@@ -64,7 +64,7 @@ def _source_graph(root):
 def test_all_production_modules_reachable_and_documented():
     """CLI/notebook roots count; tests and archived snapshots cannot rescue dead modules."""
     scripts={p.stem for p in (ROOT/'scripts').glob('*.py')}
-    assert scripts=={'run','infer','analyze_data','download_assets','execute_notebook','finalize','resume_interrupted','benchmark_inference','benchmark_training'}
+    assert scripts=={'run','infer','analyze_data','download_assets','execute_notebook','finalize','resume_interrupted','benchmark_inference','benchmark_training','generate_html_report'}
     units,seen,referenced=_source_graph(ROOT)
     assert {n for n in units if n=='src' or n.startswith('src.')}<=seen
     readme=(ROOT/'README.md').read_text(encoding='utf-8')

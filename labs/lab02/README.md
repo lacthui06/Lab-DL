@@ -2,7 +2,7 @@
 
 ## Bằng chứng thực nghiệm và cách đọc kết quả
 
-Mở [walkthrough](walkthrough_lab_02.md), [notebook EDA](notebooks/01_lab02_eda.ipynb) hoặc [notebook Modeling](notebooks/02_lab02_modeling.ipynb) để đọc phương pháp và output đã lưu. Không cần huấn luyện hoặc tải checkpoint chỉ để xem output có sẵn trong notebook.
+Mở [walkthrough](reports/walkthrough_lab_02.md), [notebook EDA](notebooks/01_lab02_eda.ipynb) hoặc [notebook Modeling](notebooks/02_lab02_modeling.ipynb) để đọc phương pháp và output đã lưu. Không cần huấn luyện hoặc tải checkpoint chỉ để xem output có sẵn trong notebook.
 
 Run được chọn trong [outputs/selected_run.json](outputs/selected_run.json) là `20261030T052121Z_cifar10_scheduled64_b895bfc1`: CPU, ảnh 64×64, seed 42. Kết quả head-only và fine-tune nằm trong [comparison.csv](outputs/runs/20261030T052121Z_cifar10_scheduled64_b895bfc1/comparison.csv). Benchmark inference Tesla T4 và benchmark training CPU batch 1 có evidence riêng dưới `outputs/published/`; không dùng chúng thay cho thời gian full training.
 
@@ -10,7 +10,7 @@ Chạy lại các cell hiển thị cần artifact EDA, run đã chọn và evid
 
 Dự án phân loại 10 lớp CIFAR-10 bằng transfer learning với ResNet18 và DenseNet121 pretrained ImageNet. Pipeline bao gồm EDA, preprocessing, khảo sát đặc trưng, huấn luyện classifier, fine-tune một phần backbone, đánh giá và so sánh chất lượng/chi phí. Source được tách theo chức năng để notebook tập trung vào phương pháp và output thực nghiệm.
 
-Hai notebook chính hiện hành chỉ đọc artifact khi `Run All`: notebook 01 trình bày dữ liệu; notebook 02 trình bày kiến trúc, training, evaluation và benchmark. Huấn luyện và đo benchmark dùng CLI riêng.
+Hai notebook chính mặc định `MODE="view"` để đọc artifact. Notebook 01 hỗ trợ `prepare` để tạo EDA; notebook 02 hỗ trợ `train` để gọi pipeline huấn luyện theo cấu hình. Các phép đo benchmark vẫn dùng CLI riêng.
 
 ---
 
@@ -79,7 +79,7 @@ labs/lab02/
 │   ├── 02_lab02_modeling.ipynb
 │   └── 02_lab02_modeling-kaggle.ipynb  # Bản Modeling có output Kaggle
 ├── description_lab_02.md              # Đề bài và phạm vi đã thống nhất
-├── walkthrough_lab_02.md              # Phương pháp và kết quả có bằng chứng
+├── reports/                           # Walkthrough và báo cáo HTML
 ├── requirements.txt                   # Pins của môi trường Windows lịch sử
 └── README.md                          # Tổng quan và hướng dẫn sử dụng
 ```
@@ -95,6 +95,7 @@ Cây thư mục lược bớt `__init__.py`, cache và artifact chi tiết. Khô
 | Mô hình | [models.py](src/models/models.py) | Khởi tạo, classifier, freeze/unfreeze |
 | Training | [experiment.py](src/training/experiment.py), [feature_cache.py](src/training/feature_cache.py), [tuning.py](src/training/tuning.py) | Train/evaluate, cache và selection |
 | Báo cáo | [reporting.py](src/utils/reporting.py), [notebook_views.py](src/utils/notebook_views.py), [costs.py](src/utils/costs.py) | Metric, hình và chi phí từ artifact |
+| Notebook và HTML | [notebook_workflow.py](src/utils/notebook_workflow.py), [html_report.py](src/utils/html_report.py), [report_theme.py](src/utils/report_theme.py), [generate_html_report.py](scripts/generate_html_report.py) | Chọn mode, kiểm tra nguồn và dựng báo cáo từ notebook/artifact |
 | Artifact | [delivery.py](src/utils/delivery.py), [constants.py](src/utils/constants.py) | IO, hash, snapshot và giá trị dùng chung |
 | Inference | [inference.py](src/inference.py), [inference_benchmark.py](src/utils/inference_benchmark.py) | Load model, predict và đo inference |
 | Training benchmark | [training_benchmark.py](src/utils/training_benchmark.py) | Forward/loss/backward/optimizer step |
@@ -181,7 +182,7 @@ Notebook cần kernel đúng interpreter, NumPy, pandas, matplotlib, Pillow, sci
 
 Mở [01_lab02_eda.ipynb](notebooks/01_lab02_eda.ipynb). Roadmap đầu notebook ghi từng bước, module/hàm tạo artifact và hàm hiển thị.
 
-- `Run All` đọc artifact đã lưu; không tái tính raw, không nạp model hoặc train.
+- Mặc định `MODE="view"` đọc artifact đã lưu. `MODE="prepare"` gọi pipeline EDA để tạo lại thống kê và ảnh từ dữ liệu, giữ split đã khóa; không train model.
 - Output gồm integrity, phân bố lớp, ảnh mẫu, pixel/spatial statistics, preprocessing, handcrafted features và data handoff.
 - Muốn tạo lại EDA, dùng CLI; `--data-dir` trỏ thư mục chứa `cifar-10-batches-py`:
 
@@ -196,7 +197,9 @@ EDA lưu dưới `outputs/eda/`, gồm split indices, metadata và preprocessing
 Mở [02_lab02_modeling.ipynb](notebooks/02_lab02_modeling.ipynb); bản có output Kaggle là [02_lab02_modeling-kaggle.ipynb](notebooks/02_lab02_modeling-kaggle.ipynb).
 
 - Thứ tự: data contract → kiến trúc/freeze → learning curves → evaluation → selection → chi phí → save/load evidence → inference batch 1 → training batch 1 → bàn giao.
-- `Run All` chỉ đọc run/evidence đã chọn. Lab02 không có công tắc `MODE='train'` như Lab01; muốn train dùng `scripts/run.py`.
+- Mặc định `MODE="view"` đọc run/evidence đã chọn. `MODE="train"` gọi pipeline bằng `TRAIN_CONFIG` và `DEVICE`, tạo run mới và cập nhật registry sau khi hoàn tất. Ví dụ cấu hình trong notebook: `config/scheduled.json`; ngân sách nằm trong file cấu hình.
+- Chế độ view thiếu artifact sẽ báo lỗi, không tự huấn luyện. Các benchmark đọc evidence riêng; không tự đo lại cho run mới.
+- Notebook `02_lab02_modeling-kaggle.ipynb` được giữ nguyên như bản tham chiếu lịch sử, không áp dụng chế độ mới.
 - `LAB02_ROOT` chọn đường dẫn tuyệt đối tới lab; `LAB02_RUN` chọn run thay registry. Nếu thiếu artifact, cần đồng bộ đúng run.
 - Mục 8 đọc inference evidence chọn trong biến `BENCHMARK`, kiểm checksum và training run; mục 8b đọc training batch 1 độc lập.
 - Sau khi sửa source trong lúc kernel đang chạy, restart kernel rồi chạy setup lại để tránh dùng module đã cache.
@@ -321,7 +324,7 @@ Nguồn: [comparison.csv của run đã chọn](outputs/runs/20261030T052121Z_ci
 
 Fine-tune tăng test accuracy **7,79 điểm phần trăm** với ResNet18 và **13,01 điểm phần trăm** với DenseNet121 so với head-only tương ứng. DenseNet121 fine-tune cao hơn ResNet18 **7,66 điểm phần trăm** trong run này; một seed chưa chứng minh ưu thế kiến trúc nói chung. Validation quyết định selection, không tiếp tục chọn cấu hình theo test.
 
-Thời gian fit fine-tune ghi trong cùng CSV khoảng 6.540,54 s/20.323,32 s tương ứng. Đây là `train_seconds` của stage, không phải tổng pipeline head/extract/search. Cả hai fine-tune dùng full image forward, head dùng pooled feature cache. Chi phí đầy đủ nằm trong [cost_comparison.csv](outputs/runs/20261030T052121Z_cifar10_scheduled64_b895bfc1/cost_comparison.csv) và [walkthrough](walkthrough_lab_02.md).
+Thời gian fit fine-tune ghi trong cùng CSV khoảng 6.540,54 s/20.323,32 s tương ứng. Đây là `train_seconds` của stage, không phải tổng pipeline head/extract/search. Cả hai fine-tune dùng full image forward, head dùng pooled feature cache. Chi phí đầy đủ nằm trong [cost_comparison.csv](outputs/runs/20261030T052121Z_cifar10_scheduled64_b895bfc1/cost_comparison.csv) và [walkthrough](reports/walkthrough_lab_02.md).
 
 ### 6.2. Phạm vi tuning và giới hạn
 
@@ -334,7 +337,7 @@ Grid tuned có source/tests nhưng chưa có kết quả full grid dùng ở b�
 ## 7. Tài liệu, lịch sử và lưu trữ
 
 - [Description](description_lab_02.md): đề gốc và phạm vi đã thống nhất.
-- [Walkthrough](walkthrough_lab_02.md): nguồn báo cáo duy nhất, gồm đặc tả, phương pháp và kết quả có evidence.
+- [Walkthrough](reports/walkthrough_lab_02.md): nguồn báo cáo duy nhất, gồm đặc tả, phương pháp và kết quả có evidence.
 - [Registry](outputs/selected_run.json): run dùng trình bày; giữ riêng run cũ thay vì ghi đè.
 - `outputs/runs/`: artifact gốc; `outputs/review/`: hình trình bày; `outputs/published/`: benchmark evidence có checksum/provenance.
 
@@ -389,3 +392,9 @@ python scripts/benchmark_inference.py run --checkpoint checkpoints/densenet121.p
 ```
 
 CLI yêu cầu CUDA thực khi chọn `cuda`; `--device cpu` tạo phép đo CPU riêng. Mỗi model có benchmark ID, config/environment, samples, summary/prediction và manifest. Không đổi registry/metric training; thu hồi kết quả và notebook đã chạy trước khi kết thúc Kaggle. Inference T4 và training CPU batch 1 khác thiết bị/phạm vi, không so sánh trực tiếp như cùng workload.
+
+### Báo cáo HTML
+
+[Đọc báo cáo HTML](reports/walkthrough_lab_02.html) với điều hướng pipeline, ảnh phóng to và code mở/đóng theo bố cục Lab01. [Walkthrough](reports/walkthrough_lab_02.md) là nguồn nội dung báo cáo chính.
+
+Từ thư mục Lab02, chạy `python scripts/generate_html_report.py` để dựng lại từ run trong `outputs/selected_run.json` và hai notebook chính đã có output. Báo cáo kiểm tra run của notebook trước khi xuất, không huấn luyện. Cần `markdown` để render phần giải thích.

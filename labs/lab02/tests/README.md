@@ -13,6 +13,8 @@ Gate ở đây là nhóm kiểm tra cho một trách nhiệm kỹ thuật. Bản
 
 ## 2. Bản đồ kiểm tra
 
+Phần chuẩn hóa notebook và HTML có thêm [`test_notebook_workflow.py`](test_notebook_workflow.py) (view không import training, mode sai, config thiếu, run mới và benchmark khác run) và [`test_html_report.py`](test_html_report.py) (nguồn run, ảnh, điều hướng và escape code). Chạy cùng `test_notebook_review.py` sau khi build báo cáo HTML.
+
 | Gate | Tệp kiểm thử | Điều cần bảo vệ | Giới hạn hoặc điều kiện |
 | --- | --- | --- | --- |
 | Dữ liệu và EDA | [test_eda.py](test_eda.py), [test_contracts.py](test_contracts.py) | Split không giao nhau, phát hiện split bị sửa, công thức đặc trưng, bảo toàn RGB và normalization. | Một số ca đối chiếu cần dữ liệu CIFAR-10 hoặc artifact của run được chọn. |

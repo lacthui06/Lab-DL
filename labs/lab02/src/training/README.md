@@ -71,7 +71,7 @@ Khi đọc kết quả cũ, dùng `config.json` của chính run đó.
 | Scheduled `20261030…b895bfc1` | Head LR `0.001`, batch `128`; **1 trial mỗi stage/model**, theo bảng trên. | [Config gốc](../../outputs/runs/20261030T052121Z_cifar10_scheduled64_b895bfc1/config.json) · [Kết quả](../../outputs/runs/20261030T052121Z_cifar10_scheduled64_b895bfc1/comparison.csv) |
 
 **Trước đây:** đã thử đủ 4 tổ hợp LR `{0.001, 0.01}` và batch `{32, 64}` cho mỗi model. LR `0.001` + batch `64` được chọn ở cả hai: validation accuracy ResNet18 **77,16%**, DenseNet121 **79,24%**.
-**Hiện tại:** run scheduled dùng sẵn batch `128`, head 12 epoch và fine-tune tối đa 20 epoch, thêm scheduler/dropout/augmentation. Run này không thử lại nhiều LR/batch để chọn batch 128, nên không kết luận cải thiện chỉ do đổi batch. [Đối chiếu hai lần chạy](../../walkthrough_lab_02.md#36-kết-quả-search-trong-từng-điều-kiện-thực-nghiệm).
+**Hiện tại:** run scheduled dùng sẵn batch `128`, head 12 epoch và fine-tune tối đa 20 epoch, thêm scheduler/dropout/augmentation. Run này không thử lại nhiều LR/batch để chọn batch 128, nên không kết luận cải thiện chỉ do đổi batch. [Đối chiếu hai lần chạy](../../reports/walkthrough_lab_02.md#36-kết-quả-search-trong-từng-điều-kiện-thực-nghiệm).
 Các config [cpu_full](../../config/cpu_full.json), [full](../../config/full.json), [tuned](../../config/tuned.json) hiện cho phép thử batch `64/128`; kết quả đã chạy phải xem bảng bằng chứng trên. Hai run đó không dùng Optuna. Trong scheduled, **batch train là 128**; số `64` ở `feature_batch_size` là batch trích feature, còn `image_size` là ảnh 64×64.
 
 **Một batch train** trong [pass_epoch()](experiment.py#L53):
@@ -115,7 +115,7 @@ Trong thư mục trial, `history.csv` ghi loss/accuracy train–validation, LR v
 
 Kiểm tra run có `status.json: completed`, đủ hai stage mỗi model và history khớp summary.
 Đọc [registry run được chọn](../../outputs/selected_run.json) để tìm artifact; checkpoint cần đồng bộ riêng khi clone.
-Metric đầy đủ ở [walkthrough](../../walkthrough_lab_02.md); cách tiếp tục run ở [hướng dẫn resume](../../README.md#36-khôi-phục-khi-gián-đoạn).
+Metric đầy đủ ở [walkthrough](../../reports/walkthrough_lab_02.md); cách tiếp tục run ở [hướng dẫn resume](../../README.md#36-khôi-phục-khi-gián-đoạn).
 
 ### 3.4. Bản đồ source
 

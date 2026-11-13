@@ -13,7 +13,7 @@ import pandas as pd
 from IPython.display import HTML, display
 
 
-def context() -> tuple[Path, Path, Path]:
+def context(run_path=None) -> tuple[Path, Path, Path]:
     """Resolve the lab, explicitly selected run, and presentation destination."""
     configured = os.environ.get('LAB02_ROOT')
     try:
@@ -25,8 +25,10 @@ def context() -> tuple[Path, Path, Path]:
         raise RuntimeError('Cannot resolve Lab02. Set LAB02_ROOT to an existing absolute Lab02 directory.') from exc
     if not (root / 'src/utils/notebook_views.py').is_file():
         raise RuntimeError(f'Invalid Lab02 directory: {root}. Set LAB02_ROOT to an existing absolute Lab02 directory.')
-    selected = json.loads((root / 'outputs/selected_run.json').read_text(encoding='utf-8'))
-    run = Path(os.environ.get('LAB02_RUN', selected['run']))
+    selected_run = run_path or os.environ.get('LAB02_RUN')
+    if selected_run is None:
+        selected_run = json.loads((root / 'outputs/selected_run.json').read_text(encoding='utf-8'))['run']
+    run = Path(selected_run)
     run = run if run.is_absolute() else root / run
     output = root / 'outputs/review' / run.name
     output.mkdir(parents=True, exist_ok=True)

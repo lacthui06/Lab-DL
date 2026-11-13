@@ -89,6 +89,14 @@ Giữ phím **`Ctrl + Click`** để mở ký hiệu hoặc vị trí mã nguồ
 
 ## 4. Các Thảo Luận & Quyết Định Kỹ Thuật (Discussions from Description)
 
+### Chế độ notebook và báo cáo HTML (2026-11-13)
+
+[`notebook_workflow.py`](notebook_workflow.py) điều phối `view/prepare` cho EDA và `view/train` cho Modeling. Mặc định `view`; mode không hợp lệ hoặc thiếu artifact phải báo lỗi. Chỉ nhánh `train` import pipeline training. Run mới được lấy từ giá trị trả về của pipeline, tránh dùng nhầm `LAB02_RUN` cũ; benchmark khác run được bỏ qua với thông báo.
+
+[`html_report.py`](html_report.py) dựng báo cáo từ output hai notebook chính và metric của run đã chọn. [`report_theme.py`](report_theme.py) giữ bố cục từ template HTML chung; CLI [`generate_html_report.py`](../../scripts/generate_html_report.py) chỉ xử lý tham số. Code drawer được escape, ảnh được nhúng để đọc offline, kiểm tra run trước khi xuất. Output notebook là bằng chứng đã lưu, không được coi là một lần inference hoặc training mới.
+
+Walkthrough nằm tại [`reports/walkthrough_lab_02.md`](../../reports/walkthrough_lab_02.md). Đường dẫn cũ chỉ chứa trang chỉ dẫn để giữ liên kết notebook Kaggle; bản Kaggle được giữ nguyên. Script thực thi dùng notebook Modeling chính làm nguồn thay vì tái tạo roadmap cũ.
+
 ### 4.1. Vì sao phải tách chi phí tìm kiếm khỏi chi phí recipe đã chọn?
 
 Mục tiêu là phân biệt công sức tìm cấu hình với chi phí thực hiện lại cấu hình đã chọn. Recipe ở đây là tổ hợp thiết lập huấn luyện, chẳng hạn optimizer, learning rate và batch size.

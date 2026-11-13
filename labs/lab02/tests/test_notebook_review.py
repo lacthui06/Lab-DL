@@ -128,7 +128,7 @@ class NotebookReviewTests(unittest.TestCase):
             for index, cell in enumerate(cells):
                 source = ''.join(cell['source'])
                 inline_limits = {'lab02-tuning-05': 24, 'lab02-roc-pr-output': 50}
-                self.assertLessEqual(len(source.splitlines()), 16 if index==0 else inline_limits.get(cell.get('id'), 8), (path.name, source))
+                self.assertLessEqual(len(source.splitlines()), 24 if index==0 else inline_limits.get(cell.get('id'), 8), (path.name, source))
                 self.assertIsNotNone(cell['execution_count'], path.name)
                 self.assertTrue(cell['outputs'], (path.name, source))
                 for output in cell['outputs']:
@@ -141,7 +141,7 @@ class NotebookReviewTests(unittest.TestCase):
             self.assertNotIn(forbidden, code)
 
     def test_current_document_and_notebook_links_resolve(self):
-        files = [ROOT/'README.md', ROOT/'walkthrough_lab_02.md', *(ROOT/'notebooks').glob('*.ipynb')]
+        files = [ROOT/'README.md', ROOT/'reports/walkthrough_lab_02.md', *(ROOT/'notebooks').glob('*.ipynb')]
         for path in files:
             if path.suffix == '.ipynb':
                 notebook = json.loads(path.read_text(encoding='utf-8'))

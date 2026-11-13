@@ -8,7 +8,7 @@
 
 Thư mục `src/` triển khai transfer learning trên CIFAR-10 với ResNet18 và DenseNet121. Bốn package chia trách nhiệm từ chuẩn bị dữ liệu đến huấn luyện, đánh giá và trình bày bằng chứng.
 
-Bắt đầu từ bảng dưới để tìm đúng module. README của từng package giải thích hợp đồng dữ liệu, cơ chế và quyết định thiết kế; [walkthrough](../walkthrough_lab_02.md) trình bày thực nghiệm và kết quả.
+Bắt đầu từ bảng dưới để tìm đúng module. README của từng package giải thích hợp đồng dữ liệu, cơ chế và quyết định thiết kế; [walkthrough](../reports/walkthrough_lab_02.md) trình bày thực nghiệm và kết quả.
 
 ## 2. Bản đồ bốn package
 
@@ -38,7 +38,7 @@ Artifact đã lưu
   → notebook trình bày bảng và hình
 ```
 
-Head-only dùng backbone cố định và feature đã cache; fine-tune scheduled xử lý ảnh với augmentation chỉ trên train. Notebook chính đọc bằng chứng đã lưu, không tự bắt đầu training hoặc benchmark khi Run All.
+Head-only dùng backbone cố định và feature đã cache; fine-tune scheduled xử lý ảnh với augmentation chỉ trên train. Notebook chính mặc định `MODE="view"` để đọc bằng chứng; `prepare`/`train` gọi pipeline tương ứng khi được chọn rõ ràng. Benchmark vẫn là CLI riêng.
 
 ## 4. Điểm vào và ranh giới trách nhiệm
 
