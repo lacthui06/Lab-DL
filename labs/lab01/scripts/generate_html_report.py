@@ -1745,21 +1745,6 @@ show_training_performance(PERFORMANCE_RUN)</code></pre>
                 </tbody>
             </table>
         </div>
-
-        <div class="callout" style="border-left-color: #f59e0b; background-color: #fffbeb;">
-            <strong style="color: #b45309;">Chẩn Đoán Kỹ Thuật: Giải Thích Về Bộ Nhớ RAM (~400 MiB) và Thời Gian Huấn Luyện 78 Giây Của MainMLP_FE:</strong>
-            <ul style="margin: 0.5rem 0 0 1.25rem; line-height: 1.6; font-size: 0.88rem; color: #78350f;">
-                <li><strong>Về mức RAM ~400 MiB:</strong> Đây là <em>Resident Set Size (RSS)</em> đo bằng <code>psutil</code> cho toàn bộ tiến trình Python runtime (chứa binary PyTorch, CUDA runtime stubs, mảng bộ đệm DataLoader và thư viện NumPy). Bộ nhớ dữ liệu pixel thuần chỉ tốn 44.86 MB (như ở Mục 3.1); lượng RAM tăng động khi nạp mẫu chỉ vỏn vẹn <strong>4.74 - 7.01 MiB</strong>.</li>
-                <li><strong>Tại sao thời gian huấn luyện MainMLP_FE lại tốn tới 78.01s (gấp 4.9x so với 15.80s của MainMLP)?</strong>
-                    <ol style="margin-left: 1.25rem; margin-top: 0.35rem;">
-                        <li><strong>Phá vỡ tối ưu SIMD vector hóa (Memory Alignment Penalty):</strong> Chiều đầu vào $784 = 28 \times 28$ là kích thước chuẩn chia hết cho 16, được các thư viện BLAS trên CPU (Intel MKL / OpenBLAS) tối ưu hóa triệt để qua các thanh ghi AVX2 256-bit. Khi nối thêm 10 đặc trưng thành <strong>794 chiều</strong>, 794 không chia hết cho 8 hay 16, buộc CPU phải rơi vào vòng lặp scalar fallback cho các phần tử biên, làm chậm đáng kể phép nhân ma trận GEMM.</li>
-                        <li><strong>Chi phí ghép nối mảng (Concatenation Overhead):</strong> Việc ghép <code>np.concatenate([pixels, features])</code> ở từng loader phá vỡ tính liên tục bộ nhớ (memory contiguity), làm tăng phân mảnh bộ đệm và tỷ lệ cache miss trên L1/L2 CPU cache.</li>
-                        <li><strong>Hiện tượng tranh chấp CPU (CPU Contention):</strong> Trong lượt chạy huấn luyện đó trên môi trường máy chủ Windows, tiến trình Python chịu ảnh hưởng điều phối tác vụ nền (thread scheduling) khiến wall-clock time kéo dài.</li>
-                    </ol>
-                </li>
-                <li><strong>Đánh đổi kỹ thuật (Engineering Trade-off):</strong> Tăng thêm 10 đặc trưng thủ công chỉ cải thiện khiêm tốn <strong>+0.19%</strong> Test Accuracy (89.41% &rarr; 89.60%), nhưng lại làm thời gian huấn luyện tăng gần <strong>500%</strong> trên CPU. Do đó, mô hình thuần pixel <code>MainMLP</code> được kết luận là kiến trúc tối ưu nhất về mặt chi phí - hiệu năng (cost-efficiency).</li>
-            </ul>
-        </div>
     </div>
 
 <!-- Section 6: Model Comparison & Diagnostics -->
