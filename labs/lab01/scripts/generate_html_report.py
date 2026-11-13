@@ -1868,75 +1868,9 @@ with torch.no_grad():
             </table>
         </div>
 
-        <!-- 7.3 Prediction Grids (Balanced 3-Column Layout for 1:1 Square Images) -->
+        <!-- 7.3 Restored Checkpoint Inference -->
         <div class="subsection-title">
-            <span>7.3. Lưới Ảnh Dự Đoán Thực Tế Trên 16 Mẫu Test (Prediction Grids)</span>
-            <span class="badge badge-info">16-SAMPLE COMPARATIVE GRIDS</span>
-        </div>
-
-        <p style="font-size: 0.92rem; color: var(--text-dark); margin-bottom: 1rem;">
-            Trực quan hóa kết quả dự đoán trên cùng 16 ảnh test ngẫu nhiên giữa 3 mô hình (Nhãn xanh: Dự đoán đúng &bull; Nhãn đỏ: Dự đoán nhầm):
-        </p>
-
-        <div class="grid-3col">
-            <figure class="image-card">
-                <div class="image-card-img-wrap">
-                    <img src="../outputs/published/comparison/SmallMLP_prediction_grid.png" alt="Lưới dự đoán thực tế của SmallMLP" loading="lazy">
-                    <div class="zoom-hint">Phóng to ảnh &nearr;</div>
-                </div>
-                <figcaption>
-                    <div class="image-card-title-row">
-                        <span class="image-card-title">1. Dự Đoán: SmallMLP</span>
-                        <span class="code-pill">Test Acc: 88.52%</span>
-                    </div>
-                    <p class="image-card-takeaway">SmallMLP nhận diện đúng hầu hết các lớp cơ bản (Trouser, Sneaker, Bag). Nhầm lẫn xuất hiện ở các mẫu Shirt có hoa văn phức tạp.</p>
-                    <div class="image-card-footer">
-                        <span>SmallMLP (101k params)</span>
-                        <span>16 Test Samples</span>
-                    </div>
-                </figcaption>
-            </figure>
-
-            <figure class="image-card">
-                <div class="image-card-img-wrap">
-                    <img src="../outputs/published/comparison/MainMLP_prediction_grid.png" alt="Lưới dự đoán thực tế của MainMLP" loading="lazy">
-                    <div class="zoom-hint">Phóng to ảnh &nearr;</div>
-                </div>
-                <figcaption>
-                    <div class="image-card-title-row">
-                        <span class="image-card-title">2. Dự Đoán: MainMLP</span>
-                        <span class="code-pill">Test Acc: 89.41%</span>
-                    </div>
-                    <p class="image-card-takeaway">MainMLP cải thiện độ tự tin xác suất (confidence score) trên các lớp áo và giày, giảm thiểu nhầm lẫn giữa T-shirt và Pullover.</p>
-                    <div class="image-card-footer">
-                        <span>MainMLP (235k params)</span>
-                        <span>16 Test Samples</span>
-                    </div>
-                </figcaption>
-            </figure>
-
-            <figure class="image-card">
-                <div class="image-card-img-wrap">
-                    <img src="../outputs/published/comparison/MainMLP_FE_prediction_grid.png" alt="Lưới dự đoán thực tế của MainMLP_FE" loading="lazy">
-                    <div class="zoom-hint">Phóng to ảnh &nearr;</div>
-                </div>
-                <figcaption>
-                    <div class="image-card-title-row">
-                        <span class="image-card-title">3. Dự Đoán: MainMLP_FE</span>
-                        <span class="code-pill">Test Acc: 89.60%</span>
-                    </div>
-                    <p class="image-card-takeaway">MainMLP_FE tận dụng đặc trưng hình học (tỷ lệ khung hình và độ đối xứng) để phân loại chuẩn xác các mẫu viền áo khó.</p>
-                    <div class="image-card-footer">
-                        <span>MainMLP_FE (237k params)</span>
-                        <span>16 Test Samples</span>
-                    </div>
-                </figcaption>
-            </figure>
-        </div>
-
-        <!-- 7.4 Restored Checkpoint Inference -->
-        <div class="subsection-title">
-            <span>7.4. Kiểm Chứng Trực Tiếp 16 Mẫu Test Từ Checkpoint best.pt Phục Hồi</span>
+            <span>7.3. Kiểm Chứng Trực Tiếp 16 Mẫu Test Từ Checkpoint best.pt Phục Hồi</span>
             <span class="badge badge-success">INFERENCE TEST</span>
         </div>
 
