@@ -625,6 +625,38 @@ def generate_report():
             padding: 0;
         }
 
+        /* Integrated Code Drawer inside Image Cards */
+        .image-card .code-tab-drawer {
+            border: none;
+            border-top: 1px solid var(--border);
+            border-radius: 0 0 12px 12px;
+            margin: 0;
+            background: #f8fafc;
+            box-shadow: none;
+        }
+
+        .image-card .code-tab-drawer .code-tab-summary {
+            padding: 0.5rem 1.25rem;
+            font-size: 0.8rem;
+            background: #f8fafc;
+            cursor: pointer;
+        }
+
+        .image-card .code-tab-drawer[open] .code-tab-summary {
+            background: #f1f5f9;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .image-card .code-tab-drawer pre {
+            margin: 0;
+            border-radius: 0 0 12px 12px;
+            padding: 0.85rem 1.25rem;
+            font-size: 0.8rem;
+            background: #0f172a;
+            color: #f8fafc;
+        }
+
+
         /* Lightbox Image Modal */
         .image-modal {
             display: none;
@@ -1080,6 +1112,19 @@ def generate_report():
                     <span>10 Classes &bull; 70k Images</span>
                 </div>
             </figcaption>
+        
+        <details class="code-tab-drawer">
+            <summary class="code-tab-summary">
+                <div class="code-summary-left">
+                    <span class="code-pill">NOTEBOOK CELL</span>
+                    <span>Cell Notebook: Trực quan hóa 16 mẫu ảnh ngẫu nhiên 10 lớp</span>
+                </div>
+                <span class="code-badge">Xem code cell &dtrif;</span>
+            </summary>
+            <pre><code class="language-python"># Notebook 01: Cell 7 - Hiển thị mẫu đại diện 10 lớp
+from src.workflow import eda_stage, show_images
+show_images(EDA_RUN, ['sample_images.png'])</code></pre>
+        </details>
         </figure>
 
         <figure class="image-card">
@@ -1099,6 +1144,18 @@ def generate_report():
                     <span>Artifact: class_mean_images.png</span>
                 </div>
             </figcaption>
+        
+        <details class="code-tab-drawer">
+            <summary class="code-tab-summary">
+                <div class="code-summary-left">
+                    <span class="code-pill">NOTEBOOK CELL</span>
+                    <span>Cell Notebook: Khuôn mẫu cường độ trung bình 10 lớp</span>
+                </div>
+                <span class="code-badge">Xem code cell &dtrif;</span>
+            </summary>
+            <pre><code class="language-python"># Notebook 01: Cell 7 - Cường độ pixel trung bình 10 lớp
+show_images(EDA_RUN, ['class_mean_images.png'])</code></pre>
+        </details>
         </figure>
 
         <!-- 3.3. Class Distribution & Pixel Histogram (Balanced 2-Column Comparison) -->
@@ -1124,7 +1181,19 @@ def generate_report():
                         <span>Seed = 42</span>
                     </div>
                 </figcaption>
-            </figure>
+            
+        <details class="code-tab-drawer">
+            <summary class="code-tab-summary">
+                <div class="code-summary-left">
+                    <span class="code-pill">NOTEBOOK CELL</span>
+                    <span>Cell Notebook: Phân bố số lượng mẫu tập Train và Validation</span>
+                </div>
+                <span class="code-badge">Xem code cell &dtrif;</span>
+            </summary>
+            <pre><code class="language-python"># Notebook 01: Cell 7 - Kiểm tra cân bằng lớp Train & Validation
+show_images(EDA_RUN, ['class_distribution.png'])</code></pre>
+        </details>
+        </figure>
 
             <figure class="image-card">
                 <div class="image-card-img-wrap">
@@ -1142,7 +1211,19 @@ def generate_report():
                         <span>Foreground: [0.2, 1.0]</span>
                     </div>
                 </figcaption>
-            </figure>
+            
+        <details class="code-tab-drawer">
+            <summary class="code-tab-summary">
+                <div class="code-summary-left">
+                    <span class="code-pill">NOTEBOOK CELL</span>
+                    <span>Cell Notebook: Histogram phân bố cường độ điểm ảnh toàn cục</span>
+                </div>
+                <span class="code-badge">Xem code cell &dtrif;</span>
+            </summary>
+            <pre><code class="language-python"># Notebook 01: Cell 7 - Phân bố giá trị pixel [0.0, 1.0]
+show_images(EDA_RUN, ['pixel_histogram.png'])</code></pre>
+        </details>
+        </figure>
         </div>
 
         <!-- 3.4. Spatial Energy & Variance Heatmaps (2-Column Comparison) -->
@@ -1168,7 +1249,19 @@ def generate_report():
                         <span>Zero Outer Border</span>
                     </div>
                 </figcaption>
-            </figure>
+            
+        <details class="code-tab-drawer">
+            <summary class="code-tab-summary">
+                <div class="code-summary-left">
+                    <span class="code-pill">NOTEBOOK CELL</span>
+                    <span>Cell Notebook: Bản đồ nhiệt cường độ trung bình toàn cục</span>
+                </div>
+                <span class="code-badge">Xem code cell &dtrif;</span>
+            </summary>
+            <pre><code class="language-python"># Notebook 01: Cell 7 - Heatmap phân bố pixel không gian
+show_images(EDA_RUN, ['mean_pixel_heatmap.png'])</code></pre>
+        </details>
+        </figure>
 
             <figure class="image-card">
                 <div class="image-card-img-wrap">
@@ -1186,7 +1279,19 @@ def generate_report():
                         <span>Boundary Signals</span>
                     </div>
                 </figcaption>
-            </figure>
+            
+        <details class="code-tab-drawer">
+            <summary class="code-tab-summary">
+                <div class="code-summary-left">
+                    <span class="code-pill">NOTEBOOK CELL</span>
+                    <span>Cell Notebook: Bản đồ phương sai điểm ảnh không gian</span>
+                </div>
+                <span class="code-badge">Xem code cell &dtrif;</span>
+            </summary>
+            <pre><code class="language-python"># Notebook 01: Cell 7 - Phương sai pixel (Pixel Variance Map)
+show_images(EDA_RUN, ['pixel_variance_heatmap.png'])</code></pre>
+        </details>
+        </figure>
         </div>
 
         <!-- 3.5. Cosine Similarity -->
@@ -1211,6 +1316,18 @@ def generate_report():
                     <span>Max: 0.93 (T-shirt vs Shirt)</span>
                 </div>
             </figcaption>
+        
+        <details class="code-tab-drawer">
+            <summary class="code-tab-summary">
+                <div class="code-summary-left">
+                    <span class="code-pill">NOTEBOOK CELL</span>
+                    <span>Cell Notebook: Ma trận độ tương đồng Cosine giữa 10 lớp</span>
+                </div>
+                <span class="code-badge">Xem code cell &dtrif;</span>
+            </summary>
+            <pre><code class="language-python"># Notebook 01: Cell 7 - Phân tích tương đồng quang học Cosine Similarity
+show_images(EDA_RUN, ['class_similarity_heatmap.png'])</code></pre>
+        </details>
         </figure>
 
         <!-- Collapsible Code Tab 1 -->
@@ -1279,7 +1396,20 @@ print(f"Train Duplicates: {train_duplicates}, Test Duplicates: {test_duplicates}
                         <span>Centroid (Cx, Cy)</span>
                     </div>
                 </figcaption>
-            </figure>
+            
+        <details class="code-tab-drawer">
+            <summary class="code-tab-summary">
+                <div class="code-summary-left">
+                    <span class="code-pill">NOTEBOOK CELL</span>
+                    <span>Cell Notebook: Trực quan hóa 10 đặc trưng hình học & mật độ</span>
+                </div>
+                <span class="code-badge">Xem code cell &dtrif;</span>
+            </summary>
+            <pre><code class="language-python"># Notebook 01: Cell 15 - Phân bố 10 đặc trưng hình thái trích xuất
+from src.workflow import show_images
+show_images(PREPARATION_RUN, ['feature_geometry.png'])</code></pre>
+        </details>
+        </figure>
 
             <figure class="image-card">
                 <div class="image-card-img-wrap">
@@ -1297,7 +1427,19 @@ print(f"Train Duplicates: {train_duplicates}, Test Duplicates: {test_duplicates}
                         <span>Independent Features</span>
                     </div>
                 </figcaption>
-            </figure>
+            
+        <details class="code-tab-drawer">
+            <summary class="code-tab-summary">
+                <div class="code-summary-left">
+                    <span class="code-pill">NOTEBOOK CELL</span>
+                    <span>Cell Notebook: Ma trận tương quan Pearson 10 đặc trưng</span>
+                </div>
+                <span class="code-badge">Xem code cell &dtrif;</span>
+            </summary>
+            <pre><code class="language-python"># Notebook 01: Cell 15 - Tương quan đa cộng tuyến giữa các đặc trưng
+show_images(PREPARATION_RUN, ['feature_correlations.png'])</code></pre>
+        </details>
+        </figure>
         </div>
 
         <!-- Collapsible Code Tab 2 -->
@@ -1432,6 +1574,19 @@ class FashionMLP(nn.Module):
                     <span>Artifact: models/SmallMLP/learning_curves.png</span>
                 </div>
             </figcaption>
+        
+        <details class="code-tab-drawer">
+            <summary class="code-tab-summary">
+                <div class="code-summary-left">
+                    <span class="code-pill">NOTEBOOK CELL</span>
+                    <span>Cell Notebook: Huấn luyện kiến trúc SmallMLP & hiển thị đường cong</span>
+                </div>
+                <span class="code-badge">Xem code cell &dtrif;</span>
+            </summary>
+            <pre><code class="language-python"># Notebook 02: Cell 6 - Huấn luyện mô hình SmallMLP (101k params)
+SmallMLP_RUN = model_stage(CONFIG, 'SmallMLP', MODE)
+show_images(SmallMLP_RUN, ['learning_curves.png'])</code></pre>
+        </details>
         </figure>
 
         <!-- 2. MainMLP -->
@@ -1452,6 +1607,19 @@ class FashionMLP(nn.Module):
                     <span>Artifact: models/MainMLP/learning_curves.png</span>
                 </div>
             </figcaption>
+        
+        <details class="code-tab-drawer">
+            <summary class="code-tab-summary">
+                <div class="code-summary-left">
+                    <span class="code-pill">NOTEBOOK CELL</span>
+                    <span>Cell Notebook: Huấn luyện kiến trúc MainMLP Baseline & hiển thị đường cong</span>
+                </div>
+                <span class="code-badge">Xem code cell &dtrif;</span>
+            </summary>
+            <pre><code class="language-python"># Notebook 02: Cell 8 - Huấn luyện mô hình MainMLP Baseline (235k params)
+MainMLP_RUN = model_stage(CONFIG, 'MainMLP', MODE)
+show_images(MainMLP_RUN, ['learning_curves.png'])</code></pre>
+        </details>
         </figure>
 
         <!-- 3. MainMLP_FE -->
@@ -1472,6 +1640,19 @@ class FashionMLP(nn.Module):
                     <span>Artifact: models/MainMLP_FE/learning_curves.png</span>
                 </div>
             </figcaption>
+        
+        <details class="code-tab-drawer">
+            <summary class="code-tab-summary">
+                <div class="code-summary-left">
+                    <span class="code-pill">NOTEBOOK CELL</span>
+                    <span>Cell Notebook: Huấn luyện MainMLP_FE (kèm đặc trưng) & hiển thị đường cong</span>
+                </div>
+                <span class="code-badge">Xem code cell &dtrif;</span>
+            </summary>
+            <pre><code class="language-python"># Notebook 02: Cell 10 - Huấn luyện mô hình MainMLP_FE (237k params)
+MainMLP_FE_RUN = model_stage(CONFIG, 'MainMLP_FE', MODE)
+show_images(MainMLP_FE_RUN, ['learning_curves.png'])</code></pre>
+        </details>
         </figure>
 
         <!-- 5.2 Resource Telemetry & Single Sample Benchmark -->
@@ -1498,6 +1679,22 @@ class FashionMLP(nn.Module):
                     <span>RAM RSS: ~400 MiB</span>
                 </div>
             </figcaption>
+        
+        <details class="code-tab-drawer">
+            <summary class="code-tab-summary">
+                <div class="code-summary-left">
+                    <span class="code-pill">NOTEBOOK CELL</span>
+                    <span>Cell Notebook: Đo đạc chi phí tài nguyên và RAM RSS trên 1 mẫu</span>
+                </div>
+                <span class="code-badge">Xem code cell &dtrif;</span>
+            </summary>
+            <pre><code class="language-python"># Notebook 02: Cell 12 - Đo đạc độ trễ & bộ nhớ trên đúng 1 mẫu (batch_size = 1)
+from src.utils.performance import benchmark_models, show_training_performance
+PERFORMANCE_RUN = benchmark_models([SmallMLP_RUN, MainMLP_RUN, MainMLP_FE_RUN],
+                                   saved_run(CONFIG, 'preparation') / 'prepared.npz',
+                                   CONFIG['single_sample_training_benchmark'])
+show_training_performance(PERFORMANCE_RUN)</code></pre>
+        </details>
         </figure>
 
         <div class="table-responsive">
@@ -1563,35 +1760,6 @@ class FashionMLP(nn.Module):
                 <li><strong>Đánh đổi kỹ thuật (Engineering Trade-off):</strong> Tăng thêm 10 đặc trưng thủ công chỉ cải thiện khiêm tốn <strong>+0.19%</strong> Test Accuracy (89.41% &rarr; 89.60%), nhưng lại làm thời gian huấn luyện tăng gần <strong>500%</strong> trên CPU. Do đó, mô hình thuần pixel <code>MainMLP</code> được kết luận là kiến trúc tối ưu nhất về mặt chi phí - hiệu năng (cost-efficiency).</li>
             </ul>
         </div>
-            <details class="code-tab-drawer">
-            <summary class="code-tab-summary">
-                <div class="code-summary-left">
-                    <span class="code-pill">NOTEBOOK</span>
-                    <span>Cell Notebook: Huấn luyện 3 kiến trúc Pure MLP & Benchmark tài nguyên 1 mẫu</span>
-                </div>
-                <span class="code-badge">Nhấn để mở code &dtrif;</span>
-            </summary>
-            <pre><code class="language-python"># Cell Notebook: Huấn luyện 3 kiến trúc Pure MLP & Benchmark tài nguyên
-from src.workflow import model_stage, show_images
-from src.utils.performance import show_model_architecture, benchmark_models, show_training_performance
-from src.workflow import saved_run
-
-# 1. Huấn luyện độc lập 3 mô hình (Pure MLP)
-SmallMLP_RUN = model_stage(CONFIG, 'SmallMLP', MODE)
-show_images(SmallMLP_RUN, ['learning_curves.png'])
-
-MainMLP_RUN = model_stage(CONFIG, 'MainMLP', MODE)
-show_images(MainMLP_RUN, ['learning_curves.png'])
-
-MainMLP_FE_RUN = model_stage(CONFIG, 'MainMLP_FE', MODE)
-show_images(MainMLP_FE_RUN, ['learning_curves.png'])
-
-# 2. Đo đạc chi phí tài nguyên trên đúng 1 mẫu (batch_size = 1)
-PERFORMANCE_RUN = benchmark_models([SmallMLP_RUN, MainMLP_RUN, MainMLP_FE_RUN],
-                                   saved_run(CONFIG, 'preparation') / 'prepared.npz',
-                                   CONFIG['single_sample_training_benchmark'])
-show_training_performance(PERFORMANCE_RUN)</code></pre>
-        </details>
     </div>
 
 <!-- Section 6: Model Comparison & Diagnostics -->
@@ -1624,6 +1792,19 @@ show_training_performance(PERFORMANCE_RUN)</code></pre>
                     <span>MainMLP_FE: 89.60% (78.01s)</span>
                 </div>
             </figcaption>
+        
+        <details class="code-tab-drawer">
+            <summary class="code-tab-summary">
+                <div class="code-summary-left">
+                    <span class="code-pill">NOTEBOOK CELL</span>
+                    <span>Cell Notebook: So sánh hiệu năng Test Accuracy và Macro F1</span>
+                </div>
+                <span class="code-badge">Xem code cell &dtrif;</span>
+            </summary>
+            <pre><code class="language-python"># Notebook 02: Cell 14 - So sánh Test Accuracy và Macro F1 giữa 3 mô hình
+COMPARISON_RUN = comparison_stage(CONFIG, [SmallMLP_RUN, MainMLP_RUN, MainMLP_FE_RUN], MODE)
+show_images(COMPARISON_RUN, ['test_scores.png'])</code></pre>
+        </details>
         </figure>
 
         <div class="table-responsive">
@@ -1706,7 +1887,19 @@ show_training_performance(PERFORMANCE_RUN)</code></pre>
                         <span>Main_FE: 237.7k params</span>
                     </div>
                 </figcaption>
-            </figure>
+            
+        <details class="code-tab-drawer">
+            <summary class="code-tab-summary">
+                <div class="code-summary-left">
+                    <span class="code-pill">NOTEBOOK CELL</span>
+                    <span>Cell Notebook: Đánh đổi tài nguyên tính toán vs số lượng tham số</span>
+                </div>
+                <span class="code-badge">Xem code cell &dtrif;</span>
+            </summary>
+            <pre><code class="language-python"># Notebook 02: Cell 14 - Trực quan hóa đánh đổi tham số và thời gian train
+show_images(COMPARISON_RUN, ['cost.png'])</code></pre>
+        </details>
+        </figure>
 
             <figure class="image-card">
                 <div class="image-card-img-wrap">
@@ -1725,8 +1918,21 @@ show_training_performance(PERFORMANCE_RUN)</code></pre>
                         <span>Scheduler: CosineLR</span>
                     </div>
                 </figcaption>
-            </figure>
+            
+        <details class="code-tab-drawer">
+            <summary class="code-tab-summary">
+                <div class="code-summary-left">
+                    <span class="code-pill">NOTEBOOK CELL</span>
+                    <span>Cell Notebook: So sánh quỹ đạo hội tụ Validation qua 10 Epochs</span>
+                </div>
+                <span class="code-badge">Xem code cell &dtrif;</span>
+            </summary>
+            <pre><code class="language-python"># Notebook 02: Cell 14 - Động học hội tụ Val Accuracy và Val Loss
+show_images(COMPARISON_RUN, ['validation_comparison.png'])</code></pre>
+        </details>
+        </figure>
         </div>
+
 
         <!-- 7.1 Confusion Matrix Comparison -->
         <div class="subsection-title">
@@ -1750,6 +1956,18 @@ show_training_performance(PERFORMANCE_RUN)</code></pre>
                     <span>Shirt Misclass: Reduced by 18%</span>
                 </div>
             </figcaption>
+        
+        <details class="code-tab-drawer">
+            <summary class="code-tab-summary">
+                <div class="code-summary-left">
+                    <span class="code-pill">NOTEBOOK CELL</span>
+                    <span>Cell Notebook: So sánh ma trận nhầm lẫn 10 lớp của cả 3 mô hình</span>
+                </div>
+                <span class="code-badge">Xem code cell &dtrif;</span>
+            </summary>
+            <pre><code class="language-python"># Notebook 02: Cell 14 - Ma trận nhầm lẫn chuẩn hóa 10 lớp
+show_images(COMPARISON_RUN, ['confusion_comparison.png'])</code></pre>
+        </details>
         </figure>
 
         <div class="table-responsive" style="margin-top: 1.5rem;">
@@ -1808,6 +2026,18 @@ show_training_performance(PERFORMANCE_RUN)</code></pre>
                     <span>Artifact: MainMLP_FE_ovr_curves.png</span>
                 </div>
             </figcaption>
+        
+        <details class="code-tab-drawer">
+            <summary class="code-tab-summary">
+                <div class="code-summary-left">
+                    <span class="code-pill">NOTEBOOK CELL</span>
+                    <span>Cell Notebook: Đường cong ROC & PR One-vs-Rest của MainMLP_FE</span>
+                </div>
+                <span class="code-badge">Xem code cell &dtrif;</span>
+            </summary>
+            <pre><code class="language-python"># Notebook 02: Cell 14 - Đường cong ROC/PR One-vs-Rest (MainMLP_FE)
+show_images(COMPARISON_RUN, ['MainMLP_FE_ovr_curves.png'])</code></pre>
+        </details>
         </figure>
 
         <figure class="image-card">
@@ -1827,6 +2057,18 @@ show_training_performance(PERFORMANCE_RUN)</code></pre>
                     <span>Artifact: MainMLP_ovr_curves.png</span>
                 </div>
             </figcaption>
+        
+        <details class="code-tab-drawer">
+            <summary class="code-tab-summary">
+                <div class="code-summary-left">
+                    <span class="code-pill">NOTEBOOK CELL</span>
+                    <span>Cell Notebook: Đường cong ROC & PR One-vs-Rest của MainMLP Baseline</span>
+                </div>
+                <span class="code-badge">Xem code cell &dtrif;</span>
+            </summary>
+            <pre><code class="language-python"># Notebook 02: Cell 14 - Đường cong ROC/PR One-vs-Rest (MainMLP)
+show_images(COMPARISON_RUN, ['MainMLP_ovr_curves.png'])</code></pre>
+        </details>
         </figure>
 
         <figure class="image-card">
@@ -1846,6 +2088,18 @@ show_training_performance(PERFORMANCE_RUN)</code></pre>
                     <span>Artifact: SmallMLP_ovr_curves.png</span>
                 </div>
             </figcaption>
+        
+        <details class="code-tab-drawer">
+            <summary class="code-tab-summary">
+                <div class="code-summary-left">
+                    <span class="code-pill">NOTEBOOK CELL</span>
+                    <span>Cell Notebook: Đường cong ROC & PR One-vs-Rest của SmallMLP</span>
+                </div>
+                <span class="code-badge">Xem code cell &dtrif;</span>
+            </summary>
+            <pre><code class="language-python"># Notebook 02: Cell 14 - Đường cong ROC/PR One-vs-Rest (SmallMLP)
+show_images(COMPARISON_RUN, ['SmallMLP_ovr_curves.png'])</code></pre>
+        </details>
         </figure>
 
         <div class="table-responsive" style="margin-top: 1.5rem;">
@@ -1884,30 +2138,6 @@ show_training_performance(PERFORMANCE_RUN)</code></pre>
                 </tbody>
             </table>
         </div>
-            <details class="code-tab-drawer">
-            <summary class="code-tab-summary">
-                <div class="code-summary-left">
-                    <span class="code-pill">NOTEBOOK</span>
-                    <span>Cell Notebook: Đánh giá so sánh 3 mô hình, ma trận nhầm lẫn & đường cong ROC/PR</span>
-                </div>
-                <span class="code-badge">Nhấn để mở code &dtrif;</span>
-            </summary>
-            <pre><code class="language-python"># Cell Notebook: So sánh toàn diện 3 mô hình trên tập Test & Chẩn đoán nhầm lẫn
-from src.workflow import comparison_stage, show_tables, show_images
-
-COMPARISON_RUN = comparison_stage(CONFIG, [SmallMLP_RUN, MainMLP_RUN, MainMLP_FE_RUN], MODE)
-
-# 1. Hiển thị bảng số liệu so sánh Test Accuracy, Macro F1, Loss, thời gian
-show_tables(COMPARISON_RUN, ['comparison.csv'])
-
-# 2. Hiển thị đường cong One-vs-Rest (ROC & PR Curves) và Ma trận nhầm lẫn
-show_images(COMPARISON_RUN, [
-    'SmallMLP_ovr_curves.png',
-    'MainMLP_ovr_curves.png',
-    'MainMLP_FE_ovr_curves.png',
-    'confusion_comparison.png'
-])</code></pre>
-        </details>
     </div>
 
 <!-- Section 7: Optimizer Study & Hyperparameter Tuning -->
@@ -1941,6 +2171,20 @@ show_images(COMPARISON_RUN, [
                     <span>Adam: 89.2%</span>
                 </div>
             </figcaption>
+        
+        <details class="code-tab-drawer">
+            <summary class="code-tab-summary">
+                <div class="code-summary-left">
+                    <span class="code-pill">NOTEBOOK CELL</span>
+                    <span>Cell Notebook: Đường học của Best Trial từng Optimizer sau Tuning</span>
+                </div>
+                <span class="code-badge">Xem code cell &dtrif;</span>
+            </summary>
+            <pre><code class="language-python"># Notebook 02: Cell 20 - So sánh đường học của Best Trial từng Optimizer
+from src.training.tuning import plot_best_optimizer_histories
+BEST_OPTIMIZER_CURVES_RUN = plot_best_optimizer_histories(TUNING_RUN)
+show_images(BEST_OPTIMIZER_CURVES_RUN, ['best_optimizer_learning_curves.png'])</code></pre>
+        </details>
         </figure>
 
         <!-- 6.2 Baseline Fixed LR & Tuning Progress (Balanced 2-Column Comparison) -->
@@ -1966,7 +2210,20 @@ show_images(COMPARISON_RUN, [
                         <span>Fixed LR = 0.001</span>
                     </div>
                 </figcaption>
-            </figure>
+            
+        <details class="code-tab-drawer">
+            <summary class="code-tab-summary">
+                <div class="code-summary-left">
+                    <span class="code-pill">NOTEBOOK CELL</span>
+                    <span>Cell Notebook: Khảo sát quá trình hội tụ với LR cố định 0.001</span>
+                </div>
+                <span class="code-badge">Xem code cell &dtrif;</span>
+            </summary>
+            <pre><code class="language-python"># Notebook 02: Cell 16 - Khảo sát AdamW, Adam, SGD cố định LR = 0.001
+FIXED_RUN = optimizer_stage(CONFIG, 'fixed', MODE)
+show_images(FIXED_RUN, ['fixed_lr_curves.png'])</code></pre>
+        </details>
+        </figure>
 
             <figure class="image-card">
                 <div class="image-card-img-wrap">
@@ -1984,7 +2241,20 @@ show_images(COMPARISON_RUN, [
                         <span>Bayesian Optimization</span>
                     </div>
                 </figcaption>
-            </figure>
+            
+        <details class="code-tab-drawer">
+            <summary class="code-tab-summary">
+                <div class="code-summary-left">
+                    <span class="code-pill">NOTEBOOK CELL</span>
+                    <span>Cell Notebook: Dò tìm siêu tham số Bayesian TPE với Optuna (30 trials)</span>
+                </div>
+                <span class="code-badge">Xem code cell &dtrif;</span>
+            </summary>
+            <pre><code class="language-python"># Notebook 02: Cell 18 - Dò tìm siêu tham số với Optuna (30 trials)
+TUNING_RUN = optimizer_stage(CONFIG, 'tuning', MODE)
+show_images(TUNING_RUN, ['tuning_progress.png'])</code></pre>
+        </details>
+        </figure>
         </div>
 
         <!-- 6.3 Final Model Refit (Full-Width Hero Card) -->
@@ -2011,6 +2281,19 @@ show_images(COMPARISON_RUN, [
                     <span>Artifact: final/learning_curves.png</span>
                 </div>
             </figcaption>
+        
+        <details class="code-tab-drawer">
+            <summary class="code-tab-summary">
+                <div class="code-summary-left">
+                    <span class="code-pill">NOTEBOOK CELL</span>
+                    <span>Cell Notebook: Huấn luyện lại mô hình tối ưu cuối cùng (Final Refit)</span>
+                </div>
+                <span class="code-badge">Xem code cell &dtrif;</span>
+            </summary>
+            <pre><code class="language-python"># Notebook 02: Cell 22 - Huấn luyện mô hình tối ưu cuối cùng (Final Refit)
+FINAL_RUN = optimizer_stage(CONFIG, 'final', MODE, tuning=TUNING_RUN)
+show_images(FINAL_RUN, ['learning_curves.png'])</code></pre>
+        </details>
         </figure>
 
         <!-- Collapsible Code Tab 4 -->
@@ -2036,36 +2319,6 @@ model.eval()
 with torch.no_grad():
     val_outputs = model(val_inputs)
     val_loss = criterion(val_outputs, val_targets)</code></pre>
-        </details>
-            <details class="code-tab-drawer">
-            <summary class="code-tab-summary">
-                <div class="code-summary-left">
-                    <span class="code-pill">NOTEBOOK</span>
-                    <span>Cell Notebook: Khảo sát Optimizer, dò tìm siêu tham số Optuna & Final Refit</span>
-                </div>
-                <span class="code-badge">Nhấn để mở code &dtrif;</span>
-            </summary>
-            <pre><code class="language-python"># Cell Notebook: Khảo sát Optimizer cố định LR, dò tìm Optuna 30 trial & Refit mô hình tối ưu
-from src.workflow import optimizer_stage, show_tables, show_images
-
-# 1. Khảo sát 3 thuật toán tối ưu cố định Learning Rate = 0.001
-FIXED_RUN = optimizer_stage(CONFIG, 'fixed', MODE)
-show_tables(FIXED_RUN, ['summary.csv'])
-show_images(FIXED_RUN, ['fixed_lr_curves.png'])
-
-# 2. Dò tìm siêu tham số Bayesian TPE với Optuna (30 trials)
-TUNING_RUN = optimizer_stage(CONFIG, 'tuning', MODE)
-show_tables(TUNING_RUN, ['best_configs.csv'])
-show_images(TUNING_RUN, ['tuning_progress.png'])
-
-# 3. Huấn luyện lại mô hình tối ưu trên tập Train đầy đủ (Final Refit)
-FINAL_RUN = optimizer_stage(CONFIG, 'final', MODE, tuning=TUNING_RUN)
-show_images(FINAL_RUN, ['learning_curves.png'])
-show_tables(FINAL_RUN, ['history.csv'])
-
-# 4. Tổng hợp so sánh hiệu năng trước và sau Tuning
-RESULTS_RUN = optimizer_stage(CONFIG, 'optimizer_results', MODE, tuning=TUNING_RUN, fixed=FIXED_RUN, final=FINAL_RUN)
-show_tables(RESULTS_RUN, ['fixed_vs_tuned.csv'])</code></pre>
         </details>
     </div>
 
@@ -2098,31 +2351,26 @@ show_tables(RESULTS_RUN, ['fixed_vs_tuned.csv'])</code></pre>
                     <span>Confidence Score > 0.95</span>
                 </div>
             </figcaption>
+        
+        <details class="code-tab-drawer">
+            <summary class="code-tab-summary">
+                <div class="code-summary-left">
+                    <span class="code-pill">NOTEBOOK CELL</span>
+                    <span>Cell Notebook: Nạp checkpoint best.pt và đánh giá suy luận 16 mẫu test</span>
+                </div>
+                <span class="code-badge">Xem code cell &dtrif;</span>
+            </summary>
+            <pre><code class="language-python"># Notebook 02: Cell 25 - Nạp checkpoint best.pt và trực quan hóa 16 mẫu suy luận
+from src.inference import save_load_model
+SAVED_MODEL_RUN, LOADED_MODEL = save_load_model(FINAL_RUN, data_path='outputs/published/preparation/prepared.npz')
+show_images(SAVED_MODEL_RUN, ['loaded_model_test_samples.png'])</code></pre>
+        </details>
         </figure>
 
         <div class="callout success">
             <strong>Kiểm chứng phục hồi Checkpoint (Roundtrip Verification):</strong>
             <p style="margin-top: 0.35rem;">Nạp checkpoint <code>best.pt</code> vào instance mô hình mới độc lập, so sánh vector xác suất dự đoán trước và sau khi lưu: đạt độ chính xác số học <code>torch.allclose(atol=1e-6, rtol=1e-5) == True</code>. Test Accuracy phục hồi đạt chính xác 89.2% khớp 100% với run log.</p>
         </div>
-            <details class="code-tab-drawer">
-            <summary class="code-tab-summary">
-                <div class="code-summary-left">
-                    <span class="code-pill">NOTEBOOK</span>
-                    <span>Cell Notebook: Nạp nhanh checkpoint best.pt & kiểm chứng suy luận thực tế</span>
-                </div>
-                <span class="code-badge">Nhấn để mở code &dtrif;</span>
-            </summary>
-            <pre><code class="language-python"># Cell Notebook: Nạp nhanh checkpoint best.pt và suy luận kiểm chứng
-from src.inference import load_model, run_inference_benchmark
-
-# 1. Nạp trực tiếp mô hình tối ưu đã lưu từ checkpoint best.pt
-model = load_model('final')
-print('Model ready:', type(model).__name__, '| in eval mode:', not model.training)
-
-# 2. Đánh giá suy luận trên toàn bộ tập test
-test_results = run_inference_benchmark(model, data_path='outputs/published/preparation/prepared.npz')
-print('Test Accuracy:', test_results['accuracy'])</code></pre>
-        </details>
     </div>
 
 <!-- Section 8: QA & Verification -->
