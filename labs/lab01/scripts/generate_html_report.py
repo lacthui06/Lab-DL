@@ -1563,9 +1563,38 @@ class FashionMLP(nn.Module):
                 <li><strong>Đánh đổi kỹ thuật (Engineering Trade-off):</strong> Tăng thêm 10 đặc trưng thủ công chỉ cải thiện khiêm tốn <strong>+0.19%</strong> Test Accuracy (89.41% &rarr; 89.60%), nhưng lại làm thời gian huấn luyện tăng gần <strong>500%</strong> trên CPU. Do đó, mô hình thuần pixel <code>MainMLP</code> được kết luận là kiến trúc tối ưu nhất về mặt chi phí - hiệu năng (cost-efficiency).</li>
             </ul>
         </div>
+            <details class="code-tab-drawer">
+            <summary class="code-tab-summary">
+                <div class="code-summary-left">
+                    <span class="code-pill">NOTEBOOK</span>
+                    <span>Cell Notebook: Huấn luyện 3 kiến trúc Pure MLP & Benchmark tài nguyên 1 mẫu</span>
+                </div>
+                <span class="code-badge">Nhấn để mở code &dtrif;</span>
+            </summary>
+            <pre><code class="language-python"># Cell Notebook: Huấn luyện 3 kiến trúc Pure MLP & Benchmark tài nguyên
+from src.workflow import model_stage, show_images
+from src.utils.performance import show_model_architecture, benchmark_models, show_training_performance
+from src.workflow import saved_run
+
+# 1. Huấn luyện độc lập 3 mô hình (Pure MLP)
+SmallMLP_RUN = model_stage(CONFIG, 'SmallMLP', MODE)
+show_images(SmallMLP_RUN, ['learning_curves.png'])
+
+MainMLP_RUN = model_stage(CONFIG, 'MainMLP', MODE)
+show_images(MainMLP_RUN, ['learning_curves.png'])
+
+MainMLP_FE_RUN = model_stage(CONFIG, 'MainMLP_FE', MODE)
+show_images(MainMLP_FE_RUN, ['learning_curves.png'])
+
+# 2. Đo đạc chi phí tài nguyên trên đúng 1 mẫu (batch_size = 1)
+PERFORMANCE_RUN = benchmark_models([SmallMLP_RUN, MainMLP_RUN, MainMLP_FE_RUN],
+                                   saved_run(CONFIG, 'preparation') / 'prepared.npz',
+                                   CONFIG['single_sample_training_benchmark'])
+show_training_performance(PERFORMANCE_RUN)</code></pre>
+        </details>
     </div>
 
-    <!-- Section 6: Model Comparison & Diagnostics -->
+<!-- Section 6: Model Comparison & Diagnostics -->
     <div class="card" id="section-comparison">
         <div class="card-header">
             <h3 class="card-title">6. Đánh Giá & So Sánh Toàn Diện 3 Kiến Trúc Mô Hình (Model Comparison & Diagnostics)</h3>
@@ -1855,9 +1884,33 @@ class FashionMLP(nn.Module):
                 </tbody>
             </table>
         </div>
+            <details class="code-tab-drawer">
+            <summary class="code-tab-summary">
+                <div class="code-summary-left">
+                    <span class="code-pill">NOTEBOOK</span>
+                    <span>Cell Notebook: Đánh giá so sánh 3 mô hình, ma trận nhầm lẫn & đường cong ROC/PR</span>
+                </div>
+                <span class="code-badge">Nhấn để mở code &dtrif;</span>
+            </summary>
+            <pre><code class="language-python"># Cell Notebook: So sánh toàn diện 3 mô hình trên tập Test & Chẩn đoán nhầm lẫn
+from src.workflow import comparison_stage, show_tables, show_images
+
+COMPARISON_RUN = comparison_stage(CONFIG, [SmallMLP_RUN, MainMLP_RUN, MainMLP_FE_RUN], MODE)
+
+# 1. Hiển thị bảng số liệu so sánh Test Accuracy, Macro F1, Loss, thời gian
+show_tables(COMPARISON_RUN, ['comparison.csv'])
+
+# 2. Hiển thị đường cong One-vs-Rest (ROC & PR Curves) và Ma trận nhầm lẫn
+show_images(COMPARISON_RUN, [
+    'SmallMLP_ovr_curves.png',
+    'MainMLP_ovr_curves.png',
+    'MainMLP_FE_ovr_curves.png',
+    'confusion_comparison.png'
+])</code></pre>
+        </details>
     </div>
 
-    <!-- Section 7: Optimizer Study & Hyperparameter Tuning -->
+<!-- Section 7: Optimizer Study & Hyperparameter Tuning -->
     <!-- Section 6: Optimizer Study -->
     <div class="card" id="section-tuning">
         <div class="card-header">
@@ -1984,9 +2037,39 @@ with torch.no_grad():
     val_outputs = model(val_inputs)
     val_loss = criterion(val_outputs, val_targets)</code></pre>
         </details>
+            <details class="code-tab-drawer">
+            <summary class="code-tab-summary">
+                <div class="code-summary-left">
+                    <span class="code-pill">NOTEBOOK</span>
+                    <span>Cell Notebook: Khảo sát Optimizer, dò tìm siêu tham số Optuna & Final Refit</span>
+                </div>
+                <span class="code-badge">Nhấn để mở code &dtrif;</span>
+            </summary>
+            <pre><code class="language-python"># Cell Notebook: Khảo sát Optimizer cố định LR, dò tìm Optuna 30 trial & Refit mô hình tối ưu
+from src.workflow import optimizer_stage, show_tables, show_images
+
+# 1. Khảo sát 3 thuật toán tối ưu cố định Learning Rate = 0.001
+FIXED_RUN = optimizer_stage(CONFIG, 'fixed', MODE)
+show_tables(FIXED_RUN, ['summary.csv'])
+show_images(FIXED_RUN, ['fixed_lr_curves.png'])
+
+# 2. Dò tìm siêu tham số Bayesian TPE với Optuna (30 trials)
+TUNING_RUN = optimizer_stage(CONFIG, 'tuning', MODE)
+show_tables(TUNING_RUN, ['best_configs.csv'])
+show_images(TUNING_RUN, ['tuning_progress.png'])
+
+# 3. Huấn luyện lại mô hình tối ưu trên tập Train đầy đủ (Final Refit)
+FINAL_RUN = optimizer_stage(CONFIG, 'final', MODE, tuning=TUNING_RUN)
+show_images(FINAL_RUN, ['learning_curves.png'])
+show_tables(FINAL_RUN, ['history.csv'])
+
+# 4. Tổng hợp so sánh hiệu năng trước và sau Tuning
+RESULTS_RUN = optimizer_stage(CONFIG, 'optimizer_results', MODE, tuning=TUNING_RUN, fixed=FIXED_RUN, final=FINAL_RUN)
+show_tables(RESULTS_RUN, ['fixed_vs_tuned.csv'])</code></pre>
+        </details>
     </div>
 
-    <!-- Section 8: Inference & Checkpoint Verification -->
+<!-- Section 8: Inference & Checkpoint Verification -->
     <div class="card" id="section-inference">
         <div class="card-header">
             <h3 class="card-title">8. Kiểm Chứng Checkpoint & Đánh Giá Suy Luận (Inference & Checkpoint Verification)</h3>
@@ -2021,6 +2104,25 @@ with torch.no_grad():
             <strong>Kiểm chứng phục hồi Checkpoint (Roundtrip Verification):</strong>
             <p style="margin-top: 0.35rem;">Nạp checkpoint <code>best.pt</code> vào instance mô hình mới độc lập, so sánh vector xác suất dự đoán trước và sau khi lưu: đạt độ chính xác số học <code>torch.allclose(atol=1e-6, rtol=1e-5) == True</code>. Test Accuracy phục hồi đạt chính xác 89.2% khớp 100% với run log.</p>
         </div>
+            <details class="code-tab-drawer">
+            <summary class="code-tab-summary">
+                <div class="code-summary-left">
+                    <span class="code-pill">NOTEBOOK</span>
+                    <span>Cell Notebook: Nạp nhanh checkpoint best.pt & kiểm chứng suy luận thực tế</span>
+                </div>
+                <span class="code-badge">Nhấn để mở code &dtrif;</span>
+            </summary>
+            <pre><code class="language-python"># Cell Notebook: Nạp nhanh checkpoint best.pt và suy luận kiểm chứng
+from src.inference import load_model, run_inference_benchmark
+
+# 1. Nạp trực tiếp mô hình tối ưu đã lưu từ checkpoint best.pt
+model = load_model('final')
+print('Model ready:', type(model).__name__, '| in eval mode:', not model.training)
+
+# 2. Đánh giá suy luận trên toàn bộ tập test
+test_results = run_inference_benchmark(model, data_path='outputs/published/preparation/prepared.npz')
+print('Test Accuracy:', test_results['accuracy'])</code></pre>
+        </details>
     </div>
 
 <!-- Section 8: QA & Verification -->
