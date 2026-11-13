@@ -766,7 +766,7 @@
             <span class="badge">PyTorch 2.14.0 (CPU / CUDA)</span>
             <span class="badge">FashionMNIST (70.000 ảnh)</span>
             <span class="badge badge-success">49/49 Tests Passed (100%)</span>
-            <span class="badge badge-info">Best Test Acc: 89.2%</span>
+            <span class="badge badge-info">Best Test Acc: 89.60%</span>
         </div>
     </header>
 
@@ -1312,13 +1312,13 @@ combined_input = np.concatenate([flattened_pixels, scaled_features], axis=1)</co
             <figcaption>
                 <div class="image-card-title-row">
                     <span class="image-card-title">Hình 3: So Sánh Trực Quan Test Accuracy và Macro F1 Giữa 3 Kiến Trúc</span>
-                    <span class="code-pill">Top: MainMLP_FE (88.58%)</span>
+                    <span class="code-pill">Top: MainMLP_FE (89.60%)</span>
                 </div>
-                <p class="image-card-takeaway">Biểu đồ cột so sánh định lượng: MainMLP_FE (kết hợp 784 pixels + 10 đặc trưng hình thái) đạt Test Accuracy 88.58% và Macro F1 88.52%, vượt trội so với MainMLP cơ sở (88.35%) và SmallMLP (87.42%). Mức chênh lệch chứng minh 10 đặc trưng hình thái mang lại giá trị bổ sung thực tế cho bộ phân loại.</p>
+                <p class="image-card-takeaway">Biểu đồ cột so sánh định lượng: MainMLP_FE (kết hợp 784 pixels + 10 đặc trưng hình thái) đạt Test Accuracy 89.60% và Macro F1 89.58%, nhỉnh hơn MainMLP cơ sở (89.41%) và SmallMLP (88.52%). Mức chênh lệch chứng minh 10 đặc trưng hình thái mang lại mức tăng khiêm tốn +0.19%, nhưng đổi lại chi phí thời gian huấn luyện tăng vọt từ 15.80s lên 78.01s (gấp 4.9x).</p>
                 <div class="image-card-footer">
-                    <span>SmallMLP: 87.42%</span>
-                    <span>MainMLP: 88.35%</span>
-                    <span>MainMLP_FE: 88.58%</span>
+                    <span>SmallMLP: 88.52% (8.27s)</span>
+                    <span>MainMLP: 89.41% (15.80s)</span>
+                    <span>MainMLP_FE: 89.60% (78.01s)</span>
                 </div>
             </figcaption>
         </figure>
@@ -1330,11 +1330,13 @@ combined_input = np.concatenate([flattened_pixels, scaled_features], axis=1)</co
                         <th>Mô Hình</th>
                         <th>Cấu Trúc Tầng (Layers)</th>
                         <th>Số Tham Số</th>
-                        <th>Train Acc</th>
-                        <th>Val Acc</th>
-                        <th>Test Acc</th>
-                        <th>Test Loss</th>
+                        <th>Test Accuracy</th>
                         <th>Macro F1</th>
+                        <th>Precision</th>
+                        <th>Recall</th>
+                        <th>Test Loss</th>
+                        <th>Thời Gian Train</th>
+                        <th>Best Epoch</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -1342,39 +1344,135 @@ combined_input = np.concatenate([flattened_pixels, scaled_features], axis=1)</co
                         <td><strong>SmallMLP</strong></td>
                         <td>784 &rarr; 128 &rarr; 10</td>
                         <td>101.770</td>
-                        <td>90.23%</td>
-                        <td>88.15%</td>
-                        <td>87.42%</td>
-                        <td>0.3541</td>
-                        <td>87.31%</td>
+                        <td>88.52%</td>
+                        <td>88.49%</td>
+                        <td>88.51%</td>
+                        <td>88.52%</td>
+                        <td>0.3213</td>
+                        <td>8.27s</td>
+                        <td>9/10</td>
                     </tr>
                     <tr>
                         <td><strong>MainMLP</strong></td>
                         <td>784 &rarr; 256 &rarr; 128 &rarr; 10</td>
                         <td>235.146</td>
-                        <td>92.41%</td>
-                        <td>88.85%</td>
-                        <td>88.35%</td>
-                        <td>0.3326</td>
-                        <td>88.29%</td>
+                        <td>89.41%</td>
+                        <td>89.38%</td>
+                        <td>89.38%</td>
+                        <td>89.41%</td>
+                        <td>0.3079</td>
+                        <td>15.80s</td>
+                        <td>10/10</td>
                     </tr>
                     <tr style="background-color: #f0fdf4;">
                         <td><strong>MainMLP_FE</strong> (Features)</td>
                         <td>794 &rarr; 256 &rarr; 128 &rarr; 10</td>
                         <td>237.706</td>
-                        <td>93.12%</td>
-                        <td>89.02%</td>
-                        <td><strong>88.58%</strong></td>
-                        <td><strong>0.3248</strong></td>
-                        <td><strong>88.52%</strong></td>
+                        <td><strong>89.60%</strong></td>
+                        <td><strong>89.58%</strong></td>
+                        <td><strong>89.57%</strong></td>
+                        <td><strong>89.60%</strong></td>
+                        <td><strong>0.3002</strong></td>
+                        <td><strong>78.01s</strong> (4.9x)</td>
+                        <td>10/10</td>
                     </tr>
                 </tbody>
             </table>
         </div>
 
-        <!-- 5.2 Compute Cost & Convergence Curves -->
+        <!-- 5.2 Resource Telemetry & Single Sample Benchmark -->
         <div class="subsection-title">
-            <span>5.2. Đánh Đổi Độ Phức Tạp Tính Toán & Quá Trình Hội Tụ Validation</span>
+            <span>5.2. Đo Đạc Chi Phí Tài Nguyên, Bộ Nhớ RAM & Độ Trễ (Single-Sample Resource Telemetry)</span>
+            <span class="badge badge-info">RAM RSS & LATENCY BENCHMARK</span>
+        </div>
+
+        <figure class="image-card">
+            <div class="image-card-img-wrap">
+                <img src="../outputs/published/training_performance_single_sample/training_resources.png" alt="Đo đạc độ trễ huấn luyện và bộ nhớ RAM trên từng mẫu" loading="lazy">
+                <div class="zoom-hint">Phóng to ảnh &nearr;</div>
+            </div>
+            <figcaption>
+                <div class="image-card-title-row">
+                    <span class="image-card-title">Hình 4: Chi Phí Huấn Luyện Độc Lập Trên 1 Mẫu (Batch Size = 1)</span>
+                    <span class="code-pill">CPU 2 Threads &bull; psutil RSS Tracking</span>
+                </div>
+                <p class="image-card-takeaway">Đo lường cô lập trên từng mẫu huấn luyện (Forward + Backward + Loss + Optimizer Step, trung vị 10 lần đo sau 3 lần warmup): SmallMLP đạt thông lượng cao nhất (2.079 samples/s, 0.481 ms/sample); MainMLP đạt 1.094 samples/s (0.914 ms/sample); MainMLP_FE tiêu tốn 1.068 ms/sample (936 samples/s). Bộ nhớ RAM RSS của cả 3 mô hình duy trì ổn định quanh mức 397 - 401 MiB với mức tăng động chỉ 4.7 - 7.0 MiB.</p>
+                <div class="image-card-footer">
+                    <span>SmallMLP: 0.481 ms/sample</span>
+                    <span>MainMLP: 0.914 ms/sample</span>
+                    <span>MainMLP_FE: 1.068 ms/sample</span>
+                    <span>RAM RSS: ~400 MiB</span>
+                </div>
+            </figcaption>
+        </figure>
+
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Mô Hình</th>
+                        <th>Thiết Bị</th>
+                        <th>Batch Size</th>
+                        <th>Độ Trễ Huấn Luyện (ms/sample)</th>
+                        <th>Thông Lượng (Samples/giây)</th>
+                        <th>RAM Cơ Sở (RSS MiB)</th>
+                        <th>RAM Đỉnh (Peak RSS MiB)</th>
+                        <th>RAM Tăng Thêm (Delta MiB)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>SmallMLP</strong></td>
+                        <td>CPU (2 threads)</td>
+                        <td>1</td>
+                        <td>0.481 ms</td>
+                        <td>2.079,0 samples/s</td>
+                        <td>393.24 MiB</td>
+                        <td>397.98 MiB</td>
+                        <td>+4.74 MiB</td>
+                    </tr>
+                    <tr>
+                        <td><strong>MainMLP</strong></td>
+                        <td>CPU (2 threads)</td>
+                        <td>1</td>
+                        <td>0.914 ms</td>
+                        <td>1.093,9 samples/s</td>
+                        <td>393.37 MiB</td>
+                        <td>400.38 MiB</td>
+                        <td>+7.01 MiB</td>
+                    </tr>
+                    <tr style="background-color: #f0fdf4;">
+                        <td><strong>MainMLP_FE</strong> (Features)</td>
+                        <td>CPU (2 threads)</td>
+                        <td>1</td>
+                        <td>1.068 ms</td>
+                        <td>936,5 samples/s</td>
+                        <td>394.46 MiB</td>
+                        <td>401.46 MiB</td>
+                        <td>+7.00 MiB</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="callout" style="border-left-color: #f59e0b; background-color: #fffbeb;">
+            <strong style="color: #b45309;">Chẩn Đoán Kỹ Thuật: Giải Thích Về Bộ Nhớ RAM (~400 MiB) và Thời Gian Huấn Luyện 78 Giây Của MainMLP_FE:</strong>
+            <ul style="margin: 0.5rem 0 0 1.25rem; line-height: 1.6; font-size: 0.88rem; color: #78350f;">
+                <li><strong>Về mức RAM ~400 MiB:</strong> Đây là <em>Resident Set Size (RSS)</em> đo bằng <code>psutil</code> cho toàn bộ tiến trình Python runtime (chứa binary PyTorch, CUDA runtime stubs, mảng bộ đệm DataLoader và thư viện NumPy). Bộ nhớ dữ liệu pixel thuần chỉ tốn 44.86 MB (như ở Mục 3.1); lượng RAM tăng động khi nạp mẫu chỉ vỏn vẹn <strong>4.74 - 7.01 MiB</strong>.</li>
+                <li><strong>Tại sao thời gian huấn luyện MainMLP_FE lại tốn tới 78.01s (gấp 4.9x so với 15.80s của MainMLP)?</strong>
+                    <ol style="margin-left: 1.25rem; margin-top: 0.35rem;">
+                        <li><strong>Phá vỡ tối ưu SIMD vector hóa (Memory Alignment Penalty):</strong> Chiều đầu vào $784 = 28 	imes 28$ là kích thước chuẩn chia hết cho 16, được các thư viện BLAS trên CPU (Intel MKL / OpenBLAS) tối ưu hóa triệt để qua các thanh ghi AVX2 256-bit. Khi nối thêm 10 đặc trưng thành <strong>794 chiều</strong>, 794 không chia hết cho 8 hay 16, buộc CPU phải rơi vào vòng lặp scalar fallback cho các phần tử biên, làm chậm đáng kể phép nhân ma trận GEMM.</li>
+                        <li><strong>Chi phí ghép nối mảng (Concatenation Overhead):</strong> Việc ghép <code>np.concatenate([pixels, features])</code> ở từng loader phá vỡ tính liên tục bộ nhớ (memory contiguity), làm tăng phân mảnh bộ đệm và tỷ lệ cache miss trên L1/L2 CPU cache.</li>
+                        <li><strong>Hiện tượng tranh chấp CPU (CPU Contention):</strong> Trong lượt chạy huấn luyện đó trên môi trường máy chủ Windows, tiến trình Python chịu ảnh hưởng điều phối tác vụ nền (thread scheduling) khiến wall-clock time kéo dài.</li>
+                    </ol>
+                </li>
+                <li><strong>Đánh đổi kỹ thuật (Engineering Trade-off):</strong> Tăng thêm 10 đặc trưng thủ công chỉ cải thiện khiêm tốn <strong>+0.19%</strong> Test Accuracy (89.41% &rarr; 89.60%), nhưng lại làm thời gian huấn luyện tăng gần <strong>500%</strong> trên CPU. Do đó, mô hình thuần pixel <code>MainMLP</code> được kết luận là kiến trúc tối ưu nhất về mặt chi phí - hiệu năng (cost-efficiency).</li>
+            </ul>
+        </div>
+
+        <!-- 5.3 Compute Cost & Convergence Curves -->
+        <div class="subsection-title">
+            <span>5.3. Đánh Đổi Độ Phức Tạp Tính Toán & Quá Trình Hội Tụ Validation</span>
             <span class="badge badge-info">COMPUTE & VALIDATION DYNAMICS</span>
         </div>
 
