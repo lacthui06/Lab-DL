@@ -308,14 +308,6 @@ test_z = scaler.transform(test_features)
 
 Đây là đoạn mô tả phương pháp. Implementation fit trong nhánh train rồi transform từng split ở vòng lặp. File feature_scaler.json giữ thứ tự tên cột, mean, scale, fit_split. Việc lưu thứ tự cũng quan trọng như giá trị scaler: tráo centroid_x và symmetry sẽ tạo input khác dù cả hai là số thực hợp lệ.
 
-![Phân bố mười feature theo lớp](../outputs/published/preparation/feature_distributions.png)
-
-*Hình: Phân bố mười feature theo lớp. Nguồn: `outputs/published/preparation`.*
-
-Boxplot biểu diễn phân bố theo lớp. Vạch trong hộp là median; hộp là vùng phân vị 25%–75%; các outlier bị ẩn theo cấu hình vẽ, không có nghĩa dữ liệu không có giá trị xa. Các hộp chồng lấn cho thấy một cột riêng lẻ không tách hoàn toàn nhãn. Trouser có bbox width nhỏ; các lớp giày có aspect ratio cao hơn, phù hợp ảnh mẫu.
-
-Trong hình lịch sử, vị trí 1–10 tương ứng class 0–9. Dataset không có class 10. Mã tạo run mới đã gán tick đúng 0–9; ảnh cũ được giữ nguyên để tôn trọng bằng chứng nguồn. Thứ tự lớp, không phải số tick được tự suy đoán, là cơ sở đọc hình.
-
 <div style="break-before: page; page-break-before: always;"></div>
 
 ### 2.8. Hình học, tương quan và đóng gói dữ liệu
