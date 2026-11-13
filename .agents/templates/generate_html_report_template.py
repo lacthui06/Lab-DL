@@ -1,12 +1,19 @@
-"""Template script to generate standardized, visual-first HTML reports for Lab DL.
+r"""Template script to generate standardized, visual-first HTML reports for Lab DL.
 Based on the UTH Computer Vision template style.
+
+Best Practices:
+1. Visual-first & Minimal Text: Tap trung bieu do, anh truc quan va bang so lieu. Han che viet chu dai dong.
+2. Code di lien voi anh: Moi anh visualize (Hero, Duo, Trio) truyen kem `code_snippet` (2-4 dong tu notebook)
+   de tu dong tao Code Drawer nam NGAY DUOI BUC ANH DANG VISUALIZE.
+3. Khong dung Raw LaTeX: Tuyet doi khong dung \frac, \sqrt, \beta, $...$ vi trinh duyet khong co MathJax
+   se render tho bi loi chu. Hay dung text unicode va ky hieu toan hoc pho thong.
 
 Usage for a new lab:
 1. Copy this file to labs/lab0X/scripts/generate_html_report.py
 2. Update LAB_CONFIG (title, author, badges, etc.)
 3. Update PIPELINE_STEPS for the interactive colored stepper
 4. Configure your Sections with helper functions:
-   - hero_card(image_path, title, tag, takeaway, footer_items)
+   - hero_card(image_path, title, tag, takeaway, footer_items, code_snippet=...)
    - duo_cards(card1_dict, card2_dict)
    - trio_cards(card1_dict, card2_dict, card3_dict)
    - code_drawer(summary_text, code_str, language)
@@ -86,14 +93,31 @@ PIPELINE_STEPS = [
 # ==============================================================================
 # 2. HELPER FUNCTIONS TO RENDER COMPONENTS
 # ==============================================================================
-def render_hero_card(img_path: str, title: str, tag: str, takeaway: str, footer_items: list[str]) -> str:
+def _render_card_drawer(code_snippet: str | None) -> str:
+    if not code_snippet:
+        return ""
+    return f"""
+        <details class="code-tab-drawer">
+            <summary class="code-tab-summary">
+                <div class="code-summary-left">
+                    <span class="code-pill">NOTEBOOK CELL</span>
+                    <span>Cell truc quan hoa anh nay</span>
+                </div>
+                <span class="code-badge">Xem code cell &dtrif;</span>
+            </summary>
+            <pre><code class="language-python">{code_snippet.strip()}</code></pre>
+        </details>"""
+
+
+def render_hero_card(img_path: str, title: str, tag: str, takeaway: str, footer_items: list[str], code_snippet: str | None = None) -> str:
     """Render full-width hero card for primary matrices or overview charts."""
     footer_html = "".join(f"<span>{item}</span>" for item in footer_items)
+    drawer_html = _render_card_drawer(code_snippet)
     return f"""
     <figure class="image-card">
         <div class="image-card-img-wrap" onclick="openModal(this)">
             <img src="{img_path}" alt="{title}" loading="lazy">
-            <span class="zoom-hint">Phong to [Zoom]</span>
+            <span class="zoom-hint">Phong to [Zoom] &nearr;</span>
         </div>
         <figcaption class="image-card-caption">
             <div class="image-card-header">
@@ -105,6 +129,7 @@ def render_hero_card(img_path: str, title: str, tag: str, takeaway: str, footer_
                 {footer_html}
             </div>
         </figcaption>
+{drawer_html}
     </figure>
     """
 
@@ -113,11 +138,12 @@ def render_duo_cards(card1: dict, card2: dict) -> str:
     """Render 2-column comparative layout."""
     def _card(c):
         footer_html = "".join(f"<span>{item}</span>" for item in c.get("footer_items", []))
+        drawer_html = _render_card_drawer(c.get("code_snippet"))
         return f"""
         <figure class="image-card">
             <div class="image-card-img-wrap" onclick="openModal(this)">
                 <img src="{c['img_path']}" alt="{c['title']}" loading="lazy">
-                <span class="zoom-hint">Phong to [Zoom]</span>
+                <span class="zoom-hint">Phong to [Zoom] &nearr;</span>
             </div>
             <figcaption class="image-card-caption">
                 <div class="image-card-header">
@@ -129,6 +155,7 @@ def render_duo_cards(card1: dict, card2: dict) -> str:
                     {footer_html}
                 </div>
             </figcaption>
+{drawer_html}
         </figure>
         """
     return f"""
@@ -143,11 +170,12 @@ def render_trio_cards(card1: dict, card2: dict, card3: dict) -> str:
     """Render 3-column layout for sequences or small comparative figures."""
     def _card(c):
         footer_html = "".join(f"<span>{item}</span>" for item in c.get("footer_items", []))
+        drawer_html = _render_card_drawer(c.get("code_snippet"))
         return f"""
         <figure class="image-card">
             <div class="image-card-img-wrap" onclick="openModal(this)">
                 <img src="{c['img_path']}" alt="{c['title']}" loading="lazy">
-                <span class="zoom-hint">Phong to [Zoom]</span>
+                <span class="zoom-hint">Phong to [Zoom] &nearr;</span>
             </div>
             <figcaption class="image-card-caption">
                 <div class="image-card-header">
@@ -159,6 +187,7 @@ def render_trio_cards(card1: dict, card2: dict, card3: dict) -> str:
                     {footer_html}
                 </div>
             </figcaption>
+{drawer_html}
         </figure>
         """
     return f"""
@@ -696,6 +725,37 @@ HTML_PAGE_TEMPLATE = """<!DOCTYPE html>
             padding: 1.25rem 1.5rem !important;
         }}
 
+        /* Integrated Code Drawer inside Image Cards */
+        .image-card .code-tab-drawer {{
+            border: none;
+            border-top: 1px solid var(--border);
+            border-radius: 0 0 12px 12px;
+            margin: 0;
+            background: #f8fafc;
+            box-shadow: none;
+        }}
+
+        .image-card .code-tab-drawer .code-tab-summary {{
+            padding: 0.5rem 1.25rem;
+            font-size: 0.8rem;
+            background: #f8fafc;
+            cursor: pointer;
+        }}
+
+        .image-card .code-tab-drawer[open] .code-tab-summary {{
+            background: #f1f5f9;
+            border-bottom: 1px solid var(--border);
+        }}
+
+        .image-card .code-tab-drawer pre {{
+            margin: 0;
+            border-radius: 0 0 12px 12px;
+            padding: 0.85rem 1.25rem;
+            font-size: 0.8rem;
+            background: #0f172a;
+            color: #f8fafc;
+        }}
+
         /* Lightbox Modal */
         .image-modal {{
             position: fixed;
@@ -868,6 +928,16 @@ HTML_PAGE_TEMPLATE = """<!DOCTYPE html>
         if (e.key === 'Escape' && modal.classList.contains('active')) {{
             closeModalForce();
         }}
+    }});
+
+    // Dynamic toggle text for code tab drawers
+    document.querySelectorAll('.code-tab-drawer').forEach(drawer => {{
+        drawer.addEventListener('toggle', () => {{
+            const badge = drawer.querySelector('.code-badge');
+            if (badge) {{
+                badge.innerHTML = drawer.open ? 'Dong code &utrif;' : 'Xem code cell &dtrif;';
+            }}
+        }});
     }});
 </script>
 </body>
