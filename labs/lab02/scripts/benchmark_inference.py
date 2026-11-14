@@ -17,7 +17,8 @@ sys.path.insert(0, str(ROOT))
 
 def _writable(path):
     path = Path(path).expanduser().resolve()
-    if path == Path('/kaggle/input') or Path('/kaggle/input') in path.parents:
+    kaggle_input = Path('/kaggle/input').resolve()
+    if path == kaggle_input or kaggle_input in path.parents:
         raise ValueError('Kaggle input is read-only; write artifacts under /kaggle/working')
     return path
 
