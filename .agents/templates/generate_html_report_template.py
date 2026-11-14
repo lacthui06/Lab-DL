@@ -1,35 +1,46 @@
-"""Template script to generate standardized, visual-first HTML reports for Lab DL.
-Based on the UTH Computer Vision template style.
+r"""Template script to generate standardized, visual-first HTML reports for Lab DL.
+Based on the official UTH Computer Vision & Deep Learning template standards.
 
-Usage for a new lab:
+Best Practices:
+1. Visual-first & Minimal Text: Tap trung bieu do, anh truc quan va bang so lieu. Han che viet chu dai dong.
+2. Code di lien voi anh: Moi the anh visualize (Hero, Duo, Trio) co the truyen kem `code_snippet` (2-4 dong tu notebook)
+   de tu dong tao Code Drawer nam NGAY DUOI BUC ANH DANG VISUALIZE.
+3. Khong dung Raw LaTeX: Tuyet doi khong dung \frac, \sqrt, \beta, $...$ vi trinh duyet khong co MathJax
+   se render tho bi loi chu. Hay dung text unicode va ky hieu toan hoc pho thong.
+4. Tuyen bo tac gia duy nhat: Ghi ro Thong tin tac gia (Thai Anh Lac) va Don vi dao tao (UTH).
+
+Usage for a new lab (e.g., Lab 0X):
 1. Copy this file to labs/lab0X/scripts/generate_html_report.py
-2. Update LAB_CONFIG (title, author, badges, etc.)
-3. Update PIPELINE_STEPS for the interactive colored stepper
-4. Configure your Sections with helper functions:
-   - hero_card(image_path, title, tag, takeaway, footer_items)
-   - duo_cards(card1_dict, card2_dict)
-   - trio_cards(card1_dict, card2_dict, card3_dict)
-   - code_drawer(summary_text, code_str, language)
-   - integrity_table(...)
+2. Update LAB_CONFIG (lab_num, lab_id, title, subtitle, metrics, etc.)
+3. Update PIPELINE_STEPS (6 buoc phu hop voi workflow cua bai toan)
+4. Implement build_sections() to assemble report sections using:
+   - render_hero_card(img_path, title, tag, takeaway, footer_items, code_snippet=...)
+   - render_duo_cards(card1_dict, card2_dict)
+   - render_trio_cards(card1_dict, card2_dict, card3_dict)
+   - render_code_drawer(title, code_str, language="python")
+   - render_data_integrity_section(audit_rows, struct_rows, code_example)
 5. Run: python labs/lab0X/scripts/generate_html_report.py
 """
 
 from pathlib import Path
 
 # ==============================================================================
-# 1. LAB CONFIGURATION (Thay doi thong tin lab o day)
+# 1. LAB CONFIGURATION (Thay doi thong tin lab cu the tai day)
 # ==============================================================================
 LAB_CONFIG = {
-    "lab_num": 1,
-    "lab_id": "lab01",
-    "title": "Bao Cao Nghiem Thu Ky Thuat Lab 1",
-    "subtitle": "Phan Loai FashionMNIST voi PyTorch & Handcrafted Features",
-    "author": "Thai Anh Lac",
-    "python_ver": "Python 3.13.15",
-    "framework_ver": "PyTorch 2.14.0",
-    "dataset_info": "FashionMNIST (70.000 anh)",
-    "test_passed": "49/49 Tests Passed (100%)",
-    "primary_metric": "Best Test Acc: 89.2%",
+    "lab_num": "0X",
+    "lab_id": "lab0X",
+    "title": "Báo Cáo Nghiệm Thu Kỹ Thuật Lab 0X",
+    "subtitle": "Tên Đề Tài & Bài Toán Nghiên Cứu (Kiến Trúc Mô Hình & Dataset)",
+    "author": "Thái Anh Lạc",
+    "author_role": "Học viên / Kỹ sư AI",
+    "school_name": "TRƯỜNG ĐẠI HỌC GIAO THÔNG VẬN TẢI TP.HCM",
+    "sub_dept": "VIỆN ĐÀO TẠO KỸ THUẬT & CÔNG NGHỆ CHẤT LƯỢNG CAO",
+    "python_ver": "Python 3.13.x",
+    "framework_ver": "PyTorch 2.x",
+    "dataset_info": "Dataset Name (Số lượng mẫu & Đặc trưng)",
+    "test_passed": "XX/XX Tests Passed (100%)",
+    "primary_metric": "Best Metric (e.g. Test Acc: XX.X% / Macro F1: XX.X%)",
 }
 
 # 6 mau gradient chuan cho 6 buoc pipeline (tuong ung UTH modern style)
@@ -42,42 +53,42 @@ STEP_GRADIENTS = [
     {"bg": "#f0fdfa", "border": "#2dd4bf", "text": "#0f766e", "badge": "linear-gradient(135deg, #0d9488, #0f766e)"},
 ]
 
-# Danh sach cac buoc tren pipeline stepper
+# Danh sach 6 buoc chuan tren pipeline stepper (anh xa theo docs/dl_flow.md)
 PIPELINE_STEPS = [
     {
         "num": "01",
-        "title": "1. Kham Pha EDA",
-        "desc": "Kiem Toan 0 NaN &bull; 0 Duplicate &bull; Phau Thuat Anh",
+        "title": "1. Khám Phá EDA",
+        "desc": "Kiểm Toán Dữ Liệu &bull; 0 NaN &bull; Phân Bố Mẫu",
         "anchor": "#section-eda",
     },
     {
         "num": "02",
-        "title": "2. Feature Engineering",
-        "desc": "Bounding Box &bull; Centroid &bull; StandardScaler",
+        "title": "2. Tiền Xử Lý Dữ Liệu",
+        "desc": "Data Pipeline &bull; Augmentation &bull; Feature Transforms",
         "anchor": "#section-features",
     },
     {
         "num": "03",
-        "title": "3. Kien Truc Mo Hinh",
-        "desc": "SmallMLP &bull; MainMLP &bull; Model_FE",
+        "title": "3. Kiến Trúc Mô Hình",
+        "desc": "Network Design &bull; Baseline &bull; Parameter Budget",
         "anchor": "#section-models",
     },
     {
         "num": "04",
-        "title": "4. Toi Uu & Tuning",
-        "desc": "SGD &bull; RMSprop &bull; Adam (30 Trials)",
-        "anchor": "#section-tuning",
+        "title": "4. Huấn Luyện & Tối Ưu",
+        "desc": "Optimizer Dynamics &bull; Tuning &bull; Learning Curves",
+        "anchor": "#section-training",
     },
     {
         "num": "05",
-        "title": "5. Danh Gia Test",
-        "desc": "Acc &bull; Confusion Matrix &bull; OvR Curves",
+        "title": "5. Đánh Giá & Chẩn Đoán",
+        "desc": "Test Benchmark &bull; Confusion Matrix &bull; ROC/PR",
         "anchor": "#section-evaluation",
     },
     {
         "num": "06",
-        "title": "6. Kiem Toan QA",
-        "desc": "Test Suite Passed &bull; Checkpoint Verification",
+        "title": "6. Nghiệm Thu Kỹ Thuật",
+        "desc": "Test Suite Passed &bull; Artifacts &bull; Model Handoff",
         "anchor": "#section-qa",
     },
 ]
@@ -86,14 +97,39 @@ PIPELINE_STEPS = [
 # ==============================================================================
 # 2. HELPER FUNCTIONS TO RENDER COMPONENTS
 # ==============================================================================
-def render_hero_card(img_path: str, title: str, tag: str, takeaway: str, footer_items: list[str]) -> str:
-    """Render full-width hero card for primary matrices or overview charts."""
+def _render_card_drawer(code_snippet: str | None) -> str:
+    """Tao collapsible code drawer tich hop ben trong card chan anh."""
+    if not code_snippet:
+        return ""
+    return f"""
+        <details class="code-tab-drawer">
+            <summary class="code-tab-summary">
+                <div class="code-summary-left">
+                    <span class="code-pill">NOTEBOOK CELL</span>
+                    <span>Cell trực quan hóa ảnh này</span>
+                </div>
+                <span class="code-badge">Xem code cell &dtrif;</span>
+            </summary>
+            <pre><code class="language-python">{code_snippet.strip()}</code></pre>
+        </details>"""
+
+
+def render_hero_card(
+    img_path: str,
+    title: str,
+    tag: str,
+    takeaway: str,
+    footer_items: list[str],
+    code_snippet: str | None = None,
+) -> str:
+    """Render full-width hero card cho bieu do tong quan hoac ma tran trung tam."""
     footer_html = "".join(f"<span>{item}</span>" for item in footer_items)
+    drawer_html = _render_card_drawer(code_snippet)
     return f"""
     <figure class="image-card">
         <div class="image-card-img-wrap" onclick="openModal(this)">
             <img src="{img_path}" alt="{title}" loading="lazy">
-            <span class="zoom-hint">Phong to [Zoom]</span>
+            <span class="zoom-hint">Phóng to [Zoom]</span>
         </div>
         <figcaption class="image-card-caption">
             <div class="image-card-header">
@@ -104,20 +140,22 @@ def render_hero_card(img_path: str, title: str, tag: str, takeaway: str, footer_
             <div class="image-card-footer">
                 {footer_html}
             </div>
+            {drawer_html}
         </figcaption>
     </figure>
     """
 
 
 def render_duo_cards(card1: dict, card2: dict) -> str:
-    """Render 2-column comparative layout."""
+    """Render layout so sanh 2 cot (Grid 2-col)."""
     def _card(c):
         footer_html = "".join(f"<span>{item}</span>" for item in c.get("footer_items", []))
+        drawer_html = _render_card_drawer(c.get("code_snippet"))
         return f"""
         <figure class="image-card">
             <div class="image-card-img-wrap" onclick="openModal(this)">
                 <img src="{c['img_path']}" alt="{c['title']}" loading="lazy">
-                <span class="zoom-hint">Phong to [Zoom]</span>
+                <span class="zoom-hint">Phóng to [Zoom]</span>
             </div>
             <figcaption class="image-card-caption">
                 <div class="image-card-header">
@@ -128,6 +166,7 @@ def render_duo_cards(card1: dict, card2: dict) -> str:
                 <div class="image-card-footer">
                     {footer_html}
                 </div>
+                {drawer_html}
             </figcaption>
         </figure>
         """
@@ -140,14 +179,15 @@ def render_duo_cards(card1: dict, card2: dict) -> str:
 
 
 def render_trio_cards(card1: dict, card2: dict, card3: dict) -> str:
-    """Render 3-column layout for sequences or small comparative figures."""
+    """Render layout 3 cot (Grid 3-col) cho cac chuoi phan tich hoac bieu do nho."""
     def _card(c):
         footer_html = "".join(f"<span>{item}</span>" for item in c.get("footer_items", []))
+        drawer_html = _render_card_drawer(c.get("code_snippet"))
         return f"""
         <figure class="image-card">
             <div class="image-card-img-wrap" onclick="openModal(this)">
                 <img src="{c['img_path']}" alt="{c['title']}" loading="lazy">
-                <span class="zoom-hint">Phong to [Zoom]</span>
+                <span class="zoom-hint">Phóng to [Zoom]</span>
             </div>
             <figcaption class="image-card-caption">
                 <div class="image-card-header">
@@ -158,6 +198,7 @@ def render_trio_cards(card1: dict, card2: dict, card3: dict) -> str:
                 <div class="image-card-footer">
                     {footer_html}
                 </div>
+                {drawer_html}
             </figcaption>
         </figure>
         """
@@ -171,7 +212,7 @@ def render_trio_cards(card1: dict, card2: dict, card3: dict) -> str:
 
 
 def render_code_drawer(title: str, code_str: str, language: str = "python") -> str:
-    """Render collapsible code drawer (closed by default)."""
+    """Render collapsible code drawer doc lap ngoai the card."""
     return f"""
     <details class="code-tab-drawer">
         <summary class="code-tab-summary">
@@ -179,15 +220,15 @@ def render_code_drawer(title: str, code_str: str, language: str = "python") -> s
                 <span class="code-pill">{language.upper()}</span>
                 <span>{title}</span>
             </div>
-            <span class="code-badge">Nhan de mo code &dtrif;</span>
+            <span class="code-badge">Nhấn để mở code &dtrif;</span>
         </summary>
         <pre><code class="language-{language}">{code_str.strip()}</code></pre>
     </details>
     """
 
 
-def render_data_integrity_section(audit_rows: list[dict], struct_rows: list[dict], code_example: str) -> str:
-    """Render standard Core EDA data integrity, missing values, and duplicate audit."""
+def render_data_integrity_section(audit_rows: list[dict], struct_rows: list[dict], code_example: str | None = None) -> str:
+    """Render bang kiem toan toan ven du lieu (Core EDA)."""
     audit_tbody = ""
     for row in audit_rows:
         audit_tbody += f"""
@@ -199,41 +240,27 @@ def render_data_integrity_section(audit_rows: list[dict], struct_rows: list[dict
         </tr>
         """
 
+    struct_headers = "".join(f"<th>{k}</th>" for k in struct_rows[0].keys()) if struct_rows else ""
     struct_tbody = ""
     for r in struct_rows:
-        struct_tbody += f"""
-        <tr>
-            <td><strong>{r['pool']}</strong></td>
-            <td>{r['count']}</td>
-            <td>{r['dim']}</td>
-            <td>{r['channel']}</td>
-            <td><code>{r['dtype']}</code></td>
-            <td>{r['pixel_range']}</td>
-            <td>{r['label_range']}</td>
-            <td>{r['classes']}</td>
-            <td>{r['ram']}</td>
-        </tr>
-        """
+        cols = "".join(f"<td>{v}</td>" for v in r.values())
+        struct_tbody += f"<tr>{cols}</tr>"
+
+    code_html = render_code_drawer("Mã nguồn kiểm toán tính toàn vẹn dữ liệu", code_example) if code_example else ""
 
     return f"""
     <div class="subsection-title">
-        <span>Kiem Toan Tinh Toan Ven Du Lieu, Gia Tri Thieu & Trung Lap (Data Integrity & Duplicate Audit)</span>
-        <span class="badge badge-info">CORE EDA &bull; 0 NaN &bull; 0 DUPLICATES</span>
+        <span>Bảng 1: Kiểm Toán Tính Toàn Vẹn & Không Thất Thoát Dữ Liệu</span>
+        <span class="badge badge-success">DATA INTEGRITY: 100%</span>
     </div>
-
-    <p style="font-size: 0.92rem; color: var(--text-dark); margin-bottom: 1rem;">
-        Theo quy chuan Core EDA, toan bo du lieu da duoc kiem toan toan ven ve mat cau truc, quet gia tri thieu/loi (NaN/Inf)
-        va quet ma bam mat ma hoc (MD5 byte hashing) tren tung ma tran anh de phat hien trung lap va ro ri du lieu:
-    </p>
-
-    <div class="table-responsive" style="margin-bottom: 1.5rem;">
+    <div class="table-responsive">
         <table>
             <thead>
                 <tr>
-                    <th style="width: 280px;">Hang Muc Kiem Tra</th>
-                    <th style="width: 180px;">Ket Qua Mong Doi</th>
-                    <th>Thuc Te Do Dac</th>
-                    <th style="width: 130px; text-align: center;">Trang Thai</th>
+                    <th>Hạng Mục Kiểm Toán</th>
+                    <th>Quy Chuẩn Kỳ Vọng</th>
+                    <th>Kết Quả Thực Nghiệm</th>
+                    <th style="text-align: center;">Trạng Thái</th>
                 </tr>
             </thead>
             <tbody>
@@ -242,19 +269,15 @@ def render_data_integrity_section(audit_rows: list[dict], struct_rows: list[dict
         </table>
     </div>
 
-    <div class="table-responsive" style="margin-bottom: 1.5rem;">
+    <div class="subsection-title" style="margin-top: 1.5rem;">
+        <span>Bảng 2: Cấu Trúc Kỹ Thuật Tập Dữ Liệu</span>
+        <span class="badge badge-info">DATASET CONTRACT</span>
+    </div>
+    <div class="table-responsive">
         <table>
             <thead>
                 <tr>
-                    <th>Tap Du Lieu</th>
-                    <th>So Luong Anh</th>
-                    <th>Kich Thuoc (HxW)</th>
-                    <th>Kenh Mau</th>
-                    <th>Kieu Du Lieu (dtype)</th>
-                    <th>Dai Diem Anh</th>
-                    <th>Dai Nhan</th>
-                    <th>So Lop</th>
-                    <th>Bo Nho RAM</th>
+                    {struct_headers}
                 </tr>
             </thead>
             <tbody>
@@ -262,13 +285,12 @@ def render_data_integrity_section(audit_rows: list[dict], struct_rows: list[dict
             </tbody>
         </table>
     </div>
-
-    {render_code_drawer("Ma nguon kiem toan tinh toan ven & quet trung lap (MD5 Hashing)", code_example)}
+    {code_html}
     """
 
 
 # ==============================================================================
-# 3. BASE HTML WRAPPER TEMPLATE
+# 3. HTML PAGE MASTER TEMPLATE
 # ==============================================================================
 HTML_PAGE_TEMPLATE = """<!DOCTYPE html>
 <html lang="vi">
@@ -276,9 +298,6 @@ HTML_PAGE_TEMPLATE = """<!DOCTYPE html>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{title} - {author}</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
     <style>
         :root {{
@@ -318,75 +337,192 @@ HTML_PAGE_TEMPLATE = """<!DOCTYPE html>
             padding: 2.5rem 1rem;
         }}
 
-        .container {{
+        /* Header with UTH Brand & Author Box */
+        header {{
+            background: linear-gradient(135deg, #1e3a8a 0%, #0f172a 100%);
+            color: #ffffff;
+            padding: 2.5rem 2rem;
+            border-radius: 16px;
+            margin-bottom: 2rem;
+            box-shadow: var(--shadow-lg);
+        }}
+
+        .header-container {{
             max-width: 1200px;
             margin: 0 auto;
         }}
 
-        header {{
-            background: linear-gradient(135deg, #1e3a8a 0%, #0369a1 100%);
+        .header-top {{
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+            padding-bottom: 1.5rem;
+            margin-bottom: 1.5rem;
+        }}
+
+        .uth-brand {{
+            display: flex;
+            align-items: center;
+            gap: 1.25rem;
+        }}
+
+        .uth-logo-text {{
+            font-size: 2.2rem;
+            font-weight: 900;
+            letter-spacing: 2px;
+            background: linear-gradient(135deg, #38bdf8, #818cf8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }}
+
+        .uth-brand-details {{
+            border-left: 2px solid rgba(255, 255, 255, 0.2);
+            padding-left: 1.25rem;
+        }}
+
+        .uth-school-name {{
+            font-size: 0.95rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #f8fafc;
+        }}
+
+        .uth-sub-dept {{
+            font-size: 0.8rem;
+            color: #94a3b8;
+            font-weight: 500;
+        }}
+
+        .author-box {{
+            background: rgba(255, 255, 255, 0.08);
+            padding: 0.75rem 1.25rem;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            text-align: right;
+        }}
+
+        .author-label {{
+            display: block;
+            font-size: 0.75rem;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }}
+
+        .author-name {{
+            font-size: 1.15rem;
+            font-weight: 700;
             color: #ffffff;
-            padding: 2.75rem 2.25rem;
-            border-radius: 16px;
-            margin-bottom: 2.5rem;
-            box-shadow: var(--shadow-lg);
-            border-bottom: 4px solid var(--accent);
         }}
 
-        header h1 {{
-            font-size: 2.15rem;
+        .author-role {{
+            display: block;
+            font-size: 0.8rem;
+            color: #38bdf8;
+            font-weight: 500;
+        }}
+
+        h1 {{
+            font-size: 2.2rem;
             font-weight: 800;
-            margin-bottom: 0.65rem;
-            letter-spacing: -0.025em;
+            letter-spacing: -0.5px;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
         }}
 
-        header h2 {{
-            font-size: 1.2rem;
-            font-weight: 400;
-            opacity: 0.92;
-            margin-bottom: 1.75rem;
+        .header-subtitle {{
+            font-size: 1.05rem;
+            color: #94a3b8;
+            margin-bottom: 1.5rem;
         }}
 
-        .meta-badges {{
+        .header-badges {{
             display: flex;
             flex-wrap: wrap;
-            gap: 0.65rem;
+            gap: 0.6rem;
         }}
 
         .badge {{
             display: inline-flex;
             align-items: center;
-            background: rgba(255, 255, 255, 0.18);
-            backdrop-filter: blur(8px);
-            padding: 0.4rem 0.95rem;
+            padding: 0.35rem 0.85rem;
             border-radius: 9999px;
-            font-size: 0.84rem;
-            font-weight: 500;
-            border: 1px solid rgba(255, 255, 255, 0.28);
-        }}
-
-        .badge-success {{
-            background: #dcfce7;
-            color: #15803d;
-            border: 1px solid #86efac;
+            font-size: 0.78rem;
             font-weight: 600;
+            letter-spacing: 0.3px;
         }}
 
-        .badge-info {{
-            background: #dbeafe;
-            color: #1e40af;
-            border: 1px solid #bfdbfe;
-            font-weight: 600;
+        .badge-success {{ background: #059669; color: #ffffff; }}
+        .badge-info {{ background: #0284c7; color: #ffffff; }}
+        .badge-dark {{ background: #334155; color: #f8fafc; }}
+
+        .container {{
+            max-width: 1200px;
+            margin: 0 auto;
         }}
 
+        /* Pipeline Stepper */
+        .pipeline-stepper {{
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }}
+
+        .pipeline-card {{
+            border-radius: 12px;
+            padding: 1.15rem 1rem;
+            text-decoration: none;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+        }}
+
+        .pipeline-card:hover {{
+            transform: translateY(-3px);
+            box-shadow: var(--shadow-lg);
+        }}
+
+        .pipeline-card-header {{
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }}
+
+        .pipeline-number {{
+            color: #ffffff;
+            font-weight: 800;
+            font-size: 0.75rem;
+            padding: 0.2rem 0.55rem;
+            border-radius: 6px;
+        }}
+
+        .pipeline-title {{
+            font-weight: 700;
+            font-size: 0.95rem;
+        }}
+
+        .pipeline-desc {{
+            font-size: 0.75rem;
+            opacity: 0.85;
+            line-height: 1.4;
+        }}
+
+        /* Cards & Sections */
         .card {{
             background: var(--card-bg);
             border-radius: 14px;
             border: 1px solid var(--border);
-            padding: 2rem 2.25rem;
-            margin-bottom: 2.5rem;
+            padding: 2rem;
+            margin-bottom: 2rem;
             box-shadow: var(--shadow);
-            scroll-margin-top: 2rem;
         }}
 
         .card-header {{
@@ -396,126 +532,72 @@ HTML_PAGE_TEMPLATE = """<!DOCTYPE html>
             margin-bottom: 1.5rem;
             padding-bottom: 1rem;
             border-bottom: 1px solid var(--border);
+            flex-wrap: wrap;
+            gap: 0.75rem;
         }}
 
         .card-title {{
-            font-size: 1.4rem;
+            font-size: 1.35rem;
             font-weight: 800;
             color: var(--primary);
-            letter-spacing: -0.015em;
         }}
 
-        /* Pipeline Stepper */
-        .pipeline-container {{
-            margin: 1.5rem 0 2rem;
-        }}
-
-        .pipeline-grid {{
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(175px, 1fr));
-            gap: 0.85rem;
-        }}
-
-        .pipeline-card {{
-            display: block;
-            text-decoration: none;
-            border-radius: 12px;
-            padding: 1.15rem 1rem;
-            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-            position: relative;
-            overflow: hidden;
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
-        }}
-
-        .pipeline-card:hover {{
-            transform: translateY(-4px);
-            box-shadow: 0 10px 18px -4px rgba(0, 0, 0, 0.12);
-        }}
-
-        .pipeline-card-header {{
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 0.65rem;
-        }}
-
-        .pipeline-number {{
-            width: 28px;
-            height: 28px;
-            color: #ffffff;
-            border-radius: 50%;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 800;
-            font-size: 0.78rem;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
-        }}
-
-        .pipeline-title {{
-            font-size: 0.95rem;
-            font-weight: 800;
-            margin-bottom: 0.35rem;
-            line-height: 1.35;
-        }}
-
-        .pipeline-desc {{
-            font-size: 0.78rem;
-            line-height: 1.45;
-            font-weight: 500;
-        }}
-
-        /* Subsections */
         .subsection-title {{
-            font-size: 1.12rem;
+            font-size: 1rem;
             font-weight: 700;
-            color: var(--primary);
-            margin: 2.25rem 0 1rem;
-            padding-bottom: 0.4rem;
-            border-bottom: 1px dashed var(--border);
+            color: var(--secondary);
+            margin: 1.5rem 0 0.85rem;
             display: flex;
             align-items: center;
             justify-content: space-between;
         }}
 
-        /* Academic Figure Cards */
+        .grid-2col {{
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.5rem;
+            margin-top: 1.25rem;
+        }}
+
+        .grid-3col {{
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.25rem;
+            margin-top: 1.25rem;
+        }}
+
+        /* Image Cards */
         .image-card {{
             background: #ffffff;
             border: 1px solid var(--border);
             border-radius: 12px;
             overflow: hidden;
-            margin: 1.5rem 0 2rem;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-            transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+            box-shadow: var(--shadow);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            margin-bottom: 1.5rem;
         }}
 
         .image-card:hover {{
-            transform: translateY(-3px);
-            box-shadow: 0 12px 24px -6px rgba(0, 0, 0, 0.1);
-            border-color: #cbd5e1;
+            box-shadow: var(--shadow-lg);
         }}
 
         .image-card-img-wrap {{
             position: relative;
-            background: #fbfcfe;
+            background: #f8fafc;
             border-bottom: 1px solid var(--border);
             overflow: hidden;
             cursor: zoom-in;
             text-align: center;
-            padding: 1.25rem;
+            padding: 1rem;
         }}
 
-        .image-card img {{
+        .image-card-img-wrap img {{
             width: 100%;
             max-height: 480px;
             object-fit: contain;
             display: block;
             margin: 0 auto;
             transition: transform 0.25s ease;
-        }}
-
-        .image-card:hover img {{
-            transform: scale(1.015);
         }}
 
         .zoom-hint {{
@@ -530,11 +612,11 @@ HTML_PAGE_TEMPLATE = """<!DOCTYPE html>
             padding: 0.3rem 0.75rem;
             border-radius: 6px;
             opacity: 0;
-            transition: opacity 0.2s ease, transform 0.2s ease;
+            transition: opacity 0.2s ease;
             pointer-events: none;
         }}
 
-        .image-card:hover .zoom-hint {{
+        .image-card-img-wrap:hover .zoom-hint {{
             opacity: 1;
         }}
 
@@ -574,97 +656,71 @@ HTML_PAGE_TEMPLATE = """<!DOCTYPE html>
             font-weight: 500;
         }}
 
-        .grid-2col {{
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 1.5rem;
-            margin: 1.5rem 0 2rem;
-        }}
-
-        .grid-3col {{
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 1.25rem;
-            margin: 1.5rem 0 2rem;
-        }}
-
-        @media (max-width: 900px) {{
-            .grid-2col, .grid-3col {{
-                grid-template-columns: 1fr;
-            }}
-        }}
-
-        /* Table styles */
-        .table-responsive {{
-            overflow-x: auto;
-            border-radius: 10px;
-            border: 1px solid var(--border);
-            margin: 1.5rem 0;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
-        }}
-
-        table {{
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 0.88rem;
-            text-align: left;
-        }}
-
-        th {{
-            background: #f8fafc;
-            color: var(--text-dark);
-            font-weight: 700;
-            padding: 0.85rem 1.15rem;
-            border-bottom: 2px solid var(--border);
-            white-space: nowrap;
-        }}
-
-        td {{
-            padding: 0.85rem 1.15rem;
-            border-bottom: 1px solid var(--border);
-            color: var(--text-dark);
-            vertical-align: middle;
-        }}
-
-        tr:last-child td {{
-            border-bottom: none;
-        }}
-
-        tr:hover td {{
-            background: #f8fafc;
-        }}
-
         .code-pill {{
-            font-family: var(--font-mono);
             background: #f1f5f9;
-            padding: 0.2rem 0.5rem;
-            border-radius: 4px;
-            font-size: 0.8rem;
-            color: #0f172a;
+            color: #475569;
+            padding: 0.25rem 0.65rem;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            font-family: var(--font-mono);
+            letter-spacing: 0.3px;
         }}
 
-        /* Collapsible Code Tabs */
-        .code-tab-drawer {{
-            border: 1px solid var(--border);
-            border-radius: 10px;
-            background: #ffffff;
-            margin: 1.5rem 0;
+        /* Code Tab Drawer Inside Card */
+        .image-card .code-tab-drawer {{
+            margin-top: 1rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
             overflow: hidden;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+            background: #f8fafc;
+            box-shadow: none;
         }}
 
-        .code-tab-summary {{
-            padding: 0.85rem 1.15rem;
-            background: #f8fafc;
+        .image-card .code-tab-drawer .code-tab-summary {{
+            padding: 0.55rem 0.9rem;
+            background: #f1f5f9;
+            font-size: 0.8rem;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: space-between;
             user-select: none;
-            font-size: 0.88rem;
+        }}
+
+        .image-card .code-tab-drawer[open] .code-tab-summary {{
+            border-bottom: 1px solid #e2e8f0;
+            background: #e2e8f0;
+        }}
+
+        .image-card .code-tab-drawer pre {{
+            margin: 0;
+            border-radius: 0;
+            padding: 0.85rem 1rem;
+            background: #1e293b !important;
+            font-size: 0.78rem;
+        }}
+
+        /* Independent Code Drawer */
+        .code-tab-drawer {{
+            margin: 1.25rem 0;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            overflow: hidden;
+            background: #ffffff;
+            box-shadow: var(--shadow);
+        }}
+
+        .code-tab-summary {{
+            padding: 0.8rem 1.25rem;
+            background: #f8fafc;
+            cursor: pointer;
             font-weight: 600;
-            color: var(--text-dark);
-            transition: background 0.15s ease;
+            font-size: 0.88rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            user-select: none;
         }}
 
         .code-tab-drawer[open] .code-tab-summary {{
@@ -680,23 +736,57 @@ HTML_PAGE_TEMPLATE = """<!DOCTYPE html>
 
         .code-badge {{
             font-size: 0.75rem;
-            color: var(--primary);
-            background: #eff6ff;
-            border: 1px solid #bfdbfe;
-            padding: 0.2rem 0.65rem;
-            border-radius: 12px;
+            color: var(--primary-light);
             font-weight: 600;
         }}
 
         pre[class*="language-"] {{
-            margin: 0 !important;
-            border-radius: 0 !important;
-            font-family: var(--font-mono) !important;
-            font-size: 0.84rem !important;
-            padding: 1.25rem 1.5rem !important;
+            margin: 0;
+            border-radius: 0;
+            padding: 1.25rem;
+            background: #0f172a !important;
+            font-size: 0.82rem;
+            font-family: var(--font-mono);
         }}
 
-        /* Lightbox Modal */
+        /* Table styles */
+        .table-responsive {{
+            overflow-x: auto;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            margin: 1rem 0;
+        }}
+
+        table {{
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.86rem;
+            text-align: left;
+        }}
+
+        th {{
+            background: #f8fafc;
+            color: var(--secondary);
+            font-weight: 700;
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid var(--border);
+        }}
+
+        td {{
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid #f1f5f9;
+            color: var(--text-dark);
+        }}
+
+        tr:last-child td {{
+            border-bottom: none;
+        }}
+
+        tr:hover td {{
+            background: #f8fafc;
+        }}
+
+        /* Lightbox Image Modal */
         .image-modal {{
             position: fixed;
             top: 0;
@@ -715,124 +805,108 @@ HTML_PAGE_TEMPLATE = """<!DOCTYPE html>
             transition: opacity 0.25s ease;
         }}
 
-        .image-modal.active {{
-            display: flex;
-            opacity: 1;
-        }}
+        .image-modal.active {{ display: flex; opacity: 1; }}
 
-        .modal-content-wrap {{
-            max-width: 95vw;
-            max-height: 92vh;
+        .modal-content {{
+            max-width: 92vw;
+            max-height: 90vh;
+            background: #ffffff;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
             display: flex;
             flex-direction: column;
-            align-items: center;
             cursor: default;
         }}
 
-        .modal-content-wrap img {{
-            max-width: 100%;
+        .modal-img-wrap {{
+            overflow: auto;
             max-height: 80vh;
+            padding: 1.5rem;
+            background: #f8fafc;
+            text-align: center;
+        }}
+
+        .modal-img-wrap img {{
+            max-width: 100%;
+            height: auto;
             object-fit: contain;
-            border-radius: 8px;
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
-            background: #ffffff;
         }}
 
         .modal-caption {{
-            color: #ffffff;
-            margin-top: 1rem;
-            font-size: 0.95rem;
-            font-weight: 600;
-            text-align: center;
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-        }}
-
-        .modal-close-btn {{
-            position: absolute;
-            top: 24px;
-            right: 28px;
-            color: #ffffff;
-            font-size: 2rem;
-            font-weight: 700;
-            cursor: pointer;
-            background: rgba(255, 255, 255, 0.1);
-            width: 44px;
-            height: 44px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: background 0.15s ease;
-        }}
-
-        .modal-close-btn:hover {{
-            background: rgba(255, 255, 255, 0.25);
-        }}
-
-        footer {{
-            text-align: center;
-            color: var(--text-muted);
-            font-size: 0.9rem;
-            margin-top: 3.5rem;
-            padding-top: 1.75rem;
+            padding: 1rem 1.5rem;
+            background: #ffffff;
             border-top: 1px solid var(--border);
+        }}
+
+        .modal-title {{
+            font-weight: 700;
+            font-size: 1rem;
+            color: var(--text-dark);
+            margin-bottom: 0.25rem;
+        }}
+
+        .modal-desc {{
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }}
+
+        @media (max-width: 768px) {{
+            .grid-2col, .grid-3col {{ grid-template-columns: 1fr; }}
+            .card {{ padding: 1.5rem 1rem; }}
+            h1 {{ font-size: 1.6rem; }}
         }}
     </style>
 </head>
 <body>
 
-<div class="container">
-    <!-- Header -->
-    <header>
+<header>
+    <div class="header-container">
+        <div class="header-top">
+            <div class="uth-brand">
+                <span class="uth-logo-text">UTH</span>
+                <div class="uth-brand-details">
+                    <div class="uth-school-name">{school_name}</div>
+                    <div class="uth-sub-dept">{sub_dept}</div>
+                </div>
+            </div>
+            <div class="author-box">
+                <span class="author-label">Báo cáo Khoa học &amp; Kỹ thuật</span>
+                <span class="author-name">{author}</span>
+                <span class="author-role">{author_role}</span>
+            </div>
+        </div>
         <h1>{title}</h1>
-        <h2>{subtitle}</h2>
-        <div class="meta-badges">
-            <span class="badge">Tac gia: {author}</span>
-            <span class="badge">{python_ver}</span>
-            <span class="badge">{framework_ver}</span>
-            <span class="badge">{dataset_info}</span>
+        <p class="header-subtitle">{subtitle}</p>
+        <div class="header-badges">
+            <span class="badge badge-dark">{python_ver}</span>
+            <span class="badge badge-dark">{framework_ver}</span>
+            <span class="badge badge-dark">{dataset_info}</span>
             <span class="badge badge-success">{test_passed}</span>
             <span class="badge badge-info">{primary_metric}</span>
         </div>
-    </header>
+    </div>
+</header>
 
+<div class="container">
     <!-- Pipeline Stepper -->
-    <div class="card" id="section-roadmap">
-        <div class="card-header">
-            <h3 class="card-title">Lo Trinh Thuc Thi & So Do Tien Trinh</h3>
-            <span class="badge badge-success">Clean Architecture</span>
-        </div>
-        <p style="font-size: 0.88rem; color: var(--text-muted); margin-bottom: 0.75rem;">
-            Nhan vao tung the de chuyen nhanh den noi dung tuong ung:
-        </p>
-        <div class="pipeline-container">
-            <div class="pipeline-grid">
-                {stepper_html}
-            </div>
-        </div>
+    <div class="pipeline-stepper">
+        {stepper_html}
     </div>
 
     <!-- Main Content Sections -->
     {sections_html}
-
-    <!-- Footer -->
-    <footer>
-        <p>Bao cao nghiem thu ky thuat mon Deep Learning - Truong Dai hoc Giao thong van tai TP.HCM (UTH)</p>
-        <p style="margin-top: 0.35rem; font-size: 0.8rem; color: var(--text-muted);">
-            Bao cao duoc tao tu dong tu artifact goc trong outputs/published/ - Thiet ke theo tieu chuan UTH-CV Template
-        </p>
-    </footer>
 </div>
 
-<!-- Modal Zoom Lightbox -->
+<!-- Modal Zoom -->
 <div id="imageModal" class="image-modal" onclick="closeModal(event)">
-    <div class="modal-close-btn" onclick="closeModalForce()">&times;</div>
-    <div class="modal-content-wrap">
-        <img id="modalImg" src="" alt="Zoomed artifact">
+    <div class="modal-content" onclick="event.stopPropagation()">
+        <div class="modal-img-wrap">
+            <img id="modalImg" src="" alt="">
+        </div>
         <div class="modal-caption">
-            <span id="modalCaptionText"></span>
+            <div id="modalTitle" class="modal-title"></div>
+            <div id="modalDesc" class="modal-desc"></div>
         </div>
     </div>
 </div>
@@ -842,13 +916,19 @@ HTML_PAGE_TEMPLATE = """<!DOCTYPE html>
 <script>
     const modal = document.getElementById('imageModal');
     const modalImg = document.getElementById('modalImg');
-    const modalCaption = document.getElementById('modalCaptionText');
+    const modalTitle = document.getElementById('modalTitle');
+    const modalDesc = document.getElementById('modalDesc');
 
-    function openModal(imgWrap) {{
-        const img = imgWrap.querySelector('img');
-        if (!img) return;
+    function openModal(wrapEl) {{
+        const img = wrapEl.querySelector('img');
+        const card = wrapEl.closest('.image-card');
+        const titleEl = card ? card.querySelector('.image-card-title') : null;
+        const takeawayEl = card ? card.querySelector('.image-card-takeaway') : null;
+
         modalImg.src = img.src;
-        modalCaption.textContent = img.alt || 'Chi tiet artifact';
+        modalTitle.textContent = titleEl ? titleEl.textContent : img.alt;
+        modalDesc.textContent = takeawayEl ? takeawayEl.textContent : '';
+
         modal.classList.add('active');
         document.body.style.overflow = 'hidden';
     }}
@@ -869,7 +949,18 @@ HTML_PAGE_TEMPLATE = """<!DOCTYPE html>
             closeModalForce();
         }}
     }});
+
+    // Dynamic toggle badge text for code drawers
+    document.querySelectorAll('.code-tab-drawer').forEach(drawer => {{
+        drawer.addEventListener('toggle', () => {{
+            const badge = drawer.querySelector('.code-badge');
+            if (badge) {{
+                badge.innerHTML = drawer.open ? 'Đóng code &utrif;' : 'Xem code cell &dtrif;';
+            }}
+        }});
+    }});
 </script>
+
 </body>
 </html>
 """
@@ -880,7 +971,6 @@ HTML_PAGE_TEMPLATE = """<!DOCTYPE html>
 # ==============================================================================
 def build_html_report(output_path: Path, sections_html: str):
     """Gop tat ca cac thanh phan va xuat file HTML hoan chinh."""
-    # Build stepper cards
     stepper_cards = []
     for i, step in enumerate(PIPELINE_STEPS):
         grad = STEP_GRADIENTS[i % len(STEP_GRADIENTS)]
@@ -902,6 +992,9 @@ def build_html_report(output_path: Path, sections_html: str):
         title=LAB_CONFIG["title"],
         subtitle=LAB_CONFIG["subtitle"],
         author=LAB_CONFIG["author"],
+        author_role=LAB_CONFIG["author_role"],
+        school_name=LAB_CONFIG["school_name"],
+        sub_dept=LAB_CONFIG["sub_dept"],
         python_ver=LAB_CONFIG["python_ver"],
         framework_ver=LAB_CONFIG["framework_ver"],
         dataset_info=LAB_CONFIG["dataset_info"],
@@ -913,35 +1006,33 @@ def build_html_report(output_path: Path, sections_html: str):
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_text(full_html, encoding="utf-8")
-    print(f"Bao cao HTML da duoc tao thanh cong tai: {output_path.resolve()}")
+    print(f"Báo cáo HTML đã được tạo thành công tại: {output_path.resolve()}")
 
 
 if __name__ == "__main__":
-    # Vi du chay sinh bao cao mau
+    # Vi du minh hoa cach dung template
     sample_audit = [
-        {"item": "Gia tri thieu (NaN / Null / Inf)", "expected": "Khong co (0 NaN)", "actual": "0 mau thieu (100% nguyen ven)", "status": "PASSED"},
-        {"item": "Trung lap noi bo tap Train", "expected": "0 mau trung", "actual": "0 mau trung lap (MD5 Hashing)", "status": "PASSED"},
+        {"item": "Giá trị thiếu (NaN / Null / Inf)", "expected": "0 NaN", "actual": "0 mẫu thiếu (100% toàn vẹn)", "status": "PASSED"},
+        {"item": "Mẫu trùng lặp (Duplicate Samples)", "expected": "0 trùng", "actual": "0 mẫu trùng lặp", "status": "PASSED"},
     ]
     sample_struct = [
-        {"pool": "Train Pool", "count": "60.000", "dim": "28 x 28", "channel": "1 (Grayscale)", "dtype": "uint8", "pixel_range": "[0, 255]", "label_range": "[0, 9]", "classes": "10", "ram": "44.86 MB"},
+        {"Tập dữ liệu": "Train Split", "Số mẫu": "40.000", "Kích thước": "3 x 64 x 64", "Kiểu dữ liệu": "float32", "Khoảng pixel": "[0.0, 1.0]", "Số lớp": "10"},
     ]
-    sample_code = """
-import numpy as np
-import hashlib
-assert not np.isnan(X_train).any()
-# MD5 hashing logic...
-"""
-    eda_section = f"""
-    <div class="card" id="section-eda">
+    sample_code = """# Notebook minh hoa: Kiem toan tinh toan ven du lieu
+assert not np.isnan(data).any()
+print("Data integrity audit: PASSED")"""
+
+    sample_sections = f"""
+    <section class="card" id="section-eda">
         <div class="card-header">
-            <h3 class="card-title">Kham Pha & Kiem Toan Du Lieu (EDA)</h3>
+            <h2 class="card-title">1. Khám Phá & Kiểm Toán Dữ Liệu (EDA)</h2>
             <span class="badge badge-info">STAGE 1</span>
         </div>
         {render_data_integrity_section(sample_audit, sample_struct, sample_code)}
-    </div>
+    </section>
     """
 
-    out_file = Path("labs/lab01/reports/sample_report_test.html")
-    build_html_report(out_file, eda_section)
+    out_file = Path("sample_report_preview.html")
+    build_html_report(out_file, sample_sections)
     if out_file.exists():
-        out_file.unlink()  # don dep file test mau
+        out_file.unlink()  # Don dep file preview sau khi kiem tra
