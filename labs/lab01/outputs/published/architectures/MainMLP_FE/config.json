@@ -1,0 +1,8 @@
+{
+  "name": "MainMLP_FE",
+  "in_features": 794,
+  "hidden_dims": [
+    256,
+    128
+  ]
+}

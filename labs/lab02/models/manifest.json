@@ -1,0 +1,65 @@
+{
+  "schema_version": 1,
+  "dataset": "CIFAR10",
+  "path_base": "labs/lab02",
+  "source_registry": "outputs/selected_run.json",
+  "source_run": "outputs/runs/20261030T052121Z_cifar10_scheduled64_b895bfc1",
+  "stage": "finetune",
+  "checkpoint_selection": "Best validation accuracy within each model's selected fine-tune trial; ties prefer lower validation loss, then earlier epoch.",
+  "metric_units": {
+    "accuracy": "fraction",
+    "macro_precision": "fraction",
+    "macro_recall": "fraction",
+    "macro_f1": "fraction",
+    "loss": "cross_entropy"
+  },
+  "distribution": {
+    "weights_included": false,
+    "method": "Obtain checkpoints separately and retain the run-relative paths.",
+    "download_url": null
+  },
+  "models": {
+    "resnet18": {
+      "checkpoint": "outputs/runs/20261030T052121Z_cifar10_scheduled64_b895bfc1/resnet18/finetune/best.pt",
+      "size_bytes": 44795332,
+      "sha256": "86a7b5946270c204ef8523569ec0b80263ba91560be5d91d6b54575158340ee1",
+      "image_size": 64,
+      "dropout": 0.2,
+      "selection_evidence": {
+        "summary_source": "outputs/runs/20261030T052121Z_cifar10_scheduled64_b895bfc1/resnet18/finetune/training_summary.json",
+        "best_val_accuracy": 0.847,
+        "best_epoch": 16
+      },
+      "metrics_source": "outputs/runs/20261030T052121Z_cifar10_scheduled64_b895bfc1/resnet18/finetune/metrics.json",
+      "test_metrics": {
+        "test_samples": 10000,
+        "accuracy": 0.8414,
+        "macro_precision": 0.841238282071442,
+        "macro_recall": 0.8413999999999999,
+        "macro_f1": 0.8405930905831374,
+        "loss": 0.4847467243671417
+      }
+    },
+    "densenet121": {
+      "checkpoint": "outputs/runs/20261030T052121Z_cifar10_scheduled64_b895bfc1/densenet121/finetune/best.pt",
+      "size_bytes": 28384691,
+      "sha256": "54db28c0903c3748328594d7273869bf32ea51b2cb3279440840c927e1697c09",
+      "image_size": 64,
+      "dropout": 0.2,
+      "selection_evidence": {
+        "summary_source": "outputs/runs/20261030T052121Z_cifar10_scheduled64_b895bfc1/densenet121/finetune/training_summary.json",
+        "best_val_accuracy": 0.9186,
+        "best_epoch": 18
+      },
+      "metrics_source": "outputs/runs/20261030T052121Z_cifar10_scheduled64_b895bfc1/densenet121/finetune/metrics.json",
+      "test_metrics": {
+        "test_samples": 10000,
+        "accuracy": 0.918,
+        "macro_precision": 0.9183934461061675,
+        "macro_recall": 0.9179999999999999,
+        "macro_f1": 0.9179775308666167,
+        "loss": 0.3010380268096924
+      }
+    }
+  }
+}

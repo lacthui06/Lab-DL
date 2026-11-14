@@ -1,0 +1,17 @@
+{
+  "kind": "single_image_benchmark",
+  "model": "resnet18",
+  "image_size": 64,
+  "warmup": 20,
+  "repeats": 100,
+  "stage_repeats": 20,
+  "memory_repeats": 20,
+  "sample_interval_seconds": 0.001,
+  "seed": 42,
+  "checkpoint_sha256": "86a7b5946270c204ef8523569ec0b80263ba91560be5d91d6b54575158340ee1",
+  "image_sha256": "bc1876dae20d9c63afe538f3f5893a4e552ead5a06b677b09a0da1e6dbb83b13",
+  "batch_size": 1,
+  "precision": "float32",
+  "model_load_in_timing": false,
+  "independent_process_per_model": true
+}

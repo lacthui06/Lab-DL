@@ -1,0 +1,31 @@
+{
+  "dataset": "CIFAR10",
+  "original_shape": [
+    32,
+    32,
+    3
+  ],
+  "classes": [
+    "airplane",
+    "automobile",
+    "bird",
+    "cat",
+    "deer",
+    "dog",
+    "frog",
+    "horse",
+    "ship",
+    "truck"
+  ],
+  "train_mean_rgb": [
+    0.49113735123910657,
+    0.4821111870234203,
+    0.44644898760893215
+  ],
+  "train_std_rgb": [
+    0.24686913619557865,
+    0.24343012612627343,
+    0.26160339391516846
+  ],
+  "normalization_policy": "Descriptive train statistics only; ImageNet normalization defines input"
+}

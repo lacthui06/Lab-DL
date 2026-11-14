@@ -14,12 +14,8 @@ import pandas as pd
 from IPython.display import Image, display
 from PIL import Image as PILImage
 from sklearn.model_selection import train_test_split
-from ..utils.artifacts import resolve_data_dir, write_json
-
-CLASSES = ['airplane', 'automobile', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck']
-CHECKSUMS = ['c99cafc152244af753f735de768cd75f', 'd4bba439e000b95fd0a9bffe97cbabec',
-             '54ebc095f3ab1f0389bbae665268c751', '634d18415352ddfa80567beed471001a',
-             '482c414d41f54cd18b22e5b47cb7c3cb', '40351d587109b95175f43aff81a1287e']
+from ..utils.delivery import resolve_data_dir, write_json
+from ..utils.constants import CLASSES, CHECKSUMS
 
 
 def read_raw(data_dir: Path) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
@@ -160,6 +156,17 @@ def duplicate_audit(images: dict, labels: dict, indices: dict) -> tuple[pd.DataF
     return pd.DataFrame(checks), pd.DataFrame(suspects, columns=columns)
 
 
+def annotate_correlation(ax, values) -> None:
+    """Label each correlation cell with two decimals and readable text contrast."""
+    matrix = np.asarray(values)
+    heatmap = ax.images[-1]
+    for (row, col), value in np.ndenumerate(matrix):
+        red, green, blue, _ = heatmap.cmap(heatmap.norm(value))
+        luminance = .299 * red + .587 * green + .114 * blue
+        ax.text(col, row, f'{value:.2f}', ha='center', va='center',
+                color='white' if luminance < .5 else 'black', fontsize=8)
+
+
 def save(fig, output: Path, name: str) -> None:
     """Save artifact; notebook gallery displays it separately without duplicate output."""
     fig.tight_layout()
@@ -233,6 +240,7 @@ def build(root: Path, data_dir: Path | None = None) -> Path:
     fig, ax = plt.subplots(figsize=(7,4.8))
     corr = frame.select_dtypes('number').drop(columns=['original_index','label']).corr()
     im = ax.imshow(corr, vmin=-1, vmax=1, cmap='coolwarm')
+    annotate_correlation(ax, corr)
     ax.set(xticks=range(len(corr)), yticks=range(len(corr)), xticklabels=corr.columns, yticklabels=corr.columns)
     ax.tick_params(axis='x', rotation=70); fig.colorbar(im, ax=ax)
     save(fig, output, 'feature_correlation')
@@ -242,6 +250,7 @@ def build(root: Path, data_dir: Path | None = None) -> Path:
     pd.DataFrame(similarity, index=CLASSES, columns=CLASSES).to_csv(output / 'class_similarity_matrix.csv')
     fig, ax = plt.subplots(figsize=(8,5))
     im=ax.imshow(similarity, vmin=-1, vmax=1, cmap='coolwarm')
+    annotate_correlation(ax, similarity)
     ax.set(xticks=range(10),yticks=range(10),xticklabels=CLASSES,yticklabels=CLASSES,title='Correlation of class mean images (train only)')
     ax.tick_params(axis='x', rotation=50); fig.colorbar(im,ax=ax)
     save(fig,output,'class_similarity')

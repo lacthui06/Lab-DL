@@ -7,7 +7,7 @@ description: Quản lý quy trình huấn luyện trên GPU từ xa của Kaggle
 
 ## 1. Tổng quan
 
-Skill này quản lý toàn bộ vòng đời thực thi trên Kaggle GPU - môi trường huấn luyện chính của dự án theo Giao thức Zero Waste. Nó giải quyết một khoảng trống quan trọng: trong khi các skill khác tập trung vào code và mô hình, skill này tập trung vào hạ tầng và vận hành - nơi nhiều vấn đề thực tế phát sinh mà không liên quan đến thuật toán.
+Skill này quản lý vòng đời thực thi khi người dùng chọn Kaggle GPU. Local CPU/GPU vẫn là môi trường hợp lệ theo workload; không tự chuyển sang Kaggle chỉ vì không có CUDA. Skill tập trung vào đường dẫn, tài nguyên, secret và thu hồi artifact.
 
 Các vấn đề điển hình mà skill này giải quyết: secret bị lộ khi push code, ghi nhầm vào thư mục chỉ đọc, DataLoader bị kill do cạn `/dev/shm`, không tìm thấy kết quả sau khi chạy xong, và đặc biệt là hiểu lầm về việc file notebook tương tác nằm ở đâu.
 
@@ -58,7 +58,7 @@ Khi cần push code từ trong Kaggle lên Git, đọc token truy cập qua Kagg
 Đảm bảo code Python ghi tường minh mọi artifact ra `/kaggle/working/`: checkpoint tốt nhất, hình dự đoán, confusion matrix, đường cong huấn luyện, và bảng kết quả. Chỉ những file được ghi ra đĩa theo cách này mới tồn tại sau khi phiên kết thúc và mới có thể đồng bộ về.
 
 ### Bước 6: Đồng bộ artifact về máy cục bộ
-Chọn một trong hai cơ chế: đồng bộ qua Git bằng Secret token, hoặc đóng gói `outputs/` thành file nén rồi tải thủ công. Sau khi đồng bộ, đưa artifact về đúng vị trí `labs/lab0X/outputs/` cục bộ.
+Thu hồi gói artifact về local, giữ nguyên run ID trong `labs/lab0X/outputs/runs/`. Chỉ đưa evidence được chọn và đã rà riêng tư sang `outputs/published/`; không push nguyên thư mục outputs chứa checkpoint, prepared data, console log hoặc secret. Gói đầy đủ được phân phối riêng khi có nhu cầu và đã được rà nội dung.
 
 ### Bước 7: Thu hồi notebook đã chạy có output
 Đây là bước quan trọng và hay bị hiểu sai. File `.ipynb` tương tác không nằm trên đĩa container. Để đưa notebook đã chạy có đầy đủ output lên Git, phải thu hồi qua giao diện Kaggle: dùng chức năng tải notebook về máy (File -> Download Notebook) hoặc lưu phiên bản trên Kaggle (Save Version). Sau đó chép file đã tải vào `labs/lab0X/notebooks/` và commit lên Git.
@@ -69,7 +69,7 @@ Sau khi thu hồi artifact, đọc các con số thực nghiệm và cập nhậ
 ## 5. Deliverables
 
 - Job huấn luyện hoàn tất trên Kaggle GPU với log đầy đủ.
-- Checkpoint tốt nhất được lưu và đồng bộ về `outputs/checkpoints/`.
+- Checkpoint tốt nhất được lưu và đồng bộ về thư mục run gốc `outputs/runs/<run_id>/`.
 - Hình trực quan (dự đoán, confusion matrix, đường cong) được đồng bộ về `outputs/`.
 - Bảng kết quả thực nghiệm được đồng bộ về `outputs/`.
 - File `.ipynb` đầy đủ output được đưa vào `notebooks/` và commit.

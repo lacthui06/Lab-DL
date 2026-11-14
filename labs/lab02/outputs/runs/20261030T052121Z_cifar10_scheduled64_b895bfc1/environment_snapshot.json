@@ -1,0 +1,50 @@
+{
+  "python": "3.12.7 (v3.12.7:0b05ead877f, Sep 30 2024, 23:18:00) [Clang 13.0.0 (clang-1300.0.29.30)]",
+  "torch": "2.2.2",
+  "torchvision": "0.17.2",
+  "device": "cpu",
+  "platform": "macOS-13.5.2-x86_64-i386-64bit",
+  "cpu_count": 8,
+  "device_name": "i386",
+  "cuda": null,
+  "cudnn": null,
+  "timing_policy": "synchronized train/validation passes; fit wall includes logging/checkpoint I/O",
+  "packages": {
+    "torch": {
+      "version": "2.2.2",
+      "requires_python": ">=3.8.0"
+    },
+    "torchvision": {
+      "version": "0.17.2",
+      "requires_python": ">=3.8"
+    },
+    "numpy": {
+      "version": "1.26.4",
+      "requires_python": ">=3.9"
+    },
+    "pandas": {
+      "version": "3.0.6",
+      "requires_python": ">=3.11"
+    },
+    "scikit-learn": {
+      "version": "1.9.1",
+      "requires_python": ">=3.11"
+    },
+    "tensorboard": {
+      "version": "2.21.0",
+      "requires_python": ">=3.9"
+    },
+    "pillow": {
+      "version": "12.3.0",
+      "requires_python": ">=3.10"
+    }
+  },
+  "reproducibility": {
+    "seed": 42,
+    "split_seed": 42,
+    "cudnn_deterministic": true,
+    "cudnn_benchmark": false,
+    "deterministic_algorithms": false,
+    "cross_device_equivalence": "not established; verify on target GPU"
+  }
+}

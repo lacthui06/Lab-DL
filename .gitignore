@@ -1,5 +1,7 @@
 .venv/
-data/
+**/data/*
+!**/data/.gitkeep
+!**/data/README.md
 __pycache__/
 .pytest_cache/
 .ipynb_checkpoints/
@@ -20,19 +22,42 @@ events.out.tfevents.*
 .env
 .env.*
 
+# Downloaded Kaggle upload bundles are too large for GitHub.
+.agents/kaggle-upload/*.zip
+
+# Local benchmark upload inputs; publish reviewed evidence under the lab outputs.
+.agents/single-image-benchmark/
+
+# Raw runs and technical journals stay local; publish selected report evidence.
+**/outputs/runs/
+**/internal_changes.md
+*.zip
+*.tar
+*.tar.gz
+
+# Lab01 evidence restored from main, including small split/prediction arrays.
+!labs/lab01/outputs/eda/split_indices.npz
+!labs/lab01/outputs/published/**/*.npz
+
 # Small locked index artifact, not image data or a learned feature cache.
 !labs/lab02/outputs/eda/split_indices.npz
+*.pickle
+**/outputs/models/*
+**/outputs/checkpoints/*
 
-# Local training archives and process state; metrics and inline notebooks stay in Git.
-*.zip
-*.pid
-labs/lab02/outputs/delivery/
-labs/lab02/outputs/review/local_environment_packages.txt
-labs/lab02/outputs/runs/20261027T124127Z_cifar10_local_remaining224_f6b79d27/
-labs/lab02/outputs/kaggle/**/runtime_source/
-labs/lab02/outputs/kaggle/**/source/
-labs/lab02/outputs/kaggle/**/cache/
-labs/lab02/outputs/kaggle/**/report.html
-labs/lab02/outputs/kaggle/**/source_snapshot/
-labs/lab02/outputs/kaggle/**/delivery_source_snapshot/
-labs/lab02/outputs/kaggle/**/handcrafted_features.csv
+# Deliverable models for Lab 01 (lightweight pure MLP checkpoints < 1MB each for submission)
+!labs/lab01/models/*.pt
+!labs/lab01/models/*.json
+
+# Logs & Output runs
+wandb/
+runs/
+lightning_logs/
+.tensorboard/
+
+# Local-only technical change journals
+
+# Curated report evidence (raw runs remain ignored).
+!labs/lab01/outputs/published/
+!labs/lab01/outputs/published/**/
+!labs/lab01/outputs/published/**/*.csv

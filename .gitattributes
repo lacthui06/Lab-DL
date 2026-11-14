@@ -1,0 +1,3 @@
+# Benchmark manifests verify exact bytes, including the original CSV CRLF endings.
+labs/lab02/outputs/published/single_image_benchmark/** -text
+labs/lab02/outputs/published/single_image_benchmark/**/*.csv whitespace=cr-at-eol

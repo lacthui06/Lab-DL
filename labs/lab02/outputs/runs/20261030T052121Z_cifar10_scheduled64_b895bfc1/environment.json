@@ -1,0 +1,12 @@
+{
+  "python": "3.12.7 (v3.12.7:0b05ead877f, Sep 30 2024, 23:18:00) [Clang 13.0.0 (clang-1300.0.29.30)]",
+  "torch": "2.2.2",
+  "torchvision": "0.17.2",
+  "device": "cpu",
+  "platform": "macOS-13.5.2-x86_64-i386-64bit",
+  "cpu_count": 8,
+  "device_name": "i386",
+  "cuda": null,
+  "cudnn": null,
+  "timing_policy": "synchronized train/validation passes; fit wall includes logging/checkpoint I/O"
+}

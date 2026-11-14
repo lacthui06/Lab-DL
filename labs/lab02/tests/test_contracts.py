@@ -4,8 +4,8 @@ import numpy as np
 import pytest
 import torch
 from torch import nn
-from src.data import balanced_subset, image_transform
-from src.models import build_model, classifier, configure_trainable, features, training_mode
+from src.datasets.data import balanced_subset, image_transform
+from src.models.models import build_model, classifier, configure_trainable, features, training_mode
 from PIL import Image
 
 
@@ -60,7 +60,7 @@ def test_balanced_pilot_has_no_leakage():
 
 @pytest.mark.parametrize('size', [64, 224])
 def test_rgb_preserved_and_normalization(size):
-    from src.models import SPECS
+    from src.models.models import SPECS
     rgb = np.zeros((32, 32, 3), dtype=np.uint8)
     rgb[:, :, 0] = 255
     result = image_transform('resnet18', size)(Image.fromarray(rgb))
@@ -72,8 +72,8 @@ def test_rgb_preserved_and_normalization(size):
 
 
 def test_cifar_split_and_labels(tmp_path):
-    from src.data import prepare_indices
-    from src.reporting import CLASSES
+    from src.datasets.data import prepare_indices
+    from src.utils.reporting import CLASSES
     from torchvision.datasets import CIFAR10
     from pathlib import Path
     import os

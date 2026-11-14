@@ -1,0 +1,12 @@
+{
+  "name": "MainMLP_FE",
+  "seed": 42,
+  "accuracy": 0.896,
+  "macro_f1": 0.8957519689317273,
+  "precision": 0.8957310978973652,
+  "recall": 0.8960000000000001,
+  "loss": 0.30021005868911743,
+  "train_seconds": 78.01061250000203,
+  "parameters": 237706,
+  "best_epoch": 10
+}

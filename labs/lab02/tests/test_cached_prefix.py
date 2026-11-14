@@ -1,7 +1,7 @@
 """Prove cached-prefix training preserves logits, gradients and checkpoint keys."""
 import pytest
 import torch
-from src.models import build_model, configure_trainable, training_mode, last_block, CachedTail
+from src.models.models import build_model, configure_trainable, training_mode, last_block, CachedTail
 
 
 @pytest.mark.parametrize('name', ['resnet18', 'densenet121'])

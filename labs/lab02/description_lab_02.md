@@ -27,181 +27,148 @@ Nguồn đối chiếu: ảnh `Screenshot 2026-10-25 201146.png`, slide trang 23
 
 ## Phạm vi đã chọn trong source
 
-CIFAR-10, ResNet18 và DenseNet121 là lựa chọn của bài làm. Ảnh đề không bắt buộc CIFAR-10, độ phân giải 224 hay phải chạy đủ VGG/ResNet/DenseNet. Source dùng API `weights=...` để tải weights ImageNet thay cho cờ `pretrained=True` cũ. Đặc tả, kiểm tra đáp ứng đề và giới hạn bằng chứng nằm trong [walkthrough_lab_02.md](walkthrough_lab_02.md).
+CIFAR-10, ResNet18 và DenseNet121 là lựa chọn của bài làm. Ảnh đề không bắt buộc CIFAR-10, độ phân giải 224 hay phải chạy đủ VGG/ResNet/DenseNet. Source dùng API `weights=...` để tải weights ImageNet thay cho cờ `pretrained=True` cũ. Đặc tả, kiểm tra đáp ứng đề và giới hạn bằng chứng nằm trong [reports/walkthrough_lab_02.md](reports/walkthrough_lab_02.md).
 
-## Yêu cầu cập nhật đã thảo luận: tuning DenseNet121
+## Các quyết định đã ghi nhận và lý do chọn kiến trúc
 
-### Thiết kế thay thế mới nhất: notebook chuẩn hai model
+Đây là bản tổng hợp từ source, cấu hình run scheduled đã chọn và các quyết định đã ghi ở tài liệu này; không phải trích nguyên văn lịch sử chat. Không coi mọi lựa chọn kỹ thuật là yêu cầu của giảng viên. Khi có khác biệt, config/metadata của từng run mô tả điều kiện thực thi của run đó.
 
-Phần này thay các lựa chọn DenseNet-only/shared-separate và 5+5 trial cũ bên dưới trong thí nghiệm mới; các phần cũ là lịch sử thảo luận, không cộng dồn ngân sách. Giữ bốn điều kiện ResNet18 head/fine-tune và DenseNet121 head/fine-tune. Cả hai train head mới từ ImageNet, cache train/val feature một lần, train classifier 10 epoch, AdamW LR 0.001/weight decay 1e-4/cosine. Fine-tune ResNet mở layer4+fc; DenseNet mở block4+norm5+classifier, BN statistics cố định. Mỗi model 3 Optuna trial tìm LR chung log [1e-6,1e-3], weight decay cố định 1e-4, tối đa 10 epoch/trial, AdamW/cosine; không augmentation/dropout/pruning. Tổng 6 trial, tối đa 60 epoch fine-tune; head và extraction là chi phí riêng. Objective/checkpoint/early stopping theo validation loss, min_delta 0.001/patience 3/min_epochs 4. Cả hai model khóa winner trước test. Notebook 04 dùng src.standard_suite, hiển thị và lưu plot loss/accuracy/LR mỗi epoch, trial table sau mỗi trial, đánh giá từng model và tổng hợp bốn điều kiện cuối cùng. Config standard.json là nguồn triển khai. Target dưới 5 giờ chưa được đo; 3 trial không bảo đảm tối ưu.
-
-Phạm vi toàn bài vẫn gồm ResNet18 và DenseNet121. Notebook Kaggle chạy ResNet18 theo recipe cũ trong completed.json (6 head trial, 9 fine candidate), chỉ đổi DenseNet sang Optuna. ResNet được chạy bổ sung riêng, không làm chạy lại DenseNet đã hoàn tất; tổng thời gian gồm cả hai pipeline. So sánh kết quả được ghi rõ khác tiêu chí chọn checkpoint giữa hai recipe.
-
-Phần này ghi yêu cầu mở rộng riêng của bài làm, không thay thế đề gốc phía trên. Đây là đặc tả trước triển khai; chưa có kết quả Optuna mới và chưa được coi là đã thay đổi code training. Chỉ triển khai/chạy khi người dùng chốt bước tiếp theo.
-
-### 1. Nhánh và ranh giới thay đổi
-
-- Phát triển trên nhánh `lab02`. Không merge hoặc lấy thay đổi từ `thuong-lab02` trong đợt này.
-- Tập trung vào fine-tuning DenseNet121 và cách tìm/chọn cấu hình. EDA, dữ liệu, split và các phần ngoài phạm vi này tiếp tục dùng thiết kế hiện hành; không mở rộng lại thí nghiệm ResNet18 chỉ vì thêm Optuna cho DenseNet.
-- Không bắt buộc duy trì thiết kế/bảng so sánh candidate cũ trong phần đang làm mới. Khi có kết quả mới hợp lệ, thay phần hiển thị đang dùng trong notebook, bảng/hình kết quả và walkthrough tương ứng; không trộn history, checkpoint hoặc metrics cũ vào thí nghiệm mới.
-- Quyền thay kết quả đang trình bày không đồng nghĩa xóa run gốc. Lần chạy mới vẫn có run ID riêng, log và provenance; không ghi đè artifact nguồn hoặc tuyên bố số liệu mới trước khi chạy.
-- Chưa thêm augmentation hoặc dropout. Chỉ xem xét trong bước sau nếu kết quả mới còn overfit; không đưa code/recipe từ nhánh kia vào trước.
-
-### 2. Phạm vi mở tầng
-
-- Giới hạn việc mở backbone trong `features.denseblock4`; `denseblock1–3`, `transition3` và các phần backbone trước đó giữ đóng băng.
-- DenseNet121 có 16 **dense layer** trong block4; mỗi dense layer chứa nhiều module/phép toán. Mở cả 16 tương đương mở toàn bộ block4, không phải chỉ 16 module PyTorch đơn lẻ.
-- Mở cố định toàn bộ 16 dense layer của `denseblock4` (`denselayer1–16`) trong mọi trial; không tuning số layer mở.
-- Giữ đúng chính sách `last_block` hiện có trong `src.models.configure_trainable`: train toàn bộ `features.denseblock4`, affine weights/bias của `features.norm5` và `classifier`. `norm5` nằm sau block4, không phải một trong 16 dense layer. Cả hai phương án LR dùng cùng chính sách này.
-- BatchNorm trong các phần được mở vẫn train affine weights/bias, nhưng running mean/variance giữ cố định bằng `src.models.training_mode`. Các BatchNorm thuộc backbone đóng băng không cập nhật cả affine parameters lẫn running statistics.
-- Các lựa chọn mở 4/8/16 layer từng được thảo luận nhưng không thuộc thiết kế đã chốt.
-
-### 3. Optuna và hai phương án learning rate
-
-- Bổ sung Optuna để chọn hyperparameter dựa trên validation thay cho chỉ dựa vào danh sách candidate fine-tune cố định.
-- So sánh hai phương án: **LR chung** cho phần backbone được mở và classifier; **LR riêng** cho hai nhóm tham số. Trong phương án chung, hai nhóm phải thực sự có cùng LR; trong phương án riêng, ghi đủ LR từng nhóm và không mặc định head luôn gấp 10 lần backbone.
-- Các tham số đóng băng không cập nhật. Head là classifier cuối; backbone được mở là phần trích xuất đặc trưng bên trong block4 được phép cập nhật.
-- Dùng cùng split, checkpoint head khởi tạo, seed, batch size, preprocessing, phạm vi mở tầng và ngân sách tối đa cho hai phương án để so sánh công bằng. Reset về cùng điểm khởi tạo trước mỗi trial.
-- Mỗi phương án được tuning LR phù hợp riêng; so sánh hai recipe tốt nhất không được mô tả thành bằng chứng nhân quả riêng của LR grouping nếu còn khác độ mở hoặc tham số khác.
-- Giữ AdamW, tìm LR và weight decay; cố định mở toàn bộ block4. Phạm vi số học của search space phải được ghi rõ trước khi chạy, không tự kế thừa mọi candidate ngoài block4.
-
-### 4. Scheduler và ngân sách
-
-- Giữ `CosineAnnealingLR` trong từng trial cho cả hai phương án. Scheduler là nhóm phương pháp điều chỉnh LR; cosine là loại cụ thể được đề xuất ở đây, không phải một bước riêng ngoài scheduler.
-- Optuna tìm LR ban đầu; cosine giảm LR từng nhóm trong quá trình train, step sau epoch. Không tìm thêm loại scheduler trong cùng thí nghiệm này.
-- Ngân sách đã chốt: **5 trial cho LR chung + 5 trial cho LR riêng = tổng 10 trial**, tối đa **20 epoch/trial**, có early stopping. Đây là khảo sát ban đầu với ngân sách nhỏ, chưa đủ khẳng định ưu thế thống kê.
-- Nếu sau này được yêu cầu mở rộng, tiếp tục study đã lưu lên 10 trial mỗi phương án; không tự tăng ngân sách hoặc chạy lại từ đầu.
-- Phương án hiện được đề xuất để dễ đọc kết quả: dùng early stopping, chưa bật pruning ở lượt đầu. Nếu thêm pruning phải chốt warm-up/startup và điều kiện loại trial trước khi chạy; không ghi mặc định đã được đồng ý.
-
-### 5. Thống nhất objective, checkpoint và early stopping
-
-- Cả ba dùng **validation cross-entropy loss**, theo chiều minimize. Accuracy, macro F1 và các metric theo lớp vẫn lưu để đánh giá; không dùng test hoặc accuracy để âm thầm thay checkpoint thắng theo loss.
-- Người dùng giao lựa chọn `patience` và `min_delta` cho người triển khai. Thiết lập được đề xuất: `patience=4`, `min_delta=0.001`, không early-stop trước epoch 6, tối đa 20 epoch.
-- Khởi tạo mốc tốt nhất bằng loss hợp lệ đầu tiên. Một epoch chỉ được công nhận là cải thiện nếu loss nhỏ hơn mốc đang lưu ít nhất `min_delta`; cùng phép so sánh này dùng để lưu checkpoint và reset patience. Objective trả loss tại checkpoint đã lưu theo quy tắc đó, không lấy một cực tiểu nhỏ hơn nhưng không có checkpoint tương ứng.
-- Epoch không đạt mức cải thiện tăng bộ đếm; đủ patience và đã tới epoch tối thiểu thì dừng. Trial có loss NaN/Inf được ghi failed, không làm ứng viên thắng.
-- Những ngưỡng này là lựa chọn vận hành khởi đầu, không phải giá trị đã chứng minh tối ưu. Cosine cần ghi đúng T_max và LR thực mỗi epoch; early stopping có thể kết thúc trước khi LR giảm hết lịch 20 epoch.
-
-### 6. Đánh giá và artifact
-
-- Dùng validation để chọn cấu hình/trial/checkpoint; chỉ đánh giá test sau khi khóa lựa chọn. Ghi giới hạn rằng official test đã từng được xem trong các thí nghiệm cũ; không tuyên bố đây là test hoàn toàn chưa từng tiếp xúc ở cấp độ thiết kế nghiên cứu.
-- Mọi trial lưu cấu hình, nhóm LR, số dense layer mở, số tham số trainable, history train/validation loss và accuracy, epoch checkpoint, trạng thái dừng và log. Lưu study/trial table, best parameters và nguồn checkpoint khởi tạo.
-- So sánh LR chung/riêng bằng bảng metrics và đường cong có nhãn rõ; giữ confusion matrix, ROC/PR OvR, mẫu dự đoán và kiểm chứng save/load trên test trong phần kết quả được cập nhật.
-- Thí nghiệm mới thay nội dung đang hiển thị trong phạm vi được sửa sau khi có evidence; output ngoài phạm vi giữ nguyên. Không thêm một nhánh báo cáo trùng lặp chỉ để giữ thiết kế candidate cũ.
-- Sửa code/lỗi môi trường/log kỹ thuật giữ local; walkthrough trình bày phương pháp, kết quả và giới hạn. Chưa chạy thì ghi chưa chạy, không tạo benchmark giả hoặc kết luận đã giảm overfit.
-
-### 7. Những điểm còn cần chốt trước triển khai
-
-Độ mở và ngân sách đã chốt: toàn bộ block4 cùng norm5/classifier theo chính sách hiện hành, 5 trial mỗi phương án, tổng 10 trial, tối đa 20 epoch/trial. Trước khi chạy cần ghi rõ search space LR/weight decay và batch size; đề xuất lượt đầu chưa dùng pruning. Những chi tiết thực thi này không được làm thay đổi ngân sách hoặc mở thêm block ngoài phạm vi đã chốt.
-
-### 8. Bảng lộ trình triển khai (Pipeline Execution Roadmap)
-
-Bảng mô tả luồng mục tiêu cho notebook modeling sau cập nhật, theo định dạng Lab01: bước, giai đoạn, nội dung, module và artifact. Các module/hàm ghi “cần bổ sung/cập nhật” chưa được coi là đã triển khai; tên artifact mới là hợp đồng dự kiến. Phần EDA và head preparation được tái sử dụng; không mặc định chạy lại mỗi khi đọc notebook hoặc tuning.
-
-| Bước | Giai đoạn | Nội dung chi tiết | Module triển khai | Output / artifact |
-|---|---|---|---|---|
-| 1 | Setup & Import | Nạp cấu hình, seed, thiết bị, đường dẫn dữ liệu; tách chế độ xem và thực thi | [src/training/trainer.py](src/training/trainer.py): `seed_all`<br>[src/utils/artifacts.py](src/utils/artifacts.py): `resolve_data_dir` | Run riêng, config, environment snapshot, console log local và thông tin phiên bản source |
-| 2 | EDA & Split Handoff | Dùng split stratified 45.000/5.000 và official test 10.000; xác minh không giao train/validation, thống kê và integrity | [src/datasets/eda.py](src/datasets/eda.py): `locked_split`, `duplicate_audit`, `export_summary`<br>[src/datasets/classification.py](src/datasets/classification.py): `prepare_indices` | `split_indices.npz`, `selected_indices.npz`, EDA tables/figures, data summary và hash split |
-| 3 | Preprocessing & DataLoaders | RGB, transform ImageNet, input 224×224; cùng split/batch giữa hai phương án; chưa augmentation | [src/datasets/classification.py](src/datasets/classification.py): `image_transform`, `IndexedImages`, `image_loader` | Cấu hình preprocessing, kiểm tra shape/nhãn/membership; train/val/test loaders |
-| 4 | Khóa điểm khởi tạo và phạm vi fine-tune | Train head mới một lần từ ImageNet pretrained rồi nạp checkpoint được chọn cho mọi trial; mở block4 + norm5 + classifier, đóng băng phần trước; kiểm tra gradient/BN | [src/models/backbones.py](src/models/backbones.py): `build_model`, `configure_trainable`, `training_mode`, `parameter_counts` | Hash checkpoint nguồn, kiến trúc, danh sách trainable/frozen, số tham số và kết quả sanity/gradient check |
-| 5 | Định nghĩa hai study Optuna | LR chung: một LR cho cả hai nhóm; LR riêng: LR backbone và LR head; AdamW, weight decay và ngân sách bằng nhau | [src/training/optuna_dense.py](src/training/optuna_dense.py): `suggest`<br>[src/training/tuning.py](src/training/tuning.py) | Search-space config, seed/sampler, hai study lưu bền, 5 trial mỗi study và bảng trial |
-| 6 | Train từng trial + cosine | Reset model về cùng head checkpoint; cập nhật các tham số mở; train tối đa 20 epoch, cosine step cuối epoch, chưa pruning ở phương án đề xuất | [src/training/trainer.py](src/training/trainer.py)<br>[src/training/trainer.py](src/training/trainer.py): `fit`, `pass_epoch` | Mỗi trial: config, TensorBoard, history loss/accuracy và LR từng nhóm, thời gian, log và trạng thái |
-| 7 | Checkpoint & Early Stopping thống nhất | Validation CE loss, minimize; cùng min_delta 0.001 cho lưu checkpoint và reset bộ đếm; patience 4, dừng từ epoch 6 | [src/training/trainer.py](src/training/trainer.py)<br>[src/training/trainer.py](src/training/trainer.py): `fit` | Best checkpoint mỗi trial, loss/epoch tại checkpoint, số epoch thực và lý do dừng; objective đúng checkpoint |
-| 8 | Khóa trial thắng mỗi phương án | Chọn bằng objective validation loss đã thống nhất; không dùng test để chọn; ghi cả accuracy/macro F1 khi đo | [src/training/tuning.py](src/training/tuning.py): `select_trial` | `best_parameters.json`, bảng so sánh validation của hai phương án, study history và checkpoint được khóa |
-| 9 | Đánh giá test & Trực quan hóa | Đánh giá hai checkpoint đã khóa trên cùng official test; so loss/accuracy/F1, hội tụ, confusion có số, ROC/PR OvR và mẫu dự đoán | [src/training/trainer.py](src/training/trainer.py): `predict`<br>[src/utils/plots.py](src/utils/plots.py): `export_evaluation` | Metrics JSON, classification report, confusion CSV/PNG, test predictions NPZ, ROC/PR và ảnh dự đoán; đường cong train/val của hai phương án |
-| 10 | Save/Load & Test lại | Tạo model mới từ kiến trúc đã lưu, nạp checkpoint, eval trên test và kiểm tra khớp dự đoán/metrics theo tolerance | [src/training/trainer.py](src/training/trainer.py): `run_model`<br>[src/models/backbones.py](src/models/backbones.py) | Model metadata/checkpoint, roundtrip verification, full-test-after-load metrics và lưới nhãn thật/dự đoán/confidence |
-| 11 | Notebook, Walkthrough & Bàn giao | Thay phần kết quả trong phạm vi cập nhật bằng artifact mới; phần ngoài phạm vi giữ nguyên; cập nhật roadmap đúng hàm thật | [src/utils/notebook_views.py](src/utils/notebook_views.py)<br>[src/utils/artifacts.py](src/utils/artifacts.py) | Bảng/hình và nhận xét từ run mới, provenance, hướng dẫn xem/tái lập; log kỹ thuật giữ local, chưa tạo PDF |
-
-Roadmap này không phải xác nhận đã chạy Optuna. Trước khi triển khai sẽ thay tên/hàm dự kiến bằng API thực tế và kiểm tra notebook không vô tình kích hoạt training trong chế độ xem.
-
-Các phần trên chưa phải lệnh chạy huấn luyện; lượt cập nhật này chỉ ghi nhận phạm vi và thảo luận vào description.
-
-### 9. Chạy lại toàn bộ trên Kaggle
-
-Không dùng checkpoint head cũ. Mặc định head_checkpoint=null: tải DenseNet121 pretrained ImageNet, thay classifier CIFAR10 và train head mới 10 epoch, LR 0.001, AdamW weight_decay 1e-4. Chọn head bằng validation loss rồi reset mọi Optuna trial về cùng checkpoint head mới. Chi phí 10 epoch head là phần bổ sung ngoài ngân sách 5+5 trial fine-tune. Notebook 03 tự tải CIFAR10 khi chưa gắn input, ghi output và weights cache dưới /kaggle/working, đóng gói artifacts khi hoàn tất hoặc training lỗi. Chưa khẳng định GPU end-to-end khi chưa có run thực tế.
-
-## Kiến trúc mô hình và lý do lựa chọn
-
-Bài toán sử dụng phương pháp Chuyển giao học tập (Transfer Learning) từ tập dữ liệu quy mô lớn ImageNet sang CIFAR-10 (10 lớp, ảnh gốc 32×32 được chuẩn hóa và nâng tỷ lệ lên 224×224 theo ImageNet standard). Hai kiến trúc mạng nơ-ron tích chập (CNN) được lựa chọn khảo sát là **ResNet-18** và **DenseNet-121**.
-
-Cả hai mô hình đều sử dụng trọng số khởi tạo chuẩn `IMAGENET1K_V1` từ `torchvision.models`. Lớp phân loại cuối cùng (classifier/fc) được thay thế bằng một lớp `nn.Linear` có kích thước đầu ra bằng 10 ứng với 10 lớp của CIFAR-10. Hàm mất mát là `nn.CrossEntropyLoss()` (nhận raw logits trực tiếp từ mô hình, không áp dụng hàm `Softmax` trước loss để đảm bảo độ ổn định số học qua log-sum-exp trick).
-
-### 1. Bảng so sánh tham số và phạm vi huấn luyện
-
-| Thuộc tính / Mô hình | ResNet-18 | DenseNet-121 |
+| Chủ đề | Quyết định hiện hành và lý do | Giới hạn hoặc phương án đã thay thế |
 |---|---|---|
-| **Kích thước đầu vào** | $3 \times 224 \times 224$ (RGB) | $3 \times 224 \times 224$ (RGB) |
-| **Kiến trúc phân loại gốc** | `fc`: Linear(512 $\rightarrow$ 1000) | `classifier`: Linear(1024 $\rightarrow$ 1000) |
-| **Kiến trúc phân loại CIFAR-10** | `fc`: Linear(512 $\rightarrow$ 10) | `classifier`: Linear(1024 $\rightarrow$ 10) |
-| **Tổng số tham số (Total parameters)** | 11.181.642 (100%) | 6.964.106 (100%) |
-| **Giai đoạn 1: Head-only (Linear Probing)** | 5.130 tham số (0,046%) | 10.250 tham số (0,147%) |
-| - Phạm vi trainable | Chỉ lớp `fc` | Chỉ lớp `classifier` |
-| - Trạng thái backbone | Đóng băng hoàn toàn (frozen) | Đóng băng hoàn toàn (frozen) |
-| **Giai đoạn 2: Fine-tuning (`last_block`)** | 8.398.858 tham số (75,11%) | 2.170.378 tham số (31,17%) |
-| - Phạm vi trainable | `layer4` + `fc` | `features.denseblock4` + `features.norm5` + `classifier` |
-| - Trạng thái backbone | Đóng băng `conv1`, `bn1`, `layer1–3` | Đóng băng `conv0`, `norm0`, `denseblock1–3`, `transition1–3` |
-| **Giai đoạn 2 mở rộng (`last_two_blocks`)** | 10.498.570 tham số (93,89%) | 5.534.474 tham số (79,47%) |
-| - Phạm vi trainable | `layer3` + `layer4` + `fc` | `denseblock3` + `transition3` + `denseblock4` + `norm5` + `classifier` |
+| Dataset/split | CIFAR-10 RGB; 45.000 train, 5.000 validation, 10.000 test; lưu indices, seed 42 | Test không chọn cấu hình; một seed chưa đánh giá độ ổn định |
+| Backbone | ResNet18 và DenseNet121, weights ImageNet1K_V1 tường minh; thay classifier 10 lớp | Đây là lựa chọn bài làm; đề không bắt buộc chạy VGG hoặc chứng minh hai mạng tối ưu |
+| Preprocessing | Run scheduled resize 64×64, normalize theo pretrained weights; giữ RGB | 64 là điều kiện thực nghiệm tiết kiệm tính toán, không đồng nhất benchmark chuẩn 224; feature thủ công ở EDA không nối vào classifier |
+| Hai giai đoạn | Học classifier từ pooled features trước; fine-tune từ best head checkpoint | Head cache không đồng nghĩa mọi fine-tune đều dùng cache |
+| Freeze/BatchNorm | Scheduled mở các module đã liệt kê bên dưới, dưới 50% tham số; BN running statistics luôn cố định | Frozen weights không có nghĩa module không thực hiện forward; BN affine ở phần mở vẫn học |
+| Regularization | Dropout 0,2; crop/flip chỉ fine-tune train; validation/test deterministic | Không ghép cache cố định với augmentation mới mỗi lượt |
+| Optimizer/scheduler | Scheduled: AdamW, head 1e-3, fine backbone 1e-4/head 1e-3; cosine ratio xuống 0,1 | Run lịch sử có search/cấu hình khác; không gọi scheduled là optimizer ablation |
+| Selection | Checkpoint: val accuracy, hòa xét val loss rồi epoch sớm; stopping theo val loss | Hai tiêu chí khác nhau; không chọn theo test |
+| Monitoring/save-load | History, TensorBoard artifacts, checkpoint metadata và roundtrip đã lưu | Xem notebook không khởi động server hoặc thực hiện lại full-test sau load |
+| Benchmark bổ sung | Training batch 1 riêng, checkpoint bất biến, process riêng; giữ inference một ảnh đã có | Số CPU training và T4 inference có phạm vi/thiết bị khác nhau, không ghép thành cùng phép đo |
 
-### 2. Chi tiết kiến trúc ResNet-18 (Residual Network)
+### Vì sao ResNet18 và DenseNet121?
 
-ResNet-18 giải quyết vấn đề tiêu biến gradient (vanishing gradient) khi tăng độ sâu mạng thông qua cơ chế kết nối tắt (residual shortcut / skip connection): $\mathbf{y} = \mathcal{F}(\mathbf{x}, \{W_i\}) + \mathbf{x}$.
+ResNet18 dùng residual connection: block học phần hiệu chỉnh rồi cộng với nhánh tắt. Mạng có bốn stage, mỗi stage hai BasicBlock, thuận tiện khảo sát thay head và mở các block cuối. DenseNet121 nối các feature map trước vào đầu vào layer sau trong cùng dense block; điều này cho phép tái sử dụng đặc trưng với số tham số khác ResNet. Cặp này phục vụ mục tiêu học hai kiểu kết nối và fine-tuning, không phải kết quả tìm kiếm kiến trúc tối ưu.
 
-```text
-ResNet(
-  (conv1): Conv2d(3, 64, kernel_size=(7, 7), stride=(2, 2), padding=(3, 3), bias=False)
-  (bn1): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
-  (relu): ReLU(inplace=True)
-  (maxpool): MaxPool2d(kernel_size=3, stride=2, padding=1)
-  (layer1): Sequential(2 BasicBlocks, 64 channels, stride 1)
-  (layer2): Sequential(2 BasicBlocks, 128 channels, stride 2, downsample shortcut)
-  (layer3): Sequential(2 BasicBlocks, 256 channels, stride 2, downsample shortcut)
-  (layer4): Sequential(2 BasicBlocks, 512 channels, stride 2, downsample shortcut)
-  (avgpool): AdaptiveAvgPool2d(output_size=(1, 1))
-  (fc): Linear(in_features=512, out_features=10, bias=True)
-)
-```
+DenseNet ít tham số hơn trong cấu hình này nhưng concatenation, activation và đường truyền gradient có thể làm thời gian/bộ nhớ khác kỳ vọng. So sánh hiện tại thay đồng thời kiến trúc và recipe unfreeze; không quy toàn bộ chênh lệch cho residual hay dense connection. Resize 64 vẫn dùng stem ImageNet nguyên bản, không tự thay stem thành CNN riêng cho CIFAR.
 
-- **Đặc điểm**: Mỗi `BasicBlock` gồm 2 lớp tích chập $3\times 3$ kèm BatchNorm và ReLU. Ở `layer4`, không gian đặc trưng được giảm về $7\times 7$ với 512 kênh trước khi qua `AdaptiveAvgPool2d` tạo vector đặc trưng 512 chiều.
-- **Khối mở (`layer4` + `fc`)**: Chiếm 8.398.858 tham số (~75,11% toàn mạng). Việc mở toàn bộ `layer4` cho phép tinh chỉnh các bộ lọc ngữ nghĩa cấp cao mà không làm xáo trộn các bộ lọc phát hiện cạnh, màu sắc sơ cấp ở các tầng dưới (`layer1–3`).
+### Kiến trúc theo layer/module của model thực tế
 
-### 3. Chi tiết kiến trúc DenseNet-121 (Densely Connected Network)
+Các mô tả sau là cấu trúc của `build_model(..., dropout=0.2)` cho run scheduled; convolution mặc định không bias trừ classifier. Tên trong ngoặc là tên module để tra source và checkpoint. Bảng tensor tham số và toàn bộ `str(model)` được notebook mở rộng từ `parameters.csv` và `architecture.txt` của đúng run, không dựng một sơ đồ khác rồi gọi là kiến trúc đã chạy.
 
-DenseNet-121 mở rộng ý tưởng skip connection bằng cách nối tất cả các tầng trực tiếp với nhau (Dense Connectivity): Mỗi tầng nhận đầu vào là phép ghép nối kênh (channel concatenation) của đầu ra từ toàn bộ các tầng trước đó: $\mathbf{x}_\ell = H_\ell([\mathbf{x}_0, \mathbf{x}_1, \ldots, \mathbf{x}_{\ell-1}])$.
+**ResNet18:**
 
-```text
-DenseNet(
-  (features): Sequential(
-    (conv0): Conv2d(3, 64, kernel_size=(7, 7), stride=(2, 2), padding=(3, 3), bias=False)
-    (norm0): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
-    (relu0): ReLU(inplace=True)
-    (pool0): MaxPool2d(kernel_size=3, stride=2, padding=1)
-    (denseblock1): 6 _DenseLayers (growth_rate k=32, out_channels=256)
-    (transition1): Conv2d(256, 128, 1x1) + AvgPool2d(2, 2)
-    (denseblock2): 12 _DenseLayers (growth_rate k=32, out_channels=512)
-    (transition2): Conv2d(512, 256, 1x1) + AvgPool2d(2, 2)
-    (denseblock3): 24 _DenseLayers (growth_rate k=32, out_channels=1024)
-    (transition3): Conv2d(1024, 512, 1x1) + AvgPool2d(2, 2)
-    (denseblock4): 16 _DenseLayers (growth_rate k=32, out_channels=1024)
-    (norm5): BatchNorm2d(1024, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
-  )
-  (classifier): Linear(in_features=1024, out_features=10, bias=True)
-)
-```
+| Thứ tự | Layer/module | Kênh và phép toán |
+|---|---|---|
+| 1 | `conv1`, `bn1`, `relu`, `maxpool` | Conv 7×7, 3→64, stride 2/pad 3; BN64; ReLU; MaxPool3 stride 2/pad 1 |
+| 2 | `layer1.0`, `layer1.1` | Hai BasicBlock 64→64; mỗi block Conv3→BN→ReLU→Conv3→BN→cộng identity→ReLU |
+| 3 | `layer2.0`, `layer2.1` | 64→128 rồi 128→128; block đầu stride 2 và nhánh tắt Conv1 stride 2 + BN |
+| 4 | `layer3.0`, `layer3.1` | 128→256 rồi 256→256; block đầu downsample như trên |
+| 5 | `layer4.0`, `layer4.1` | 256→512 rồi 512→512; block đầu downsample như trên |
+| 6 | `avgpool`, flatten | AdaptiveAvgPool(1,1), mỗi ảnh thành vector 512 |
+| 7 | `fc.0`, `fc.1` | Dropout(0,2) → Linear(512,10), bias=True; output logits |
 
-- **Cấu trúc mỗi `_DenseLayer` (Bottleneck design)**:
-  - `norm1` (BatchNorm) $\rightarrow$ `relu1` $\rightarrow$ `conv1` ($1\times 1$, bottleneck $4k=128$ kênh)
-  - `norm2` (BatchNorm) $\rightarrow$ `relu2` $\rightarrow$ `conv2` ($3\times 3$, tạo $k=32$ kênh đặc trưng mới)
-- **Tầng chuyển tiếp (`Transition Layer`)**: Thực hiện giảm số kênh (compression rate $\theta = 0,5$) bằng tích chập $1\times 1$ và giảm kích thước không gian bằng $2\times 2$ Average Pooling.
-- **Khối mở (`features.denseblock4` + `features.norm5` + `classifier`)**: Gồm 16 dense layers cuối cùng và lớp chuẩn hóa cuối trước khi vào classifier. Chiếm 2.170.378 tham số (~31,17% toàn mạng).
+Mỗi BasicBlock có các tên con `conv1`, `bn1`, `relu`, `conv2`, `bn2`; ba block đổi kênh có thêm `downsample.0` (Conv1) và `downsample.1` (BN). Conv3 dùng padding 1; stride 2 ở conv1 của block đầu stage 2–4. Đầu vào 64×64 cho các mốc spatial 32→16→16→8→4→2→1 trước classifier. Scheduled chỉ mở `layer4.1` và `fc`; phần còn lại freeze.
 
-### 4. Lý do lựa chọn và Chiến lược Transfer Learning
+**DenseNet121:**
 
-1. **Khả năng tái sử dụng đặc trưng thị giác (Feature Reusability)**:
-   - CIFAR-10 có kích thước tập dữ liệu vừa phải (50.000 ảnh). Nếu huấn luyện từ đầu (scratch) trên mạng sâu 18 hay 121 tầng, mô hình rất dễ rơi vào tình trạng overfitting nghiêm trọng hoặc khó hội tụ.
-   - Trọng số ImageNet-1K cung cấp bộ biểu diễn đặc trưng tổng quát xuất sắc, giúp rút ngắn thời gian hội tụ và đạt độ chính xác cao.
-2. **Chiến lược huấn luyện 2 giai đoạn (Two-Stage Transfer Learning Protocol)**:
-   - **Giai đoạn 1 (Linear Probing / Head Training)**: Đóng băng toàn bộ backbone, chỉ huấn luyện classifier mới với learning rate $10^{-3}$. Giai đoạn này cho phép trích xuất đặc trưng cố định (feature caching), tính toán cực nhanh (chỉ mất vài giây/epoch) để tìm ra trọng số đầu phân loại thích ứng ban đầu mà không làm biến dạng các trọng số tiền huấn luyện.
-   - **Giai đoạn 2 (Fine-tuning)**: Mở khóa các tầng đặc trưng ngữ nghĩa cuối (`layer4` của ResNet-18, `denseblock4 + norm5` của DenseNet-121) và huấn luyện với learning rate rất nhỏ ($10^{-5} - 10^{-4}$). Điều này giúp tinh chỉnh các biểu diễn cấp cao phù hợp với 10 lớp của CIFAR-10, đồng thời hạn chế tối đa nguy cơ "quên kiến thức cũ" (Catastrophic Forgetting).
-3. **Quy tắc kiểm soát BatchNorm nghiêm ngặt (`training_mode`)**:
-   - Khi fine-tune, tất cả các lớp `BatchNorm2d` được ép hoạt động ở chế độ `eval()` (giữ cố định `running_mean` và `running_var` được học từ ImageNet, chỉ cho phép cập nhật các tham số affine $\gamma, \beta$ nếu tầng đó thuộc khối được mở).
-   - Lý do: Batch size nhỏ trong quá trình fine-tune và sự dịch chuyển phân bố dữ liệu (Domain Shift giữa ImageNet và CIFAR-10) sẽ làm sai lệch nghiêm trọng các thống kê chuẩn hóa nếu bật cập nhật running statistics, dẫn đến suy giảm độ chính xác và mất ổn định gradient.
+| Thứ tự | Layer/module | Kênh và phép toán |
+|---|---|---|
+| 1 | `features.conv0/norm0/relu0/pool0` | Conv7 3→64 stride 2/pad 3; BN64; ReLU; MaxPool3 stride 2/pad 1 |
+| 2 | `features.denseblock1` | 6 DenseLayer; growth rate 32: 64→256 |
+| 3 | `features.transition1` | BN256→ReLU→Conv1 256→128→AvgPool2 stride 2 |
+| 4 | `features.denseblock2` | 12 DenseLayer: 128→512 |
+| 5 | `features.transition2` | BN512→ReLU→Conv1 512→256→AvgPool2 stride 2 |
+| 6 | `features.denseblock3` | 24 DenseLayer: 256→1024 |
+| 7 | `features.transition3` | BN1024→ReLU→Conv1 1024→512→AvgPool2 stride 2 |
+| 8 | `features.denseblock4`, `features.norm5` | 16 DenseLayer: 512→1024; BN1024 |
+| 9 | Functional ReLU, adaptive average pool, flatten | ReLU→AdaptiveAvgPool(1,1)→vector 1024; các phép functional không hiện như module riêng trong str(model) |
+| 10 | `classifier.0`, `classifier.1` | Dropout(0,2)→Linear(1024,10), bias=True; output logits |
+
+Mỗi `denselayerN` gồm `norm1`→`relu1`→`conv1` (1×1, C→128)→`norm2`→`relu2`→`conv2` (3×3, 128→32, padding 1). Đầu vào layer thứ N có C=C_đầu_block+32×(N−1); nối 32 kênh mới với các feature trước. Các khoảng `denselayer1..6/12/24/16` gồm mọi layer theo quy tắc này. DenseLayer mặc định không có dropout nội bộ; dropout 0,2 ở classifier. Với ảnh 64, spatial sau stem là 16, qua ba transition là 8→4→2; cuối cùng pool về 1. Danh sách mở xen kẽ scheduled và số tham số được giữ ở mục cấu hình bên dưới.
+
+### Hợp đồng benchmark training batch size 1 được duyệt
+
+- Chọn tường minh run và `finetune/best.pt` của hai model; cùng index thuộc selected train split, kiểm checksum split trong checkpoint. Không dùng test để đo training.
+- Process riêng/model; batch 1, FP32, full-image forward. Giữ freeze, dropout và BN theo metadata; dùng preprocessing deterministic, không augmentation để đầu vào giống nhau. Đây là microbenchmark khác pipeline train có augmentation.
+- Tạo optimizer mới với loại, weight decay và LR ban đầu của recipe; không phục hồi optimizer state hoặc scheduler, không gọi đây là tiếp tục training tại best epoch.
+- Một bước đầu đo memory có optimizer allocation; warmup 3, timing 10 bước riêng; CUDA đồng bộ nếu chọn GPU. Timing gồm zero_grad/forward/loss/backward/step; không gồm IO, preprocessing, transfer, validation, load model hoặc ghi file.
+- RSS baseline/peak/tăng thêm tính bằng MiB, lấy mẫu 1 ms nên có thể bỏ lỡ đỉnh; gồm runtime và model. VRAM allocated/reserved chỉ từ CUDA allocator, CPU ghi null. Batch 1 không biến RSS thành bộ nhớ riêng của ảnh.
+- Checkpoint chỉ đọc, kết quả ở thư mục mới và từ chối ghi đè. Test phải kiểm freeze/BN, checkpoint bất biến, cấu hình sai, đơn vị và notebook không tự benchmark. Benchmark không thay accuracy, history hoặc thời gian train cũ.
+
+## Thay đổi được xác nhận ngày 30/10/2026 — cấu hình scheduled
+
+Đây là yêu cầu bổ sung của bài làm, không phải nội dung đề gốc hay kết quả đã chạy. Source hỗ trợ công thức này qua `config/scheduled.json`; full training do người dùng tự khởi chạy. Không gán kết quả của run cũ cho cấu hình dưới đây. Sau khi run hoàn tất, `scripts/execute_notebook.py` dựng phần Modeling theo artifact của run mới, lưu bản notebook trước và sau thực thi theo hash nội dung.
+
+### 1. Dữ liệu và các cơ chế giữ lại
+
+- CIFAR-10, RGB 64×64, train/validation/test 45.000/5.000/10.000; giữ split đã lưu và seed 42.
+- Pretrained ImageNet; thay classifier thành 10 đầu ra. Resize → ToTensor → Normalize theo mean/std ImageNet.
+- Head: dùng đặc trưng cache từ preprocessing cố định, không augmentation.
+- Fine-tune train: RandomCrop(32, padding=4, padding_mode='reflect') → RandomHorizontalFlip(p=0.5) → preprocessing cố định. Validation/test không augmentation.
+- Dropout p=0.2 ngay trước Linear của classifier; bật khi train, tắt khi validation/test.
+- Optimizer AdamW, weight decay 1e-4; loss cross-entropy.
+- BatchNorm: giữ cố định running_mean/running_var. Weight/bias của BatchNorm thuộc phần được mở vẫn được học; phần freeze không cập nhật weight/bias.
+
+### 2. Phạm vi freeze/unfreeze và giới hạn tham số
+
+Head-only freeze toàn bộ backbone, chỉ học classifier. Fine-tune mở đúng danh sách bên dưới; tất cả tham số ngoài danh sách giữ freeze. Giới hạn trainable không vượt 50% tổng số tham số của từng mô hình sau khi thay head; không phải giới hạn 50% số layer hoặc giới hạn cho từng module riêng lẻ. Running statistics BatchNorm không tính là tham số học.
+
+| Model | Phần được học khi fine-tune | Phần freeze |
+|---|---|---|
+| ResNet18 | Toàn bộ `layer4.1` và `fc` | `conv1`, `bn1`, `layer1`, `layer2`, `layer3`, `layer4.0` |
+| DenseNet121 | `denseblock3.denselayer11–12`, `denseblock3.denselayer18–24`; toàn bộ `transition3` có tham số; `denseblock4.denselayer1–4`, `denseblock4.denselayer13–16`; `norm5`; `classifier` | Các phần trước block3; block3 layer 1–10, 13–17; block4 layer 5–12 |
+
+Với DenseNet, tên đầy đủ trong model có tiền tố `features.` trừ `classifier`. Các khoảng layer gồm cả hai đầu. Block3 có 24 dense layer, block4 có 16. ResNet `layer4.1` là BasicBlock thứ hai của layer4, gồm cả hai convolution và hai BatchNorm; yêu cầu mở các phần đầu/giữa của ResNet trước đó đã được thay bằng lựa chọn này.
+
+| Phần mở của DenseNet121 | Số tham số |
+|---|---:|
+| Block3: layer 11–12, 18–24 | 1.303.360 |
+| Transition3: BatchNorm weight/bias + convolution | 526.336 |
+| Block4: layer 1–4, 13–16 | 1.079.040 |
+| Norm5 weight/bias | 2.048 |
+| Classifier 10 lớp | 10.250 |
+| Tổng trainable | **2.921.034 / 6.964.106 = 41,94%** |
+
+ResNet18 mở `layer4.1` (4.720.640) + `fc` (5.130), tổng **4.725.770 / 11.181.642 = 42,26%**. Trước train phải đếm trực tiếp tham số thực tế, đối chiếu danh sách và dừng với lỗi rõ ràng nếu vượt 50% hoặc có module không tồn tại.
+
+`transition3` nối block3 với block4: BatchNorm → ReLU → Conv 1×1 (1.024 → 512 kênh) → AveragePool 2×2. BatchNorm có 2.048 tham số, convolution có 524.288; ReLU/pooling không có tham số học. Mở toàn bộ transition3 ở đây là mở weight/bias BatchNorm và trọng số convolution, vẫn giữ running statistics cố định.
+
+### 3. Thay Grid Search bằng một công thức có LR schedule
+
+Không chạy tích Descartes LR × batch và không tìm nhiều candidate cho cấu hình mới. Mỗi model chạy một giai đoạn head rồi một giai đoạn fine-tune; fine-tune khởi tạo từ best head checkpoint của chính model đó. Batch size **128 cố định** trong cả hai giai đoạn.
+
+| Thiết lập | Head-only | Fine-tune |
+|---|---|---|
+| Ngân sách | 12 epoch | Tối đa 20 epoch |
+| LR đầu | Head 1e-3 | Backbone được mở 1e-4; head 1e-3 |
+| LR cuối lịch | Head 1e-4 | Backbone 1e-5; head 1e-4 |
+| Scheduler | Cosine giảm còn 10% LR đầu | Cosine giảm mỗi nhóm còn 10% LR đầu |
+| Early stopping | Không | Validation loss; min_epochs=10, patience=7, min_delta=1e-4 |
+
+Lịch cosine không restart, không warmup. Gọi bước scheduler sau mỗi epoch; ghi LR thực sự dùng trước khi bước scheduler. Với LR đầu của mỗi nhóm là `base_lr`, dùng hệ số chung `f(t) = 0.1 + 0.9 × (1 + cos(pi × t / T)) / 2`, trong đó t là số epoch đã hoàn tất và T là ngân sách của giai đoạn (12 hoặc 20). LR = base_lr × f(t). Như vậy ở t=0 dùng LR đầu; t=T/2 còn 55%; t=T đạt 10%. LR tại t=T là mức sau bước scheduler cuối, không gọi nhầm là LR đã dùng để train epoch cuối. Nếu dừng sớm thì lịch chưa nhất thiết đạt mức cuối.
+
+Không dùng một giá trị eta_min tuyệt đối chung làm hai nhóm fine-tune mất tỷ lệ LR 10:1. Khi resume phải phục hồi optimizer, scheduler, epoch và trạng thái early stopping để lịch tiếp tục đúng.
+
+Early stopping theo dõi loss từ epoch đầu: cải thiện khi loss mới thấp hơn best monitored loss ít nhất theo điều kiện `new_loss < best_loss - 1e-4`; nếu không thì tăng bộ đếm stale. Chỉ cho phép dừng từ epoch 10 khi stale >= 7. Không đợi đến epoch 10 mới bắt đầu đếm. Best checkpoint chọn độc lập bằng validation accuracy cao nhất, hòa ưu tiên validation loss thấp hơn, tiếp tục hòa giữ epoch sớm hơn.
+
+### 4. Chi phí backward và giới hạn diễn giải
+
+ResNet giữ phần đầu freeze liên tục, chỉ cần xây đồ thị gradient cho cụm cuối được mở. DenseNet **giữ yêu cầu mở xen kẽ block3/block4**, không chuyển sang chỉ mở toàn bộ block4. Layer được mở sớm nhất là block3 layer11; backward phải truyền về tới layer này qua các phép toán phía sau, kể cả layer có trọng số freeze. Block3 layer1–10 được freeze. Không dùng no_grad/detach giữa các phần được mở làm mất gradient về layer được học.
+
+Có thể chạy phần prefix hoàn toàn freeze trước block3 của DenseNet, hoặc trước layer4.1 của ResNet, mà không ghi đồ thị gradient. Fine-tune vẫn lấy ảnh augmentation mới mỗi lần; không chuyển sang cache cố định làm mất augmentation. Dưới 50% tham số không bảo đảm dưới 50% FLOPs, thời gian hay bộ nhớ; cần đo trên run mới.
+
+Learning curves cũ cho thấy fine-tune loss còn giảm ở cuối 10 epoch, nhưng không chứng minh lịch mới tối ưu. LR fine-tune mới cao gấp 10 lần run cũ; có rủi ro dao động hoặc làm thay đổi mạnh đặc trưng pretrained. Đồng thời đổi freeze và scheduler nên không quy chênh lệch kết quả cho riêng một cơ chế.
+
+### 5. Nghiệm thu khi triển khai sau bước đặc tả này
+
+1. Kiểm tra chính xác tên module được mở/freeze, số tham số và giới hạn 50% cho cả hai model; BatchNorm running statistics không đổi trong train.
+2. Kiểm tra batch=128, head 12 epoch, fine-tune tối đa 20; LR hai nhóm theo đúng tỷ lệ, các mốc cosine và resume không lệch lịch.
+3. Kiểm tra gradient tới các layer DenseNet được mở ở đầu block3, không có gradient trọng số ở phần freeze; train/eval bật tắt dropout và augmentation đúng phạm vi.
+4. Kiểm tra early stopping và checkpoint selection theo hai tiêu chí độc lập đã mô tả; không dùng test để chọn lịch, cấu hình hay epoch.
+5. Chạy kiểm tra nhỏ trước huấn luyện đầy đủ; ghi run mới riêng, giữ nguyên checkpoint/log/kết quả lịch sử. Không tự chạy full training CPU.
+6. Cập nhật Modeling để phân biệt cấu hình mới chưa chạy với kết quả đã đo; chỉ thay bảng kết quả sau khi có artifact mới. EDA giữ thống kê dữ liệu gốc. Đồng bộ quyết định và kết quả vào walkthrough khi triển khai/đánh giá, không trình bày kế hoạch này thành kết quả thực nghiệm.
+
+### 6. Lưu kết quả các lần chạy và output notebook
+
+Mỗi run mới có thư mục riêng trong `outputs/runs/<run_id>/`, giữ nguyên config, checkpoint, history, prediction và metric của run trước. Figure trình bày tách theo `outputs/review/<run_id>/`. Khi đổi run được xem rồi thực thi lại cùng notebook, output của cell được thay bằng kết quả run đang chọn; một file ipynb không tự giữ lịch sử mọi phiên bản output. Lệnh train lưu bản notebook đang có vào `notebook_snapshots/<content_hash>/` của run được chọn trước khi tạo kết quả mới. Lệnh execute notebook tiếp tục lưu bản trước và sau thực thi trong thư mục run đang xem; nội dung notebook có thể đang thuộc run trước nên cần đọc run_id bên trong bản snapshot, không suy ra chỉ từ thư mục chứa. Không ghi đè snapshot đã có. Phải chạy lệnh train mới trước khi đổi registry bằng tay để bản notebook cũ được lưu gắn với run cũ.

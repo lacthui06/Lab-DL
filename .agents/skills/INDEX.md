@@ -1,4 +1,4 @@
-# SKILL INDEX — Bảng định tuyến nhanh 17 skill
+# SKILL INDEX — Bảng định tuyến nhanh 19 skill
 
 File này là manifest định tuyến. Agent đọc file này trước để chọn đúng skill mà không cần quét toàn bộ thư mục. Mỗi dòng ánh xạ một tình huống kích hoạt sang skill tương ứng.
 
@@ -16,6 +16,7 @@ File này là manifest định tuyến. Agent đọc file này trước để ch
 |---|---|---|
 | `idea-refine` | Ý tưởng còn mơ hồ, cần chọn dataset và kiến trúc khả thi | Khởi tạo |
 | `interview-me` | Yêu cầu chưa rõ metric, dữ liệu, hoặc ràng buộc compute | Khởi tạo |
+| `dac-ta-prompt-test` | Làm rõ chức năng, đặc tả, test case và prompt trước khi sinh mã | Đặc tả |
 | `spec-driven-development` | Cần chốt spec, baseline, metric trước khi code | Đặc tả |
 
 ## 3. Lập kế hoạch (Plan)
@@ -37,7 +38,7 @@ File này là manifest định tuyến. Agent đọc file này trước để ch
 | Skill | Kích hoạt khi | Nằm ở giai đoạn |
 |---|---|---|
 | `debugging-and-error-recovery` | CUDA OOM, loss NaN, lỗi môi trường Kaggle, gradient tiêu biến | Gỡ lỗi |
-| `doubt-driven-development` | Độ chính xác cao bất thường (> 95%), nghi ngờ rò rỉ dữ liệu | Kiểm toán |
+| `doubt-driven-development` | Metric cao bất thường so với dataset/baseline, nghi ngờ rò rỉ; không dùng một ngưỡng chung cho Accuracy và ROC-AUC | Kiểm toán |
 
 ## 6. Tối ưu và Triển khai (Optimize & Serve)
 
@@ -56,6 +57,7 @@ File này là manifest định tuyến. Agent đọc file này trước để ch
 
 | Skill | Kích hoạt khi | Nằm ở giai đoạn |
 |---|---|---|
+| `doc-ma-giai-thich` | Đọc và giải thích hàm/module, dò vết và review mã AI | Rà soát |
 | `code-simplification` | Refactor notebook thành module sạch, loại bỏ code chết | Rà soát |
 | `version-control-and-artifacts` | Commit, push, quyết định file nào thuộc Git, quản lý artifact | Rà soát |
 | `walkthrough-and-experiment-tracking` | Ghi vết các run, chênh lệch metric, và phân tích ảnh output vào Section 2 | Ghi vết |

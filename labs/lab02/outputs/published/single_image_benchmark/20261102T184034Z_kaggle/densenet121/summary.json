@@ -1,0 +1,113 @@
+{
+  "model": "densenet121",
+  "device": "cuda",
+  "image_size": 64,
+  "batch_size": 1,
+  "precision": "float32",
+  "warmup": 20,
+  "repeats": 100,
+  "first_request_ms": 477.551671,
+  "latency_ms": {
+    "count": 100,
+    "mean": 15.55475799,
+    "median": 15.329037,
+    "p95": 16.15658505
+  },
+  "stage_repeats": 20,
+  "stages_ms": {
+    "read": {
+      "count": 20,
+      "mean": 0.22946085,
+      "median": 0.22625499999999998,
+      "p95": 0.25279385
+    },
+    "preprocess": {
+      "count": 20,
+      "mean": 0.34822,
+      "median": 0.3307715,
+      "p95": 0.4097013
+    },
+    "transfer": {
+      "count": 20,
+      "mean": 0.0704783,
+      "median": 0.068817,
+      "p95": 0.08178025
+    },
+    "forward": {
+      "count": 20,
+      "mean": 14.582227,
+      "median": 14.522405500000001,
+      "p95": 15.14214995
+    },
+    "postprocess": {
+      "count": 20,
+      "mean": 0.1173969,
+      "median": 0.111701,
+      "p95": 0.13856055
+    },
+    "serialize": {
+      "count": 20,
+      "mean": 0.05089325,
+      "median": 0.047882499999999995,
+      "p95": 0.0657316
+    }
+  },
+  "prediction": {
+    "model": "densenet121",
+    "predicted": "cat",
+    "probability": 0.9966075420379639,
+    "actual": null,
+    "probabilities": {
+      "airplane": 3.353263666738826e-09,
+      "automobile": 1.3360666173412028e-07,
+      "bird": 1.7123416284903215e-07,
+      "cat": 0.9966075420379639,
+      "deer": 1.9554548202904698e-07,
+      "dog": 0.0033910837955772877,
+      "frog": 8.073843673628289e-07,
+      "horse": 5.0127496820095985e-08,
+      "ship": 1.8424273218187182e-09,
+      "truck": 2.881787963815441e-08
+    }
+  },
+  "memory": {
+    "after_load": {
+      "rss_bytes": 1034735616,
+      "allocated_bytes": 28299264,
+      "reserved_bytes": 48234496
+    },
+    "after_warmup": {
+      "rss_bytes": 1373040640,
+      "allocated_bytes": 37867520,
+      "reserved_bytes": 50331648
+    },
+    "before_pass": {
+      "rss_bytes": 1373048832,
+      "allocated_bytes": 37867520,
+      "reserved_bytes": 50331648
+    },
+    "after_pass": {
+      "rss_bytes": 1373122560,
+      "allocated_bytes": 37867520,
+      "reserved_bytes": 50331648
+    },
+    "peak_rss_bytes": 1373126656,
+    "rss_increase_bytes": 77824,
+    "peak_allocated_bytes": 44929024,
+    "peak_reserved_bytes": 50331648,
+    "allocated_increase_bytes": 7061504,
+    "reserved_increase_bytes": 0,
+    "repeats": 20,
+    "sample_interval_seconds": 0.001,
+    "rss_sample_count": 311,
+    "scope": "separate warmed request pass"
+  },
+  "measurement_policy": {
+    "total": "read/decode PNG -> preprocess -> transfer -> forward -> CPU probabilities -> JSON string; excludes printing/writing",
+    "first": "first image request after model load; library imports and checkpoint load completed beforehand",
+    "stages": "separate diagnostic pass with CUDA synchronization at each boundary; do not sum to infer total",
+    "memory": "process RSS sampled in separate pass; CUDA allocated/reserved use PyTorch allocator peaks, not total device usage",
+    "filesystem": "same image read repeatedly; OS file cache can contribute; no forced cache flush",
+    "limitations": "one image, warmed model, no claim of minimum required RAM/VRAM or performance on all inputs"
+  }
+}

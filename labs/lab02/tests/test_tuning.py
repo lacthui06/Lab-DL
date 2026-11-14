@@ -7,8 +7,58 @@ import torch
 from torch import nn
 from torch.utils.data import DataLoader, TensorDataset
 
-from src.models import build_model, configure_trainable, parameter_counts, training_mode
-from src.tuning import fine_candidates, select_trial, make_optimizer, make_scheduler
+from src.models.models import build_model, configure_trainable, parameter_counts, training_mode
+from src.training.tuning import fine_candidates, select_trial, make_optimizer, make_scheduler
+
+
+
+
+@pytest.mark.parametrize('name,expected', [('resnet18', 4725770), ('densenet121', 2921034)])
+def test_scheduled_recipe_parameters_and_backward(name, expected):
+    torch.set_num_threads(2)
+    torch.manual_seed(42)
+    model = build_model(name, pretrained=False, dropout=.2)
+    configure_trainable(model, name, 'finetune', 'scheduled_tail', max_fraction=.5)
+    assert parameter_counts(model)['trainable'] == expected
+    training_mode(model)
+    statistics = {n: b.clone() for n, b in model.named_buffers() if 'running_' in n}
+    output = model(torch.randn(2, 3, 64, 64))
+    assert output.shape == (2, 10) and torch.isfinite(output).all()
+    output.square().mean().backward()
+    for n, p in model.named_parameters():
+        assert (p.grad is not None) == p.requires_grad, n
+    for n, b in model.named_buffers():
+        if n in statistics:
+            assert torch.equal(b, statistics[n]), n
+    if name == 'densenet121':
+        assert model.features.denseblock3.denselayer11.conv1.weight.requires_grad
+        assert not model.features.denseblock3.denselayer10.conv1.weight.requires_grad
+        assert not model.features.denseblock3.denselayer13.conv1.weight.requires_grad
+    with pytest.raises(ValueError, match='limit'):
+        configure_trainable(model, name, 'finetune', 'scheduled_tail', max_fraction=.1)
+
+
+def test_ratio_schedule_and_resume_preserve_group_ratio():
+    parameters = [nn.Parameter(torch.ones(1)), nn.Parameter(torch.ones(1))]
+    optimizer = torch.optim.AdamW([{'params': [parameters[0]], 'lr': 1e-4},
+                                  {'params': [parameters[1]], 'lr': 1e-3}])
+    scheduler = make_scheduler(optimizer, 'cosine_ratio', 20)
+    for _ in range(10):
+        optimizer.step()
+        scheduler.step()
+    assert [g['lr'] for g in optimizer.param_groups] == pytest.approx([5.5e-5, 5.5e-4])
+    opt_state, sched_state = copy.deepcopy(optimizer.state_dict()), copy.deepcopy(scheduler.state_dict())
+    for _ in range(10):
+        optimizer.step()
+        scheduler.step()
+    expected = [g['lr'] for g in optimizer.param_groups]
+    assert expected == pytest.approx([1e-5, 1e-4])
+    optimizer.load_state_dict(opt_state)
+    scheduler.load_state_dict(sched_state)
+    for _ in range(10):
+        optimizer.step()
+        scheduler.step()
+    assert [g['lr'] for g in optimizer.param_groups] == pytest.approx(expected)
 
 
 @pytest.mark.parametrize('improves,expected,reason', [
@@ -16,7 +66,7 @@ from src.tuning import fine_candidates, select_trial, make_optimizer, make_sched
     (True, 12, 'epoch_budget_exhausted'),
 ])
 def test_stopping_respects_minimum_and_reports_actual_epochs(tmp_path, monkeypatch, improves, expected, reason):
-    from src import experiment
+    from src.training import experiment
     model = nn.Linear(2, 2)
     loader = DataLoader(TensorDataset(torch.ones(2, 2), torch.tensor([0, 1])), batch_size=2)
     state = {'epoch': 0}
@@ -112,7 +162,7 @@ def test_optimizer_groups_and_cosine_update(name):
 
 
 def test_fit_logs_validation_loss_lr_and_time_at_selected_checkpoint(tmp_path):
-    from src.experiment import fit
+    from src.training.experiment import fit
     torch.set_num_threads(2)
     torch.manual_seed(42)
     model = nn.Linear(8,2)
@@ -131,6 +181,112 @@ def test_fit_logs_validation_loss_lr_and_time_at_selected_checkpoint(tmp_path):
     assert result['train_seconds'] >= result['train_pass_seconds']+result['validation_seconds']
     checkpoint=torch.load(tmp_path/'best.pt',weights_only=True)
     assert checkpoint['val_loss'] == pytest.approx(result['best_val_loss'])
+
+
+def test_epoch_resume_matches_uninterrupted_training_and_events(tmp_path, monkeypatch):
+    """An interrupted epoch is replayed with identical dropout, shuffle and LR."""
+    from src.training import experiment
+    from tensorboard.backend.event_processing.event_accumulator import EventAccumulator
+    torch.set_num_threads(2)
+    data = TensorDataset(torch.eye(8), torch.arange(8) % 2)
+    meta = dict(model='tiny', stage='head', batch_size=2, lr=.1, optimizer='adamw')
+
+    def setup():
+        experiment.seed_all(42)
+        model = nn.Sequential(nn.Linear(8, 4), nn.Dropout(.3), nn.Linear(4, 2))
+        opt = torch.optim.AdamW(model.parameters(), lr=.1)
+        sched = make_scheduler(opt, 'cosine', 4)
+        train = DataLoader(data, batch_size=2, shuffle=True,
+                           generator=torch.Generator().manual_seed(42))
+        val = DataLoader(data, batch_size=2, generator=torch.Generator().manual_seed(43))
+        return model, opt, sched, train, val
+
+    full, opt, sched, train, val = setup()
+    experiment.fit(full, train, val, opt, 4, torch.device('cpu'), tmp_path/'full', meta, scheduler=sched)
+    model, opt, sched, train, val = setup()
+    original = experiment.pass_epoch
+    calls = 0
+
+    def interrupt(*args, **kwargs):
+        nonlocal calls
+        calls += 1
+        if calls == 5:
+            torch.rand(9)  # Simulate work consumed in an incomplete epoch.
+            raise RuntimeError('simulated interruption')
+        return original(*args, **kwargs)
+
+    monkeypatch.setattr(experiment, 'pass_epoch', interrupt)
+    with pytest.raises(RuntimeError, match='simulated'):
+        experiment.fit(model, train, val, opt, 4, torch.device('cpu'), tmp_path/'resume', meta, scheduler=sched)
+    monkeypatch.setattr(experiment, 'pass_epoch', original)
+    model, opt, sched, train, val = setup()
+    result = experiment.fit(model, train, val, opt, 4, torch.device('cpu'), tmp_path/'resume', meta,
+                            scheduler=sched, resume=True)
+    assert result['epochs_completed'] == 4
+    for key, expected in full.state_dict().items():
+        torch.testing.assert_close(model.state_dict()[key], expected, rtol=0, atol=0)
+    checkpoint = torch.load(tmp_path/'resume/last.pt', weights_only=True)
+    assert checkpoint['epoch'] == 4 and checkpoint['optimizer_state_dict']['state']
+    assert checkpoint['scheduler_state_dict'] == sched.state_dict()
+    events = EventAccumulator(str(tmp_path/'resume/tensorboard')).Reload()
+    assert [e.step for e in events.Scalars('val_loss')] == [1, 2, 3, 4]
+    with pytest.raises(ValueError, match='configuration'):
+        experiment.fit(model, train, val, opt, 5, torch.device('cpu'), tmp_path/'resume', meta,
+                       scheduler=sched, resume=True)
+
+
+def test_resume_cli_restores_head_trial_without_finalizing_suite(tmp_path, monkeypatch):
+    import importlib.util
+    from pathlib import Path
+    import numpy as np
+    from src.training import experiment
+    from src.models import models
+    from src.utils.delivery import file_hash, write_json
+    root = Path(__file__).resolve().parents[1]
+    spec = importlib.util.spec_from_file_location('resume_cli', root/'scripts/resume_interrupted.py')
+    cli = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(cli)
+    torch.set_num_threads(2)
+    run = tmp_path/'outputs/runs/example'
+    trial = run/'resnet18/head_trial_00'
+    trial.mkdir(parents=True)
+    indices = np.arange(8)
+    np.savez(run/'selected_indices.npz', train=indices, val=indices)
+    write_json(run/'source_hashes.json', {'src/models/models.py': file_hash(root/'src/models/models.py')})
+    write_json(run/'status.json', {'status': 'failed'})
+    cfg = dict(threads=2, head_epochs=3, finetune_epochs=3, weight_decay=0.)
+    meta = dict(model='resnet18', stage='head', optimizer='adamw', lr=.1, batch_size=2,
+                seed=42, data_sha256=file_hash(run/'selected_indices.npz'))
+    data = (torch.eye(8), torch.arange(8)%2, torch.arange(8))
+    for split in ('train', 'val'):
+        torch.save(dict(zip(('features', 'labels', 'indices'), data)), trial.parent/f'{split}_features.pt')
+    head = nn.Linear(8, 2)
+    optimizer = make_optimizer([dict(params=head.parameters(), lr=.1)], 'adamw', 0.)
+    original = experiment.pass_epoch
+    count = 0
+
+    def interrupt(*args, **kwargs):
+        nonlocal count
+        count += 1
+        if count == 3:
+            raise RuntimeError('interrupted')
+        return original(*args, **kwargs)
+
+    monkeypatch.setattr(experiment, 'pass_epoch', interrupt)
+    with pytest.raises(RuntimeError, match='interrupted'):
+        experiment.fit(head, experiment.tensor_loader(data, 2, 42, True),
+                       experiment.tensor_loader(data, 2, 42), optimizer, 3,
+                       torch.device('cpu'), trial, meta)
+    monkeypatch.setattr(experiment, 'pass_epoch', original)
+    monkeypatch.setattr(models, 'build_model', lambda *a, **k: nn.ModuleDict({'fc': nn.Linear(8, 2)}))
+    monkeypatch.setattr(models, 'classifier', lambda model, name: model['fc'])
+    monkeypatch.setattr(models, 'configure_trainable', lambda *a, **k: None)
+    cli._resume_trial(run, 'resnet18/head_trial_00', cfg, torch.device('cpu'))
+    assert json.loads((trial/'training_summary.json').read_text())['epochs_completed'] == 3
+    assert json.loads((run/'status.json').read_text())['status'] == 'failed'
+    assert not (run/'comparison.csv').exists()
+    with pytest.raises(ValueError, match='directly inside'):
+        cli._resume_trial(run, '../outside', cfg, torch.device('cpu'))
 
 
 @pytest.mark.parametrize('name', ['adamw','sgd'])
@@ -152,11 +308,12 @@ def test_one_batch_overfit_with_configurable_optimizer(name):
 
 
 @pytest.mark.parametrize('name', ['resnet18','densenet121'])
-def test_real_model_two_block_one_batch_overfit(name):
+@pytest.mark.parametrize('depth', ['last_two_blocks', 'scheduled_tail'])
+def test_real_model_two_block_one_batch_overfit(name, depth):
     torch.set_num_threads(2)
     torch.manual_seed(42)
     model=build_model(name,pretrained=False)
-    configure_trainable(model,name,'finetune','last_two_blocks')
+    configure_trainable(model,name,'finetune',depth)
     training_mode(model)
     x=torch.randn(2,3,64,64)
     y=torch.tensor([0,1])
@@ -172,7 +329,7 @@ def test_real_model_two_block_one_batch_overfit(name):
 
 
 def test_search_resets_same_head_and_does_not_touch_test(tmp_path,monkeypatch):
-    import src.experiment as exp
+    import src.training.experiment as exp
     import numpy as np
     torch.set_num_threads(2)
     torch.manual_seed(42)
@@ -215,7 +372,7 @@ def test_search_resets_same_head_and_does_not_touch_test(tmp_path,monkeypatch):
 
 
 def test_costs_count_entire_fine_search_once_and_selected_recipe_separately(tmp_path):
-    from src.costs import cost_table
+    from src.utils.costs import cost_table
     import pandas as pd
     folder=tmp_path/'resnet18/head_selected'; folder.mkdir(parents=True)
     (folder/'training_summary.json').write_text(json.dumps(dict(feature_extraction_train_val_seconds=10,
@@ -227,22 +384,29 @@ def test_costs_count_entire_fine_search_once_and_selected_recipe_separately(tmp_
     assert cost.selected_recipe_training_seconds==22
 
 
-def test_training_search_smoke_and_reporting_without_downloads(tmp_path,monkeypatch):
+@pytest.mark.parametrize('regularized', [False, True])
+def test_training_search_smoke_and_reporting_without_downloads(tmp_path,monkeypatch,regularized):
     """Exercise real fit/predict/promotion/cost reporting on a small synthetic batch."""
-    import src.experiment as exp
+    import src.training.experiment as exp
+    import src.training.feature_cache as cache
     import numpy as np
     import pandas as pd
-    from src.reporting import summarize_suite
+    from src.utils.reporting import summarize_suite
     torch.set_num_threads(2)
     torch.manual_seed(42)
     images=torch.randn(4,3,64,64)
     labels=torch.tensor([0,1,0,1])
     indices=torch.arange(4)
-    def loader(data_dir,split,ids,name,batch,seed,shuffle=False,image_size=64):
+    augmentation_calls = []
+    def loader(data_dir,split,ids,name,batch,seed,shuffle=False,image_size=64,augmentation=False):
+        if augmentation:
+            assert split == 'train'
+            augmentation_calls.append(split)
         return DataLoader(TensorDataset(images,labels,indices),batch_size=batch,shuffle=shuffle,
                           generator=torch.Generator().manual_seed(seed))
     monkeypatch.setattr(exp,'image_loader',loader)
-    monkeypatch.setattr(exp,'build_model',lambda name,pretrained=True:build_model(name,pretrained=False))
+    monkeypatch.setattr(cache,'image_loader',loader)
+    monkeypatch.setattr(exp,'build_model',lambda name,pretrained=True,**kwargs:build_model(name,pretrained=False,**kwargs))
     monkeypatch.setattr(exp,'export_evaluation',lambda folder,p,y,i,data_dir:dict(test_samples=len(y),
         accuracy=float((p.argmax(1)==y).mean()),loss=1.,macro_f1=.1,macro_precision=.1,macro_recall=.1))
     cfg=dict(profile='synthetic_smoke_not_benchmark',dataset='CIFAR10',models=['resnet18'],seed=42,
@@ -251,9 +415,13 @@ def test_training_search_smoke_and_reporting_without_downloads(tmp_path,monkeypa
         weight_decay=1e-4,finetune_backbone_lr=1e-5,finetune_head_lr=1e-4,cache_frozen_prefix=False,
         finetune_candidates=[dict(id='a',backbone_lr=1e-5,head_lr=1e-4),
             dict(id='b',optimizer='sgd',backbone_lr=1e-3,head_lr=1e-2,unfreeze='last_two_blocks',scheduler='cosine')])
+    if regularized:
+        cfg.update(dropout=.2, train_augmentation=True,
+                   finetune_candidates=[dict(id='small_tail',backbone_lr=1e-5,head_lr=1e-4,unfreeze='last_units')])
     selected={s:np.arange(4) for s in ['train','val','test']}
     np.savez(tmp_path/'selected_indices.npz',**selected)
     rows=exp.run_model('resnet18',cfg,selected,tmp_path,tmp_path,torch.device('cpu'))
+    assert bool(augmentation_calls) == regularized
     assert len(rows)==2 and rows[1]['all_finetune_search_seconds']>=rows[1]['train_seconds']
     pd.DataFrame(rows).to_csv(tmp_path/'comparison.csv',index=False)
     summarize_suite(tmp_path,cfg,selected)

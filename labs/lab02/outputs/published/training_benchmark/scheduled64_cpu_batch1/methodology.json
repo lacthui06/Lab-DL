@@ -1,0 +1,10 @@
+{
+  "scope": "forward + CrossEntropyLoss + backward + optimizer.step; batch already on device",
+  "execution": "full_image_forward; checkpoint freeze/dropout/BatchNorm policy; float32",
+  "initialization": "saved best validation weights; NEW optimizer at recipe INITIAL LRs; no scheduler",
+  "input": "same selected train index; deterministic preprocessing; no augmentation; tensor hash recorded",
+  "memory": "separate FIRST step including optimizer allocation; RSS sampled at 1ms; CUDA allocator peaks",
+  "timing": "median/mean/P95 of warmed steps; sampler disabled; CUDA synchronized at boundaries",
+  "exclusions": "checkpoint/model loading, IO, preprocessing, transfer, validation, artifact writing",
+  "limitations": "one sample repeated, one process/model; RSS includes runtime; not convergence or full-fit time; CPU VRAM null"
+}

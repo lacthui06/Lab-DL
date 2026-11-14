@@ -22,27 +22,117 @@ def load_cli(name):
     return module
 
 
-def test_grouped_modules_preserve_public_imports():
-    """Notebook/CLI legacy imports resolve to the same canonical module object."""
-    from importlib import import_module
-    aliases = {
-        'data':'datasets.classification', 'eda':'datasets.eda',
-        'experiment':'training.trainer', 'tuning':'training.tuning',
-        'standard_suite':'training.standard_suite', 'optuna_dense':'training.optuna_dense',
-        'reporting':'utils.plots', 'delivery':'utils.artifacts', 'costs':'utils.costs',
-        'notebook_views':'utils.notebook_views', 'merged_results':'utils.merged_results'}
-    for old, new in aliases.items():
-        assert import_module('src.'+old) is import_module('src.'+new)
-    from src.models import build_model
-    from src.models.backbones import build_model as canonical
-    assert build_model is canonical
-    from src.training.trainer import ROOT as training_root
-    assert training_root == ROOT
-    for relative in aliases.values():
-        assert (ROOT/'src'/Path(*relative.split('.'))).with_suffix('.py').exists()
+def _source_graph(root):
+    """Resolve nested packages and relative imports without executing production code."""
+    scripts={p.stem:p for p in (root/'scripts').glob('*.py')}
+    units={}
+    packages=set()
+    for path in (root/'src').rglob('*.py'):
+        parts=path.relative_to(root).with_suffix('').parts
+        name='.'.join(parts[:-1] if path.stem=='__init__' else parts)
+        units[name]=path.read_text(encoding='utf-8')
+        if path.stem=='__init__': packages.add(name)
+    units.update({f'scripts.{name}':p.read_text(encoding='utf-8') for name,p in scripts.items()})
+    entries={name for name in units if name.startswith('scripts.')}
+    for p in (root/'notebooks').glob('*.ipynb'):
+        name='notebooks.'+p.stem;entries.add(name)
+        units[name]='\n'.join(''.join(c['source']) for c in json.loads(p.read_text(encoding='utf-8'))['cells'] if c['cell_type']=='code')
+    graph={name:set() for name in units}
+    referenced=set()
+    for name,source in units.items():
+        for node in ast.walk(ast.parse(source)):
+            if name not in packages:
+                if isinstance(node,ast.Name) and isinstance(node.ctx,ast.Load): referenced.add(node.id)
+                if isinstance(node,ast.Attribute): referenced.add(node.attr)
+            if isinstance(node,ast.ImportFrom):
+                package=name if name in packages else name.rpartition('.')[0]
+                module=importlib.util.resolve_name('.'*node.level+(node.module or ''),package)
+                graph[name].add(module)
+                graph[name].update(module+'.'+x.name for x in node.names if module+'.'+x.name in units)
+            elif isinstance(node,ast.Import): graph[name].update(x.name for x in node.names)
+        # Python executes parent package initializers before importing a submodule.
+        graph[name].update(parent for target in tuple(graph[name])
+                           for parent in packages if target.startswith(parent+'.'))
+    seen=set();pending=list(entries)
+    while pending:
+        name=pending.pop()
+        if name in seen: continue
+        seen.add(name);pending.extend(graph.get(name,set())-seen)
+    return units,seen,referenced
 
 
-@pytest.mark.parametrize('name',['run','infer','analyze_data','download_assets','execute_notebook','finalize','resume_interrupted'])
+def test_all_production_modules_reachable_and_documented():
+    """CLI/notebook roots count; tests and archived snapshots cannot rescue dead modules."""
+    scripts={p.stem for p in (ROOT/'scripts').glob('*.py')}
+    assert scripts=={'run','infer','analyze_data','download_assets','execute_notebook','finalize','resume_interrupted','benchmark_inference','benchmark_training','generate_html_report'}
+    units,seen,referenced=_source_graph(ROOT)
+    assert {n for n in units if n=='src' or n.startswith('src.')}<=seen
+    readme=(ROOT/'README.md').read_text(encoding='utf-8')
+    unreferenced=set()
+    for folder in ['src','scripts']:
+        for p in (ROOT/folder).rglob('*.py'):
+            relative=p.relative_to(ROOT).as_posix()
+            target=p.parent.relative_to(ROOT).as_posix()+'/' if p.stem=='__init__' and p.parent!=ROOT/'src' else relative
+            assert f']({target})' in readme, relative
+            if folder=='src' and p.stem!='__init__':
+                for node in ast.parse(p.read_text(encoding='utf-8')).body:
+                    if isinstance(node,ast.FunctionDef) and not node.name.startswith('_'):
+                        if node.name not in referenced:
+                            unreferenced.add((relative,node.name))
+    # Every public production function must have a caller; no unused-view exception.
+    assert not unreferenced
+
+
+def test_source_graph_resolves_relative_imports_and_detects_nested_orphan(tmp_path):
+    for name,source in {
+        'scripts/run.py':'from src.training.runner import main\nmain()\n',
+        'src/__init__.py':'', 'src/training/__init__.py':'',
+        'src/training/runner.py':'from ..utils import helper\ndef main(): helper.work()\n',
+        'src/utils/__init__.py':'', 'src/utils/helper.py':'def work(): pass\n',
+        'src/utils/orphan.py':'def unused(): pass\n',
+    }.items():
+        path=tmp_path/name;path.parent.mkdir(parents=True,exist_ok=True);path.write_text(source)
+    units,seen,_=_source_graph(tmp_path)
+    assert 'src.utils.helper' in seen and 'src.utils' in seen
+    assert {n for n in units if n.startswith('src.')} - seen == {'src.utils.orphan'}
+
+
+def test_source_inventory_includes_nested_modules_and_excludes_artifacts(tmp_path):
+    from src.utils.delivery import iter_source_files
+    names=['src/__init__.py','src/datasets/data.py','src/utils/deep/io.py',
+           'scripts/run.py','tests/test_data.py','config/profile.json']
+    for name in [*names,'src/__pycache__/cached.py','outputs/runs/old/source.py','data/raw.py','.env']:
+        path=tmp_path/name;path.parent.mkdir(parents=True,exist_ok=True);path.write_text('fixture')
+    assert [p.relative_to(tmp_path).as_posix() for p in iter_source_files(tmp_path)] == sorted(names)
+
+
+def test_resume_snapshot_preserves_nested_source_paths(tmp_path,monkeypatch):
+    """Exercise resume finalization with no training; archived bytes must match their hashes."""
+    import torch
+    import src.utils.reporting as reporting
+    from src.utils.delivery import write_json,file_hash
+    cli=load_cli('resume_interrupted')
+    root=tmp_path/'lab';run=root/'outputs/runs/fixture';run.mkdir(parents=True)
+    cfg=json.loads((ROOT/'config/cpu_pilot.json').read_text())
+    cfg.update(models=[])
+    write_json(run/'config.json',cfg)
+    write_json(run/'environment.json',{'device':'cpu'})
+    write_json(run/'status.json',{'status':'failed'})
+    np.savez(run/'selected_indices.npz',train=[],val=[],test=[])
+    source=root/'src/datasets/nested/data.py'
+    source.parent.mkdir(parents=True);source.write_text('VALUE = 42\n')
+    write_json(root/'config/profile.json',cfg)
+    monkeypatch.setattr(cli,'ROOT',root)
+    monkeypatch.setattr(reporting,'summarize_suite',lambda *a:None)
+    monkeypatch.setattr(torch.hub,'set_dir',lambda *a:None)
+    cli.main([str(run),'--device','cpu'])
+    hashes=json.loads((run/'resume_source_hashes.json').read_text())
+    assert hashes['src/datasets/nested/data.py']==file_hash(source)
+    assert (run/'resume_source_snapshot/src/datasets/nested/data.py').read_bytes()==source.read_bytes()
+    assert 'config/profile.json' in hashes
+
+
+@pytest.mark.parametrize('name',['run','infer','analyze_data','download_assets','execute_notebook','finalize','resume_interrupted','benchmark_inference'])
 def test_cli_help_does_not_execute_work(name):
     result=subprocess.run([sys.executable,'-X','utf8',str(ROOT/'scripts'/f'{name}.py'),'--help'],
         cwd=ROOT,capture_output=True,text=True,timeout=60)
@@ -53,7 +143,7 @@ def test_cli_help_does_not_execute_work(name):
 def test_cli_modules_are_import_safe(monkeypatch):
     import urllib.request
     monkeypatch.setattr(urllib.request,'urlopen',lambda *a,**k:pytest.fail('Download during import'))
-    for name in ['infer','download_assets','execute_notebook','resume_interrupted','finalize','analyze_data','run']:
+    for name in ['infer','download_assets','execute_notebook','resume_interrupted','finalize','analyze_data','run','benchmark_inference']:
         load_cli(name)
 
 
@@ -80,19 +170,19 @@ def test_chunked_download_verifies_headers_checksum_and_reuses_archive(tmp_path,
 
 
 def test_io_helpers_are_lightweight_and_data_paths_are_shared(tmp_path,monkeypatch):
-    from src.delivery import resolve_data_dir,resolve_run,write_json,file_hash
+    from src.utils.delivery import resolve_data_dir,resolve_run,write_json,file_hash
     monkeypatch.setenv('LAB02_DATA',str(tmp_path/'external'))
     assert resolve_data_dir(tmp_path)==(tmp_path/'external').resolve()
     assert resolve_data_dir(tmp_path,tmp_path/'explicit')==(tmp_path/'explicit').resolve()
     write_json(tmp_path/'outputs/selected_run.json',dict(run='outputs/runs/a'))
     assert resolve_run(tmp_path)==(tmp_path/'outputs/runs/a').resolve()
     assert file_hash(tmp_path/'outputs/selected_run.json')==hashlib.sha256((tmp_path/'outputs/selected_run.json').read_bytes()).hexdigest()
-    result=subprocess.run([sys.executable,'-c',"import sys; import src.delivery; assert 'torch' not in sys.modules; assert 'src.experiment' not in sys.modules"],cwd=ROOT,capture_output=True,text=True)
+    result=subprocess.run([sys.executable,'-c',"import sys; import src.utils.delivery; assert 'torch' not in sys.modules; assert 'src.training.experiment' not in sys.modules"],cwd=ROOT,capture_output=True,text=True)
     assert result.returncode==0,result.stderr
 
 
 def test_rgb_formula_matches_independent_population_statistics():
-    from src.eda import rgb_statistics
+    from src.datasets.eda import rgb_statistics
     rng=np.random.default_rng(42)
     raw=rng.integers(0,256,size=(5,32,32,3),dtype=np.uint8)
     ids=np.array([1,3])
@@ -104,7 +194,7 @@ def test_rgb_formula_matches_independent_population_statistics():
 
 
 def test_training_reuses_eda_locked_split(tmp_path,monkeypatch):
-    import src.data as data
+    import src.datasets.data as data
     labels=np.repeat(np.arange(10),5000)
     class FakeCifar:
         def __init__(self,root,train=True,download=False): self.targets=labels if train else np.repeat(np.arange(10),1000)
@@ -123,7 +213,7 @@ def test_training_reuses_eda_locked_split(tmp_path,monkeypatch):
 
 def test_quality_cost_handles_new_csv_execution_column(tmp_path,monkeypatch):
     import matplotlib.pyplot as plt
-    from src import notebook_views as view
+    from src.utils import notebook_views as view
     run=ROOT/json.loads((ROOT/'outputs/selected_run.json').read_text())['run']
     frame=pd.read_csv(run/'comparison.csv')
     costs=pd.read_csv(run/'cost_comparison.csv')
@@ -139,7 +229,7 @@ def test_quality_cost_handles_new_csv_execution_column(tmp_path,monkeypatch):
 
 
 def test_complete_delivery_uses_requested_run_and_recommended_checkpoint(tmp_path,monkeypatch):
-    import src.delivery as delivery
+    import src.utils.delivery as delivery
     import unittest.mock as mock
     root=tmp_path/'lab';(root/'outputs/runs/wanted').mkdir(parents=True)
     run=root/'outputs/runs/wanted'
@@ -150,7 +240,7 @@ def test_complete_delivery_uses_requested_run_and_recommended_checkpoint(tmp_pat
     (root/'notebooks').mkdir()
     for name in ['01_lab02_eda.ipynb','02_lab02_modeling.ipynb']:
         delivery.write_json(root/'notebooks'/name,dict(cells=[dict(cell_type='code',execution_count=1,outputs=[dict(output_type='stream')])]))
-    monkeypatch.setattr(delivery,'__file__',str(root/'src/utils/artifacts.py'))
+    monkeypatch.setattr(delivery,'__file__',str(root/'src/utils/delivery.py'))
     monkeypatch.setattr(delivery,'finalize_run',lambda *a:None)
     calls=[]
     def fake_run(args,**kwargs):
@@ -172,8 +262,8 @@ def test_finalizer_writes_one_config_driven_report(tmp_path,monkeypatch):
     from sklearn.metrics import classification_report,log_loss
     from torch.utils.tensorboard import SummaryWriter
     from torchvision.datasets import CIFAR10
-    import src.delivery as delivery
-    from src.eda import CLASSES
+    import src.utils.delivery as delivery
+    from src.datasets.eda import CLASSES
     data_dir=Path(os.environ.get('LAB02_DATA',str(ROOT/'data')))
     if not (data_dir/'cifar-10-batches-py').exists(): pytest.skip('Raw CIFAR-10 required')
     labels=np.asarray(CIFAR10(str(data_dir),train=False).targets)
@@ -185,6 +275,11 @@ def test_finalizer_writes_one_config_driven_report(tmp_path,monkeypatch):
     delivery.write_json(run/'config.json',cfg)
     delivery.write_json(run/'status.json',dict(status='completed'))
     delivery.write_json(run/'source_hashes.json',{})
+    source=root/'src/datasets/nested/data.py'
+    source.parent.mkdir(parents=True);source.write_text('VALUE = 2\n')
+    original_source=run/'source_snapshot/src/datasets/nested/data.py'
+    original_source.parent.mkdir(parents=True);original_source.write_text('VALUE = 1\n')
+    delivery.write_json(run/'source_hashes.json',{'src/datasets/nested/data.py':delivery.file_hash(original_source)})
     for name in ['split_indices.npz','selected_indices.npz']:
         shutil.copy2(ROOT/'outputs/eda/split_indices.npz',run/name)
     original=ROOT/json.loads((ROOT/'outputs/selected_run.json').read_text())['run']
@@ -224,7 +319,7 @@ def test_finalizer_writes_one_config_driven_report(tmp_path,monkeypatch):
             train_seconds=1. if stage=='head' else 10.,test_seconds=1.,
             execution='pooled_feature_cache' if stage=='head' else 'full_image_forward'))
     pd.DataFrame(rows).to_csv(run/'comparison.csv',index=False)
-    monkeypatch.setattr(delivery,'__file__',str(root/'src/utils/artifacts.py'))
+    monkeypatch.setattr(delivery,'__file__',str(root/'src/utils/delivery.py'))
     monkeypatch.setenv('LAB02_DATA',str(data_dir))
     monkeypatch.setattr(subprocess,'check_output',lambda *a,**k:'fixture==0\n')
     delivery.finalize_run(str(run))
@@ -233,3 +328,7 @@ def test_finalizer_writes_one_config_driven_report(tmp_path,monkeypatch):
     assert '10 epoch fine-tune' in text and 'CPU profile chỉ có 2 epoch' not in text
     assert 'data:image/png;base64,' in (run/'report_vi.html').read_text(encoding='utf-8')
     assert json.loads((run/'verification.json').read_text())['status']=='passed'
+    hashes=json.loads((run/'delivery_source_hashes.json').read_text())
+    assert hashes['src/datasets/nested/data.py']==delivery.file_hash(source)
+    assert (run/'delivery_source_snapshot/src/datasets/nested/data.py').read_bytes()==source.read_bytes()
+    assert original_source.read_text()=='VALUE = 1\n'

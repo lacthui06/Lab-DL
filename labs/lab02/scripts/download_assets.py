@@ -10,7 +10,7 @@ import sys
 import time
 import urllib.request
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from src.delivery import resolve_data_dir
+from src.utils.delivery import resolve_data_dir
 
 ROOT=Path(__file__).resolve().parents[1]
 URL='https://cave.cs.toronto.edu/kriz/cifar-10-python.tar.gz'
@@ -76,7 +76,7 @@ def main(argv=None):
     for train in (True,False): CIFAR10(str(data_dir),train=train,download=True)
     if not args.dataset_only:
         import torch
-        from src.models import SPECS
+        from src.models.models import SPECS
         torch.hub.set_dir(str(ROOT/'data/pretrained'))
         for name,(_,weights) in SPECS.items():
             print('Downloading',name,flush=True)
