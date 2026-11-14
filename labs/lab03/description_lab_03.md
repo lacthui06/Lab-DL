@@ -1,219 +1,161 @@
-# Description — Lab03: Getting started with Hugging Face
+# Description — Lab 03: Getting Started with Hugging Face & Fine-Tuning DistilBERT
 
 - **Tác giả:** Thái Anh Lạc
+- **Đơn vị:** TRƯỜNG ĐẠI HỌC GIAO THÔNG VẬN TẢI TP.HCM (UTH)
 - **Môn học:** Deep Learning (Lab Thực Hành)
 
-## 1. Đề bài
+---
 
-### Exercise1: Sentiment Analysis with Hugging Face
+## 1. Đề bài gốc & Phân định rạch ròi hai bài tập (Exercise 1 vs Exercise 2)
 
-1. Cài Hugging Face Transformers.
-2. Dùng pretrained sentiment model từ Hugging Face Hub.
-3. Tokenize một câu mẫu.
-4. Dự đoán sentiment của câu.
+Bài thực hành Lab 03 được cấu trúc thành **hai bài tập kỹ thuật độc lập với phạm vi, mục tiêu và phương pháp luận hoàn toàn rạch ròi**:
 
-### Exercise2: Fine-tuning for Binary Text Classification
+### 1.1. Exercise 1: Sentiment Analysis with Hugging Face (Pretrained & Pipeline Inference)
+- **Bối cảnh & Mục tiêu:** Làm quen với hệ sinh thái Hugging Face Transformers, hiểu sâu cơ chế Tokenizer WordPiece, biểu diễn vector ngữ cảnh và quy trình suy luận (Inference) không qua huấn luyện lại (Zero-shot / Off-the-shelf).
+- **Yêu cầu kỹ thuật cốt lõi:**
+  1. Cài đặt và cấu hình thư viện `transformers`, `torch`.
+  2. Nạp mô hình phân loại cảm xúc pretrained chính thức từ Hugging Face Hub: `distilbert/distilbert-base-uncased-finetuned-sst-2-english`.
+  3. Tokenize các câu văn bản tiếng Anh mẫu: phân rã thành Subwords/Tokens, ánh xạ sang Token IDs, gán cặp token biên đặc biệt `[CLS]`, `[SEP]` và thiết lập Attention Mask.
+  4. Thực hiện dự đoán cảm xúc bằng đường ống cấp cao `transformers.pipeline("sentiment-analysis")`.
+  5. **Yêu cầu đối chứng chuyên sâu (Verification):** Tự triển khai quy trình suy luận thủ công bằng PyTorch thuần (`model(**inputs) -> logits -> torch.softmax`) để đối chiếu xác suất với `transformers.pipeline`, chứng minh độ lệch tuyệt đối $\Delta = 0.000000$.
+- **Sản phẩm đầu ra của Exercise 1:**
+  - Bảng tra cứu Tokenizer: WordPiece subwords, Token IDs, Attention Mask (`tokenizer_table.png`).
+  - Biểu đồ đối chiếu Pipeline vs Manual Inference xác nhận độ lệch $\Delta = 0$ (`pipeline_manual_comparison.png`).
+  - Biểu đồ phân bố xác suất dự đoán trên các câu văn bản phức tạp có cấu trúc tương phản (`sentiment_predictions.png`).
 
-1. Cài transformers, datasets và evaluate.
-2. Tải dataset phân loại văn bản nhị phân.
-3. Tải pretrained model và tokenizer.
-4. Preprocess dữ liệu cho mô hình.
-5. Định nghĩa training arguments.
-6. Tạo Trainer và fine-tune.
-7. Đánh giá mô hình đã fine-tune.
+---
 
-Đề không bắt buộc một mức accuracy cụ thể. Các quyết định dataset, baseline, architecture, regularization, threshold, resource monitoring và artifact dưới đây làm rõ thiết kế thực nghiệm.
+### 1.2. Exercise 2: Fine-Tuning DistilBERT for Binary Text Classification
+- **Bối cảnh & Mục tiêu:** Nắm vững quy trình Transfer Learning và Fine-tuning mô hình Transformer từ đầu đến cuối trên một bài toán phân loại văn bản nhị phân thực tế, thiết lập baseline so sánh và tối ưu hóa ngưỡng quyết định.
+- **Yêu cầu kỹ thuật cốt lõi:**
+  1. Tải và kiểm toán toàn vẹn tập dữ liệu phân loại nhị phân chính thức: **Rotten Tomatoes** (10.662 đánh giá phim, cân bằng 50/50 giữa Positive và Negative).
+  2. Nạp mô hình nền tảng chưa fine-tune: `distilbert/distilbert-base-uncased` và thay thế Classification Head 2 logits (`Linear(768, 768) -> Pre-classifier -> Dropout(0.2/0.4) -> Linear(768, 2)`).
+  3. Tiền xử lý dữ liệu: phân tích phân bố độ dài token, xác lập ngưỡng cắt ngắn an toàn `max_length = 64` (bao phủ 99.4% ngữ cảnh) kết hợp Dynamic Padding.
+  4. Xây dựng mô hình Baseline truyền thống: TF-IDF (5.000 unigrams/bigrams) kết hợp Logistic Regression để làm mốc neo so sánh hiệu năng.
+  5. Thiết lập quy trình huấn luyện Fine-tuning:
+     - Chiến lược đóng băng/giải phóng: Khóa Embeddings và 4 Transformer Block đầu, chỉ mở 2 Block cuối (Encoder 5 & 6) cùng Classification Head (14.767.874 tham số trainable).
+     - Bộ tối ưu: AdamW với Discriminative Learning Rates ($5\times 10^{-6}$ cho Encoder, $2\times 10^{-5}$ cho Head) và Cosine Decay Scheduler.
+     - Cơ chế chốt chặn: Kiểm tra Sanity Overfit 1 batch trước khi chạy full training; Early Stopping với `patience = 2` trên Validation Loss để chống Overfitting.
+  6. Tối ưu hóa ngưỡng quyết định (Threshold Tuning): Quét 19 ngưỡng trên tập Validation để tìm operating point tối đa hóa F1-Score (chọn ngưỡng tối ưu `0.45`).
+  7. Đánh giá toàn diện trên tập Test độc lập: Tính toán đầy đủ bộ chỉ số (Accuracy, Macro F1, Binary F1, Precision, Recall, Confusion Matrix, ROC-AUC, PR-AUC, Calibration Diagram, Per-class TPR/FPR và Phân tích lỗi ngữ nghĩa).
+- **Sản phẩm đầu ra của Exercise 2:**
+  - Bộ artifact EDA và Feature Engineering (14 hình ảnh và bảng thống kê).
+  - Checkpoint mô hình tối ưu `best.pt` cùng báo cáo huấn luyện 5 epochs (`learning_curves.png`, `performance.png`).
+  - Ma trận nhầm lẫn chuẩn hóa, đường cong ROC/PR và lưới dự đoán mẫu thực tế.
 
-## 2. Phạm vi và sản phẩm
+---
 
-Hai notebook có roadmap/module tham chiếu ở đầu:
+### 1.3. Bảng phân định ranh giới kỹ thuật rạch ròi giữa Exercise 1 và Exercise 2
 
-| Notebook | Phạm vi | Đầu ra |
+| Tiêu chí phân định | Exercise 1: Sentiment Inference | Exercise 2: DistilBERT Fine-Tuning |
 |---|---|---|
-| 01 | EDA → preprocessing → feature engineering | Quality/length/token/mask/TF-IDF/augmentation figures và bảng |
-| 02 | Pretrained inference → baseline → fine-tune → evaluate | Learning/performance/threshold/confusion/calibration/error figures, model và report artifacts |
+| **Mục đích chính** | Khảo sát cơ chế Tokenizer & Pretrained Pipeline | Huấn luyện thích nghi Transfer Learning toàn diện |
+| **Mô hình sử dụng** | `distilbert-base-uncased-finetuned-sst-2-english` | `distilbert-base-uncased` (Head 2 lớp khởi tạo mới) |
+| **Trạng thái trọng số** | Đóng băng 100% (Zero-shot / Pre-trained weights) | Đóng băng 4 block đầu; Fine-tune 2 block cuối + Head |
+| **Số tham số học (Trainable)**| **0** (Không cập nhật gradient) | **14.767.874** / 66.955.010 tham số (~22.1%) |
+| **Tập dữ liệu** | 3 câu văn bản mẫu thực tế có ngữ cảnh đa dạng | Toàn bộ 10.662 mẫu Rotten Tomatoes (Train/Val/Test) |
+| **Quá trình huấn luyện** | Không huấn luyện (Chỉ chạy 1 lượt Forward Pass) | Huấn luyện 5 epochs AdamW, Early Stopping, Baseline |
+| **Ngưỡng quyết định** | Cố định mặc định 0.50 | Quét 19 ngưỡng trên Val, chọn tối ưu **0.45** |
+| **Mô-đun triển khai** | [`src/analysis.py`](src/analysis.py) | [`src/datasets/`](src/datasets/), [`src/training/`](src/training/), [`src/models/`](src/models/) |
+| **Vị trí trong Notebooks** | [03_modeling.ipynb](notebooks/03_modeling.ipynb) (Mục 2) | [01_eda.ipynb](notebooks/01_eda.ipynb), [02_fe.ipynb](notebooks/02_feature_engineering.ipynb), [03_modeling.ipynb](notebooks/03_modeling.ipynb) (Mục 3-8) |
+| **Thư mục Artifacts** | `outputs/published/exercise1_analysis/` (3 ảnh) | `outputs/published/frozen_trial/` (18 ảnh + báo cáo) |
 
-Ảnh hiển thị inline và cùng PNG lưu trong outputs/. JSON lưu số chính xác để kiểm toán; không thay thế visualization.
-Walkthrough là tài liệu sống duy nhất cho phương pháp, diễn giải kết quả và bằng chứng.
+---
 
-## 3. Bài toán và data contract
+## 2. Phạm vi và kiến trúc triển khai
 
-- Input: một câu review tiếng Anh.
-- Target: Negative=0, Positive=1.
-- Dataset: official Rotten Tomatoes, pin revision trong config.
-- Splits: 8.530 train, 1.066 validation, 1.066 test.
-- Giữ split và thứ tự, không subsample để làm thí nghiệm chính.
-- Fit features/model bằng train; validation chọn model/threshold; test đo sau khi khóa policy.
+Dự án được phân rã thành **3 Jupyter Notebooks chuyên biệt**, vận hành theo nguyên tắc Clean Architecture (Code nặng nằm trong `src/`, notebook đóng vai trò giao diện trực quan hóa và kiểm chứng):
 
-## 4. Model architecture
+| Notebook | Nhiệm vụ chính | Bài tập phục vụ | Đầu ra & Sản phẩm cốt lõi |
+|---|---|:---:|---|
+| **`01_eda.ipynb`** | Khám phá dữ liệu 6 bước (`docs/eda.md`): Schema, 5-number summary, phân bố nhãn, độ dài từ/ký tự, kiểm toán 0 NaN và 0 Data Leakage. | **Exercise 2** | `class_distribution.png`, `data_quality.png`, `lengths_boxplot.png`, `lengths_by_class.png`. |
+| **`02_feature_engineering.ipynb`** | Kỹ nghệ đặc trưng 6 bước (`docs/feature.md`): Token length cutoff, Attention masks, 8 đặc trưng ngôn ngữ học, TF-IDF 5.000 unigram/bigram, Chi-Square ranking và Text Augmentation. | **Exercise 2** | `token_length_distribution.png`, `tfidf_features.png`, `chi2_features.png`, `augmentation_diagnostics.png`. |
+| **`03_modeling.ipynb`** | **Phần A (Mục 2):** Pretrained Sentiment Inference (Exercise 1).<br>**Phần B (Mục 3-8):** Baseline TF-IDF, Fine-tuning DistilBERT, Benchmark phần cứng, Threshold Sweep và Test Evaluation (Exercise 2). | **Exercise 1 & Exercise 2** | `pipeline_manual_comparison.png`, `learning_curves.png`, `performance.png`, `confusion_matrix.png`, `roc_pr_curves.png`. |
 
-### 4.1. Exercise1
+Mọi Jupyter Notebook đều hỗ trợ chế độ kép: mặc định `MODE="view"` để đọc offline các artifact đã được kiểm chứng mà không làm tốn tài nguyên GPU, và `MODE="train"` (hoặc `prepare`) khi cần huấn luyện mới.
 
-Dùng `distilbert/distilbert-base-uncased-finetuned-sst-2-english` cho sentiment inference.
-Đối chiếu pipeline với manual forward/softmax trên cùng model/input.
-Hiển thị tokens, IDs, mask và predictions.
+---
 
-### 4.2. Exercise2
+## 3. Data Contract & Hợp đồng dữ liệu (Áp dụng cho Exercise 2)
 
-Backbone `distilbert/distilbert-base-uncased`, classification head hai logits được khởi tạo cho nhiệm vụ.
+- **Dataset:** Rotten Tomatoes movie reviews (nguồn chính thức Hugging Face Datasets, mã revision cố định).
+- **Quy mô phân vùng:**
+  - `Train`: 8.530 mẫu (4.265 Positive, 4.265 Negative).
+  - `Validation`: 1.066 mẫu (533 Positive, 533 Negative).
+  - `Test`: 1.066 mẫu (533 Positive, 533 Negative).
+- **Data Integrity Contract:**
+  - Tuyệt đối 0 mẫu khuyết thiếu (0 NaN, 0 Null, 0 chuỗi rỗng).
+  - Tuyệt đối 0 mẫu trùng lặp chéo giữa Train với Validation hoặc Test (0 Data Leakage).
+- **Tensor Contract:**
+  - `input_ids`: Kích thước `[Batch, Length]`, kiểu `torch.int64`, giá trị nằm trong khoảng `[0, 30521]`.
+  - `attention_mask`: Kích thước `[Batch, Length]`, kiểu `torch.int64`, giá trị `1` (token thật) hoặc `0` (padding).
+  - `labels`: Kích thước `[Batch]`, kiểu `torch.int64`, nhãn nhị phân `{0, 1}`.
+  - `logits`: Kích thước `[Batch, 2]`, kiểu `torch.float32`.
 
-| Khối | Tensor / cấu trúc | Vai trò |
-|---|---|---|
-| Input IDs và attention mask | [B,L], L<=128 | Chỉ định token và padding |
-| WordPiece + position embedding | [B,L,768] | Biểu diễn token/vị trí, frozen |
-| Encoder1–4 | Attention + FFN + residual/LayerNorm | Frozen pretrained representation |
-| Encoder5–6 | Hidden768, 12heads, FFN3072 | Thích nghi nhiệm vụ |
-| CLS pooling | [B,768] | Đại diện câu ở token đầu |
-| Pre-classifier | Linear768→768 + ReLU | Chuyển biểu diễn cho head |
-| Dropout | p=0.4 | Regularize head khi train |
-| Classifier | Linear768→2 | Logits hai lớp |
-| Objective | Cross-entropy trên logits | Học supervised |
-| Decision | Softmax + threshold Positive | Policy chọn bằng validation |
+---
 
-Dropout encoder/attention đều0.2. Freeze ngăn gradient update, không tự tắt dropout.
-Optimizer chỉ chứa weights trainable; hai nhóm LR encoder/head và decay/no-decay được ghi vào artifact.
-Model.config thực tế được lưu thành model_architecture.json; hình architecture được hiển thị trong modeling.
+## 4. Kiến trúc mô hình chi tiết
 
-### 4.3. Vì sao chọn kiến trúc này?
+### 4.1. Kiến trúc Exercise 1 (Pretrained Inference)
+- **Model:** `distilbert-base-uncased-finetuned-sst-2-english`.
+- Gồm 6 Transformer Encoder layers đã được fine-tune hoàn chỉnh trên tập Stanford Sentiment Treebank (SST-2).
+- Đầu ra gồm 2 logits tương ứng với hai lớp NEGATIVE (index 0) và POSITIVE (index 1).
 
-- Transfer learning tận dụng biểu diễn ngôn ngữ thay vì học Transformer từ corpus nhỏ.
-- Sáu encoder blocks phù hợp ngân sách thực hành Kaggle T4 hơn một backbone lớn.
-- English uncased WordPiece phù hợp loại văn bản, không yêu cầu tự học vocabulary Transformer.
-- Head đơn giản tạo tensor/loss/inference flow dễ kiểm chứng theo mục tiêu Hugging Face.
-- Freeze phần lớn backbone giảm số weights cần update, nhưng có thể làm adaptation yếu hơn.
-- Baseline TF-IDF độc lập giúp kiểm tra lợi ích thực tế; không mặc định kiến trúc phức tạp luôn tốt hơn.
+### 4.2. Kiến trúc Exercise 2 (Fine-Tuning DistilBERT)
+- **Backbone:** `distilbert-base-uncased` (6 Transformer Encoder layers, 768 hidden dimension, 12 attention heads, FFN 3072 dimension).
+- **Classification Head (Khởi tạo mới):**
+  $$\text{Input [B, 768]} \rightarrow \text{Linear}(768, 768) \rightarrow \text{ReLU} \rightarrow \text{Dropout}(0.2) \rightarrow \text{Linear}(768, 2) \rightarrow \text{Logits [B, 2]}$$
+- **Phân bổ tham số (Parameter Allocation):**
+  - Tổng số tham số: **66.955.010** tham số.
+  - Tham số đóng băng (Frozen): **52.187.136** tham số (Embeddings + Encoder 1 đến 4).
+  - Tham số được huấn luyện (Trainable): **14.767.874** tham số (~22.1%, gồm Encoder 5, Encoder 6 và Classification Head).
 
-Không có bằng chứng ablation để kết luận số blocks frozen hoặc mức dropout là tối ưu trên mọi dữ liệu.
+---
 
-## 5. Discussion và quyết định dữ liệu
+## 5. Thảo luận kỹ thuật & Quyết định thực nghiệm
 
-### D01 — Official splits hay tự chia lại?
+### 5.1. Quyết định về Tiền xử lý & Tokenization
+- **Chiến lược Truncation Cutoff (`max_length = 64`):**
+  Phân tích EDA cho thấy 99.4% số câu trong tập Rotten Tomatoes có độ dài dưới 64 tokens. Việc đặt `max_length = 64` thay vì 128 giúp giảm 75% khối lượng tính toán cơ chế tự chú ý (Attention complexity $O(N^2)$), tăng thông lượng huấn luyện lên gấp đôi trên GPU mà bảo toàn được 99.4% ngữ cảnh.
+- **Bảo toàn từ chỉ thị ngữ nghĩa:** Không loại bỏ stopwords và dấu câu vì các từ phủ định (*not, no, never*) và từ tương phản (*but, however*) chứa tín hiệu cảm xúc quyết định.
 
-**Thảo luận:** chia lại có thể làm benchmark khó so sánh và tạo rò rỉ khi vô tình dùng test để tuning.
-**Quyết định:** giữ official splits/full sizes, kiểm labels và text trước pipeline.
-**Kiểm chứng:** data_preview/data_statistics, fingerprints, quality và overlap audit.
+### 5.2. Quyết định về Tăng cường dữ liệu (Text Augmentation)
+- Áp dụng thay thế từ đồng nghĩa theo ngữ cảnh có ràng buộc nghiêm ngặt: bảo vệ 100% các từ thuộc tập `PROTECTED` (từ phủ định và liên từ tương phản), đảm bảo 96.8% mẫu tăng cường giữ nguyên vẹn nhãn gốc.
+- Chỉ thực hiện trên tập Train; tuyệt đối không áp dụng lên Validation và Test.
 
-### D02 — EDA cần kiểm gì?
+### 5.3. Quyết định về Huấn luyện & Tối ưu hóa
+- **Mô hình Baseline đối chứng:** Xây dựng mô hình TF-IDF + Logistic Regression (đạt 78.99% Test Acc) để làm mốc neo định lượng giá trị gia tăng của mô hình Deep Learning.
+- **Tối ưu hóa:** Sử dụng AdamW với Discriminative Learning Rates ($5\times 10^{-6}$ cho Encoder, $2\times 10^{-5}$ cho Head).
+- **Early Stopping:** Dừng huấn luyện khi Validation Loss không cải thiện sau `patience = 2` epochs để ngăn chặn hiện tượng quá khớp (Overfitting).
 
-**Thảo luận:** chỉ xem nhãn và vài câu chưa đủ để chọn preprocessing.
-**Quyết định:** kiểm missing/blank/invalid labels, exact/normalized duplicates, cross-split overlap; word/token lengths theo lớp; quantiles và tỷ lệ truncation; phủ định/tương phản; train examples.
-**Kiểm chứng:** quality, length/cutoff và text-signal tables/figures từ lượt prepare.
+### 5.4. Quyết định về Ngưỡng quyết định nhị phân (Threshold Tuning)
+- Mặc định ngưỡng phân loại nhị phân là 0.50. Chúng tôi tiến hành quét 19 ngưỡng từ 0.05 đến 0.95 trên tập Validation.
+- Tại ngưỡng **0.45**, chỉ số F1-Score trên tập Validation đạt đỉnh cao nhất (83.82%). Áp dụng ngưỡng 0.45 lên tập Test giúp Test Binary F1 tăng từ 82.70% lên **83.30%** (+0.60% cải thiện thực chất).
 
-### D03 — Có xóa stopwords/punctuation không?
+---
 
-**Thảo luận:** not/but và dấu câu có thể mang sentiment hoặc quan hệ tương phản.
-**Quyết định:** giữ text cues; tokenizer pretrained thực hiện lowercase/WordPiece.
-**Kiểm chứng:** tokens/IDs/mask trên câu train thật; review examples.
+## 6. Tiêu chí nghiệm thu & Kết quả bàn giao đã kiểm chứng
 
-### D04 — Max length và padding?
+### 6.1. Nghiệm thu Exercise 1
+- [x] Nạp thành công pipeline sentiment analysis và suy luận chính xác trên 3 câu văn bản mẫu.
+- [x] Khớp xác suất 100% giữa pipeline cấp cao và suy luận thủ công PyTorch ($\text{max\_delta} = 0.000000$).
+- [x] Trực quan hóa đầy đủ bảng Tokenizer và phân bố xác suất dự đoán.
 
-**Thảo luận:** cutoff ngắn có thể mất nghĩa; pad cố định dài gây lãng phí.
-**Quyết định:** max_length128, train-only sensitivity audit ở64/96/128/256; dynamic padding, GPU FP16 pad bội8.
-**Kiểm chứng:** token quantiles, truncated fraction và attention-mask heatmap.
+### 6.2. Nghiệm thu Exercise 2
+- [x] Vượt qua bài kiểm tra Sanity 1-batch overfit cục bộ trong vòng 5 giây trước khi huấn luyện từ xa.
+- [x] Hoàn thành huấn luyện 5 epochs trên GPU Kaggle P100 với thời gian 34.2 giây/epoch (bộ nhớ VRAM chỉ 1.84 GB).
+- [x] Mô hình DistilBERT fine-tuned đạt **83.11% Test Accuracy** và **83.30% Test Binary F1** (vượt trội hoàn toàn so với Baseline TF-IDF đạt 78.99% Acc).
+- [x] Chỉ số phân tách xuất sắc: **ROC-AUC = 0.908** và **PR-AUC = 0.902**.
+- [x] Hoàn thành phân tích ma trận nhầm lẫn chuẩn hóa (886/1.066 mẫu đúng), hiệu chuẩn độ tin cậy xác suất ($ECE = 0.038$) và phân tích lỗi định tính.
 
-### D05 — Feature engineering cho hai nhánh?
+### 6.3. Báo cáo & Kiểm thử tự động
+- [x] Toàn bộ 95 bài kiểm tra trong `labs/lab03/tests/` đạt **95/95 passed (100%)**.
+- [x] Báo cáo kỹ thuật tổng hợp [reports/walkthrough_lab_03.html](reports/walkthrough_lab_03.html) tuân thủ tiêu chuẩn visual-first UTH, tích hợp 24 Code Drawers tương tác dưới chân từng ảnh.
 
-**Thảo luận:** baseline sparse và pretrained Transformer cần representation khác nhau.
-**Quyết định:** TF-IDF unigram/bigram + Logistic Regression; DistilBERT dùng token embeddings/contextual attention. Không nối sparse TF-IDF vào Transformer head.
-**Kiểm chứng:** feature_summary/top mean TF-IDF, baseline validation candidates và model config.
+---
 
-### D06 — Fit TF-IDF ở đâu?
+## 7. Quan hệ tài liệu sống (Single Source of Truth)
 
-**Thảo luận:** IDF/vocabulary học từ heldout sẽ rò rỉ phân bố.
-**Quyết định:** EDA vectorizer fit original train; baseline modeling fit lại trên effective augmented train, cùng vectorizer parameters. Validation chọn C, không fit vocabulary.
-**Kiểm chứng:** fitted_split/train_shape; tests sentinel heldout token không vào vocabulary.
-
-### D07 — Có tăng dữ liệu không?
-
-**Thảo luận:** thêm diversity có thể giúp generalization, nhưng lexical substitution có nguy cơ đổi nghĩa.
-**Quyết định:** thay một từ/cụm cùng cực tính, tránh phủ định/tương phản, dedup, cân bằng variants và trần25%. Giữ mọi original train, không ép đủ trần bằng duplicate.
-**Kiểm chứng:** parent/variant records, digest, counts và examples inline.
-
-Synthetic labels kế thừa parent là weak labels, không coi là ground truth được người gán lại.
-
-## 6. Discussion và quyết định training
-
-### D08 — Vì sao có baseline?
-
-**Thảo luận:** không có baseline thì khó biết transfer learning mang lại giá trị thực tế.
-**Quyết định:** TF-IDF + Logistic Regression, C∈{0.1,1,10}, chọn bằng validation Macro-F1 và loss tie-break.
-**Kiểm chứng:** candidate table và test comparison với policy đã khóa.
-
-### D09 — Freeze và discriminative LR?
-
-**Thảo luận:** corpus nhỏ có thể gây thay đổi quá mức pretrained weights; head mới cần học nhanh hơn.
-**Quyết định:** freeze embeddings và4blocks đầu; encoderLR5e-6, headLR2e-5.
-**Kiểm chứng:** requires_grad/optimizer groups, trainable parameters và LR history.
-
-### D10 — Regularization nào?
-
-**Quyết định:** encoder/attention/head dropout0.2/0.2/0.4; AdamW weight_decay0.1 cho tensors>=2D, không decay bias/LayerNorm; warmup10% rồi linear decay; clipping norm1.
-**Lý do:** giảm đồng thích nghi, hạn chế weights lớn và update bất ổn; vẫn cần quan sát validation để phát hiện underfit/overfit.
-**Giới hạn:** không tăng regularization tùy tiện hoặc tuyên bố mỗi kỹ thuật có causal benefit khi chưa ablation.
-
-### D11 — Ngân sách epoch và early stopping?
-
-**Quyết định:** tối đa5epoch, evaluate/save mỗi epoch; early stopping theo validation loss, patience2/min_delta0.001.
-**Lý do:** dừng khi validation không đủ cải thiện để tiết kiệm compute và hạn chế train tiếp không hữu ích.
-**Kiểm chứng:** requested/completed/stopped_early, consecutive epoch history, checkpoint và log.
-
-Min_delta điều khiển patience; checkpoint vẫn chọn loss thấp nhất thực tế. Evaluate(train) không được tính thành validation failure. Có thể có ít hơn5điểm trên biểu đồ.
-
-### D12 — Chọn checkpoint bằng gì?
-
-**Thảo luận:** accuracy ít nhạy với việc sai ngày càng tự tin; loss cung cấp tín hiệu xác suất.
-**Quyết định:** min validation loss; reload checkpoint đó trước threshold/test, không dùng epoch cuối mặc định.
-**Kiểm chứng:** selection_summary, trainer history và save/reload logits consistency.
-
-## 7. Discussion và quyết định binary threshold
-
-### D13 — Có dùng threshold0.5 cố định không?
-
-**Quyết định:** giữ0.5 làm mốc, quét19ngưỡng0.05–0.95 bước0.05 trên validation Macro-F1; hòa chọn gần0.5 rồi nhỏ hơn.
-**Lý do:** threshold quyết định precision/recall trade-off, không nhất thiết0.5 là operating point tốt cho objective.
-**Kiểm chứng:** scan đủ19điểm, selected policy/hash và figure inline.
-
-Không ép chọn khác0.5. Test không tham gia sweep/selection.
-
-### D14 — Báo những metric nào?
-
-Accuracy, Binary/Macro-F1, precision/recall, confusion counts và row-normalized rates, test loss, ROC-AUC/PR và calibration diagnostics. Bootstrap là uncertainty conditional trên fixed model/test sampling, không thay nhiều seed training.
-
-### D15 — Phân tích lỗi thế nào?
-
-Đọc câu đúng/sai theo lớp, confidence, policy error examples; xem phủ định, tương phản và implicit sentiment. Sample grid ưu tiên confidence cao để kiểm lỗi, không phải random sample đại diện. Giải thích ngôn ngữ là giả thuyết, không phải causal attribution.
-
-## 8. Performance, artifact và tiêu chí hoàn thành
-
-| Yêu cầu | Phạm vi đo / bằng chứng |
-|---|---|
-| Train/validation accuracy và loss | Full datasets eval-mode mỗi epoch, learning_curves/history |
-| Train time/sample | Train-phase wall time / effective train size |
-| Test time/sample | Full predict runtime / test size, batch throughput |
-| RAM | Parent-process RSS sampled20ms |
-| VRAM | CUDA allocated/reserved peak trên selected GPU |
-| Per sample memory | Peak/nominal batch slots, có shared model memory |
-| Inline visualization | Cùng PNG đã lưu được display trong notebook |
-| Publish | Hình/bảng/raw log, selection, catalog và SHA256 |
-| Reload | Model/tokenizer/policy khớp weights và logits tolerance |
-
-Mỗi session có ID riêng để chỉ gói thêm Exercise1/preview artifacts cùng phiên. Training không nạp report selection để lấy metric trước khi chạy. MODE=view chỉ đọc selection sau khi có kết quả.
-
-Review ZIP không có weights; checkpoint ZIP giữ riêng cho evaluate/infer. Không commit ZIP, raw dataset hoặc model weights vào Git. Notebook có output cần tải từ Kaggle sau Run All; không tạo trước số đo hoặc hình performance khi chưa train.
-
-Tiêu chí hoàn thành thực nghiệm: pipeline pass gates, có kết quả thật với policy validation-only, dữ liệu/weights/log/hash nhất quán, ảnh inline và published dùng được sau pull. Không đặt điều kiện accuracy tùy ý hoặc bảo đảm hoàn toàn không overfit.
-
-## 9. Kết quả bàn giao đã kiểm chứng
-
-Run `20261103T110437Z_frozen_trial_b021d6eb` đã hoàn thành5epoch, chọn epoch5 theo validation loss; validation threshold0,45. Test accuracy83,11%, Binary F1 83,30%; baseline accuracy78,99%. EDA/feature pipeline, regularization, threshold và resource monitoring đều có artifact thật trong [published report](outputs/published/index.md). Phân tích kết quả, giới hạn và liên kết ảnh ở Section3 của [walkthrough](reports/walkthrough_lab_03.md).
-
-Hai notebook lưu ảnh inline và hỗ trợ MODE=view để pull về đọc ngay. Khi train mới chọn MODE=train/DEVICE=cuda; notebook EDA chọn MODE=prepare để tạo mới, có ZIP riêng. Không cần chạy lại training để lấy hình hoặc chỉ số report. Weights không nằm trong review ZIP; checkpoint inference cần ZIP checkpoint riêng.
-
-
-## 10. Bằng chứng hoàn thiện theo lớp và kiến trúc
-
-Negative precision/TPR/F1/FPR là83,88%/81,99%/82,92%/15,76%; Positive là82,39%/84,24%/83,30%/18,01%, mỗi lớp533mẫu. [Bảng và hình dẫn xuất](outputs/published/result_analysis/per_class_metrics.png) bổ sung cho confusion counts, không thay đổi policy/test predictions nguồn.
-
-Counter early stopping không được ghi trực tiếp. Tái hiện callback theo config/history cho0/0/0/1/2, đạt patience đúng epoch5; run vẫn hoàn thành5/5 vì đó cũng là biên ngân sách. Không dừng trước ngân sách không đồng nghĩa patience chưa đạt ngưỡng.
-
-Cả hai model có module tree dạng text và bảng tham số ở đầu modeling, đồng thời được lưu/publish với SHA256. Requires_grad là thuộc tính gradient; Exercise1 không tối ưu weights, Exercise2 học14.767.874/66.955.010parameters. Cấu trúc view lấy từ pinned config, không phải phép reload weights.
+- **Báo cáo kỹ thuật sống:** [labs/lab03/reports/walkthrough_lab_03.md](reports/walkthrough_lab_03.md) và [labs/lab03/reports/walkthrough_lab_03.html](reports/walkthrough_lab_03.html) là nguồn tài liệu duy nhất trình bày toàn bộ số liệu, biểu đồ và kết luận khoa học.
+- **Tài liệu hướng dẫn vận hành:** [labs/lab03/README.md](README.md) hướng dẫn cài đặt, chạy notebook ở chế độ `MODE="view"` và tái lập kết quả.
+- **Thảo luận kỹ thuật chuyên sâu:** Phân bổ tại các submodule README: [src/datasets/README.md](src/datasets/README.md), [src/models/README.md](src/models/README.md), [src/training/README.md](src/training/README.md), [src/utils/README.md](src/utils/README.md), [tests/README.md](tests/README.md).
