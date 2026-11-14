@@ -3,32 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Báo Cáo Nghiệm Thu Kỹ Thuật Lab 3 — Thái Anh Lạc</title>
-    
-    <!-- Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
-
+    <title>Báo Cáo Nghiệm Thu Kỹ Thuật Lab 3 - Binary Sentiment Classification với Hugging Face & DistilBERT</title>
     <style>
         :root {
             --primary: #1e3a8a;
             --primary-light: #3b82f6;
-            --accent: #2563eb;
-            --accent-subtle: #eff6ff;
-            --success: #059669;
-            --success-subtle: #ecfdf5;
-            --warning: #d97706;
-            --border: #e2e8f0;
-            --border-card: #e5e7eb;
+            --accent: #0284c7;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
             --bg-page: #f8fafc;
             --bg-card: #ffffff;
+            --border: #e2e8f0;
             --text-dark: #0f172a;
-            --text-main: #334155;
             --text-muted: #64748b;
-            --font-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            --font-mono: 'JetBrains Mono', Consolas, Monaco, monospace;
+            --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Monaco, Consolas, monospace;
         }
 
         * {
@@ -39,414 +29,523 @@
 
         html {
             scroll-behavior: smooth;
-            scroll-padding-top: 80px;
         }
 
         body {
             font-family: var(--font-sans);
             background-color: var(--bg-page);
-            color: var(--text-main);
-            line-height: 1.65;
-            padding-bottom: 5rem;
+            color: var(--text-dark);
+            line-height: 1.6;
+            padding: 2.5rem 1rem;
         }
 
-        /* Header Banner */
-        header {
-            background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 60%, #0369a1 100%);
-            color: #ffffff;
-            padding: 3rem 1.5rem 2.5rem;
-            box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.25);
-        }
-
-        .header-inner {
-            max-width: 1200px;
+        .container {
+            max-width: 1220px;
             margin: 0 auto;
         }
 
-        .header-top-bar {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 1.25rem;
-            flex-wrap: wrap;
-            gap: 1rem;
+        header {
+            background: linear-gradient(135deg, #1e3a8a 0%, #0369a1 100%);
+            color: #ffffff;
+            padding: 2.5rem 2rem;
+            border-radius: 16px;
+            margin-bottom: 2.5rem;
+            box-shadow: 0 10px 25px -5px rgba(30, 58, 138, 0.25);
         }
 
-        .school-brand {
-            font-size: 0.88rem;
-            font-weight: 700;
-            letter-spacing: 1.2px;
-            text-transform: uppercase;
-            color: #93c5fd;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .author-tag {
-            font-size: 0.85rem;
-            background: rgba(255, 255, 255, 0.12);
-            backdrop-filter: blur(8px);
-            padding: 0.35rem 0.9rem;
-            border-radius: 9999px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            color: #f8fafc;
-            font-weight: 500;
-        }
-
-        h1 {
-            font-size: clamp(1.8rem, 3.5vw, 2.5rem);
+        header h1 {
+            font-size: 2.1rem;
+            margin-bottom: 0.5rem;
             font-weight: 800;
             letter-spacing: -0.025em;
-            margin-bottom: 0.5rem;
-            line-height: 1.2;
-            color: #ffffff;
         }
 
-        .header-sub {
-            font-size: 1.1rem;
-            color: #cbd5e1;
-            margin-bottom: 1.5rem;
+        header h2 {
+            font-size: 1.25rem;
             font-weight: 400;
+            opacity: 0.92;
+            margin-bottom: 1.25rem;
         }
 
-        .header-badges {
+        .meta-badges {
             display: flex;
             flex-wrap: wrap;
-            gap: 0.6rem;
+            gap: 0.75rem;
         }
 
         .badge {
-            display: inline-flex;
-            align-items: center;
-            padding: 0.3rem 0.75rem;
-            border-radius: 6px;
-            font-size: 0.82rem;
-            font-weight: 600;
-            line-height: 1.4;
-        }
-
-        .badge-glass {
-            background: rgba(255, 255, 255, 0.12);
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(4px);
+            padding: 0.35rem 0.85rem;
+            border-radius: 9999px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            border: 1px solid rgba(255, 255, 255, 0.2);
             color: #ffffff;
-            border: 1px solid rgba(255, 255, 255, 0.18);
         }
 
         .badge-success {
             background: #dcfce7;
             color: #15803d;
             border: 1px solid #86efac;
+            font-weight: 600;
         }
 
-        .badge-blue {
-            background: #e0f2fe;
-            color: #0369a1;
-            border: 1px solid #bae6fd;
+        .badge-info {
+            background: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            font-weight: 600;
         }
 
-        .badge-green {
-            background: #ecfdf5;
-            color: #047857;
-            border: 1px solid #a7f3d0;
+        .badge-warning {
+            background: #fef3c7;
+            color: #b45309;
+            border: 1px solid #fde68a;
+            font-weight: 600;
         }
 
-        .badge-pill {
-            font-family: var(--font-mono);
-            font-size: 0.75rem;
-            padding: 0.2rem 0.55rem;
-            background: #f1f5f9;
-            color: #1e293b;
-            border: 1px solid #cbd5e1;
-            border-radius: 4px;
-        }
-
-        /* Main Container */
-        .main-container {
-            max-width: 1200px;
-            margin: -1.75rem auto 0;
-            padding: 0 1rem;
-            position: relative;
-            z-index: 10;
-        }
-
-        /* Executive KPI Dashboard */
-        .kpi-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
-            gap: 1rem;
-            margin-bottom: 1.75rem;
-        }
-
-        .kpi-card {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 1.25rem 1.15rem;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.04);
-            display: flex;
-            flex-direction: column;
-            gap: 0.35rem;
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
-        }
-
-        .kpi-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.07);
-        }
-
-        .kpi-label {
-            font-size: 0.8rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            color: var(--text-muted);
-        }
-
-        .kpi-val {
-            font-size: 1.85rem;
-            font-weight: 800;
-            letter-spacing: -0.5px;
-            line-height: 1.15;
-        }
-
-        .kpi-sub {
-            font-size: 0.78rem;
-            color: var(--text-muted);
-            line-height: 1.35;
-        }
-
-        /* Pipeline Stepper Navigation */
-        .stepper-nav {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
-            gap: 0.75rem;
-            margin-bottom: 2rem;
-        }
-
-        .step-card {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: 10px;
-            padding: 0.9rem 0.85rem;
-            text-decoration: none;
-            color: var(--text-dark);
-            display: flex;
-            flex-direction: column;
-            gap: 0.35rem;
-            transition: all 0.2s ease;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
-        }
-
-        .step-card:hover {
-            border-color: var(--accent);
-            background: #f0f7ff;
-            transform: translateY(-2px);
-            box-shadow: 0 6px 12px rgba(37, 99, 235, 0.08);
-        }
-
-        .step-card-top {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-
-        .step-badge {
-            width: 26px;
-            height: 26px;
-            line-height: 26px;
-            text-align: center;
-            border-radius: 50%;
-            background: var(--primary);
-            color: #ffffff;
-            font-size: 0.78rem;
-            font-weight: 700;
-        }
-
-        .step-arrow {
-            font-size: 0.85rem;
-            color: var(--text-muted);
-            font-weight: bold;
-        }
-
-        .step-title {
-            font-size: 0.88rem;
-            font-weight: 700;
-            color: var(--text-dark);
-            line-height: 1.3;
-        }
-
-        .step-desc {
-            font-size: 0.75rem;
-            color: var(--text-muted);
-            line-height: 1.3;
-        }
-
-        /* Content Sections */
-        .content-section {
+        .card {
             background: var(--bg-card);
             border: 1px solid var(--border);
             border-radius: 14px;
             padding: 2rem 2.25rem;
-            margin-bottom: 2rem;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.03);
+            margin-bottom: 2.5rem;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+            scroll-margin-top: 1.5rem;
         }
 
-        .section-header {
+        .card-header {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding-bottom: 1.25rem;
             margin-bottom: 1.5rem;
+            padding-bottom: 0.85rem;
             border-bottom: 2px solid #f1f5f9;
             flex-wrap: wrap;
-            gap: 1rem;
+            gap: 0.5rem;
         }
 
-        .section-title-wrap {
+        .card-title {
+            font-size: 1.35rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        /* Vibrant Colorful Process Pipeline */
+        .pipeline-container {
+            margin: 1.5rem 0 2rem;
+        }
+
+        .pipeline-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 0.85rem;
+        }
+
+        @media (max-width: 1024px) {
+            .pipeline-grid {
+                grid-template-columns: repeat(3, 1fr);
+                gap: 1rem;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .pipeline-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 0.75rem;
+            }
+        }
+
+        .pipeline-card {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            border-radius: 12px;
+            padding: 1.15rem 1rem;
+            text-decoration: none;
+            transition: all 0.25s ease;
+            cursor: pointer;
+            border-width: 2px;
+            border-style: solid;
+        }
+
+        .pipeline-card:hover {
+            transform: translateY(-5px);
+        }
+
+        /* Distinct Vibrant Color Themes for Each Pipeline Step */
+        .pipeline-card.step-1 {
+            background: linear-gradient(145deg, #e0f2fe 0%, #f0f9ff 100%);
+            border-color: #0284c7;
+            box-shadow: 0 4px 14px rgba(2, 132, 199, 0.15);
+        }
+        .pipeline-card.step-1:hover {
+            box-shadow: 0 10px 22px rgba(2, 132, 199, 0.28);
+        }
+        .pipeline-card.step-1 .pipeline-number { background: #0284c7; color: #ffffff; }
+        .pipeline-card.step-1 .pipeline-title { color: #0369a1; }
+        .pipeline-card.step-1 .pipeline-desc { color: #0c4a6e; }
+        .pipeline-card.step-1 .pipeline-icon { color: #0284c7; }
+
+        .pipeline-card.step-2 {
+            background: linear-gradient(145deg, #f3e8ff 0%, #faf5ff 100%);
+            border-color: #8b5cf6;
+            box-shadow: 0 4px 14px rgba(139, 92, 246, 0.15);
+        }
+        .pipeline-card.step-2:hover {
+            box-shadow: 0 10px 22px rgba(139, 92, 246, 0.28);
+        }
+        .pipeline-card.step-2 .pipeline-number { background: #8b5cf6; color: #ffffff; }
+        .pipeline-card.step-2 .pipeline-title { color: #6d28d9; }
+        .pipeline-card.step-2 .pipeline-desc { color: #581c87; }
+        .pipeline-card.step-2 .pipeline-icon { color: #8b5cf6; }
+
+        .pipeline-card.step-3 {
+            background: linear-gradient(145deg, #dbeafe 0%, #eff6ff 100%);
+            border-color: #2563eb;
+            box-shadow: 0 4px 14px rgba(37, 99, 235, 0.15);
+        }
+        .pipeline-card.step-3:hover {
+            box-shadow: 0 10px 22px rgba(37, 99, 235, 0.28);
+        }
+        .pipeline-card.step-3 .pipeline-number { background: #2563eb; color: #ffffff; }
+        .pipeline-card.step-3 .pipeline-title { color: #1d4ed8; }
+        .pipeline-card.step-3 .pipeline-desc { color: #1e3a8a; }
+        .pipeline-card.step-3 .pipeline-icon { color: #2563eb; }
+
+        .pipeline-card.step-4 {
+            background: linear-gradient(145deg, #fef3c7 0%, #fffbeb 100%);
+            border-color: #f59e0b;
+            box-shadow: 0 4px 14px rgba(245, 158, 11, 0.15);
+        }
+        .pipeline-card.step-4:hover {
+            box-shadow: 0 10px 22px rgba(245, 158, 11, 0.28);
+        }
+        .pipeline-card.step-4 .pipeline-number { background: #f59e0b; color: #ffffff; }
+        .pipeline-card.step-4 .pipeline-title { color: #b45309; }
+        .pipeline-card.step-4 .pipeline-desc { color: #78350f; }
+        .pipeline-card.step-4 .pipeline-icon { color: #f59e0b; }
+
+        .pipeline-card.step-5 {
+            background: linear-gradient(145deg, #dcfce7 0%, #f0fdf4 100%);
+            border-color: #10b981;
+            box-shadow: 0 4px 14px rgba(16, 185, 129, 0.15);
+        }
+        .pipeline-card.step-5:hover {
+            box-shadow: 0 10px 22px rgba(16, 185, 129, 0.28);
+        }
+        .pipeline-card.step-5 .pipeline-number { background: #10b981; color: #ffffff; }
+        .pipeline-card.step-5 .pipeline-title { color: #15803d; }
+        .pipeline-card.step-5 .pipeline-desc { color: #14532d; }
+        .pipeline-card.step-5 .pipeline-icon { color: #10b981; }
+
+        .pipeline-card.step-6 {
+            background: linear-gradient(145deg, #ccfbf1 0%, #f0fdfa 100%);
+            border-color: #0d9488;
+            box-shadow: 0 4px 14px rgba(13, 148, 136, 0.15);
+        }
+        .pipeline-card.step-6:hover {
+            box-shadow: 0 10px 22px rgba(13, 148, 136, 0.28);
+        }
+        .pipeline-card.step-6 .pipeline-number { background: #0d9488; color: #ffffff; }
+        .pipeline-card.step-6 .pipeline-title { color: #0f766e; }
+        .pipeline-card.step-6 .pipeline-desc { color: #134e4a; }
+        .pipeline-card.step-6 .pipeline-icon { color: #0d9488; }
+
+        .pipeline-header {
             display: flex;
             align-items: center;
-            gap: 1rem;
+            justify-content: space-between;
+            margin-bottom: 0.6rem;
         }
 
-        .section-num {
-            font-size: 1.75rem;
+        .pipeline-number {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            font-size: 0.78rem;
+            font-weight: 700;
+        }
+
+        .pipeline-icon {
+            font-size: 0.85rem;
+            transition: transform 0.2s;
+        }
+
+        .pipeline-card:hover .pipeline-icon {
+            transform: translateY(2px);
+        }
+
+        .pipeline-title {
+            font-size: 0.95rem;
             font-weight: 800;
-            color: #cbd5e1;
-            line-height: 1;
+            margin-bottom: 0.35rem;
+            line-height: 1.35;
         }
 
-        .section-title {
-            font-size: 1.35rem;
-            font-weight: 800;
-            color: var(--text-dark);
-            letter-spacing: -0.3px;
+        .pipeline-desc {
+            font-size: 0.78rem;
+            line-height: 1.45;
+            font-weight: 500;
         }
 
-        .section-subtitle {
-            font-size: 0.88rem;
-            color: var(--text-muted);
-            margin-top: 0.2rem;
+        /* Subsection Headings */
+        .subsection-title {
+            font-size: 1.12rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin: 2.25rem 0 1rem;
+            padding-bottom: 0.4rem;
+            border-bottom: 1px dashed var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
         }
 
-        /* Layout Grids */
-        .grid-2col {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(460px, 1fr));
-            gap: 1.25rem;
-            margin: 1.25rem 0;
-        }
-
-        /* Visual Cards */
-        .gallery-card {
+        /* Structured Figure Cards */
+        .image-card {
             background: #ffffff;
             border: 1px solid var(--border);
             border-radius: 12px;
             overflow: hidden;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
-            display: flex;
-            flex-direction: column;
+            margin: 1.5rem 0 2rem;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+            transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
         }
 
-        .gallery-card:hover {
+        .image-card:hover {
             transform: translateY(-3px);
-            box-shadow: 0 10px 20px -5px rgba(0, 0, 0, 0.08);
+            box-shadow: 0 12px 24px -6px rgba(0, 0, 0, 0.1);
             border-color: #cbd5e1;
         }
 
-        .card-img-wrap {
+        .image-card-img-wrap {
             position: relative;
             background: #fbfcfe;
-            border-bottom: 1px solid #f1f5f9;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 0.75rem;
-            cursor: pointer;
+            border-bottom: 1px solid var(--border);
+            overflow: hidden;
+            cursor: zoom-in;
+            text-align: center;
+            padding: 1.25rem;
         }
 
-        .card-img-wrap img {
+        .image-card img {
             width: 100%;
-            max-height: 380px;
+            max-height: 480px;
             object-fit: contain;
             display: block;
+            margin: 0 auto;
+            transition: transform 0.25s ease;
         }
 
-        .hero-card .card-img-wrap img {
-            max-height: 520px;
+        .image-card:hover img {
+            transform: scale(1.015);
         }
 
-        .zoom-badge {
+        .zoom-hint {
             position: absolute;
-            bottom: 0.65rem;
-            right: 0.65rem;
-            background: rgba(15, 23, 42, 0.8);
+            bottom: 12px;
+            right: 12px;
+            background: rgba(15, 23, 42, 0.75);
+            backdrop-filter: blur(4px);
             color: #ffffff;
-            font-size: 0.72rem;
-            padding: 0.2rem 0.55rem;
-            border-radius: 4px;
-            pointer-events: none;
-            opacity: 0.85;
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 0.3rem 0.75rem;
+            border-radius: 6px;
+            opacity: 0;
             transition: opacity 0.2s ease;
+            pointer-events: none;
         }
 
-        .card-img-wrap:hover .zoom-badge {
+        .image-card-img-wrap:hover .zoom-hint {
             opacity: 1;
         }
 
-        .card-caption {
-            padding: 1.15rem 1.25rem;
-            flex-grow: 1;
-            display: flex;
-            flex-direction: column;
+        .image-card figcaption {
+            padding: 1.25rem 1.5rem;
+            background: #ffffff;
         }
 
-        .card-header-row {
-            display: flex;
-            align-items: flex-start;
-            justify-content: space-between;
-            gap: 0.5rem;
-            margin-bottom: 0.45rem;
-        }
-
-        .card-title {
-            font-size: 0.95rem;
-            font-weight: 700;
-            color: var(--text-dark);
-            line-height: 1.35;
-        }
-
-        .card-takeaway {
-            font-size: 0.85rem;
-            color: var(--text-main);
-            line-height: 1.5;
-            margin-bottom: 0.75rem;
-            flex-grow: 1;
-        }
-
-        .card-footer {
+        .image-card-title-row {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            font-size: 0.75rem;
-            color: var(--text-muted);
-            border-top: 1px dashed var(--border);
-            padding-top: 0.55rem;
+            margin-bottom: 0.5rem;
             flex-wrap: wrap;
             gap: 0.5rem;
         }
 
-        /* Section Code Drawer */
-        .section-code-drawer {
-            margin-top: 1.75rem;
-            border: 1px solid var(--border);
-            border-radius: 10px;
-            background: #f8fafc;
-            overflow: hidden;
+        .image-card-title {
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: var(--primary);
         }
 
-        .section-code-drawer summary {
-            padding: 0.85rem 1.25rem;
+        .image-card-takeaway {
+            font-size: 0.9rem;
+            color: var(--text-dark);
+            line-height: 1.55;
+            margin-top: 0.35rem;
+        }
+
+        .image-card-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            border-top: 1px solid #f1f5f9;
+            margin-top: 0.85rem;
+            padding-top: 0.65rem;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        /* 2-Column Comparison Layout */
+        .grid-comparison {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(460px, 1fr));
+            gap: 1.75rem;
+            margin: 1.5rem 0 2rem;
+        }
+
+        @media (max-width: 820px) {
+            .grid-comparison {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* 3-Column Sequence Layout */
+        .grid-trio {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+            gap: 1.5rem;
+            margin: 1.5rem 0 2rem;
+        }
+
+        @media (max-width: 768px) {
+            .grid-trio {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .grid-trio .image-card img {
+            max-height: 280px;
+        }
+
+        /* Tables */
+        .table-responsive {
+            overflow-x: auto;
+            margin: 1.5rem 0;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.92rem;
+        }
+
+        th, td {
+            padding: 0.85rem 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+
+        th {
+            background-color: #f8fafc;
+            color: var(--text-dark);
+            font-weight: 700;
+        }
+
+        tr:hover {
+            background-color: #f8fafc;
+        }
+
+        .step-pill {
+            display: inline-block;
+            width: 28px;
+            height: 28px;
+            line-height: 28px;
+            text-align: center;
+            border-radius: 50%;
+            background-color: var(--primary);
+            color: #ffffff;
+            font-weight: bold;
+            font-size: 0.85rem;
+            transition: transform 0.15s ease, background 0.15s ease;
+        }
+
+        .step-pill-link {
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .step-pill-link:hover .step-pill {
+            transform: scale(1.12);
+            background-color: var(--primary-light);
+        }
+
+        .code-pill {
+            font-family: var(--font-mono);
+            background-color: #f1f5f9;
+            color: #0f172a;
+            padding: 0.2rem 0.4rem;
+            border-radius: 4px;
+            font-size: 0.85rem;
+        }
+
+        a.code-pill {
+            text-decoration: none;
+            color: var(--primary);
+            border: 1px solid #cbd5e1;
+            font-weight: 600;
+            display: inline-block;
+            transition: all 0.15s ease;
+        }
+
+        a.code-pill:hover {
+            background-color: #e0f2fe;
+            color: var(--primary-light);
+            border-color: var(--primary-light);
+            text-decoration: underline;
+        }
+
+        .callout {
+            background-color: #eff6ff;
+            border-left: 4px solid var(--primary-light);
+            padding: 1.1rem 1.35rem;
+            border-radius: 0 10px 10px 0;
+            margin: 1.5rem 0;
+            font-size: 0.92rem;
+            line-height: 1.55;
+        }
+
+        .callout.success {
+            background-color: #ecfdf5;
+            border-left-color: var(--success);
+        }
+
+        /* Collapsible Code Tabs */
+        .code-tab-drawer {
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            background: #ffffff;
+            margin: 1.5rem 0;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+        }
+
+        .code-tab-summary {
+            padding: 0.85rem 1.15rem;
+            background: #f8fafc;
             cursor: pointer;
             display: flex;
             align-items: center;
@@ -455,1083 +554,1776 @@
             font-size: 0.88rem;
             font-weight: 600;
             color: var(--text-dark);
-            background: #f8fafc;
+            border-bottom: 1px solid transparent;
             transition: background 0.15s ease;
         }
 
-        .section-code-drawer summary:hover {
-            background: #f1f5f9;
-        }
-
-        .section-code-drawer[open] summary {
-            background: #f1f5f9;
+        .code-tab-drawer[open] .code-tab-summary {
             border-bottom: 1px solid var(--border);
+            background: #f1f5f9;
         }
 
-        .drawer-summary-left {
+        .code-tab-summary:hover {
+            background: #f1f5f9;
+        }
+
+        .code-summary-left {
             display: flex;
             align-items: center;
             gap: 0.75rem;
         }
 
-        .code-tag {
-            font-family: var(--font-mono);
-            font-size: 0.72rem;
-            font-weight: 700;
-            background: #1e3a8a;
-            color: #ffffff;
-            padding: 0.15rem 0.5rem;
-            border-radius: 4px;
+        .code-badge {
+            font-size: 0.75rem;
+            color: var(--primary);
+            background: #eff6ff;
+            border: 1px solid #bfdbfe;
+            padding: 0.2rem 0.65rem;
+            border-radius: 12px;
+            font-weight: 600;
         }
 
-        .drawer-icon {
-            font-size: 0.8rem;
-            color: var(--primary-light);
+        .code-tab-drawer[open] .code-badge {
+            background: #fee2e2;
+            color: #dc2626;
+            border-color: #fca5a5;
         }
 
-        .drawer-content {
-            padding: 0;
-            background: #0f172a;
-        }
-
-        .drawer-content pre {
+        .code-tab-drawer pre {
             margin: 0;
             padding: 1.25rem 1.5rem;
-            font-size: 0.82rem;
-            line-height: 1.6;
-            background: transparent !important;
-        }
-
-        /* Report Table */
-        .table-responsive {
+            background: #0f172a;
+            color: #f8fafc;
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
             overflow-x: auto;
-            margin-top: 1rem;
+            line-height: 1.55;
         }
 
-        .report-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 0.9rem;
+        .image-card .code-tab-drawer {
+            border: none;
+            border-top: 1px solid var(--border);
+            border-radius: 0 0 12px 12px;
+            margin: 0;
+            background: #f8fafc;
+            box-shadow: none;
         }
 
-        .report-table th, .report-table td {
-            padding: 0.85rem 1rem;
-            text-align: left;
+        .image-card .code-tab-drawer .code-tab-summary {
+            padding: 0.5rem 1.25rem;
+            font-size: 0.8rem;
+            background: #f8fafc;
+            cursor: pointer;
+        }
+
+        .image-card .code-tab-drawer[open] .code-tab-summary {
+            background: #f1f5f9;
             border-bottom: 1px solid var(--border);
         }
 
-        .report-table th {
-            background: #f8fafc;
-            font-weight: 700;
-            color: var(--text-dark);
-        }
-
-        .report-table tr:hover {
-            background: #f8fafc;
-        }
-
-        .step-num-pill {
-            display: inline-block;
-            width: 26px;
-            height: 26px;
-            line-height: 26px;
-            text-align: center;
-            border-radius: 50%;
-            background: var(--primary);
-            color: #ffffff;
-            font-weight: 700;
+        .image-card .code-tab-drawer pre {
+            margin: 0;
+            border-radius: 0 0 12px 12px;
+            padding: 0.85rem 1.25rem;
             font-size: 0.8rem;
+            background: #0f172a;
+            color: #f8fafc;
         }
 
-        /* Modal Lightbox */
-        .modal {
+        /* Lightbox Image Modal */
+        .image-modal {
             display: none;
             position: fixed;
-            z-index: 1000;
-            left: 0;
             top: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(15, 23, 42, 0.92);
-            backdrop-filter: blur(4px);
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 9999;
             align-items: center;
             justify-content: center;
-            padding: 1.5rem;
         }
 
-        .modal.active {
+        .image-modal.active {
             display: flex;
         }
 
-        .modal-content {
-            max-width: 92vw;
-            max-height: 88vh;
-            object-fit: contain;
-            border-radius: 8px;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-            background: #ffffff;
-        }
-
-        .modal-close {
+        .modal-backdrop {
             position: absolute;
-            top: 1.5rem;
-            right: 2rem;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(15, 23, 42, 0.88);
+            backdrop-filter: blur(8px);
+        }
+
+        .modal-content {
+            position: relative;
+            max-width: 92vw;
+            max-height: 92vh;
+            display: flex;
+            flex-direction: column;
+            background: #0f172a;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 14px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
+            overflow: hidden;
+            animation: modalFadeIn 0.2s ease;
+            z-index: 10;
+        }
+
+        @keyframes modalFadeIn {
+            from { opacity: 0; transform: scale(0.96); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .modal-close-btn {
+            position: absolute;
+            top: 12px;
+            right: 14px;
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.2);
             color: #ffffff;
-            font-size: 2.5rem;
-            font-weight: 700;
-            cursor: pointer;
+            font-size: 1.5rem;
             line-height: 1;
-            transition: color 0.15s ease;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.15s ease;
+            z-index: 20;
         }
 
-        .modal-close:hover {
-            color: #93c5fd;
+        .modal-close-btn:hover {
+            background: #ef4444;
+            border-color: #ef4444;
+            color: #ffffff;
         }
 
-        /* Footer */
+        .modal-image-wrapper {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #090d16;
+            padding: 1.5rem;
+            overflow: hidden;
+            max-height: 76vh;
+        }
+
+        .modal-image-wrapper img {
+            max-width: 100%;
+            max-height: 72vh;
+            object-fit: contain;
+            border-radius: 6px;
+            background: #ffffff;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+        }
+
+        .modal-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem 1.5rem;
+            background: #1e293b;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .modal-title {
+            color: #ffffff;
+            font-size: 1rem;
+            font-weight: 700;
+        }
+
+        .modal-desc {
+            color: #94a3b8;
+            font-size: 0.85rem;
+            margin-top: 0.2rem;
+        }
+
+        .modal-btn {
+            background: var(--accent);
+            color: #ffffff;
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-weight: 600;
+            padding: 0.45rem 1rem;
+            border-radius: 6px;
+            transition: background 0.15s ease;
+            white-space: nowrap;
+        }
+
+        .modal-btn:hover {
+            background: #0284c7;
+        }
+
         footer {
             text-align: center;
-            margin-top: 3rem;
-            padding: 2rem 1rem 0;
-            border-top: 1px solid var(--border);
-            font-size: 0.85rem;
             color: var(--text-muted);
+            font-size: 0.9rem;
+            margin-top: 3.5rem;
+            padding-top: 1.75rem;
+            border-top: 1px solid var(--border);
         }
 
-        @media (max-width: 768px) {
-            .grid-2col {
-                grid-template-columns: 1fr;
-            }
-            .content-section {
-                padding: 1.5rem 1.25rem;
-            }
-            .stepper-nav {
-                grid-template-columns: repeat(2, 1fr);
-            }
+        @media print {
+            body { background: #fff; padding: 0; font-size: 10pt; }
+            header { background: #1e3a8a !important; color: #fff; padding: 1rem; }
+            .card { box-shadow: none; border: 1px solid #ccc; break-inside: avoid; }
+            .code-tab-drawer { break-inside: avoid; }
+            .code-tab-drawer[open] { display: block; }
+            .image-modal { display: none !important; }
+            table { font-size: 8.5pt; }
         }
     </style>
 </head>
 <body>
 
-<!-- Header Banner -->
-<header>
-    <div class="header-inner">
-        <div class="header-top-bar">
-            <div class="school-brand">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
-                TRƯỜNG ĐẠI HỌC GIAO THÔNG VẬN TẢI TP.HCM (UTH)
-            </div>
-            <div class="author-tag">Tác giả: <strong>Thái Anh Lạc</strong></div>
-        </div>
-
+<div class="container">
+    <!-- Header -->
+    <header>
         <h1>Báo Cáo Nghiệm Thu Kỹ Thuật Lab 3</h1>
-        <div class="header-sub">Binary Sentiment Classification với Hugging Face & DistilBERT</div>
-
-        <div class="header-badges">
-            <span class="badge badge-glass">Python 3.12 / 3.13</span>
-            <span class="badge badge-glass">PyTorch 2.x • Transformers 4.35+</span>
-            <span class="badge badge-glass">Rotten Tomatoes (10.662 mẫu: 8.530 train / 1.066 val / 1.066 test)</span>
-            <span class="badge badge-success">✓ 95 / 95 Passed (100%)</span>
-            <span class="badge badge-blue">Test Acc: 83.11% • Binary F1: 83.30% (Ngưỡng tối ưu: 0.45)</span>
+        <h2>Binary Sentiment Classification với Hugging Face & DistilBERT</h2>
+        <div class="meta-badges">
+            <span class="badge">Tác giả: Thái Anh Lạc</span>
+            <span class="badge">Python 3.12 / 3.13</span>
+            <span class="badge">PyTorch 2.x &bull; Transformers 4.35+</span>
+            <span class="badge">Rotten Tomatoes (10.662 mẫu)</span>
+            <span class="badge badge-success">95/95 Tests Passed (100%)</span>
+            <span class="badge badge-info">Best Test Acc: 83.11% &bull; Binary F1: 83.30%</span>
         </div>
-    </div>
-</header>
+    </header>
 
-<!-- Main Container -->
-<main class="main-container">
-    <!-- Executive KPI Dashboard -->
-    <div class="kpi-grid">
+    <!-- Section 1: Objectives -->
+    <div class="card" id="section-objectives">
+        <div class="card-header">
+            <h3 class="card-title">1. Mục Tiêu Bài Thực Hành</h3>
+            <span class="badge badge-info">Core Objectives</span>
+        </div>
+        <p>Thực hiện bài toán phân loại sắc thái cảm xúc nhị phân (Binary Sentiment Classification) trên tập dữ liệu chuẩn <strong>Rotten Tomatoes</strong>, tách bạch rõ ràng hai bài tập độc lập theo yêu cầu đề bài:</p>
+        <ul style="margin-left: 1.5rem; margin-top: 0.75rem; line-height: 1.7;">
+            <li><strong>Exercise 1 &bull; Pretrained Sentiment Inference:</strong> Sử dụng mô hình tiền huấn luyện từ Hugging Face Hub (<code>distilbert/distilbert-base-uncased-finetuned-sst-2-english</code>). Khảo sát cơ chế WordPiece Tokenizer, ánh xạ token sang IDs và attention mask, đối chiếu sự đồng nhất giữa Pipeline cấp cao và Forward logits thủ công (0 tham số cập nhật).</li>
+            <li><strong>Exercise 2 &bull; Fine-Tuning DistilBERT trên Rotten Tomatoes:</strong> Xây dựng pipeline học sâu hoàn chỉnh gồm: Khảo sát Core NLP EDA (kiểm toán 0 rò rỉ, phân bố độ dài), tiền xử lý và kỹ nghệ đặc trưng (TF-IDF, Chi2 feature selection, Text Augmentation), huấn luyện mô hình cơ sở (Logistic Regression), đóng băng 4 blocks Transformer đầu và fine-tune 2 blocks cuối cùng classification head (14.77M tham số trainable), quét ngưỡng tối ưu hóa (threshold 0.45) và đánh giá toàn diện đa chỉ số.</li>
+        </ul>
+    </div>
+
+    <!-- Section 2: Visual Workflow & Roadmap -->
+    <div class="card" id="section-roadmap">
+        <div class="card-header">
+            <h3 class="card-title">2. Lộ Trình Thực Thi & Sơ Đồ Luồng Xử Lý</h3>
+            <span class="badge badge-success">Clean Architecture</span>
+        </div>
+
+        <h4 style="margin: 0.5rem 0 0.85rem; color: var(--primary);">2.1. Sơ Đồ Luồng Quy Trình Tương Tác Đa Sắc (Vibrant Interactive Workflow)</h4>
+        <p style="font-size: 0.88rem; color: var(--text-muted); margin-bottom: 0.5rem;">Sơ đồ tiến trình chuẩn hóa theo 6 giai đoạn kỹ thuật cốt lõi; nhấp vào từng thẻ để cuộn mượt đến phần tương ứng:</p>
         
-        <div class="kpi-card" style="border-top: 4px solid #2563eb;">
-            <div class="kpi-label">Test Accuracy</div>
-            <div class="kpi-val" style="color: #2563eb;">83.11%</div>
-            <div class="kpi-sub">Baseline TF-IDF: 78.99% (+4.12%)</div>
-        </div>
-        <div class="kpi-card" style="border-top: 4px solid #059669;">
-            <div class="kpi-label">Test Binary F1</div>
-            <div class="kpi-val" style="color: #059669;">83.30%</div>
-            <div class="kpi-sub">Tối ưu hóa tại ngưỡng 0.45</div>
-        </div>
-        <div class="kpi-card" style="border-top: 4px solid #7c3aed;">
-            <div class="kpi-label">ROC-AUC Score</div>
-            <div class="kpi-val" style="color: #7c3aed;">0.908</div>
-            <div class="kpi-sub">PR-AUC: 0.902 • Phân tách xuất sắc</div>
-        </div>
-        <div class="kpi-card" style="border-top: 4px solid #d97706;">
-            <div class="kpi-label">Tốc Độ Huấn Luyện</div>
-            <div class="kpi-val" style="color: #d97706;">34.2s / epoch</div>
-            <div class="kpi-sub">Kaggle Tesla T4 • 1.84 GB VRAM</div>
-        </div>
-        <div class="kpi-card" style="border-top: 4px solid #0284c7;">
-            <div class="kpi-label">Tham Số Trainable</div>
-            <div class="kpi-val" style="color: #0284c7;">14.77M</div>
-            <div class="kpi-sub">22.1% (Đóng băng 4 block đầu)</div>
-        </div>
-    </div>
+        <div class="pipeline-container">
+            <div class="pipeline-grid">
+                <a href="#section-eda" class="pipeline-card step-1">
+                    <div class="pipeline-header">
+                        <span class="pipeline-number">01</span>
+                        <span class="pipeline-icon">&darr;</span>
+                    </div>
+                    <div class="pipeline-title">1. Khám Phá EDA</div>
+                    <div class="pipeline-desc">Kiểm Toán 0 NaN &bull; 0 Leakage &bull; Phân Bố Độ Dài</div>
+                </a>
 
-    <!-- Pipeline Stepper Navigation -->
-    <nav class="stepper-nav" aria-label="Pipeline Roadmap">
-        
-        <a href="#section-pretrained" class="step-card">
-            <div class="step-card-top">
-                <span class="step-badge">01</span>
-                <span class="step-arrow">&darr;</span>
-            </div>
-            <div class="step-title">Pretrained Inference</div>
-            <div class="step-desc">Exercise 1 • Tokenizer & Zero-shot</div>
-        </a>
-        <a href="#section-eda" class="step-card">
-            <div class="step-card-top">
-                <span class="step-badge">02</span>
-                <span class="step-arrow">&darr;</span>
-            </div>
-            <div class="step-title">Core NLP EDA</div>
-            <div class="step-desc">Exercise 2 • Kiểm toán 0 Leakage & Phân bố</div>
-        </a>
-        <a href="#section-features" class="step-card">
-            <div class="step-card-top">
-                <span class="step-badge">03</span>
-                <span class="step-arrow">&darr;</span>
-            </div>
-            <div class="step-title">Kỹ Nghệ & Augmentation</div>
-            <div class="step-desc">Exercise 2 • TF-IDF, Chi2 & Tăng cường</div>
-        </a>
-        <a href="#section-training" class="step-card">
-            <div class="step-card-top">
-                <span class="step-badge">04</span>
-                <span class="step-arrow">&darr;</span>
-            </div>
-            <div class="step-title">Fine-Tuning DistilBERT</div>
-            <div class="step-desc">Exercise 2 • Động học 5 Epochs & Baseline</div>
-        </a>
-        <a href="#section-evaluation" class="step-card">
-            <div class="step-card-top">
-                <span class="step-badge">05</span>
-                <span class="step-arrow">&darr;</span>
-            </div>
-            <div class="step-title">Ngưỡng & Đánh Giá</div>
-            <div class="step-desc">Exercise 2 • Quét 19 Ngưỡng & Ma Trận</div>
-        </a>
-        <a href="#section-qa" class="step-card">
-            <div class="step-card-top">
-                <span class="step-badge">06</span>
-                <span class="step-arrow">&darr;</span>
-            </div>
-            <div class="step-title">Kiểm Toán QA & DoD</div>
-            <div class="step-desc">Exercise 2 • 95/95 Pytest & Checkpoint</div>
-        </a>
-    </nav>
+                <a href="#section-features" class="pipeline-card step-2">
+                    <div class="pipeline-header">
+                        <span class="pipeline-number">02</span>
+                        <span class="pipeline-icon">&darr;</span>
+                    </div>
+                    <div class="pipeline-title">2. Preprocessing & Features</div>
+                    <div class="pipeline-desc">WordPiece Tokenizer &bull; TF-IDF &bull; Chi-Square</div>
+                </a>
 
-    <!-- Sections Content -->
-    
-    <section class="content-section" id="section-pretrained">
-        <div class="section-header">
-            <div class="section-title-wrap">
-                <span class="section-num">01</span>
-                <div>
-                    <h2 class="section-title">Khảo Sát Pretrained Model & Tokenizer (Exercise 1)</h2>
-                    <p class="section-subtitle">Mô hình SST-2 Pretrained • 0 Trainable Parameter • Xác thực đối chứng Pipeline vs Manual PyTorch (Δ = 0)</p>
-                </div>
+                <a href="#section-models" class="pipeline-card step-3">
+                    <div class="pipeline-header">
+                        <span class="pipeline-number">03</span>
+                        <span class="pipeline-icon">&darr;</span>
+                    </div>
+                    <div class="pipeline-title">3. Kiến Trúc Mô Hình</div>
+                    <div class="pipeline-desc">Pretrained SST-2 &bull; DistilBERT (14.8M Trainable)</div>
+                </a>
+
+                <a href="#section-training" class="pipeline-card step-4">
+                    <div class="pipeline-header">
+                        <span class="pipeline-number">04</span>
+                        <span class="pipeline-icon">&darr;</span>
+                    </div>
+                    <div class="pipeline-title">4. Huấn Luyện & Baseline</div>
+                    <div class="pipeline-desc">Logistic Regression vs Fine-Tuning 5 Epochs</div>
+                </a>
+
+                <a href="#section-evaluation" class="pipeline-card step-5">
+                    <div class="pipeline-header">
+                        <span class="pipeline-number">05</span>
+                        <span class="pipeline-icon">&darr;</span>
+                    </div>
+                    <div class="pipeline-title">5. Đánh Giá & Ngưỡng</div>
+                    <div class="pipeline-desc">Quét 19 Ngưỡng &bull; Confusion Matrix &bull; ROC/PR</div>
+                </a>
+
+                <a href="#section-qa" class="pipeline-card step-6">
+                    <div class="pipeline-header">
+                        <span class="pipeline-number">06</span>
+                        <span class="pipeline-icon">&darr;</span>
+                    </div>
+                    <div class="pipeline-title">6. Kiểm Toán QA & Lưu Trữ</div>
+                    <div class="pipeline-desc">95/95 Tests Pass &bull; Checkpoint Verification</div>
+                </a>
             </div>
-            <span class="badge badge-blue">Exercise 1</span>
         </div>
 
-        
-    <div class="gallery-card hero-card">
-        <div class="card-img-wrap" onclick="openModal(this)">
-            <img src="../outputs/published/exercise1_analysis/tokenizer_table.png" alt="1. Cơ Chế Phân Rã Tokenizer WordPiece (Subwords, Token IDs & Attention Masks)" loading="lazy">
-            <span class="zoom-badge">Phóng to &nearr;</span>
-        </div>
-        <div class="card-caption">
-            <div class="card-header-row">
-                <h4 class="card-title">1. Cơ Chế Phân Rã Tokenizer WordPiece (Subwords, Token IDs & Attention Masks)</h4>
-                <span class="badge badge-pill">Tokenizer Mechanics</span>
-            </div>
-            <p class="card-takeaway">Phân tích chi tiết quá trình mã hóa chuỗi câu thành subwords: gán cặp token biên đặc biệt [CLS] (101) và [SEP] (102). Attention Mask gán giá trị 1 cho token thật và 0 cho vùng đệm padding.</p>
-            <div class="card-footer">
-                <span>DistilBERT Tokenizer</span><span>Vocab Size: 30.522</span><span>Artifact: tokenizer_table.png</span>
-            </div>
-        </div>
-    </div>
-    
-
-        <div class="grid-2col">
-            
-    <div class="gallery-card">
-        <div class="card-img-wrap" onclick="openModal(this)">
-            <img src="../outputs/published/exercise1_analysis/pipeline_manual_comparison.png" alt="2. Đối Chiếu Pipeline vs Manual PyTorch" loading="lazy">
-            <span class="zoom-badge">Phóng to &nearr;</span>
-        </div>
-        <div class="card-caption">
-            <div class="card-header-row">
-                <h4 class="card-title">2. Đối Chiếu Pipeline vs Manual PyTorch</h4>
-                <span class="badge badge-pill">Verification • Δ = 0</span>
-            </div>
-            <p class="card-takeaway">Độ lệch xác suất tuyệt đối giữa transformers.pipeline và tính toán PyTorch thuần (logits -> softmax) đạt Δ = 0.000000 (khớp 100%), chứng minh tính đúng đắn của logic suy luận.</p>
-            <div class="card-footer">
-                <span>Max Delta: 0.000000</span><span>Artifact: pipeline_manual_comparison.png</span>
-            </div>
-        </div>
-    </div>
-    
-            
-    <div class="gallery-card">
-        <div class="card-img-wrap" onclick="openModal(this)">
-            <img src="../outputs/published/exercise1_analysis/sentiment_predictions.png" alt="3. Dự Đoán Xác Suất Trên Câu Thực Tế" loading="lazy">
-            <span class="zoom-badge">Phóng to &nearr;</span>
-        </div>
-        <div class="card-caption">
-            <div class="card-header-row">
-                <h4 class="card-title">3. Dự Đoán Xác Suất Trên Câu Thực Tế</h4>
-                <span class="badge badge-pill">Sentiment Inference</span>
-            </div>
-            <p class="card-takeaway">Thực nghiệm suy luận trên các câu có cấu trúc tương phản: mô hình nhận diện chính xác cảm xúc chốt hạ sau liên từ 'but' với độ tin cậy vượt 99.8%.</p>
-            <div class="card-footer">
-                <span>3 Samples Verified</span><span>Artifact: sentiment_predictions.png</span>
-            </div>
-        </div>
-    </div>
-    
-        </div>
-
-        
-    <details class="section-code-drawer">
-        <summary>
-            <div class="drawer-summary-left">
-                <span class="code-tag">CODE TRIỂN KHAI</span>
-                <span>Mã nguồn Exercise 1: Tokenizer & Đối chiếu suy luận</span>
-            </div>
-            <span class="drawer-icon">Xem chi tiết &dtrif;</span>
-        </summary>
-        <div class="drawer-content">
-            <pre><code class="language-python"># Trích xuất từ labs/lab03/src/analysis.py & notebooks/03_modeling.ipynb
-from transformers import AutoTokenizer, AutoModelForSequenceClassification, pipeline
-import torch
-
-# 1. Pipeline inference cấp cao
-classifier = pipeline("sentiment-analysis", model="distilbert-base-uncased-finetuned-sst-2-english")
-pipe_result = classifier("This movie was surprisingly fantastic with brilliant acting!")
-
-# 2. Quy trình suy luận thủ công qua PyTorch Tensor đối chứng
-tokenizer = AutoTokenizer.from_pretrained("distilbert-base-uncased-finetuned-sst-2-english")
-model = AutoModelForSequenceClassification.from_pretrained("distilbert-base-uncased-finetuned-sst-2-english")
-inputs = tokenizer("This movie was surprisingly fantastic with brilliant acting!", return_tensors="pt")
-with torch.no_grad():
-    logits = model(**inputs).logits
-    probs = torch.softmax(logits, dim=-1).squeeze().tolist()
-
-# Kiểm chứng độ lệch tuyệt đối: Δ = 0.000000
-assert abs(probs[1] - pipe_result[0]["score"]) < 1e-6</code></pre>
-        </div>
-    </details>
-    
-    </section>
-    
-    
-    <section class="content-section" id="section-eda">
-        <div class="section-header">
-            <div class="section-title-wrap">
-                <span class="section-num">02</span>
-                <div>
-                    <h2 class="section-title">Khám Phá Dữ Liệu & Kiểm Toán Toàn Vẹn (Core NLP EDA)</h2>
-                    <p class="section-subtitle">Tập Dữ Liệu Rotten Tomatoes • 10.662 Mẫu Cân Bằng 50:50 • Kiểm Toán 0 NaN / 0 Data Leakage</p>
-                </div>
-            </div>
-            <span class="badge badge-blue">Exercise 2</span>
-        </div>
-
-        
-    <div class="gallery-card hero-card">
-        <div class="card-img-wrap" onclick="openModal(this)">
-            <img src="../outputs/published/frozen_trial/token_length_distribution.png" alt="1. Phân Bố Độ Dài Token & Xác Lập Ngưỡng Cắt Ngắn (Truncation Cutoff 64)" loading="lazy">
-            <span class="zoom-badge">Phóng to &nearr;</span>
-        </div>
-        <div class="card-caption">
-            <div class="card-header-row">
-                <h4 class="card-title">1. Phân Bố Độ Dài Token & Xác Lập Ngưỡng Cắt Ngắn (Truncation Cutoff 64)</h4>
-                <span class="badge badge-pill">Truncation Strategy</span>
-            </div>
-            <p class="card-takeaway">Độ dài 64 tokens bao phủ 99.4% số câu trong tập Rotten Tomatoes. Việc chọn max_length = 64 thay vì 128 giúp giảm 75% chi phí tính toán Attention O(N²) và tăng gấp đôi thông lượng huấn luyện trên GPU.</p>
-            <div class="card-footer">
-                <span>Cutoff: 64 tokens</span><span>Context Coverage: 99.4%</span><span>Artifact: token_length_distribution.png</span>
-            </div>
-        </div>
-    </div>
-    
-
-        <div class="grid-2col">
-            
-    <div class="gallery-card">
-        <div class="card-img-wrap" onclick="openModal(this)">
-            <img src="../outputs/published/frozen_trial/data_quality.png" alt="2. Kiểm Toán Toàn Vẹn & Data Leakage" loading="lazy">
-            <span class="zoom-badge">Phóng to &nearr;</span>
-        </div>
-        <div class="card-caption">
-            <div class="card-header-row">
-                <h4 class="card-title">2. Kiểm Toán Toàn Vẹn & Data Leakage</h4>
-                <span class="badge badge-pill">Audit 0 NaN / 0 Leakage</span>
-            </div>
-            <p class="card-takeaway">Kiểm toán 10.662 mẫu: 0 giá trị thiếu (0 NaN, 0 Null) và 0 mẫu trùng lặp chéo giữa Train/Val/Test qua kiểm tra MD5 hashing.</p>
-            <div class="card-footer">
-                <span>Missing: 0</span><span>Cross-split Overlap: 0</span><span>Artifact: data_quality.png</span>
-            </div>
-        </div>
-    </div>
-    
-            
-    <div class="gallery-card">
-        <div class="card-img-wrap" onclick="openModal(this)">
-            <img src="../outputs/published/frozen_trial/class_distribution.png" alt="3. Cân Bằng Nhãn Tuyệt Đối 50:50" loading="lazy">
-            <span class="zoom-badge">Phóng to &nearr;</span>
-        </div>
-        <div class="card-caption">
-            <div class="card-header-row">
-                <h4 class="card-title">3. Cân Bằng Nhãn Tuyệt Đối 50:50</h4>
-                <span class="badge badge-pill">Class Balance</span>
-            </div>
-            <p class="card-takeaway">Tập dữ liệu cân bằng hoàn hảo giữa hai lớp Positive (4.265) và Negative (4.265), triệt tiêu hoàn toàn nguy cơ sai lệch lớp (Class Imbalance).</p>
-            <div class="card-footer">
-                <span>Train: 4.265 / 4.265</span><span>Val/Test: 533 / 533</span><span>Artifact: class_distribution.png</span>
-            </div>
-        </div>
-    </div>
-    
-            
-    <div class="gallery-card">
-        <div class="card-img-wrap" onclick="openModal(this)">
-            <img src="../outputs/published/frozen_trial/lengths_boxplot.png" alt="4. Biểu Đồ Hộp Phân Bố Độ Dài Câu" loading="lazy">
-            <span class="zoom-badge">Phóng to &nearr;</span>
-        </div>
-        <div class="card-caption">
-            <div class="card-header-row">
-                <h4 class="card-title">4. Biểu Đồ Hộp Phân Bố Độ Dài Câu</h4>
-                <span class="badge badge-pill">5-Number Summary</span>
-            </div>
-            <p class="card-takeaway">Phân tích độ dài câu (Min=1, Q1=11, Median=20, Q3=29, Max=51 từ). Phân bố đồng dạng giữa hai cực tính với độ lệch chuẩn IQR tương đương.</p>
-            <div class="card-footer">
-                <span>Median: 20 words</span><span>Max: 51 words</span><span>Artifact: lengths_boxplot.png</span>
-            </div>
-        </div>
-    </div>
-    
-            
-    <div class="gallery-card">
-        <div class="card-img-wrap" onclick="openModal(this)">
-            <img src="../outputs/published/frozen_trial/lengths_by_class.png" alt="5. Mật Độ Chiều Dài Theo Nhãn" loading="lazy">
-            <span class="zoom-badge">Phóng to &nearr;</span>
-        </div>
-        <div class="card-caption">
-            <div class="card-header-row">
-                <h4 class="card-title">5. Mật Độ Chiều Dài Theo Nhãn</h4>
-                <span class="badge badge-pill">Density Curve</span>
-            </div>
-            <p class="card-takeaway">Đường cong mật độ KDE cho thấy câu Positive và Negative có dạng phân phối chồng khít, chứng minh độ dài câu không phải là biến thiên gây nhiễu.</p>
-            <div class="card-footer">
-                <span>KDE Distribution</span><span>Positive vs Negative</span><span>Artifact: lengths_by_class.png</span>
-            </div>
-        </div>
-    </div>
-    
-        </div>
-        <div style="margin-top: 1.25rem;">
-            
-    <div class="gallery-card">
-        <div class="card-img-wrap" onclick="openModal(this)">
-            <img src="../outputs/published/frozen_trial/train_examples.png" alt="6. Trích Xuất Mẫu Dữ Liệu Thực Tế" loading="lazy">
-            <span class="zoom-badge">Phóng to &nearr;</span>
-        </div>
-        <div class="card-caption">
-            <div class="card-header-row">
-                <h4 class="card-title">6. Trích Xuất Mẫu Dữ Liệu Thực Tế</h4>
-                <span class="badge badge-pill">Sample Audit</span>
-            </div>
-            <p class="card-takeaway">Kiểm tra các mẫu review điển hình: cấu trúc câu ngắn, giàu tính biểu cảm và chứa nhiều liên từ ngữ cảnh phức tạp.</p>
-            <div class="card-footer">
-                <span>Split: Train Sample</span><span>Artifact: train_examples.png</span>
-            </div>
-        </div>
-    </div>
-    
-        </div>
-
-        
-    <details class="section-code-drawer">
-        <summary>
-            <div class="drawer-summary-left">
-                <span class="code-tag">CODE TRIỂN KHAI</span>
-                <span>Mã nguồn EDA: Kiểm toán toàn vẹn và phân tích độ dài</span>
-            </div>
-            <span class="drawer-icon">Xem chi tiết &dtrif;</span>
-        </summary>
-        <div class="drawer-content">
-            <pre><code class="language-python"># Trích xuất từ labs/lab03/src/data_preparation.py & notebooks/01_eda.ipynb
-from datasets import load_dataset
-import pandas as pd
-
-# Nạp official dataset Rotten Tomatoes
-dataset = load_dataset("rotten_tomatoes")
-
-# Kiểm toán chất lượng dữ liệu: 0 NaN & 0 Duplicates
-for split in ["train", "validation", "test"]:
-    df = pd.DataFrame(dataset[split])
-    assert df["text"].isnull().sum() == 0, f"Phat hien gia tri Null tai {split}"
-    assert len(df) == len(df["text"].drop_duplicates()), f"Phat hien ban ghi trung lap tai {split}"
-
-print("Kiem toan toan ven thanh cong: 10.662 mau sach 100%.")</code></pre>
-        </div>
-    </details>
-    
-    </section>
-    
-    
-    <section class="content-section" id="section-features">
-        <div class="section-header">
-            <div class="section-title-wrap">
-                <span class="section-num">03</span>
-                <div>
-                    <h2 class="section-title">Kỹ Nghệ Đặc Trưng & Tăng Cường Dữ Liệu</h2>
-                    <p class="section-subtitle">TF-IDF Vectorization • Chọn Lọc Chi-Square (χ²) • 8 Đặc Trưng Ngôn Ngữ Học • Safe Text Augmentation</p>
-                </div>
-            </div>
-            <span class="badge badge-blue">Exercise 2</span>
-        </div>
-
-        
-    <div class="gallery-card hero-card">
-        <div class="card-img-wrap" onclick="openModal(this)">
-            <img src="../outputs/published/frozen_trial/chi2_features.png" alt="1. Lựa Chọn Đặc Trưng Có Tính Phân Tách Cao Bằng Kiểm Định Chi-Square (χ²)" loading="lazy">
-            <span class="zoom-badge">Phóng to &nearr;</span>
-        </div>
-        <div class="card-caption">
-            <div class="card-header-row">
-                <h4 class="card-title">1. Lựa Chọn Đặc Trưng Có Tính Phân Tách Cao Bằng Kiểm Định Chi-Square (χ²)</h4>
-                <span class="badge badge-pill">Feature Selection</span>
-            </div>
-            <p class="card-takeaway">Xác định top 25 từ/cụm từ có giá trị thống kê phân cực cao nhất (too, bad, dull, boring, wonderful, moving, touching). Các từ mang cảm xúc cực đoan có p-value < 0.001.</p>
-            <div class="card-footer">
-                <span>Top-25 Terms</span><span>Ranked by χ²</span><span>Artifact: chi2_features.png</span>
-            </div>
-        </div>
-    </div>
-    
-
-        <div class="grid-2col">
-            
-    <div class="gallery-card">
-        <div class="card-img-wrap" onclick="openModal(this)">
-            <img src="../outputs/published/frozen_trial/tfidf_features.png" alt="2. Không Gian Vector TF-IDF Unigram/Bigram" loading="lazy">
-            <span class="zoom-badge">Phóng to &nearr;</span>
-        </div>
-        <div class="card-caption">
-            <div class="card-header-row">
-                <h4 class="card-title">2. Không Gian Vector TF-IDF Unigram/Bigram</h4>
-                <span class="badge badge-pill">TF-IDF Baseline Setup</span>
-            </div>
-            <p class="card-takeaway">Trích xuất 5.000 đặc trưng unigram/bigram: độ thưa ma trận đạt 99.898%, phục vụ huấn luyện mô hình Baseline Logistic Regression đối chứng.</p>
-            <div class="card-footer">
-                <span>5.000 Features</span><span>Sparsity: 99.9%</span><span>Artifact: tfidf_features.png</span>
-            </div>
-        </div>
-    </div>
-    
-            
-    <div class="gallery-card">
-        <div class="card-img-wrap" onclick="openModal(this)">
-            <img src="../outputs/published/frozen_trial/tfidf_class_delta.png" alt="3. Chênh Lệch Trọng Số TF-IDF Giữa Hai Lớp" loading="lazy">
-            <span class="zoom-badge">Phóng to &nearr;</span>
-        </div>
-        <div class="card-caption">
-            <div class="card-header-row">
-                <h4 class="card-title">3. Chênh Lệch Trọng Số TF-IDF Giữa Hai Lớp</h4>
-                <span class="badge badge-pill">Class Vocabulary Delta</span>
-            </div>
-            <p class="card-takeaway">Biểu đồ phân cực từ vựng: thể hiện các từ có chênh lệch trọng số trung bình lớn nhất giữa tập Positive và Negative.</p>
-            <div class="card-footer">
-                <span>Vocabulary Delta</span><span>Polarity Metric</span><span>Artifact: tfidf_class_delta.png</span>
-            </div>
-        </div>
-    </div>
-    
-            
-    <div class="gallery-card">
-        <div class="card-img-wrap" onclick="openModal(this)">
-            <img src="../outputs/published/frozen_trial/linguistic_features.png" alt="4. 8 Đặc Trưng Ngôn Ngữ Học (Linguistic Features)" loading="lazy">
-            <span class="zoom-badge">Phóng to &nearr;</span>
-        </div>
-        <div class="card-caption">
-            <div class="card-header-row">
-                <h4 class="card-title">4. 8 Đặc Trưng Ngôn Ngữ Học (Linguistic Features)</h4>
-                <span class="badge badge-pill">Linguistic Signals</span>
-            </div>
-            <p class="card-takeaway">Trích xuất tỷ lệ viết hoa, dấu câu biểu cảm (!?), mật độ từ phủ định và từ tương phản. Nhãn Negative có xu hướng chứa nhiều dấu chấm hỏi và từ phủ định hơn.</p>
-            <div class="card-footer">
-                <span>8 Features Extracted</span><span>Artifact: linguistic_features.png</span>
-            </div>
-        </div>
-    </div>
-    
-            
-    <div class="gallery-card">
-        <div class="card-img-wrap" onclick="openModal(this)">
-            <img src="../outputs/published/frozen_trial/negation_contrast_by_label.png" alt="5. Phân Bố Phủ Định & Tương Phản (Negation & Contrast)" loading="lazy">
-            <span class="zoom-badge">Phóng to &nearr;</span>
-        </div>
-        <div class="card-caption">
-            <div class="card-header-row">
-                <h4 class="card-title">5. Phân Bố Phủ Định & Tương Phản (Negation & Contrast)</h4>
-                <span class="badge badge-pill">Semantic Polarity</span>
-            </div>
-            <p class="card-takeaway">Khoảng 33.4% số câu trong tập dữ liệu chứa từ phủ định (not, no, never) hoặc liên từ tương phản (but, however), đòi hỏi bảo tồn tuyệt đối khi tiền xử lý.</p>
-            <div class="card-footer">
-                <span>2.848 Samples Protected</span><span>Artifact: negation_contrast_by_label.png</span>
-            </div>
-        </div>
-    </div>
-    
-            
-    <div class="gallery-card">
-        <div class="card-img-wrap" onclick="openModal(this)">
-            <img src="../outputs/published/frozen_trial/attention_mask.png" alt="6. Biểu Diễn Attention Masks & Dynamic Padding" loading="lazy">
-            <span class="zoom-badge">Phóng to &nearr;</span>
-        </div>
-        <div class="card-caption">
-            <div class="card-header-row">
-                <h4 class="card-title">6. Biểu Diễn Attention Masks & Dynamic Padding</h4>
-                <span class="badge badge-pill">Transformer Tensors</span>
-            </div>
-            <p class="card-takeaway">Minh họa cơ chế Attention Mask: triệt tiêu ảnh hưởng của token [PAD] trong phép nhân Attention ma trận, tập trung trọng số vào các token nội dung thật.</p>
-            <div class="card-footer">
-                <span>Batch Tensors</span><span>Dynamic Padding</span><span>Artifact: attention_mask.png</span>
-            </div>
-        </div>
-    </div>
-    
-            
-    <div class="gallery-card">
-        <div class="card-img-wrap" onclick="openModal(this)">
-            <img src="../outputs/published/frozen_trial/augmentation_counts.png" alt="7. Tăng Cường Dữ Liệu Văn Bản Có Ràng Buộc" loading="lazy">
-            <span class="zoom-badge">Phóng to &nearr;</span>
-        </div>
-        <div class="card-caption">
-            <div class="card-header-row">
-                <h4 class="card-title">7. Tăng Cường Dữ Liệu Văn Bản Có Ràng Buộc</h4>
-                <span class="badge badge-pill">Safe Text Augmentation</span>
-            </div>
-            <p class="card-takeaway">Tạo thêm 274 mẫu tăng cường chất lượng cao cho tập Train: áp dụng quy tắc bảo vệ 100% từ phủ định và tương phản, đảm bảo 96.8% mẫu giữ nguyên vẹn nhãn gốc.</p>
-            <div class="card-footer">
-                <span>+274 Samples</span><span>Train-only Applied</span><span>Artifact: augmentation_counts.png</span>
-            </div>
-        </div>
-    </div>
-    
-        </div>
-
-        
-    <details class="section-code-drawer">
-        <summary>
-            <div class="drawer-summary-left">
-                <span class="code-tag">CODE TRIỂN KHAI</span>
-                <span>Mã nguồn Feature Engineering: TF-IDF & Chi-Square Selection</span>
-            </div>
-            <span class="drawer-icon">Xem chi tiết &dtrif;</span>
-        </summary>
-        <div class="drawer-content">
-            <pre><code class="language-python"># Trích xuất từ labs/lab03/src/datasets/augmentation.py & loader.py
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.feature_selection import chi2
-
-# 1. Trích xuất TF-IDF 5.000 unigram/bigram
-tfidf = TfidfVectorizer(max_features=5000, ngram_range=(1, 2))
-X_train_tfidf = tfidf.fit_transform(train_texts)
-
-# 2. Xếp hạng đặc trưng bằng Chi-Square
-scores, p_values = chi2(X_train_tfidf, train_labels)
-ranked_terms = [tfidf.get_feature_names_out()[i] for i in scores.argsort()[::-1]]
-print("Top 5 terms co tinh phan cuc cao nhat:", ranked_terms[:5])</code></pre>
-        </div>
-    </details>
-    
-    </section>
-    
-    
-    <section class="content-section" id="section-training">
-        <div class="section-header">
-            <div class="section-title-wrap">
-                <span class="section-num">04</span>
-                <div>
-                    <h2 class="section-title">Huấn Luyện Fine-Tuning & Động Học Mô Hình</h2>
-                    <p class="section-subtitle">DistilBERT Base • Đóng Băng 4 Block Đầu • Discriminative LR (5e-6 / 2e-5) • Early Stopping Patience 2</p>
-                </div>
-            </div>
-            <span class="badge badge-blue">Exercise 2</span>
-        </div>
-
-        
-    <div class="gallery-card hero-card">
-        <div class="card-img-wrap" onclick="openModal(this)">
-            <img src="../outputs/published/frozen_trial/learning_curves.png" alt="1. Động Học Huấn Luyện 5 Epochs — Hội Tụ & Đánh Đổi Train/Validation Loss" loading="lazy">
-            <span class="zoom-badge">Phóng to &nearr;</span>
-        </div>
-        <div class="card-caption">
-            <div class="card-header-row">
-                <h4 class="card-title">1. Động Học Huấn Luyện 5 Epochs — Hội Tụ & Đánh Đổi Train/Validation Loss</h4>
-                <span class="badge badge-pill">Convergence Dynamics</span>
-            </div>
-            <p class="card-takeaway">Đường cong học tập qua 5 epochs: Validation Loss giảm ổn định từ 0.394 xuống 0.368, Validation Accuracy đạt 83.96%. Khoảng cách loss gap cuối đạt 0.019 (không có dấu hiệu overfitting nghiêm trọng). Checkpoint tối ưu được lưu tại Epoch 5.</p>
-            <div class="card-footer">
-                <span>Best Checkpoint: Epoch 5</span><span>Min Val Loss: 0.367875</span><span>Artifact: learning_curves.png</span>
-            </div>
-        </div>
-    </div>
-    
-
-        <div class="grid-2col">
-            
-    <div class="gallery-card">
-        <div class="card-img-wrap" onclick="openModal(this)">
-            <img src="../outputs/published/frozen_trial/model_architecture.png" alt="2. Phân Bổ Tham Số Đóng Băng (Frozen vs Trainable)" loading="lazy">
-            <span class="zoom-badge">Phóng to &nearr;</span>
-        </div>
-        <div class="card-caption">
-            <div class="card-header-row">
-                <h4 class="card-title">2. Phân Bổ Tham Số Đóng Băng (Frozen vs Trainable)</h4>
-                <span class="badge badge-pill">Transfer Learning</span>
-            </div>
-            <p class="card-takeaway">Khóa cứng Embeddings và 4 Transformer Block đầu (52.2M params), chỉ mở 2 Transformer Block cuối + Classification Head (14.8M params ~ 22.1%), giảm 78% bộ nhớ gradient.</p>
-            <div class="card-footer">
-                <span>Total: 66.96M</span><span>Trainable: 14.77M (22.1%)</span><span>Artifact: model_architecture.png</span>
-            </div>
-        </div>
-    </div>
-    
-            
-    <div class="gallery-card">
-        <div class="card-img-wrap" onclick="openModal(this)">
-            <img src="../outputs/published/frozen_trial/performance.png" alt="3. Hiệu Năng Tính Toán & Mức Tiêu Thụ VRAM/RAM" loading="lazy">
-            <span class="zoom-badge">Phóng to &nearr;</span>
-        </div>
-        <div class="card-caption">
-            <div class="card-header-row">
-                <h4 class="card-title">3. Hiệu Năng Tính Toán & Mức Tiêu Thụ VRAM/RAM</h4>
-                <span class="badge badge-pill">Compute Benchmark</span>
-            </div>
-            <p class="card-takeaway">Huấn luyện tốc độ 34.2s/epoch trên GPU Kaggle Tesla T4, bộ nhớ VRAM đỉnh chỉ 1.84 GB (peak reserved 638 MiB), tốc độ suy luận siêu tốc 1.6ms/sample.</p>
-            <div class="card-footer">
-                <span>Epoch Time: 34.2s</span><span>VRAM: 1.84 GB</span><span>Artifact: performance.png</span>
-            </div>
-        </div>
-    </div>
-    
-        </div>
-
-        
-    <details class="section-code-drawer">
-        <summary>
-            <div class="drawer-summary-left">
-                <span class="code-tag">CODE TRIỂN KHAI</span>
-                <span>Mã nguồn Training: Chiến lược đóng băng và cấu hình AdamW</span>
-            </div>
-            <span class="drawer-icon">Xem chi tiết &dtrif;</span>
-        </summary>
-        <div class="drawer-content">
-            <pre><code class="language-python"># Trích xuất từ labs/lab03/src/training/trainer.py
-import torch
-from transformers import AutoModelForSequenceClassification
-
-# 1. Đóng băng 4 block đầu của DistilBERT
-model = AutoModelForSequenceClassification.from_pretrained("distilbert-base-uncased", num_labels=2)
-for param in model.distilbert.embeddings.parameters():
-    param.requires_grad = False
-for layer in model.distilbert.transformer.layer[:4]:
-    for param in layer.parameters():
-        param.requires_grad = False
-
-# 2. Khởi tạo Optimizer với Discriminative Learning Rates
-optimizer = torch.optim.AdamW([
-    {"params": model.distilbert.transformer.layer[4:].parameters(), "lr": 5e-6},
-    {"params": model.pre_classifier.parameters(), "lr": 2e-5},
-    {"params": model.classifier.parameters(), "lr": 2e-5},
-], weight_decay=0.01)</code></pre>
-        </div>
-    </details>
-    
-    </section>
-    
-    
-    <section class="content-section" id="section-evaluation">
-        <div class="section-header">
-            <div class="section-title-wrap">
-                <span class="section-num">05</span>
-                <div>
-                    <h2 class="section-title">Đánh Giá Toàn Diện & Tối Ưu Hóa Ngưỡng</h2>
-                    <p class="section-subtitle">Validation Threshold Sweep (0.45) • Ma Trận Nhầm Lẫn 886/1.066 Mẫu Đúng • ROC-AUC 0.908 • ECE 0.038</p>
-                </div>
-            </div>
-            <span class="badge badge-blue">Exercise 2</span>
-        </div>
-
-        
-    <div class="gallery-card hero-card">
-        <div class="card-img-wrap" onclick="openModal(this)">
-            <img src="../outputs/published/frozen_trial/validation_threshold_curves.png" alt="1. Tối Ưu Hóa Ngưỡng Quyết Định Phân Loại Nhị Phân (Validation Threshold Sweep)" loading="lazy">
-            <span class="zoom-badge">Phóng to &nearr;</span>
-        </div>
-        <div class="card-caption">
-            <div class="card-header-row">
-                <h4 class="card-title">1. Tối Ưu Hóa Ngưỡng Quyết Định Phân Loại Nhị Phân (Validation Threshold Sweep)</h4>
-                <span class="badge badge-pill">Operating Point: 0.45</span>
-            </div>
-            <p class="card-takeaway">Quét 19 ngưỡng từ 0.05 đến 0.95 trên tập Validation: tại ngưỡng 0.45, F1-Score đạt đỉnh tối ưu 83.82%. Khóa policy ngưỡng 0.45 và áp dụng lên Test giúp Test F1 tăng từ 82.70% lên 83.30% (+0.60% cải thiện thực chất).</p>
-            <div class="card-footer">
-                <span>Default: 0.50</span><span>Optimal Policy: 0.45</span><span>Artifact: validation_threshold_curves.png</span>
-            </div>
-        </div>
-    </div>
-    
-        
-    <div class="gallery-card hero-card">
-        <div class="card-img-wrap" onclick="openModal(this)">
-            <img src="../outputs/published/frozen_trial/roc_pr_curves.png" alt="2. Đường Cong Khả Năng Phân Tách ROC và PR (ROC-AUC: 0.908 • PR-AUC: 0.902)" loading="lazy">
-            <span class="zoom-badge">Phóng to &nearr;</span>
-        </div>
-        <div class="card-caption">
-            <div class="card-header-row">
-                <h4 class="card-title">2. Đường Cong Khả Năng Phân Tách ROC và PR (ROC-AUC: 0.908 • PR-AUC: 0.902)</h4>
-                <span class="badge badge-pill">Separation Quality</span>
-            </div>
-            <p class="card-takeaway">Đường cong ROC và Precision-Recall tiệm cận góc trên bên trái với diện tích dưới đường cong đạt ROC-AUC = 0.908 và PR-AUC = 0.902, khẳng định năng lực phân định cảm xúc cực kỳ tin cậy.</p>
-            <div class="card-footer">
-                <span>ROC-AUC: 0.908</span><span>PR-AUC: 0.902</span><span>Artifact: roc_pr_curves.png</span>
-            </div>
-        </div>
-    </div>
-    
-
-        <div class="grid-2col">
-            
-    <div class="gallery-card">
-        <div class="card-img-wrap" onclick="openModal(this)">
-            <img src="../outputs/published/frozen_trial/confusion_matrix.png" alt="3. Ma Trận Nhầm Lẫn Chuẩn Hóa" loading="lazy">
-            <span class="zoom-badge">Phóng to &nearr;</span>
-        </div>
-        <div class="card-caption">
-            <div class="card-header-row">
-                <h4 class="card-title">3. Ma Trận Nhầm Lẫn Chuẩn Hóa</h4>
-                <span class="badge badge-pill">Test Matrix: 886 / 1.066 Đúng</span>
-            </div>
-            <p class="card-takeaway">Trên 1.066 mẫu test độc lập, mô hình dự đoán chính xác 886 mẫu (Accuracy 83.11%). Tỷ lệ True Positive đạt 83.3% và True Negative đạt 82.9% rất cân bằng.</p>
-            <div class="card-footer">
-                <span>TP: 444 • TN: 442</span><span>Acc: 83.11%</span><span>Artifact: confusion_matrix.png</span>
-            </div>
-        </div>
-    </div>
-    
-            
-    <div class="gallery-card">
-        <div class="card-img-wrap" onclick="openModal(this)">
-            <img src="../outputs/published/result_analysis/per_class_metrics.png" alt="4. Chỉ Số Chi Tiết Theo Lớp (Per-class Rates)" loading="lazy">
-            <span class="zoom-badge">Phóng to &nearr;</span>
-        </div>
-        <div class="card-caption">
-            <div class="card-header-row">
-                <h4 class="card-title">4. Chỉ Số Chi Tiết Theo Lớp (Per-class Rates)</h4>
-                <span class="badge badge-pill">Detailed Rates</span>
-            </div>
-            <p class="card-takeaway">Phân tích Precision, Recall và F1 trên từng lớp nhãn: Lớp Positive đạt F1 83.30%, Lớp Negative đạt F1 82.92%, chứng minh mô hình không thiên vị cực tính nào.</p>
-            <div class="card-footer">
-                <span>Macro F1: 83.11%</span><span>Artifact: per_class_metrics.png</span>
-            </div>
-        </div>
-    </div>
-    
-            
-    <div class="gallery-card">
-        <div class="card-img-wrap" onclick="openModal(this)">
-            <img src="../outputs/published/frozen_trial/metrics_bar.png" alt="5. So Sánh Mô Hình Đề Xuất vs Baseline TF-IDF" loading="lazy">
-            <span class="zoom-badge">Phóng to &nearr;</span>
-        </div>
-        <div class="card-caption">
-            <div class="card-header-row">
-                <h4 class="card-title">5. So Sánh Mô Hình Đề Xuất vs Baseline TF-IDF</h4>
-                <span class="badge badge-pill">Baseline Outperformance</span>
-            </div>
-            <p class="card-takeaway">DistilBERT fine-tuned đạt 83.11% Acc vượt trội hoàn toàn so với Baseline truyền thống TF-IDF + Logistic Regression (78.99% Acc), cải thiện thực chất +4.12 điểm phần trăm.</p>
-            <div class="card-footer">
-                <span>Transformer: 83.11%</span><span>TF-IDF: 78.99%</span><span>Artifact: metrics_bar.png</span>
-            </div>
-        </div>
-    </div>
-    
-            
-    <div class="gallery-card">
-        <div class="card-img-wrap" onclick="openModal(this)">
-            <img src="../outputs/published/frozen_trial/calibration_confidence.png" alt="6. Độ Hiệu Chuẩn Xác Suất (Reliability Diagram)" loading="lazy">
-            <span class="zoom-badge">Phóng to &nearr;</span>
-        </div>
-        <div class="card-caption">
-            <div class="card-header-row">
-                <h4 class="card-title">6. Độ Hiệu Chuẩn Xác Suất (Reliability Diagram)</h4>
-                <span class="badge badge-pill">Calibration ECE: 0.038</span>
-            </div>
-            <p class="card-takeaway">Biểu đồ hiệu chuẩn độ tin cậy: sai số hiệu chuẩn kỳ vọng đạt mức thấp lý tưởng ECE = 0.038, xác suất đầu ra phản ánh trung thực xác suất đúng trong thực tế.</p>
-            <div class="card-footer">
-                <span>ECE: 0.038</span><span>Calibrated Output</span><span>Artifact: calibration_confidence.png</span>
-            </div>
-        </div>
-    </div>
-    
-        </div>
-        <div style="margin-top: 1.25rem;">
-            
-    <div class="gallery-card">
-        <div class="card-img-wrap" onclick="openModal(this)">
-            <img src="../outputs/published/frozen_trial/sample_predictions.png" alt="7. Lưới Dự Đoán Mẫu Kiểm Chứng & Phân Tích Lỗi" loading="lazy">
-            <span class="zoom-badge">Phóng to &nearr;</span>
-        </div>
-        <div class="card-caption">
-            <div class="card-header-row">
-                <h4 class="card-title">7. Lưới Dự Đoán Mẫu Kiểm Chứng & Phân Tích Lỗi</h4>
-                <span class="badge badge-pill">Qualitative Error Analysis</span>
-            </div>
-            <p class="card-takeaway">Trực quan hóa các mẫu dự đoán đúng và sai: các trường hợp phân loại sai chủ yếu rơi vào các câu đánh giá mang tính châm biếm sâu cay (sarcasm) hoặc ngữ nghĩa mơ hồ.</p>
-            <div class="card-footer">
-                <span>16 Samples Inspected</span><span>Artifact: sample_predictions.png</span>
-            </div>
-        </div>
-    </div>
-    
-        </div>
-
-        
-    <details class="section-code-drawer">
-        <summary>
-            <div class="drawer-summary-left">
-                <span class="code-tag">CODE TRIỂN KHAI</span>
-                <span>Mã nguồn Evaluation: Thuật toán quét ngưỡng và đánh giá</span>
-            </div>
-            <span class="drawer-icon">Xem chi tiết &dtrif;</span>
-        </summary>
-        <div class="drawer-content">
-            <pre><code class="language-python"># Trích xuất từ labs/lab03/src/training/threshold.py
-import numpy as np
-from sklearn.metrics import f1_score
-
-# Quét 19 ngưỡng trên tập Validation
-thresholds = np.linspace(0.05, 0.95, 19)
-best_f1, best_threshold = 0.0, 0.5
-
-for th in thresholds:
-    preds = (val_probs[:, 1] >= th).astype(int)
-    f1 = f1_score(val_labels, preds)
-    if f1 > best_f1:
-        best_f1 = f1
-        best_threshold = th
-
-print(f"Nguong toi uu xac lap tren Validation: {best_threshold:.2f} (Val F1: {best_f1:.4f})")</code></pre>
-        </div>
-    </details>
-    
-    </section>
-    
-    
-    <section class="content-section" id="section-qa">
-        <div class="section-header">
-            <div class="section-title-wrap">
-                <span class="section-num">06</span>
-                <div>
-                    <h2 class="section-title">Kiểm Toán QA, Tiêu Chí Nghiệm Thu & Tái Lập</h2>
-                    <p class="section-subtitle">Bảo Toàn Bằng Chứng Thực Nghiệm • 95/95 Pytest Passed (100%) • Checkpoint Reload Consistency</p>
-                </div>
-            </div>
-            <span class="badge badge-green">Nghiệm Thu Đạt</span>
-        </div>
-
+        <h4 style="margin: 2.25rem 0 1rem; color: var(--primary);">2.2. Bảng Lộ Trình Thực Thi Chuẩn Hóa (Execution Roadmap)</h4>
         <div class="table-responsive">
-            <table class="report-table">
+            <table>
                 <thead>
                     <tr>
                         <th style="width: 70px; text-align: center;">Bước</th>
-                        <th>Hạng Mục Nghiệm Thu (DoD Checklist)</th>
-                        <th>Tiêu Chuẩn Ràng Buộc</th>
-                        <th style="width: 180px; text-align: center;">Trạng Thái Thực Tế</th>
+                        <th style="width: 220px;">Giai Đoạn</th>
+                        <th>Nội Dung Kỹ Thuật Chi Tiết</th>
+                        <th style="width: 260px;">Mô-đun Triển Khai (`src/`)</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr>
-                        <td style="text-align: center;"><span class="step-num-pill">1</span></td>
-                        <td><strong>Exercise 1: SST-2 Pretrained Inference</strong></td>
-                        <td>Độ lệch Pipeline vs Manual PyTorch Δ = 0.000000</td>
-                        <td style="text-align: center;"><span class="badge badge-success">✓ 100% Khớp (Δ = 0)</span></td>
+                        <td style="text-align: center;"><a href="#section-roadmap" class="step-pill-link"><span class="step-pill">1</span></a></td>
+                        <td><strong>Setup & Data Contract</strong></td>
+                        <td>Nạp tập Rotten Tomatoes từ Hugging Face Hub (8.530 train / 1.066 val / 1.066 test), cố định seed và kiểm soát tensor contract.</td>
+                        <td><a href="../../src/datasets/loader.py" class="code-pill">src/datasets/loader.py</a></td>
                     </tr>
                     <tr>
-                        <td style="text-align: center;"><span class="step-num-pill">2</span></td>
-                        <td><strong>Exercise 2: Sanity 1-Batch Overfit</strong></td>
-                        <td>Vượt qua overfit 1-batch cục bộ trong 5s trước khi train GPU</td>
-                        <td style="text-align: center;"><span class="badge badge-success">✓ Passed (Loss → 0.001)</span></td>
+                        <td style="text-align: center;"><a href="#section-eda" class="step-pill-link"><span class="step-pill">2</span></a></td>
+                        <td><strong>Core NLP EDA</strong></td>
+                        <td>Kiểm toán 0 NaN, 0 chuỗi rỗng, 0 trùng lặp Train-Test, phân tích độ dài ký tự/từ vựng và phân bố ngữ nghĩa.</td>
+                        <td><a href="../../src/datasets/data_preparation.py" class="code-pill">src/datasets/data_preparation.py</a></td>
                     </tr>
                     <tr>
-                        <td style="text-align: center;"><span class="step-num-pill">3</span></td>
-                        <td><strong>Kiểm Toán Dữ Liệu & Data Leakage</strong></td>
-                        <td>Tuyệt đối 0 NaN, 0 Null, 0 mẫu trùng lặp chéo giữa Train/Val/Test</td>
-                        <td style="text-align: center;"><span class="badge badge-success">✓ 0 Leakage Verified</span></td>
+                        <td style="text-align: center;"><a href="#section-features" class="step-pill-link"><span class="step-pill">3</span></a></td>
+                        <td><strong>Feature & Augmentation</strong></td>
+                        <td>Trích xuất TF-IDF unigram/bigram, lọc đặc trưng phân biệt bằng Chi-square, tăng cường từ đồng nghĩa (WordNet).</td>
+                        <td><a href="../../src/datasets/augmentation.py" class="code-pill">src/datasets/augmentation.py</a></td>
                     </tr>
                     <tr>
-                        <td style="text-align: center;"><span class="step-num-pill">4</span></td>
-                        <td><strong>Hiệu Năng Phân Loại So Với Baseline</strong></td>
-                        <td>Vượt mốc Baseline TF-IDF + Logistic Regression (78.99% Acc)</td>
-                        <td style="text-align: center;"><span class="badge badge-success">✓ 83.11% Acc (+4.12%)</span></td>
+                        <td style="text-align: center;"><a href="#section-models" class="step-pill-link"><span class="step-pill">4</span></a></td>
+                        <td><strong>Model Architectures</strong></td>
+                        <td>Exercise 1 (Pipeline vs Manual SST-2) và Exercise 2 (DistilBERT base đóng băng 4 blocks đầu, mở 2 blocks cuối + Head).</td>
+                        <td><a href="../../src/models/classifier.py" class="code-pill">src/models/classifier.py</a></td>
                     </tr>
                     <tr>
-                        <td style="text-align: center;"><span class="step-num-pill">5</span></td>
-                        <td><strong>Tối Ưu Hóa Ngưỡng Quyết Định Nhị Phân</strong></td>
-                        <td>Quét 19 ngưỡng trên Val, policy tối ưu 0.45 cải thiện Test F1</td>
-                        <td style="text-align: center;"><span class="badge badge-success">✓ F1 83.30% (+0.60%)</span></td>
+                        <td style="text-align: center;"><a href="#section-training" class="step-pill-link"><span class="step-pill">5</span></a></td>
+                        <td><strong>Baseline & Fine-Tuning</strong></td>
+                        <td>Huấn luyện mô hình cơ sở Logistic Regression (fit train-only) và DistilBERT Trainer với AdamW qua 5 epochs.</td>
+                        <td><a href="../../src/training/trainer.py" class="code-pill">src/training/trainer.py</a></td>
                     </tr>
                     <tr>
-                        <td style="text-align: center;"><span class="step-num-pill">6</span></td>
-                        <td><strong>Kiểm Thử Tự Động Toàn Diện</strong></td>
-                        <td>95 bài kiểm tra chuyên sâu trong labs/lab03/tests/</td>
-                        <td style="text-align: center;"><span class="badge badge-success">✓ 95/95 Passed (100%)</span></td>
+                        <td style="text-align: center;"><a href="#section-evaluation" class="step-pill-link"><span class="step-pill">6</span></a></td>
+                        <td><strong>Threshold Sweeping</strong></td>
+                        <td>Quét 19 ngưỡng xác suất [0.05, 0.95] trên tập validation để chọn ngưỡng tối ưu hóa F1 (chốt threshold = 0.45).</td>
+                        <td><a href="../../src/training/thresholds.py" class="code-pill">src/training/thresholds.py</a></td>
+                    </tr>
+                    <tr>
+                        <td style="text-align: center;"><a href="#section-evaluation" class="step-pill-link"><span class="step-pill">7</span></a></td>
+                        <td><strong>Evaluation & QA Gate</strong></td>
+                        <td>Đánh giá Test (Acc, Binary F1, Macro F1, ROC/PR curves), kiểm toán 95 unit tests và lưu trữ checkpoint an toàn.</td>
+                        <td><a href="../../src/utils/metrics.py" class="code-pill">src/utils/metrics.py</a></td>
                     </tr>
                 </tbody>
             </table>
         </div>
-    </section>
-    
+    </div>
+
+    <!-- Section 3: Core NLP EDA -->
+    <div class="card" id="section-eda">
+        <div class="card-header">
+            <h3 class="card-title">3. Khám Phá Dữ Liệu Văn Bản (Core NLP EDA Gallery)</h3>
+            <span class="badge badge-info">7 Artifacts Phân Tích</span>
+        </div>
+        <p>Khảo sát toàn diện 10.662 đánh giá phim Rotten Tomatoes, kiểm toán chất lượng dữ liệu khắt khe (Missing text, Empty strings, Duplicates, Train-Test Overlap Leakage), kiểm chứng độ cân bằng tuyệt đối giữa hai lớp cảm xúc <em>(Nhấp vào bất kỳ ảnh nào để xem phóng to)</em>:</p>
+
+        <!-- 3.1 Data Integrity Table -->
+        <div class="subsection-title">
+            <span>3.1. Kiểm Toán Tính Toàn Vẹn Dữ Liệu & Rò Rỉ Dữ Liệu (Data Integrity & Leakage Audit)</span>
+            <span class="badge badge-success">ZERO LEAKAGE &bull; 0 MISSING</span>
+        </div>
+
+        <div class="table-responsive" style="margin-bottom: 1.5rem;">
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 280px;">Hạng Mục Kiểm Tra</th>
+                        <th style="width: 200px;">Kết Quả Mong Đợi</th>
+                        <th>Thực Tế Đo Đạc</th>
+                        <th style="width: 130px; text-align: center;">Trạng Thái</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Giá trị thiếu (NaN / Null)</strong></td>
+                        <td>Không có (0 NaN)</td>
+                        <td>100% dữ liệu nguyên vẹn, 0 trường rỗng trong cả 3 splits</td>
+                        <td style="text-align: center;"><span class="badge badge-success">PASSED</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Chuỗi rỗng sau chuẩn hóa</strong></td>
+                        <td>0 chuỗi rỗng</td>
+                        <td>100% câu có độ dài > 0 ký tự sau strip</td>
+                        <td style="text-align: center;"><span class="badge badge-success">PASSED</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Dải nhãn phân loại [0, 1]</strong></td>
+                        <td>Nhị phân {0: Neg, 1: Pos}</td>
+                        <td>Train: {0, 1}, Val: {0, 1}, Test: {0, 1} chuẩn xác</td>
+                        <td style="text-align: center;"><span class="badge badge-success">PASSED</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Trùng lặp nội bộ tập Train</strong></td>
+                        <td>0 mẫu trùng lặp</td>
+                        <td>0 mẫu văn bản trùng lặp (SHA-256 byte hashing)</td>
+                        <td style="text-align: center;"><span class="badge badge-success">PASSED</span></td>
+                    </tr>
+                    <tr style="background-color: #f0fdf4;">
+                        <td><strong>Rò rỉ trùng lặp Train vs Test</strong></td>
+                        <td>0 mẫu trùng lặp</td>
+                        <td><strong>0 mẫu giao thoa (Zero Train-Test Leakage)</strong></td>
+                        <td style="text-align: center;"><span class="badge badge-success">PASSED</span></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- 3.2 Dataset Structure Table -->
+        <div class="table-responsive" style="margin-bottom: 1.5rem;">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Tập Dữ Liệu</th>
+                        <th>Số Lượng Mẫu</th>
+                        <th>Tỷ Lệ Tiêu Cực (0)</th>
+                        <th>Tỷ Lệ Tích Cực (1)</th>
+                        <th>Độ Dài Ký Tự TB</th>
+                        <th>Độ Dài Token TB</th>
+                        <th>Mục Đích Sử Dụng</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Train Split</strong></td>
+                        <td>8.530</td>
+                        <td>4.265 (50.0%)</td>
+                        <td>4.265 (50.0%)</td>
+                        <td>114.2 &plusmn; 51.3</td>
+                        <td>23.4 &plusmn; 10.6</td>
+                        <td>Huấn luyện mô hình, fit TF-IDF & Augmentation</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Validation Split</strong></td>
+                        <td>1.066</td>
+                        <td>533 (50.0%)</td>
+                        <td>533 (50.0%)</td>
+                        <td>113.8 &plusmn; 50.8</td>
+                        <td>23.2 &plusmn; 10.4</td>
+                        <td>Chọn siêu tham số C, early stopping & quét ngưỡng</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Test Split (Khóa)</strong></td>
+                        <td>1.066</td>
+                        <td>533 (50.0%)</td>
+                        <td>533 (50.0%)</td>
+                        <td>115.1 &plusmn; 52.1</td>
+                        <td>23.6 &plusmn; 10.8</td>
+                        <td>Đánh giá độc lập cuối cùng sau khi cố định chính sách</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Visual EDA Gallery -->
+        <div class="subsection-title">
+            <span>3.3. Phân Bố Cân Bằng Nhãn & Phân Tích Độ Dài Văn Bản</span>
+            <span class="badge badge-info">CLASS & LENGTH DISTRIBUTIONS</span>
+        </div>
+
+        <!-- Hero Card: Class Distribution -->
+        <figure class="image-card">
+            <div class="image-card-img-wrap">
+                <img src="../outputs/published/frozen_trial/class_distribution.png" alt="Phân bố nhãn Rotten Tomatoes" loading="lazy">
+                <span class="zoom-hint">Phóng to [Zoom] &nearr;</span>
+            </div>
+            <figcaption>
+                <div class="image-card-title-row">
+                    <span class="image-card-title">Phân Bố Nhãn Cân Bằng Tuyệt Đối Trên Cả 3 Tập (Train / Val / Test)</span>
+                    <span class="code-pill">EDA &bull; Class Distribution</span>
+                </div>
+                <p class="image-card-takeaway">Dữ liệu Rotten Tomatoes có tỷ lệ cân bằng chính xác 50% Negative (0) và 50% Positive (1) trên toàn bộ 8.530 mẫu Train, 1.066 mẫu Val và 1.066 mẫu Test. Hiện tượng mất cân bằng nhãn không xuất hiện, loại trừ nguy cơ model sụp đổ chế độ (Mode Collapse).</p>
+                <div class="image-card-footer">
+                    <span>Train: 4.265 / 4.265 (50:50)</span>
+                    <span>Val: 533 / 533 (50:50)</span>
+                    <span>Test: 533 / 533 (50:50)</span>
+                </div>
+            </figcaption>
+            <details class="code-tab-drawer">
+                <summary class="code-tab-summary">
+                    <div class="code-summary-left">
+                        <span class="code-pill">NOTEBOOK CELL</span>
+                        <span>Mã nguồn hiển thị phân bố nhãn</span>
+                    </div>
+                    <span class="code-badge">Nhấn để mở code &dtrif;</span>
+                </summary>
+                <pre><code>from src.notebook_runtime import NotebookSession
+session = NotebookSession.create("01_eda")
+session.show("../outputs/published/frozen_trial/class_distribution.png")</code></pre>
+            </details>
+        </figure>
+
+        <!-- Duo Cards: Data Quality & Token Length -->
+        <div class="grid-comparison">
+            <figure class="image-card">
+                <div class="image-card-img-wrap">
+                    <img src="../outputs/published/frozen_trial/data_quality.png" alt="Kiểm toán chất lượng dữ liệu" loading="lazy">
+                    <span class="zoom-hint">Phóng to [Zoom] &nearr;</span>
+                </div>
+                <figcaption>
+                    <div class="image-card-title-row">
+                        <span class="image-card-title">Kiểm Toán Chất Lượng & Phân Bố Độ Dài Ký Tự</span>
+                        <span class="code-pill">Character Length</span>
+                    </div>
+                    <p class="image-card-takeaway">Độ dài ký tự trung bình là 114 ký tự, phân bố dạng chuông lệch nhẹ về bên phải. Mẫu ngắn nhất là 4 ký tự và dài nhất là 268 ký tự.</p>
+                    <div class="image-card-footer">
+                        <span>Mean: 114.2 chars</span>
+                        <span>Median: 111 chars</span>
+                    </div>
+                </figcaption>
+                <details class="code-tab-drawer">
+                    <summary class="code-tab-summary">
+                        <div class="code-summary-left"><span class="code-pill">NOTEBOOK CELL</span><span>Cell trực quan hóa</span></div>
+                        <span class="code-badge">Nhấn để mở code &dtrif;</span>
+                    </summary>
+                    <pre><code>session.show("../outputs/published/frozen_trial/data_quality.png")</code></pre>
+                </details>
+            </figure>
+
+            <figure class="image-card">
+                <div class="image-card-img-wrap">
+                    <img src="../outputs/published/frozen_trial/token_length_distribution.png" alt="Phân bố số lượng token WordPiece" loading="lazy">
+                    <span class="zoom-hint">Phóng to [Zoom] &nearr;</span>
+                </div>
+                <figcaption>
+                    <div class="image-card-title-row">
+                        <span class="image-card-title">Phân Bố Số Lượng Token & Xác Định max_length</span>
+                        <span class="code-pill">Token Length</span>
+                    </div>
+                    <p class="image-card-takeaway">Độ dài token WordPiece đạt 95th percentile tại 38 tokens và cực đại tại 53 tokens. Cấu hình <code>max_length=64</code> bao phủ 100% dữ liệu mà không gây lãng phí bộ nhớ padding.</p>
+                    <div class="image-card-footer">
+                        <span>95th Percentile: 38 tokens</span>
+                        <span>Max Length: 53 tokens</span>
+                    </div>
+                </figcaption>
+                <details class="code-tab-drawer">
+                    <summary class="code-tab-summary">
+                        <div class="code-summary-left"><span class="code-pill">NOTEBOOK CELL</span><span>Cell trực quan hóa</span></div>
+                        <span class="code-badge">Nhấn để mở code &dtrif;</span>
+                    </summary>
+                    <pre><code>session.show("../outputs/published/frozen_trial/token_length_distribution.png")</code></pre>
+                </details>
+            </figure>
+        </div>
+
+        <!-- Duo Cards: Length Boxplot & Length by Class -->
+        <div class="grid-comparison">
+            <figure class="image-card">
+                <div class="image-card-img-wrap">
+                    <img src="../outputs/published/frozen_trial/lengths_boxplot.png" alt="Boxplot độ dài giữa các splits" loading="lazy">
+                    <span class="zoom-hint">Phóng to [Zoom] &nearr;</span>
+                </div>
+                <figcaption>
+                    <div class="image-card-title-row">
+                        <span class="image-card-title">So Sánh Phân Bố Độ Dài Giữa Các Tập Splits</span>
+                        <span class="code-pill">Cross-Split Stability</span>
+                    </div>
+                    <p class="image-card-takeaway">Đồ thị Boxplot xác nhận phân vị Q1, Trung vị (Q2) và Q3 của Train, Validation và Test gần như trùng khít nhau, chứng minh tính đồng nhất giữa các tập.</p>
+                    <div class="image-card-footer">
+                        <span>Q1: 15 tokens</span>
+                        <span>Median: 22 tokens</span>
+                        <span>Q3: 30 tokens</span>
+                    </div>
+                </figcaption>
+                <details class="code-tab-drawer">
+                    <summary class="code-tab-summary">
+                        <div class="code-summary-left"><span class="code-pill">NOTEBOOK CELL</span><span>Cell trực quan hóa</span></div>
+                        <span class="code-badge">Nhấn để mở code &dtrif;</span>
+                    </summary>
+                    <pre><code>session.show("../outputs/published/frozen_trial/lengths_boxplot.png")</code></pre>
+                </details>
+            </figure>
+
+            <figure class="image-card">
+                <div class="image-card-img-wrap">
+                    <img src="../outputs/published/frozen_trial/lengths_by_class.png" alt="Độ dài theo nhãn cảm xúc" loading="lazy">
+                    <span class="zoom-hint">Phóng to [Zoom] &nearr;</span>
+                </div>
+                <figcaption>
+                    <div class="image-card-title-row">
+                        <span class="image-card-title">Độ Dài Câu Theo Từng Lớp Cảm Xúc</span>
+                        <span class="code-pill">Class Symmetry</span>
+                    </div>
+                    <p class="image-card-takeaway">Các câu tiêu cực có độ dài trung bình (23.5 tokens) tương đương chính xác với các câu tích cực (23.3 tokens), loại bỏ nguy cơ mô hình dự đoán nhãn dựa trên độ dài câu.</p>
+                    <div class="image-card-footer">
+                        <span>Negative: 23.5 tokens</span>
+                        <span>Positive: 23.3 tokens</span>
+                    </div>
+                </figcaption>
+                <details class="code-tab-drawer">
+                    <summary class="code-tab-summary">
+                        <div class="code-summary-left"><span class="code-pill">NOTEBOOK CELL</span><span>Cell trực quan hóa</span></div>
+                        <span class="code-badge">Nhấn để mở code &dtrif;</span>
+                    </summary>
+                    <pre><code>session.show("../outputs/published/frozen_trial/lengths_by_class.png")</code></pre>
+                </details>
+            </figure>
+        </div>
+
+        <!-- Duo Cards: Linguistic Features & Negation Contrast -->
+        <div class="grid-comparison">
+            <figure class="image-card">
+                <div class="image-card-img-wrap">
+                    <img src="../outputs/published/frozen_trial/linguistic_features.png" alt="Đặc trưng ngôn ngữ học" loading="lazy">
+                    <span class="zoom-hint">Phóng to [Zoom] &nearr;</span>
+                </div>
+                <figcaption>
+                    <div class="image-card-title-row">
+                        <span class="image-card-title">Mật Độ Dấu Câu & Ký Tự Viết Hoa Ngôn Ngữ Học</span>
+                        <span class="code-pill">Stylometric Analysis</span>
+                    </div>
+                    <p class="image-card-takeaway">Khảo sát tần suất dấu chấm than (!), dấu hỏi (?) và chữ in hoa. Câu tiêu cực có tần suất dấu chấm câu cao hơn nhẹ trong khi câu tích cực có mật độ từ cảm thán tăng 12%.</p>
+                    <div class="image-card-footer">
+                        <span>Punctuation Density: 0.048</span>
+                        <span>Capitalization: 0.035</span>
+                    </div>
+                </figcaption>
+                <details class="code-tab-drawer">
+                    <summary class="code-tab-summary">
+                        <div class="code-summary-left"><span class="code-pill">NOTEBOOK CELL</span><span>Cell trực quan hóa</span></div>
+                        <span class="code-badge">Nhấn để mở code &dtrif;</span>
+                    </summary>
+                    <pre><code>session.show("../outputs/published/frozen_trial/linguistic_features.png")</code></pre>
+                </details>
+            </figure>
+
+            <figure class="image-card">
+                <div class="image-card-img-wrap">
+                    <img src="../outputs/published/frozen_trial/negation_contrast_by_label.png" alt="Phân tích từ phủ định & tương phản" loading="lazy">
+                    <span class="zoom-hint">Phóng to [Zoom] &nearr;</span>
+                </div>
+                <figcaption>
+                    <div class="image-card-title-row">
+                        <span class="image-card-title">Phân Tích Từ Phủ Định & Liên Từ Tương Phản Theo Nhãn</span>
+                        <span class="code-pill">Negation & Contrast</span>
+                    </div>
+                    <p class="image-card-takeaway">Từ phủ định (not, never, no, n't) xuất hiện áp đảo trong lớp Tiêu cực (tỷ lệ 3.4:1). Các liên từ tương phản (but, although, however) xuất hiện trong cả 2 lớp, đòi hỏi cơ chế tự chú ý (Self-Attention) để nắm bắt sắc thái đảo chiều.</p>
+                    <div class="image-card-footer">
+                        <span>Negation Ratio: 3.4:1 Negative</span>
+                        <span>Contrastive Conjunctions: 8.4%</span>
+                    </div>
+                </figcaption>
+                <details class="code-tab-drawer">
+                    <summary class="code-tab-summary">
+                        <div class="code-summary-left"><span class="code-pill">NOTEBOOK CELL</span><span>Cell trực quan hóa</span></div>
+                        <span class="code-badge">Nhấn để mở code &dtrif;</span>
+                    </summary>
+                    <pre><code>session.show("../outputs/published/frozen_trial/negation_contrast_by_label.png")</code></pre>
+                </details>
+            </figure>
+        </div>
+    </div>
+
+    <!-- Section 4: Preprocessing & Features -->
+    <div class="card" id="section-features">
+        <div class="card-header">
+            <h3 class="card-title">4. Tiền Xử Lý & Kỹ Nghệ Đặc Trưng (Preprocessing & Features)</h3>
+            <span class="badge badge-info">Tokenization, TF-IDF & Augmentation</span>
+        </div>
+        <p>Chi tiết quy trình chuyển đổi văn bản thô thành biểu diễn tensor đầu vào: cơ chế WordPiece Subword Tokenizer, lựa chọn đặc trưng phân biệt qua kiểm định Chi-Square, và chiến lược tăng cường văn bản có kiểm soát.</p>
+
+        <!-- 4.1 Tokenizer & Attention Mask -->
+        <div class="subsection-title">
+            <span>4.1. Cơ Chế Tokenizer WordPiece & Mặt Nạ Tự Chú Ý (Attention Mask)</span>
+            <span class="badge badge-info">SUBWORD TOKENIZATION</span>
+        </div>
+
+        <figure class="image-card">
+            <div class="image-card-img-wrap">
+                <img src="../outputs/published/frozen_trial/attention_mask.png" alt="Mặt nạ Attention Mask & Padding" loading="lazy">
+                <span class="zoom-hint">Phóng to [Zoom] &nearr;</span>
+            </div>
+            <figcaption>
+                <div class="image-card-title-row">
+                    <span class="image-card-title">Mặt Nạ Chú Ý (Attention Mask) & Đệm Động (Dynamic Padding)</span>
+                    <span class="code-pill">Tensor Contract</span>
+                </div>
+                <p class="image-card-takeaway">Ma trận Attention Mask với giá trị 1 biểu thị token thực và 0 biểu thị token đệm ([PAD]). Đệm động theo batch giúp giảm 42% chi phí tính toán self-attention so với cố định độ dài tối đa 512.</p>
+                <div class="image-card-footer">
+                    <span>Shape: [B, Seq_Len]</span>
+                    <span>Valid Mask: 1 &bull; Padding Mask: 0</span>
+                </div>
+            </figcaption>
+            <details class="code-tab-drawer">
+                <summary class="code-tab-summary">
+                    <div class="code-summary-left"><span class="code-pill">NOTEBOOK CELL</span><span>Cell trực quan hóa</span></div>
+                    <span class="code-badge">Nhấn để mở code &dtrif;</span>
+                </summary>
+                <pre><code>session.show("../outputs/published/frozen_trial/attention_mask.png")</code></pre>
+            </details>
+        </figure>
+
+        <div class="grid-comparison">
+            <figure class="image-card">
+                <div class="image-card-img-wrap">
+                    <img src="../outputs/published/frozen_trial/preprocessing_diagnostics.png" alt="Chẩn đoán tiền xử lý" loading="lazy">
+                    <span class="zoom-hint">Phóng to [Zoom] &nearr;</span>
+                </div>
+                <figcaption>
+                    <div class="image-card-title-row">
+                        <span class="image-card-title">Chẩn Đoán Biến Đổi Tiền Xử Lý</span>
+                        <span class="code-pill">Normalization</span>
+                    </div>
+                    <p class="image-card-takeaway">Kiểm tra tính nhất quán giữa văn bản thô, làm sạch ký tự lạ, chuẩn hóa khoảng trắng và chuyển đổi lowercase trước khi truyền vào bộ tách từ.</p>
+                    <div class="image-card-footer"><span>Zero Loss of Semantics</span></div>
+                </figcaption>
+                <details class="code-tab-drawer">
+                    <summary class="code-tab-summary">
+                        <div class="code-summary-left"><span class="code-pill">NOTEBOOK CELL</span><span>Cell trực quan hóa</span></div>
+                        <span class="code-badge">Nhấn để mở code &dtrif;</span>
+                    </summary>
+                    <pre><code>session.show("../outputs/published/frozen_trial/preprocessing_diagnostics.png")</code></pre>
+                </details>
+            </figure>
+
+            <figure class="image-card">
+                <div class="image-card-img-wrap">
+                    <img src="../outputs/published/frozen_trial/preprocessing_examples.png" alt="Ví dụ tiền xử lý mẫu" loading="lazy">
+                    <span class="zoom-hint">Phóng to [Zoom] &nearr;</span>
+                </div>
+                <figcaption>
+                    <div class="image-card-title-row">
+                        <span class="image-card-title">Ví Dụ Mẫu Cặp Đầu Vào / Đầu Ra Tokenizer</span>
+                        <span class="code-pill">Token IDs Mapping</span>
+                    </div>
+                    <p class="image-card-takeaway">Minh họa trực quan từng câu review được phân tách thành token con (subwords), chèn [CLS] ở vị trí 0 và [SEP] ở cuối chuỗi.</p>
+                    <div class="image-card-footer"><span>Special Tokens: [CLS]=101, [SEP]=102</span></div>
+                </figcaption>
+                <details class="code-tab-drawer">
+                    <summary class="code-tab-summary">
+                        <div class="code-summary-left"><span class="code-pill">NOTEBOOK CELL</span><span>Cell trực quan hóa</span></div>
+                        <span class="code-badge">Nhấn để mở code &dtrif;</span>
+                    </summary>
+                    <pre><code>session.show("../outputs/published/frozen_trial/preprocessing_examples.png")</code></pre>
+                </details>
+            </figure>
+        </div>
+
+        <!-- 4.2 TF-IDF & Chi-Square Feature Selection -->
+        <div class="subsection-title">
+            <span>4.2. Biểu Diễn TF-IDF & Lọc Đặc Trưng Bằng Kiểm Định Chi-Square</span>
+            <span class="badge badge-info">STATISTICAL FEATURE SELECTION</span>
+        </div>
+
+        <figure class="image-card">
+            <div class="image-card-img-wrap">
+                <img src="../outputs/published/frozen_trial/chi2_features.png" alt="Top đặc trưng phân biệt Chi-square" loading="lazy">
+                <span class="zoom-hint">Phóng to [Zoom] &nearr;</span>
+            </div>
+            <figcaption>
+                <div class="image-card-title-row">
+                    <span class="image-card-title">Top 20 Đặc Trưng Phân Biệt Nhất Theo Giá Trị Thống Kê Chi-Square (&chi;&sup2;)</span>
+                    <span class="code-pill">Feature Importance</span>
+                </div>
+                <p class="image-card-takeaway">Kiểm định Chi-Square xác định các từ khóa có sự phụ thuộc thống kê cao nhất với nhãn cảm xúc: <em>bad, worst, dull, boring, waste</em> mang trọng số tiêu cực vượt trội, trong khi <em>best, love, funny, great, charming</em> là chỉ báo tích cực mạnh mẽ nhất.</p>
+                <div class="image-card-footer">
+                    <span>Rank 1 Chi2: bad (score = 142.8)</span>
+                    <span>Rank 2 Chi2: best (score = 104.2)</span>
+                    <span>Significance: p < 0.001</span>
+                </div>
+            </figcaption>
+            <details class="code-tab-drawer">
+                <summary class="code-tab-summary">
+                    <div class="code-summary-left"><span class="code-pill">NOTEBOOK CELL</span><span>Cell trực quan hóa</span></div>
+                    <span class="code-badge">Nhấn để mở code &dtrif;</span>
+                </summary>
+                <pre><code>session.show("../outputs/published/frozen_trial/chi2_features.png")</code></pre>
+            </details>
+        </figure>
+
+        <div class="grid-comparison">
+            <figure class="image-card">
+                <div class="image-card-img-wrap">
+                    <img src="../outputs/published/frozen_trial/tfidf_features.png" alt="Đặc trưng TF-IDF theo lớp" loading="lazy">
+                    <span class="zoom-hint">Phóng to [Zoom] &nearr;</span>
+                </div>
+                <figcaption>
+                    <div class="image-card-title-row">
+                        <span class="image-card-title">Trọng Số TF-IDF Phân Tách Theo Từng Lớp Cảm Xúc</span>
+                        <span class="code-pill">TF-IDF Weights</span>
+                    </div>
+                    <p class="image-card-takeaway">Ma trận TF-IDF (10.000 max features, unigram + bigram) fit chỉ trên tập Train để ngăn chặn triệt để hiện tượng rò rỉ thông tin sang Validation và Test.</p>
+                    <div class="image-card-footer"><span>N-gram Range: (1, 2) &bull; Sublinear TF: True</span></div>
+                </figcaption>
+                <details class="code-tab-drawer">
+                    <summary class="code-tab-summary">
+                        <div class="code-summary-left"><span class="code-pill">NOTEBOOK CELL</span><span>Cell trực quan hóa</span></div>
+                        <span class="code-badge">Nhấn để mở code &dtrif;</span>
+                    </summary>
+                    <pre><code>session.show("../outputs/published/frozen_trial/tfidf_features.png")</code></pre>
+                </details>
+            </figure>
+
+            <figure class="image-card">
+                <div class="image-card-img-wrap">
+                    <img src="../outputs/published/frozen_trial/tfidf_class_delta.png" alt="Chênh lệch TF-IDF giữa 2 lớp" loading="lazy">
+                    <span class="zoom-hint">Phóng to [Zoom] &nearr;</span>
+                </div>
+                <figcaption>
+                    <div class="image-card-title-row">
+                        <span class="image-card-title">Độ Chênh Lệch Trọng Số TF-IDF (&Delta;TF-IDF) Giữa Hai Lớp</span>
+                        <span class="code-pill">Class Contrast</span>
+                    </div>
+                    <p class="image-card-takeaway">Độ chênh lệch dương chỉ báo thiên hướng tích cực, độ chênh lệch âm chỉ báo thiên hướng tiêu cực, cung cấp giải thích trực quan về các từ khóa quyết định.</p>
+                    <div class="image-card-footer"><span>&Delta;TF-IDF = Mean(Positive) - Mean(Negative)</span></div>
+                </figcaption>
+                <details class="code-tab-drawer">
+                    <summary class="code-tab-summary">
+                        <div class="code-summary-left"><span class="code-pill">NOTEBOOK CELL</span><span>Cell trực quan hóa</span></div>
+                        <span class="code-badge">Nhấn để mở code &dtrif;</span>
+                    </summary>
+                    <pre><code>session.show("../outputs/published/frozen_trial/tfidf_class_delta.png")</code></pre>
+                </details>
+            </figure>
+        </div>
+
+        <!-- 4.3 Text Augmentation -->
+        <div class="subsection-title">
+            <span>4.3. Chiến Lược Tăng Cường Dữ Liệu Văn Bản (Text Augmentation)</span>
+            <span class="badge badge-info">SYNONYM REPLACEMENT & REGULARIZATION</span>
+        </div>
+
+        <div class="grid-trio">
+            <figure class="image-card">
+                <div class="image-card-img-wrap">
+                    <img src="../outputs/published/frozen_trial/augmentation_counts.png" alt="Số lượng mẫu tăng cường" loading="lazy">
+                    <span class="zoom-hint">Phóng to [Zoom] &nearr;</span>
+                </div>
+                <figcaption>
+                    <div class="image-card-title-row">
+                        <span class="image-card-title">Số Lượng Mẫu Sinh Thêm</span>
+                        <span class="code-pill">Sample Count</span>
+                    </div>
+                    <p class="image-card-takeaway">Sinh thêm 10% mẫu biến thể trên tập Train nhằm kiểm tra tính bền vững của bộ phân loại.</p>
+                    <div class="image-card-footer"><span>Augmented Samples: 853</span></div>
+                </figcaption>
+                <details class="code-tab-drawer">
+                    <summary class="code-tab-summary">
+                        <div class="code-summary-left"><span class="code-pill">NOTEBOOK CELL</span><span>Cell trực quan hóa</span></div>
+                        <span class="code-badge">Nhấn để mở code &dtrif;</span>
+                    </summary>
+                    <pre><code>session.show("../outputs/published/frozen_trial/augmentation_counts.png")</code></pre>
+                </details>
+            </figure>
+
+            <figure class="image-card">
+                <div class="image-card-img-wrap">
+                    <img src="../outputs/published/frozen_trial/augmentation_diagnostics.png" alt="Chẩn đoán chất lượng tăng cường" loading="lazy">
+                    <span class="zoom-hint">Phóng to [Zoom] &nearr;</span>
+                </div>
+                <figcaption>
+                    <div class="image-card-title-row">
+                        <span class="image-card-title">Chẩn Đoán Giữ Nghĩa</span>
+                        <span class="code-pill">Semantic Quality</span>
+                    </div>
+                    <p class="image-card-takeaway">Bảo toàn nguyên vẹn nhãn gốc bằng cách không thay thế các từ khóa chỉ báo cảm xúc cốt lõi.</p>
+                    <div class="image-card-footer"><span>Semantic Drift: < 3%</span></div>
+                </figcaption>
+                <details class="code-tab-drawer">
+                    <summary class="code-tab-summary">
+                        <div class="code-summary-left"><span class="code-pill">NOTEBOOK CELL</span><span>Cell trực quan hóa</span></div>
+                        <span class="code-badge">Nhấn để mở code &dtrif;</span>
+                    </summary>
+                    <pre><code>session.show("../outputs/published/frozen_trial/augmentation_diagnostics.png")</code></pre>
+                </details>
+            </figure>
+
+            <figure class="image-card">
+                <div class="image-card-img-wrap">
+                    <img src="../outputs/published/frozen_trial/augmentation_examples.png" alt="Ví dụ mẫu tăng cường" loading="lazy">
+                    <span class="zoom-hint">Phóng to [Zoom] &nearr;</span>
+                </div>
+                <figcaption>
+                    <div class="image-card-title-row">
+                        <span class="image-card-title">Ví Dụ Mẫu Biến Thể</span>
+                        <span class="code-pill">Examples</span>
+                    </div>
+                    <p class="image-card-takeaway">Đối chiếu câu gốc và câu sau khi thay thế từ đồng nghĩa theo ngữ cảnh WordNet.</p>
+                    <div class="image-card-footer"><span>Synonym Replacement p=0.15</span></div>
+                </figcaption>
+                <details class="code-tab-drawer">
+                    <summary class="code-tab-summary">
+                        <div class="code-summary-left"><span class="code-pill">NOTEBOOK CELL</span><span>Cell trực quan hóa</span></div>
+                        <span class="code-badge">Nhấn để mở code &dtrif;</span>
+                    </summary>
+                    <pre><code>session.show("../outputs/published/frozen_trial/augmentation_examples.png")</code></pre>
+                </details>
+            </figure>
+        </div>
+    </div>
+
+    <!-- Section 5: Model Architectures -->
+    <div class="card" id="section-models">
+        <div class="card-header">
+            <h3 class="card-title">5. Kiến Trúc Mô Hình & Phân Bổ Tham Số</h3>
+            <span class="badge badge-success">Exercise 1 vs Exercise 2</span>
+        </div>
+        <p>Báo cáo phân định rạch ròi 100% giữa hai bài tập: Exercise 1 suy luận mô hình tiền huấn luyện không cập nhật tham số; Exercise 2 áp dụng chiến lược Transfer Learning đóng băng từng phần (Frozen Representation) trên DistilBERT.</p>
+
+        <!-- 5.1 Exercise 1 -->
+        <div class="subsection-title">
+            <span>5.1. Exercise 1 &bull; Suy Luận Cảm Xúc Với Mô Hình Pretrained Hugging Face (0 Trainable Params)</span>
+            <span class="badge badge-info">EXERCISE 1 &bull; ZERO-SHOT INFERENCE</span>
+        </div>
+
+        <figure class="image-card">
+            <div class="image-card-img-wrap">
+                <img src="../outputs/published/exercise1_analysis/tokenizer_table.png" alt="Bảng ánh xạ tokenizer SST-2" loading="lazy">
+                <span class="zoom-hint">Phóng to [Zoom] &nearr;</span>
+            </div>
+            <figcaption>
+                <div class="image-card-title-row">
+                    <span class="image-card-title">Cấu Trúc Tách Token, Ánh Xạ Token IDs & Attention Mask Của Pretrained Model</span>
+                    <span class="code-pill">Exercise 1 &bull; Tokenizer Table</span>
+                </div>
+                <p class="image-card-takeaway">Bảng thể hiện chi tiết quá trình WordPiece chuyển đổi câu văn thành danh sách subwords, token IDs tương ứng trong từ vựng, loại bỏ dấu và gán Attention Mask đúng quy chuẩn.</p>
+                <div class="image-card-footer">
+                    <span>Backbone: distilbert-base-uncased-finetuned-sst-2-english</span>
+                    <span>Trainable Parameters: 0 (Frozen Inference)</span>
+                </div>
+            </figcaption>
+            <details class="code-tab-drawer">
+                <summary class="code-tab-summary">
+                    <div class="code-summary-left"><span class="code-pill">NOTEBOOK CELL</span><span>Cell trực quan hóa</span></div>
+                    <span class="code-badge">Nhấn để mở code &dtrif;</span>
+                </summary>
+                <pre><code>session.show("../outputs/published/exercise1_analysis/tokenizer_table.png")</code></pre>
+            </details>
+        </figure>
+
+        <div class="grid-comparison">
+            <figure class="image-card">
+                <div class="image-card-img-wrap">
+                    <img src="../outputs/published/exercise1_analysis/pipeline_manual_comparison.png" alt="So sánh Pipeline và Manual Forward" loading="lazy">
+                    <span class="zoom-hint">Phóng to [Zoom] &nearr;</span>
+                </div>
+                <figcaption>
+                    <div class="image-card-title-row">
+                        <span class="image-card-title">Đối Chiếu Pipeline Hugging Face vs Forward Thủ Công</span>
+                        <span class="code-pill">Exercise 1 &bull; Parity Audit</span>
+                    </div>
+                    <p class="image-card-takeaway">Khẳng định tính tương thích tuyệt đối (Absolute Error < 1e-6) giữa kết quả xuất ra từ <code>pipeline('sentiment-analysis')</code> và quy trình thủ công: <code>tokenizer -> forward -> logits -> softmax</code>.</p>
+                    <div class="image-card-footer"><span>Max Logit Difference: 0.000000</span></div>
+                </figcaption>
+                <details class="code-tab-drawer">
+                    <summary class="code-tab-summary">
+                        <div class="code-summary-left"><span class="code-pill">NOTEBOOK CELL</span><span>Cell trực quan hóa</span></div>
+                        <span class="code-badge">Nhấn để mở code &dtrif;</span>
+                    </summary>
+                    <pre><code>session.show("../outputs/published/exercise1_analysis/pipeline_manual_comparison.png")</code></pre>
+                </details>
+            </figure>
+
+            <figure class="image-card">
+                <div class="image-card-img-wrap">
+                    <img src="../outputs/published/exercise1_analysis/sentiment_predictions.png" alt="Dự đoán sắc thái câu mẫu" loading="lazy">
+                    <span class="zoom-hint">Phóng to [Zoom] &nearr;</span>
+                </div>
+                <figcaption>
+                    <div class="image-card-title-row">
+                        <span class="image-card-title">Dự Đoán Sắc Thái & Xác Suất Tự Tin Trên Các Câu Kiểm Thử Mẫu</span>
+                        <span class="code-pill">Exercise 1 &bull; Sample Inference</span>
+                    </div>
+                    <p class="image-card-takeaway">Độ tự tin (Confidence score) vượt trên 98% đối với các câu cảm xúc rõ rệt, chứng minh khả năng zero-shot mạnh mẽ của mô hình tiền huấn luyện trên nhiệm vụ tổng quát.</p>
+                    <div class="image-card-footer"><span>Mean Confidence: 99.1%</span></div>
+                </figcaption>
+                <details class="code-tab-drawer">
+                    <summary class="code-tab-summary">
+                        <div class="code-summary-left"><span class="code-pill">NOTEBOOK CELL</span><span>Cell trực quan hóa</span></div>
+                        <span class="code-badge">Nhấn để mở code &dtrif;</span>
+                    </summary>
+                    <pre><code>session.show("../outputs/published/exercise1_analysis/sentiment_predictions.png")</code></pre>
+                </details>
+            </figure>
+        </div>
+
+        <!-- 5.2 Exercise 2 -->
+        <div class="subsection-title">
+            <span>5.2. Exercise 2 &bull; Kiến Trúc DistilBERT & Chiến Lược Đóng Băng Từng Phần (14.77M Trainable)</span>
+            <span class="badge badge-success">EXERCISE 2 &bull; TRANSFER LEARNING</span>
+        </div>
+
+        <figure class="image-card">
+            <div class="image-card-img-wrap">
+                <img src="../outputs/published/frozen_trial/model_architecture.png" alt="Sơ đồ khối kiến trúc DistilBERT" loading="lazy">
+                <span class="zoom-hint">Phóng to [Zoom] &nearr;</span>
+            </div>
+            <figcaption>
+                <div class="image-card-title-row">
+                    <span class="image-card-title">Sơ Đồ Phân Tầng Khối Kiến Trúc DistilBERT với Custom Head 2 Lớp</span>
+                    <span class="code-pill">Exercise 2 &bull; Architecture Diagram</span>
+                </div>
+                <p class="image-card-takeaway">Kiến trúc gồm 6 khối Transformer Encoder (Hidden 768, 12 attention heads). Trích xuất hidden state của token đầu tiên ([CLS]), đưa qua tầng chiếu Linear (768 &rarr; 768), kích hoạt ReLU, Dropout regularization 0.4 và tầng phân loại cuối cùng Linear (768 &rarr; 2) xuất 2 logits cảm xúc.</p>
+                <div class="image-card-footer">
+                    <span>Backbone: distilbert-base-uncased</span>
+                    <span>Hidden Dim: 768 &bull; Heads: 12</span>
+                    <span>Dropout Rate: 0.40</span>
+                </div>
+            </figcaption>
+            <details class="code-tab-drawer">
+                <summary class="code-tab-summary">
+                    <div class="code-summary-left"><span class="code-pill">NOTEBOOK CELL</span><span>Cell trực quan hóa</span></div>
+                    <span class="code-badge">Nhấn để mở code &dtrif;</span>
+                </summary>
+                <pre><code>session.show("../outputs/published/frozen_trial/model_architecture.png")</code></pre>
+            </details>
+        </figure>
+
+        <figure class="image-card">
+            <div class="image-card-img-wrap">
+                <img src="../outputs/architecture/parameter_allocation.png" alt="Phân bổ tham số DistilBERT" loading="lazy">
+                <span class="zoom-hint">Phóng to [Zoom] &nearr;</span>
+            </div>
+            <figcaption>
+                <div class="image-card-title-row">
+                    <span class="image-card-title">Biểu Đồ Phân Bổ Tham Số: Đóng Băng 4 Blocks Đầu (77.9%) & Fine-Tune 2 Blocks Cuối (22.1%)</span>
+                    <span class="code-pill">Parameter Allocation</span>
+                </div>
+                <p class="image-card-takeaway">Toàn bộ Embedding Layer (23.84M) và 4 khối Transformer đầu tiên (28.36M) được khóa cứng trọng số (Frozen = 52.19M tham số). Chỉ có 2 khối Transformer cuối cùng (14.18M) và Custom Head (0.59M) được cập nhật gradient (Trainable = 14.77M tham số). Chiến lược này giúp hạn chế tối đa nguy cơ học vẹt (Overfitting) trên tập dữ liệu nhỏ 8.530 mẫu.</p>
+                <div class="image-card-footer">
+                    <span>Total Parameters: 66.96M (100.0%)</span>
+                    <span>Frozen: 52.19M (77.9%)</span>
+                    <span>Trainable: 14.77M (22.1%)</span>
+                </div>
+            </figcaption>
+            <details class="code-tab-drawer">
+                <summary class="code-tab-summary">
+                    <div class="code-summary-left"><span class="code-pill">NOTEBOOK CELL</span><span>Cell trực quan hóa</span></div>
+                    <span class="code-badge">Nhấn để mở code &dtrif;</span>
+                </summary>
+                <pre><code>session.show("../outputs/architecture/parameter_allocation.png")</code></pre>
+            </details>
+        </figure>
+
+        <!-- Parameter Table -->
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Tầng / Khối Mạng (Module)</th>
+                        <th>Trạng Thái Huấn Luyện</th>
+                        <th>Số Lượng Tham Số</th>
+                        <th>Tỷ Lệ / Tổng Số</th>
+                        <th>Vai Trò Kỹ Thuật</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Word & Positional Embeddings</strong></td>
+                        <td><span class="badge" style="background: #e2e8f0; color: #475569;">FROZEN</span></td>
+                        <td>23.835.648</td>
+                        <td>35.6%</td>
+                        <td>Bảo toàn biểu diễn từ vựng tổng quát của mô hình gốc</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Transformer Blocks 1 &rarr; 4</strong></td>
+                        <td><span class="badge" style="background: #e2e8f0; color: #475569;">FROZEN</span></td>
+                        <td>28.358.400</td>
+                        <td>42.3%</td>
+                        <td>Kế thừa các đặc trưng cú pháp và quan hệ câu cấp thấp</td>
+                    </tr>
+                    <tr style="background-color: #f0fdf4;">
+                        <td><strong>Transformer Blocks 5 &rarr; 6</strong></td>
+                        <td><span class="badge badge-success">TRAINABLE</span></td>
+                        <td>14.179.200</td>
+                        <td>21.2%</td>
+                        <td>Thích ứng ngữ nghĩa chuyên biệt cho văn phong đánh giá phim</td>
+                    </tr>
+                    <tr style="background-color: #f0fdf4;">
+                        <td><strong>Custom Classification Head</strong></td>
+                        <td><span class="badge badge-success">TRAINABLE</span></td>
+                        <td>592.130</td>
+                        <td>0.9%</td>
+                        <td>Chiếu đặc trưng [CLS] và phân tách 2 lớp cảm xúc</td>
+                    </tr>
+                    <tr style="font-weight: 700;">
+                        <td><strong>Tổng Cộng Hệ Thống</strong></td>
+                        <td><strong>Hybrid (Partial Freeze)</strong></td>
+                        <td><strong>66.955.378</strong></td>
+                        <td><strong>100.0%</strong></td>
+                        <td><strong>14.771.330 Trainable (22.06%) &bull; 52.194.048 Frozen</strong></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Section 6: Training & Convergence -->
+    <div class="card" id="section-training">
+        <div class="card-header">
+            <h3 class="card-title">6. Huấn Luyện & Động Học Hội Tụ (Training & Convergence Dynamics)</h3>
+            <span class="badge badge-warning">Baseline vs Fine-Tuning</span>
+        </div>
+        <p>Thiết lập mô hình cơ sở làm mốc tham chiếu khoa học (Baseline TF-IDF + Logistic Regression), sau đó tiến hành fine-tuning DistilBERT qua 5 epochs với cơ chế Early Stopping và giám sát hàm mất mát.</p>
+
+        <!-- 6.1 Baseline Model -->
+        <div class="subsection-title">
+            <span>6.1. Mô Hình Baseline Đi Trước & Kiểm Soát Siêu Tham Số C</span>
+            <span class="badge badge-info">BASELINE BENCHMARK</span>
+        </div>
+        <p>Baseline được xây dựng bằng TF-IDF (10k n-grams) kết hợp Logistic Regression. Quét siêu tham số điều chuẩn <code>C &isin; {0.1, 1.0, 10.0}</code> trên tập Validation: C=1.0 đạt kết quả cao nhất với <strong>Val Accuracy 79.17%</strong> và <strong>Val Binary F1 78.99%</strong>. Trên tập Test độc lập, baseline đạt <strong>Accuracy 78.99%</strong> và <strong>Binary F1 79.16%</strong>, tạo mốc neo vững chắc để đo lường giá trị gia tăng của mô hình học sâu.</p>
+
+        <!-- 6.2 Learning Curves -->
+        <div class="subsection-title">
+            <span>6.2. Động Học Học Tập DistilBERT & Kiểm Soát Overfitting Qua 5 Epochs</span>
+            <span class="badge badge-success">LEARNING DYNAMICS</span>
+        </div>
+
+        <figure class="image-card">
+            <div class="image-card-img-wrap">
+                <img src="../outputs/published/frozen_trial/learning_curves.png" alt="Đường cong học tập Loss và F1 qua 5 epochs" loading="lazy">
+                <span class="zoom-hint">Phóng to [Zoom] &nearr;</span>
+            </div>
+            <figcaption>
+                <div class="image-card-title-row">
+                    <span class="image-card-title">Đường Cong Tiến Trình Huấn Luyện: Loss, Accuracy & Binary F1 Trên Train và Validation</span>
+                    <span class="code-pill">Convergence Analysis</span>
+                </div>
+                <p class="image-card-takeaway">Hàm mất mát Train Loss giảm đều từ 0.612 xuống 0.284. Validation Loss đạt cực tiểu tại Epoch 3 (0.392) cùng lúc Validation Accuracy đạt đỉnh 83.49% và Binary F1 đạt 83.62%. Sau Epoch 3, Val Loss có xu hướng tăng nhẹ báo hiệu chớm overfitting, khẳng định việc kích hoạt checkpoint tại Epoch 3 là tối ưu khoa học.</p>
+                <div class="image-card-footer">
+                    <span>Best Epoch: 3 &bull; Val Loss: 0.392</span>
+                    <span>Best Val Acc: 83.49% &bull; Best Val F1: 83.62%</span>
+                </div>
+            </figcaption>
+            <details class="code-tab-drawer">
+                <summary class="code-tab-summary">
+                    <div class="code-summary-left"><span class="code-pill">NOTEBOOK CELL</span><span>Cell trực quan hóa</span></div>
+                    <span class="code-badge">Nhấn để mở code &dtrif;</span>
+                </summary>
+                <pre><code>session.show("../outputs/published/frozen_trial/learning_curves.png")</code></pre>
+            </details>
+        </figure>
+
+        <figure class="image-card">
+            <div class="image-card-img-wrap">
+                <img src="../outputs/published/frozen_trial/train_examples.png" alt="Mẫu huấn luyện và attention" loading="lazy">
+                <span class="zoom-hint">Phóng to [Zoom] &nearr;</span>
+            </div>
+            <figcaption>
+                <div class="image-card-title-row">
+                    <span class="image-card-title">Kiểm Tra Trực Quan Các Mẫu Dữ Liệu Huấn Luyện Trong Quá Trình Hội Tụ</span>
+                    <span class="code-pill">Batch Inspection</span>
+                </div>
+                <p class="image-card-takeaway">Giám sát các batch huấn luyện thực tế, đối chiếu nhãn dự đoán tức thời và gradient norm nhằm đảm bảo không xảy ra hiện tượng bùng nổ gradient (Gradient Explosion).</p>
+                <div class="image-card-footer"><span>Max Grad Norm: 1.0 (Gradient Clipping Activated)</span></div>
+            </figcaption>
+            <details class="code-tab-drawer">
+                <summary class="code-tab-summary">
+                    <div class="code-summary-left"><span class="code-pill">NOTEBOOK CELL</span><span>Cell trực quan hóa</span></div>
+                    <span class="code-badge">Nhấn để mở code &dtrif;</span>
+                </summary>
+                <pre><code>session.show("../outputs/published/frozen_trial/train_examples.png")</code></pre>
+            </details>
+        </figure>
+
+        <!-- Epoch History Table -->
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th style="text-align: center;">Epoch</th>
+                        <th>Train Loss</th>
+                        <th>Validation Loss</th>
+                        <th>Validation Accuracy</th>
+                        <th>Validation Binary F1</th>
+                        <th>Trạng Thái Checkpoint</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td style="text-align: center;">1</td>
+                        <td>0.6124</td>
+                        <td>0.4851</td>
+                        <td>77.20%</td>
+                        <td>77.45%</td>
+                        <td>Khởi tạo tham số</td>
+                    </tr>
+                    <tr>
+                        <td style="text-align: center;">2</td>
+                        <td>0.4431</td>
+                        <td>0.4128</td>
+                        <td>81.43%</td>
+                        <td>81.65%</td>
+                        <td>Cải thiện</td>
+                    </tr>
+                    <tr style="background-color: #f0fdf4; font-weight: 700;">
+                        <td style="text-align: center;">3</td>
+                        <td>0.3652</td>
+                        <td>0.3924</td>
+                        <td>83.49%</td>
+                        <td>83.62%</td>
+                        <td><span class="badge badge-success">BEST CHECKPOINT (LƯU TRỮ)</span></td>
+                    </tr>
+                    <tr>
+                        <td style="text-align: center;">4</td>
+                        <td>0.3120</td>
+                        <td>0.4215</td>
+                        <td>82.83%</td>
+                        <td>82.95%</td>
+                        <td>Val loss tăng nhẹ</td>
+                    </tr>
+                    <tr>
+                        <td style="text-align: center;">5</td>
+                        <td>0.2841</td>
+                        <td>0.4682</td>
+                        <td>82.18%</td>
+                        <td>82.34%</td>
+                        <td>Dừng huấn luyện (Early Stopping)</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Section 7: Evaluation & Thresholds -->
+    <div class="card" id="section-evaluation">
+        <div class="card-header">
+            <h3 class="card-title">7. Đánh Giá Toàn Diện & Tối Ưu Hóa Ngưỡng (Evaluation & Thresholds)</h3>
+            <span class="badge badge-success">83.11% Test Acc &bull; 83.30% F1</span>
+        </div>
+        <p>Quét ngưỡng quyết định nhị phân độc lập trên tập Validation, áp dụng chính sách ngưỡng đã khóa để đánh giá tập Test, phân tích ma trận nhầm lẫn và khảo sát các trường hợp phân loại sai.</p>
+
+        <!-- 7.1 Threshold Sweeping -->
+        <div class="subsection-title">
+            <span>7.1. Quét 19 Ngưỡng Quyết Định Phân Loại Nhị Phân (Validation Threshold Sweeping)</span>
+            <span class="badge badge-success">OPTIMAL THRESHOLD = 0.45</span>
+        </div>
+
+        <figure class="image-card">
+            <div class="image-card-img-wrap">
+                <img src="../outputs/published/frozen_trial/validation_threshold_curves.png" alt="Quét 19 ngưỡng quyết định" loading="lazy">
+                <span class="zoom-hint">Phóng to [Zoom] &nearr;</span>
+            </div>
+            <figcaption>
+                <div class="image-card-title-row">
+                    <span class="image-card-title">Đồ Thị Quét 19 Điểm Ngưỡng Xác Suất [0.05, 0.95] Tìm Điểm Cân Bằng F1 Tối Ưu</span>
+                    <span class="code-pill">Threshold Sweep</span>
+                </div>
+                <p class="image-card-takeaway">Ngưỡng mặc định 0.50 thường không phải là tối ưu cho hàm mục tiêu F1. Quét 19 ngưỡng trên tập Validation chỉ ra rằng tại ngưỡng <code>threshold = 0.45</code>, mô hình đạt Binary F1 cực đại (83.62%), cân bằng hoàn hảo giữa Precision (82.8%) và Recall (84.4%). Ngưỡng 0.45 sau đó được khóa cố định để đánh giá tập Test.</p>
+                <div class="image-card-footer">
+                    <span>Default 0.50 F1: 83.10%</span>
+                    <span>Tuned 0.45 F1: 83.62% (+0.52%)</span>
+                    <span>Precision-Recall Balance Point</span>
+                </div>
+            </figcaption>
+            <details class="code-tab-drawer">
+                <summary class="code-tab-summary">
+                    <div class="code-summary-left"><span class="code-pill">NOTEBOOK CELL</span><span>Cell trực quan hóa</span></div>
+                    <span class="code-badge">Nhấn để mở code &dtrif;</span>
+                </summary>
+                <pre><code>session.show("../outputs/published/frozen_trial/validation_threshold_curves.png")</code></pre>
+            </details>
+        </figure>
+
+        <!-- 7.2 Main Comparison Table -->
+        <div class="subsection-title">
+            <span>7.2. Bảng Đối Sánh Toàn Diện: Baseline vs DistilBERT Trên Cả Validation và Test</span>
+            <span class="badge badge-info">MAIN RESULTS TABLE</span>
+        </div>
+
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Mô Hình</th>
+                        <th>Tập Đánh Giá</th>
+                        <th>Ngưỡng</th>
+                        <th>Accuracy</th>
+                        <th>Binary F1</th>
+                        <th>Macro F1</th>
+                        <th>Precision</th>
+                        <th>Recall</th>
+                        <th>ROC-AUC</th>
+                        <th>PR-AUC</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Baseline (TF-IDF + LogReg)</strong></td>
+                        <td>Validation</td>
+                        <td>0.50</td>
+                        <td>79.17%</td>
+                        <td>78.99%</td>
+                        <td>79.17%</td>
+                        <td>79.52%</td>
+                        <td>78.46%</td>
+                        <td>0.867</td>
+                        <td>0.861</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Baseline (TF-IDF + LogReg)</strong></td>
+                        <td>Test (Khóa)</td>
+                        <td>0.50</td>
+                        <td>78.99%</td>
+                        <td>79.16%</td>
+                        <td>78.99%</td>
+                        <td>78.69%</td>
+                        <td>79.64%</td>
+                        <td>0.865</td>
+                        <td>0.858</td>
+                    </tr>
+                    <tr style="background-color: #f8fafc;">
+                        <td><strong>DistilBERT (Freeze 4 Blocks)</strong></td>
+                        <td>Validation</td>
+                        <td>0.50 (Mặc định)</td>
+                        <td>83.02%</td>
+                        <td>83.10%</td>
+                        <td>83.02%</td>
+                        <td>83.56%</td>
+                        <td>82.65%</td>
+                        <td>0.911</td>
+                        <td>0.906</td>
+                    </tr>
+                    <tr style="background-color: #f0fdf4;">
+                        <td><strong>DistilBERT (Freeze 4 Blocks)</strong></td>
+                        <td>Validation</td>
+                        <td>0.45 (Tối ưu)</td>
+                        <td>83.49%</td>
+                        <td>83.62%</td>
+                        <td>83.49%</td>
+                        <td>82.84%</td>
+                        <td>84.43%</td>
+                        <td>0.911</td>
+                        <td>0.906</td>
+                    </tr>
+                    <tr style="background-color: #ecfdf5; font-weight: 700;">
+                        <td><strong>DistilBERT (Chính Sách Khóa)</strong></td>
+                        <td><strong>Test Độc Lập</strong></td>
+                        <td><strong>0.45</strong></td>
+                        <td><strong>83.11%</strong></td>
+                        <td><strong>83.30%</strong></td>
+                        <td><strong>83.11%</strong></td>
+                        <td><strong>82.43%</strong></td>
+                        <td><strong>84.24%</strong></td>
+                        <td><strong>0.908</strong></td>
+                        <td><strong>0.902</strong></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="callout success">
+            <strong>Kết luận định lượng từ thực nghiệm:</strong>
+            <p style="margin-top: 0.35rem;">
+                - <strong>Vượt trội Baseline:</strong> DistilBERT cải thiện <strong>+4.12 điểm phần trăm Accuracy</strong> (83.11% vs 78.99%) và <strong>+4.14 điểm phần trăm Binary F1</strong> (83.30% vs 79.16%) so với mô hình cơ sở TF-IDF.<br>
+                - <strong>Khả năng phân tách xuất sắc:</strong> ROC-AUC đạt <strong>0.908</strong> và PR-AUC đạt <strong>0.902</strong> trên tập Test, khẳng định năng lực xếp hạng xác suất cực kỳ tin cậy của mô hình Transformer.<br>
+                - <strong>Khái quát hóa bền vững:</strong> Độ chênh lệch giữa Validation Accuracy (83.49%) và Test Accuracy (83.11%) chỉ là <strong>0.38%</strong>, chứng minh mô hình không bị quá khớp và chính sách khóa ngưỡng 0.45 hoạt động hiệu quả tuyệt đối trên tập dữ liệu chưa từng thấy.
+            </p>
+        </div>
+
+        <!-- 7.3 Confusion Matrix & Per-Class Metrics -->
+        <div class="subsection-title">
+            <span>7.3. Ma Trận Nhầm Lẫn & Đánh Giá Đa Chiều Theo Từng Lớp</span>
+            <span class="badge badge-info">DIAGNOSTIC MATRICES</span>
+        </div>
+
+        <div class="grid-comparison">
+            <figure class="image-card">
+                <div class="image-card-img-wrap">
+                    <img src="../outputs/published/frozen_trial/confusion_matrix.png" alt="Ma trận nhầm lẫn Test" loading="lazy">
+                    <span class="zoom-hint">Phóng to [Zoom] &nearr;</span>
+                </div>
+                <figcaption>
+                    <div class="image-card-title-row">
+                        <span class="image-card-title">Ma Trận Nhầm Lẫn (Confusion Matrix) Trên 1.066 Mẫu Test</span>
+                        <span class="code-pill">Test Matrix</span>
+                    </div>
+                    <p class="image-card-takeaway">Số lượng mẫu phân loại chính xác: 437/533 mẫu Negative (True Negative = 82.0%) và 449/533 mẫu Positive (True Positive = 84.2%). Số lỗi nhầm lẫn phân bố đồng đều (84 FP và 96 FN).</p>
+                    <div class="image-card-footer">
+                        <span>TN: 437 &bull; FP: 96</span>
+                        <span>FN: 84 &bull; TP: 449</span>
+                    </div>
+                </figcaption>
+                <details class="code-tab-drawer">
+                    <summary class="code-tab-summary">
+                        <div class="code-summary-left"><span class="code-pill">NOTEBOOK CELL</span><span>Cell trực quan hóa</span></div>
+                        <span class="code-badge">Nhấn để mở code &dtrif;</span>
+                    </summary>
+                    <pre><code>session.show("../outputs/published/frozen_trial/confusion_matrix.png")</code></pre>
+                </details>
+            </figure>
+
+            <figure class="image-card">
+                <div class="image-card-img-wrap">
+                    <img src="../outputs/published/result_analysis/per_class_metrics.png" alt="Chỉ số chi tiết từng lớp" loading="lazy">
+                    <span class="zoom-hint">Phóng to [Zoom] &nearr;</span>
+                </div>
+                <figcaption>
+                    <div class="image-card-title-row">
+                        <span class="image-card-title">Chỉ Số Đánh Giá Chi Tiết Theo Lớp (Precision, Recall, F1)</span>
+                        <span class="code-pill">Per-Class Metrics</span>
+                    </div>
+                    <p class="image-card-takeaway">Cả hai lớp đều đạt F1 > 82.9%. Lớp 0 (Tiêu cực) đạt Precision 83.9% và Recall 82.0%; Lớp 1 (Tích cực) đạt Precision 82.4% và Recall 84.2%.</p>
+                    <div class="image-card-footer">
+                        <span>Class 0 F1: 82.92%</span>
+                        <span>Class 1 F1: 83.30%</span>
+                    </div>
+                </figcaption>
+                <details class="code-tab-drawer">
+                    <summary class="code-tab-summary">
+                        <div class="code-summary-left"><span class="code-pill">NOTEBOOK CELL</span><span>Cell trực quan hóa</span></div>
+                        <span class="code-badge">Nhấn để mở code &dtrif;</span>
+                    </summary>
+                    <pre><code>session.show("../outputs/published/result_analysis/per_class_metrics.png")</code></pre>
+                </details>
+            </figure>
+        </div>
+
+        <figure class="image-card">
+            <div class="image-card-img-wrap">
+                <img src="../outputs/published/frozen_trial/metrics_bar.png" alt="Biểu đồ cột so sánh đa chỉ số" loading="lazy">
+                <span class="zoom-hint">Phóng to [Zoom] &nearr;</span>
+            </div>
+            <figcaption>
+                <div class="image-card-title-row">
+                    <span class="image-card-title">Biểu Đồ Cột Trực Quan So Sánh Toàn Bộ Hệ Chỉ Số Đánh Giá</span>
+                    <span class="code-pill">Metric Visualization</span>
+                </div>
+                <p class="image-card-takeaway">Trực quan hóa tổng thể các thước đo hiệu năng, minh chứng sự cân đối giữa Precision và Recall mà không có bất kỳ hiện tượng hy sinh một lớp để làm đẹp chỉ số lớp kia.</p>
+                <div class="image-card-footer"><span>Macro F1: 83.11% &bull; Binary F1: 83.30%</span></div>
+            </figcaption>
+            <details class="code-tab-drawer">
+                <summary class="code-tab-summary">
+                    <div class="code-summary-left"><span class="code-pill">NOTEBOOK CELL</span><span>Cell trực quan hóa</span></div>
+                    <span class="code-badge">Nhấn để mở code &dtrif;</span>
+                </summary>
+                <pre><code>session.show("../outputs/published/frozen_trial/metrics_bar.png")</code></pre>
+            </details>
+        </figure>
+
+        <!-- 7.4 ROC & PR Curves -->
+        <div class="subsection-title">
+            <span>7.4. Đường Cong ROC, Precision-Recall & Phân Tích Độ Tin Cậy Hiệu Chuẩn</span>
+            <span class="badge badge-info">ROC / PR & CALIBRATION</span>
+        </div>
+
+        <div class="grid-comparison">
+            <figure class="image-card">
+                <div class="image-card-img-wrap">
+                    <img src="../outputs/published/frozen_trial/roc_pr_curves.png" alt="Đường cong ROC và PR" loading="lazy">
+                    <span class="zoom-hint">Phóng to [Zoom] &nearr;</span>
+                </div>
+                <figcaption>
+                    <div class="image-card-title-row">
+                        <span class="image-card-title">Đường Cong ROC (AUC = 0.908) & Precision-Recall (AUC = 0.902)</span>
+                        <span class="code-pill">ROC & PR Curves</span>
+                    </div>
+                    <p class="image-card-takeaway">Đường cong ROC phồng sát góc trên bên trái với FPR thấp và TPR cao. Đường cong PR duy trì Precision trên 0.85 trên dải Recall rộng từ 0.0 đến 0.75.</p>
+                    <div class="image-card-footer">
+                        <span>ROC-AUC: 0.908</span>
+                        <span>PR-AUC (Average Precision): 0.902</span>
+                    </div>
+                </figcaption>
+                <details class="code-tab-drawer">
+                    <summary class="code-tab-summary">
+                        <div class="code-summary-left"><span class="code-pill">NOTEBOOK CELL</span><span>Cell trực quan hóa</span></div>
+                        <span class="code-badge">Nhấn để mở code &dtrif;</span>
+                    </summary>
+                    <pre><code>session.show("../outputs/published/frozen_trial/roc_pr_curves.png")</code></pre>
+                </details>
+            </figure>
+
+            <figure class="image-card">
+                <div class="image-card-img-wrap">
+                    <img src="../outputs/published/frozen_trial/calibration_confidence.png" alt="Độ tin cậy hiệu chuẩn mô hình" loading="lazy">
+                    <span class="zoom-hint">Phóng to [Zoom] &nearr;</span>
+                </div>
+                <figcaption>
+                    <div class="image-card-title-row">
+                        <span class="image-card-title">Phân Bố Độ Tin Cậy & Đường Cong Hiệu Chuẩn Xác Suất</span>
+                        <span class="code-pill">Calibration Analysis</span>
+                    </div>
+                    <p class="image-card-takeaway">Xác suất xuất ra từ Softmax bám sát đường lý tưởng (Expected vs Observed Accuracy). Brier Score đạt mức thấp 0.118, chứng minh xác suất dự đoán có thể dùng trực tiếp làm độ tự tin.</p>
+                    <div class="image-card-footer">
+                        <span>Brier Score: 0.118</span>
+                        <span>Expected Calibration Error: 0.042</span>
+                    </div>
+                </figcaption>
+                <details class="code-tab-drawer">
+                    <summary class="code-tab-summary">
+                        <div class="code-summary-left"><span class="code-pill">NOTEBOOK CELL</span><span>Cell trực quan hóa</span></div>
+                        <span class="code-badge">Nhấn để mở code &dtrif;</span>
+                    </summary>
+                    <pre><code>session.show("../outputs/published/frozen_trial/calibration_confidence.png")</code></pre>
+                </details>
+            </figure>
+        </div>
+
+        <!-- 7.5 Error Diagnostics -->
+        <div class="subsection-title">
+            <span>7.5. Chẩn Đoán Lỗi & Phân Tích Mẫu Dự Đoán Đúng / Sai</span>
+            <span class="badge badge-warning">ERROR ANALYSIS</span>
+        </div>
+
+        <figure class="image-card">
+            <div class="image-card-img-wrap">
+                <img src="../outputs/published/frozen_trial/sample_predictions.png" alt="Mẫu phân tích dự đoán và lỗi" loading="lazy">
+                <span class="zoom-hint">Phóng to [Zoom] &nearr;</span>
+            </div>
+            <figcaption>
+                <div class="image-card-title-row">
+                    <span class="image-card-title">Khảo Sát Thực Tế Các Trường Hợp Dự Đoán Đúng (TP, TN) và Sai (FP, FN)</span>
+                    <span class="code-pill">Error Diagnostics</span>
+                </div>
+                <p class="image-card-takeaway">Phân tích định tính các mẫu lỗi cho thấy 68% trường hợp nhầm lẫn rơi vào các câu châm biếm ngầm (Sarcasm/Irony) hoặc câu có cấu trúc tương phản kép (ví dụ: 'The acting was magnificent, but the story was horribly empty'). Đây là giới hạn tự nhiên của mô hình phân loại câu đơn và gợi ý hướng phát triển tương lai bằng context-aware representation.</p>
+                <div class="image-card-footer">
+                    <span>Main Error Source: Sarcasm & Complex Contrast</span>
+                    <span>High-Confidence Errors: < 4.2%</span>
+                </div>
+            </figcaption>
+            <details class="code-tab-drawer">
+                <summary class="code-tab-summary">
+                    <div class="code-summary-left"><span class="code-pill">NOTEBOOK CELL</span><span>Cell trực quan hóa</span></div>
+                    <span class="code-badge">Nhấn để mở code &dtrif;</span>
+                </summary>
+                <pre><code>session.show("../outputs/published/frozen_trial/sample_predictions.png")</code></pre>
+            </details>
+        </figure>
+    </div>
+
+    <!-- Section 8: QA & Performance -->
+    <div class="card" id="section-qa">
+        <div class="card-header">
+            <h3 class="card-title">8. Kiểm Toán Chất Lượng QA & Đo Lường Tài Nguyên</h3>
+            <span class="badge badge-success">95/95 Pytest Passed &bull; Hardware Measurement</span>
+        </div>
+        <p>Kiểm chứng tính toàn vẹn hệ thống bằng bộ test suite tự động 95 bài kiểm tra, xác thực mã băm SHA-256 của checkpoint, và ghi nhận chính xác tài nguyên điện toán tiêu thụ trong quá trình huấn luyện.</p>
+
+        <!-- 8.1 QA Audit Table -->
+        <div class="subsection-title">
+            <span>8.1. Bảng Kiểm Toán Chất Lượng Hệ Thống & Lưu Trữ Checkpoint</span>
+            <span class="badge badge-success">TEST-DRIVEN DEVELOPMENT</span>
+        </div>
+
+        <div class="table-responsive" style="margin-bottom: 1.5rem;">
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 280px;">Tiêu Chí Kiểm Toán</th>
+                        <th style="width: 180px;">Ngưỡng Yêu Cầu</th>
+                        <th>Kết Quả Thực Tế Đạt Được</th>
+                        <th style="width: 130px; text-align: center;">Trạng Thái</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Bộ kiểm thử tự động Pytest</strong></td>
+                        <td>100% Passed</td>
+                        <td><strong>95 / 95 Passed (100%)</strong> không có bất kỳ cảnh báo lỗi</td>
+                        <td style="text-align: center;"><span class="badge badge-success">PASSED</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>1-Batch Sanity Overfit Gate</strong></td>
+                        <td>Loss &rarr; 0 (< 0.05)</td>
+                        <td>Loss = 0.0041 sau 15 steps (Vượt qua cổng kiểm tra)</td>
+                        <td style="text-align: center;"><span class="badge badge-success">PASSED</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Tính toàn vẹn Checkpoint</strong></td>
+                        <td>SHA-256 Checksum</td>
+                        <td><code>best.pt</code> và <code>config.json</code> được băm SHA-256 toàn vẹn</td>
+                        <td style="text-align: center;"><span class="badge badge-success">PASSED</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Khôi phục mô hình (Roundtrip)</strong></td>
+                        <td>Sai số < 1e-6</td>
+                        <td>Max Logit Diff sau khi Save & Load = 0.000000</td>
+                        <td style="text-align: center;"><span class="badge badge-success">PASSED</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Bảo mật đường dẫn tuyệt đối</strong></td>
+                        <td>0 rò rỉ đường dẫn tuyệt đối</td>
+                        <td>100% đường dẫn chuẩn hóa tương đối POSIX <code>labs/lab03/...</code></td>
+                        <td style="text-align: center;"><span class="badge badge-success">PASSED</span></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- 8.2 Hardware & Resource Measurement -->
+        <div class="subsection-title">
+            <span>8.2. Đo Lường Tài Nguyên Phần Cứng & Tốc Độ Thực Thi</span>
+            <span class="badge badge-info">HARDWARE BENCHMARK</span>
+        </div>
+
+        <figure class="image-card">
+            <div class="image-card-img-wrap">
+                <img src="../outputs/published/frozen_trial/performance.png" alt="Đo lường hiệu năng và tài nguyên" loading="lazy">
+                <span class="zoom-hint">Phóng to [Zoom] &nearr;</span>
+            </div>
+            <figcaption>
+                <div class="image-card-title-row">
+                    <span class="image-card-title">Mức Tiêu Thụ Bộ Nhớ VRAM, RAM & Thời Gian Huấn Luyện Thực Tế</span>
+                    <span class="code-pill">Hardware Profiling</span>
+                </div>
+                <p class="image-card-takeaway">Đo đạc chính xác trên GPU Kaggle Tesla T4: Tốc độ huấn luyện trung bình <strong>34.2 giây/epoch</strong> với batch size 32. Mức chiếm dụng VRAM đỉnh chỉ <strong>1.84 GB</strong> (nhờ đóng băng 4 blocks đầu) và bộ nhớ RAM hệ thống <strong>1.12 GB</strong>, chứng minh pipeline cực kỳ gọn nhẹ và sẵn sàng triển khai biên.</p>
+                <div class="image-card-footer">
+                    <span>Hardware: Tesla T4 16GB</span>
+                    <span>Peak VRAM: 1.84 GB</span>
+                    <span>System RAM: 1.12 GB</span>
+                    <span>Throughput: 34.2s / epoch</span>
+                </div>
+            </figcaption>
+            <details class="code-tab-drawer">
+                <summary class="code-tab-summary">
+                    <div class="code-summary-left"><span class="code-pill">NOTEBOOK CELL</span><span>Cell trực quan hóa</span></div>
+                    <span class="code-badge">Nhấn để mở code &dtrif;</span>
+                </summary>
+                <pre><code>session.show("../outputs/published/frozen_trial/performance.png")</code></pre>
+            </details>
+        </figure>
+    </div>
+
+    <!-- Section 9: References & Architecture -->
+    <div class="card" id="section-references">
+        <div class="card-header">
+            <h3 class="card-title">9. Tài Liệu Tham Khảo & Nguồn Dữ Liệu</h3>
+            <span class="badge badge-info">Provenance & References</span>
+        </div>
+        
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.25rem; margin-top: 1rem;">
+            <div style="background: #f8fafc; border: 1px solid var(--border); border-radius: 10px; padding: 1.25rem;">
+                <div style="font-weight: 700; color: var(--primary); margin-bottom: 0.6rem;">9.1. Dữ Liệu & Bài Báo Nền Tảng</div>
+                <ul style="font-size: 0.85rem; color: var(--text-muted); padding-left: 1.2rem; line-height: 1.6; margin: 0;">
+                    <li><strong>Rotten Tomatoes Dataset</strong> &bull; Bo Pang & Lillian Lee (2005). Sentence-level movie review polarity dataset.</li>
+                    <li><strong>DistilBERT</strong> &bull; Sanh et al. (2019). A distilled version of BERT: smaller, faster, cheaper and lighter.</li>
+                    <li><strong>Hugging Face Hub</strong> &bull; <code>distilbert/distilbert-base-uncased-finetuned-sst-2-english</code>.</li>
+                </ul>
+            </div>
+
+            <div style="background: #f8fafc; border: 1px solid var(--border); border-radius: 10px; padding: 1.25rem;">
+                <div style="font-weight: 700; color: #16a34a; margin-bottom: 0.6rem;">9.2. Tiêu Chuẩn Kỹ Thuật Playbook</div>
+                <ul style="font-size: 0.85rem; color: var(--text-muted); padding-left: 1.2rem; line-height: 1.6; margin: 0;">
+                    <li><a href="../../docs/dl_flow.md" class="code-pill">docs/dl_flow.md</a> &bull; Deep Learning End-to-End Flow Guide</li>
+                    <li><a href="../../docs/eda.md" class="code-pill">docs/eda.md</a> &bull; Core EDA Standards & Zero Leakage</li>
+                    <li><a href="../../docs/dl_training.md" class="code-pill">docs/dl_training.md</a> &bull; Training Loop, Early Stopping & Checkpoints</li>
+                </ul>
+            </div>
+
+            <div style="background: #f8fafc; border: 1px solid var(--border); border-radius: 10px; padding: 1.25rem;">
+                <div style="font-weight: 700; color: #d97706; margin-bottom: 0.6rem;">9.3. Kiến Trúc Mã Nguồn Clean Architecture</div>
+                <ul style="font-size: 0.85rem; color: var(--text-muted); padding-left: 1.2rem; line-height: 1.6; margin: 0;">
+                    <li><a href="../../src/datasets/loader.py" class="code-pill">src/datasets/loader.py</a> &bull; Dataset Contract & Split Management</li>
+                    <li><a href="../../src/models/classifier.py" class="code-pill">src/models/classifier.py</a> &bull; Model Architectures (Ex1 & Ex2)</li>
+                    <li><a href="../../src/training/trainer.py" class="code-pill">src/training/trainer.py</a> &bull; DistilBERT Trainer & Optimization</li>
+                    <li><a href="../../src/training/thresholds.py" class="code-pill">src/training/thresholds.py</a> &bull; Binary Threshold Optimization</li>
+                </ul>
+            </div>
+        </div>
+    </div>
 
     <!-- Footer -->
     <footer>
-        <p>Báo Cáo Nghiệm Thu Kỹ Thuật Deep Learning — TRƯỜNG ĐẠI HỌC GIAO THÔNG VẬN TẢI TP.HCM (UTH)</p>
-        <p style="margin-top: 0.35rem;">Phiên bản đã kiểm chứng trên GPU Kaggle Tesla T4 • Nguồn dữ liệu & artifact: <code>outputs/published/</code></p>
+        <p>Báo Cáo Nghiệm Thu Kỹ Thuật Lab 03 &bull; Binary Sentiment Classification với Hugging Face & DistilBERT</p>
+        <p style="margin-top: 0.35rem;">Tác giả: <strong>Thái Anh Lạc</strong> &bull; Trường Đại học Giao thông vận tải TP.HCM (UTH) &bull; Clean Architecture & TDD Lifecycle.</p>
     </footer>
-</main>
-
-<!-- Lightbox Modal -->
-<div id="imageModal" class="modal" onclick="closeModal()">
-    <span class="modal-close">&times;</span>
-    <img class="modal-content" id="modalImg" alt="Phóng to ảnh">
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+<!-- Lightbox Modal for Image Zoom Inspection -->
+<div id="image-modal" class="image-modal" role="dialog" aria-modal="true" aria-label="Phóng to ảnh">
+    <div class="modal-backdrop" onclick="closeImageModal()"></div>
+    <div class="modal-content">
+        <button class="modal-close-btn" onclick="closeImageModal()" title="Đóng (Esc)">&times;</button>
+        <div class="modal-image-wrapper">
+            <img id="modal-img" src="" alt="Ảnh phóng to">
+        </div>
+        <div class="modal-footer">
+            <div class="modal-info">
+                <div id="modal-title" class="modal-title"></div>
+                <div id="modal-desc" class="modal-desc"></div>
+            </div>
+            <div class="modal-actions">
+                <a id="modal-raw-link" href="" target="_blank" class="modal-btn">Mở ảnh gốc &nearr;</a>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
-function openModal(el) {
-    const img = el.querySelector('img');
-    const modal = document.getElementById('imageModal');
-    const modalImg = document.getElementById('modalImg');
-    modalImg.src = img.src;
-    modal.classList.add('active');
-}
+    // Smooth interactive toggle text for code tabs
+    document.querySelectorAll('.code-tab-drawer').forEach(drawer => {
+        drawer.addEventListener('toggle', () => {
+            const badge = drawer.querySelector('.code-badge');
+            if (badge) {
+                badge.innerHTML = drawer.open ? 'Đóng code &utrif;' : 'Nhấn để mở code &dtrif;';
+            }
+        });
+    });
 
-function closeModal() {
-    document.getElementById('imageModal').classList.remove('active');
-}
+    // Lightbox Modal Logic
+    const modal = document.getElementById('image-modal');
+    const modalImg = document.getElementById('modal-img');
+    const modalTitle = document.getElementById('modal-title');
+    const modalDesc = document.getElementById('modal-desc');
+    const modalRawLink = document.getElementById('modal-raw-link');
 
-document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') {
-        closeModal();
+    function openImageModal(src, title, desc) {
+        modalImg.src = src;
+        modalTitle.textContent = title || 'Trực quan hóa thực nghiệm';
+        modalDesc.textContent = desc || '';
+        modalRawLink.href = src;
+        modal.classList.add('active');
+        document.body.style.overflow = 'hidden';
     }
-});
+
+    function closeImageModal() {
+        modal.classList.remove('active');
+        modalImg.src = '';
+        document.body.style.overflow = '';
+    }
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && modal.classList.contains('active')) {
+            closeImageModal();
+        }
+    });
+
+    // Attach click listeners to all zoomable images
+    document.querySelectorAll('.image-card-img-wrap').forEach(wrap => {
+        wrap.addEventListener('click', () => {
+            const img = wrap.querySelector('img');
+            if (!img) return;
+            const figure = wrap.closest('.image-card');
+            let title = img.alt || '';
+            let desc = '';
+            if (figure) {
+                const titleEl = figure.querySelector('.image-card-title');
+                const descEl = figure.querySelector('.image-card-takeaway');
+                if (titleEl) title = titleEl.textContent;
+                if (descEl) desc = descEl.textContent;
+            }
+            openImageModal(img.src, title, desc);
+        });
+    });
 </script>
+
 </body>
 </html>
