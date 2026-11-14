@@ -224,7 +224,11 @@ save_json(folder/'manifest.json',{name:hash_text_file(folder/name) for name in (
         from .evidence import verify_manifest
         from .utils.runs import save_json, hash_file
         if self.mode == 'view':
-            print('Ảnh EDA đã lưu:', self.paths['data'])
+            try:
+                rel = self.paths['data'].relative_to(self.lab.parent.parent).as_posix()
+            except Exception:
+                rel = self.paths['data'].as_posix()
+            print('Ảnh EDA đã lưu:', rel)
             return
         roles = {role: self.paths[role] for role in ('data', 'augmentation')}
         for folder in roles.values():
@@ -275,7 +279,11 @@ save_json(folder/'manifest.json',{name:hash_text_file(folder/name) for name in (
 
     def export(self):
         if self.mode == 'view':
-            print('Artifact report:',self.lab/'outputs/published/index.md')
+            try:
+                rel = (self.lab/'outputs/published/index.md').relative_to(self.lab.parent.parent).as_posix()
+            except Exception:
+                rel = (self.lab/'outputs/published/index.md').as_posix()
+            print('Artifact report:', rel)
             return
         from IPython.display import display, HTML, FileLink
         from urllib.parse import quote
